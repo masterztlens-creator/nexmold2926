@@ -1,12 +1,7 @@
-/**
- * NEXMOLD V7.14 — Regional Compiler
- * Evidence -> Claim Binding -> Eligibility -> Firewall -> Artifact -> Gate -> Projection.
- */
-import { evaluateRegionalEligibility } from "./eligibility.ts";
+/** NEXMOLD V7.14 — self-contained Regional Compiler. */
 import { runEpistemicFirewall, type V714ClaimEvidenceBinding, type V714FirewallPass } from "./epistemic-firewall.ts";
-import { createRegionalPublishArtifact, projectRegionalRoute, projectHreflang } from "./regionalPublishArtifact.ts";
-import { runPublicationGate } from "./publication-gate.ts";
-import type { CanonicalUrl, RegionalCompileInput, RegionalCompileResult } from "./types.ts";
+import { createRegionalPublishArtifact, projectHreflang, projectRegionalRoute } from "./regionalPublishArtifact.ts";
+import type { CanonicalUrl, EligibleRegionalDecision, RegionalCompileInput, RegionalCompileResult, RegionalEligibilityDecision } from "./types.ts";
 
 export interface V714RegionalCompilerInput {
   readonly compileInput: RegionalCompileInput;
@@ -15,64 +10,39 @@ export interface V714RegionalCompilerInput {
   readonly hreflangSet: readonly RegionalCompileInput["locale"][];
   readonly canonicalByLocale: ReadonlyMap<RegionalCompileInput["locale"], CanonicalUrl>;
 }
-export interface V714PublicationAuthorization {
-  readonly eligibility: RegionalCompileResult["eligibility"];
-  readonly firewall: V714FirewallPass;
-}
-export interface V714RegionalCompilerBlocked {
-  readonly published: false;
-  readonly result: RegionalCompileResult;
-  readonly reasonCodes: readonly string[];
-}
-export interface V714RegionalCompilerPublished {
-  readonly published: true;
-  readonly result: RegionalCompileResult & { readonly publicationAuthorization: V714PublicationAuthorization };
-}
+export interface V714PublicationAuthorization { readonly eligibility: EligibleRegionalDecision; readonly firewall: V714FirewallPass; }
+export interface V714RegionalCompilerBlocked { readonly published: false; readonly result: RegionalCompileResult; readonly reasonCodes: readonly string[]; }
+export interface V714RegionalCompilerPublished { readonly published: true; readonly result: RegionalCompileResult & { readonly publicationAuthorization: V714PublicationAuthorization }; }
 export type V714RegionalCompilerResult = V714RegionalCompilerPublished | V714RegionalCompilerBlocked;
 
+function evaluateEligibility(input: RegionalCompileInput): RegionalEligibilityDecision {
+  const reasons: string[] = [];
+  if (input.applicability === "UNKNOWN") reasons.push("V714_ELIGIBILITY_UNKNOWN_APPLICABILITY");
+  else if (input.applicability === "NOT_APPLICABLE") reasons.push("V714_ELIGIBILITY_NOT_APPLICABLE");
+  if (input.compliance !== "VERIFIED") reasons.push(`V714_ELIGIBILITY_COMPLIANCE_${input.compliance}`);
+  if (input.evidence.completeness !== "COMPLETE") reasons.push("V714_ELIGIBILITY_EVIDENCE_NOT_COMPLETE");
+  if (input.semantic.pageId !== input.pageId) reasons.push("V714_ELIGIBILITY_PAGE_ID_MISMATCH");
+  if (input.semantic.locale !== input.locale) reasons.push("V714_ELIGIBILITY_LOCALE_MISMATCH");
+  if (input.semantic.region !== input.region) reasons.push("V714_ELIGIBILITY_REGION_MISMATCH");
+  if (reasons.length === 0) return { pageId: input.pageId, locale: input.locale, region: input.region, applicability: "APPLICABLE", compliance: "VERIFIED", evidence: input.evidence as EligibleRegionalDecision["evidence"], status: "ELIGIBLE", reasonCodes: [] };
+  const status = input.applicability === "NOT_APPLICABLE" ? "NOT_APPLICABLE" : (input.compliance === "REQUIRES_REVIEW" || input.compliance === "UNKNOWN" ? "REQUIRES_REVIEW" : "BLOCKED");
+  if (status === "NOT_APPLICABLE") return { pageId: input.pageId, locale: input.locale, region: input.region, applicability: "NOT_APPLICABLE", compliance: input.compliance, evidence: input.evidence, status, reasonCodes: reasons };
+  if (status === "REQUIRES_REVIEW") return { pageId: input.pageId, locale: input.locale, region: input.region, applicability: input.applicability, compliance: input.compliance === "REQUIRES_REVIEW" || input.compliance === "UNKNOWN" ? input.compliance : "UNKNOWN", evidence: input.evidence, status, reasonCodes: reasons };
+  return { pageId: input.pageId, locale: input.locale, region: input.region, applicability: input.applicability, compliance: input.compliance, evidence: input.evidence, status: "BLOCKED", reasonCodes: reasons };
+}
+
+function publicationGate(eligibility: EligibleRegionalDecision, firewall: V714FirewallPass, artifact: ReturnType<typeof createRegionalPublishArtifact>): void {
+  if (!eligibility || eligibility.status !== "ELIGIBLE") throw new Error("V714_PUBLICATION_GATE_ELIGIBILITY_BLOCKED");
+  if (!firewall.ok) throw new Error("V714_PUBLICATION_GATE_FIREWALL_BLOCKED");
+  if (!artifact) throw new Error("V714_PUBLICATION_GATE_ARTIFACT_MISSING");
+}
+
 export function compileRegionalPage(input: V714RegionalCompilerInput): V714RegionalCompilerResult {
-  const compileInput = input.compileInput;
-  const eligibility = evaluateRegionalEligibility(compileInput);
-  const firewall = runEpistemicFirewall({
-    evidence: compileInput.evidence,
-    semanticClaimIds: compileInput.semantic.semanticClaimIds,
-    bindings: input.bindings,
-  });
-
-  if (eligibility.status !== "ELIGIBLE" || !firewall.ok) {
-    return {
-      published: false,
-      result: { eligibility, artifact: null, route: null, hreflang: null },
-      reasonCodes: [...(eligibility.reasonCodes ?? []), ...(firewall.ok ? [] : firewall.reasonCodes)],
-    };
-  }
-
-  const artifact = createRegionalPublishArtifact({
-    input: compileInput, eligibility, firewall, bindings: input.bindings,
-    canonicalUrl: input.canonicalUrl, hreflangSet: input.hreflangSet,
-  });
-
-  const publication = runPublicationGate({ eligibility, firewall, artifact });
-  if (!publication.ok) {
-    return {
-      published: false,
-      result: { eligibility, artifact: null, route: null, hreflang: null },
-      reasonCodes: publication.reasonCodes,
-    };
-  }
-
-  const publishedArtifact = publication.artifact;
-  return {
-    published: true,
-    result: {
-      eligibility,
-      artifact: publishedArtifact,
-      route: projectRegionalRoute(publishedArtifact),
-      hreflang: projectHreflang(
-        publishedArtifact.pageId, publishedArtifact.locale, publishedArtifact.region,
-        input.canonicalByLocale,
-      ),
-      publicationAuthorization: { eligibility, firewall },
-    },
-  };
+  if (!input) throw new Error("V714_REGIONAL_COMPILER_INPUT_REQUIRED");
+  const eligibility = evaluateEligibility(input.compileInput);
+  const firewall = runEpistemicFirewall({ evidence: input.compileInput.evidence, semanticClaimIds: input.compileInput.semantic.semanticClaimIds, bindings: input.bindings });
+  if (eligibility.status !== "ELIGIBLE" || !firewall.ok) return { published: false, result: { eligibility, artifact: null, route: null, hreflang: null }, reasonCodes: [...eligibility.reasonCodes, ...(firewall.ok ? [] : firewall.reasonCodes)] };
+  const artifact = createRegionalPublishArtifact({ input: input.compileInput, eligibility, firewall, bindings: input.bindings, canonicalUrl: input.canonicalUrl, hreflangSet: input.hreflangSet });
+  publicationGate(eligibility, firewall, artifact);
+  return { published: true, result: { eligibility, artifact, route: projectRegionalRoute(artifact), hreflang: projectHreflang(artifact.pageId, artifact.locale, artifact.region, input.canonicalByLocale), publicationAuthorization: { eligibility, firewall } } };
 }
