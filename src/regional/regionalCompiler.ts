@@ -1,6 +1,7 @@
 /** NEXMOLD V7.14 — canonical Regional Compiler. */
 import {
   runEpistemicFirewall,
+  normalizeFirewallBindings,
   type V714ClaimEvidenceBinding,
   type V714FirewallPass,
 } from "./epistemic-firewall.ts";
@@ -178,13 +179,15 @@ export function compileRegionalPage(
     };
   }
 
+  const artifactBindings = normalizeFirewallBindings(input.bindings);
+
   let artifact;
   try {
     artifact = createRegionalPublishArtifact({
       input: input.compileInput,
       eligibility,
       firewall,
-      bindings: input.bindings,
+      bindings: artifactBindings,
       canonicalUrl: input.canonicalUrl,
       hreflangSet: input.hreflangSet,
     });
