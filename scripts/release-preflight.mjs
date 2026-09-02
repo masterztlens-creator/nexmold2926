@@ -1,87 +1,85 @@
-﻿/**
- * NEXMOLD V7.14
- * Release Preflight
- *
- * Non-destructive production readiness checks.
- *
- * Contract:
- *   runReleasePreflight(context)
- */
+#!/usr/bin/env node
+/** NEXMOLD V7.14 — production release preflight. */
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+const ROOT = process.cwd();
 
-export function runReleasePreflight(context = {}) {
-  const root =
-    typeof context === 'string'
-      ? context
-      : context?.projectRoot ?? context?.root ?? process.cwd();
-
-  const requiredFiles = [
-    'package.json',
-    'astro.config.mjs',
-    'src',
-    'public'
-  ];
-
-  const checks = requiredFiles.map(relativePath => {
-    const target = path.join(root, relativePath);
-
-    return {
-      id: 'exists:' + relativePath,
-      passed: fs.existsSync(target)
-    };
-  });
-
-  const failed = checks.filter(check => !check.passed);
-
-  const result = {
-    gate: 'release-preflight',
-    passed: failed.length === 0,
-    root,
-    checks
-  };
-
-  if (!result.passed) {
-    throw new Error(
-      '[V7.14 Release Preflight] FAILED: ' +
-      failed.map(check => check.id).join(', ')
-    );
-  }
-
-  return Object.freeze(result);
+function fail(message) {
+  throw new Error(`[V7.14 Release Preflight] FAILED: ${message}`);
 }
 
-/**
- * CLI entrypoint
- */
+function check(id, passed) {
+  return { id, passed: Boolean(passed) };
+}
+
+export function runReleasePreflight(context = {}) {
+  const root = path.resolve(
+    typeof context === "string"
+      ? context
+      : context?.projectRoot ?? context?.root ?? ROOT,
+  );
+
+  const requiredFiles = [
+    "package.json",
+    "astro.config.mjs",
+    "src/regional/types.ts",
+    "src/regional/epistemic-firewall.ts",
+    "src/regional/regionalPublishArtifact.ts",
+    "src/regional/publication-gate.ts",
+    "src/regional/regionalCompiler.ts",
+    "src/regional/Producer.ts",
+    "src/regional/releasePreflight.ts",
+    "src/regional/article-producer.ts",
+    "src/regional/article-renderer.ts",
+    "scripts/v714-regional-gate.mjs",
+    "scripts/v714-article-factory.mjs",
+    "build-orchestrator.mjs",
+  ];
+
+  const checks = requiredFiles.map((relativePath) =>
+    check(`exists:${relativePath}`, fs.existsSync(path.join(root, relativePath))),
+  );
+
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  );
+
+  checks.push(
+    check(
+      "engine:node>=22.12.0",
+      /^>=22\.12\.0/.test(String(packageJson.engines?.node ?? "")),
+    ),
+    check("script:v714:build", packageJson.scripts?.["v714:build"] === "node build-orchestrator.mjs"),
+    check("script:v714:regional", typeof packageJson.scripts?.["v714:regional"] === "string"),
+  );
+
+  const failed = checks.filter((item) => !item.passed);
+  if (failed.length) {
+    fail(failed.map((item) => item.id).join(", "));
+  }
+
+  return Object.freeze({
+    gate: "release-preflight",
+    passed: true,
+    root,
+    checks,
+  });
+}
+
 const currentFile = path.resolve(fileURLToPath(import.meta.url));
-const invokedFile = process.argv[1]
-  ? path.resolve(process.argv[1])
-  : '';
+const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : "";
 
 if (invokedFile === currentFile) {
   try {
     const result = runReleasePreflight(process.cwd());
-
-    console.log(
-      JSON.stringify(
-        {
-          schema: 'nexmold.v7.14.release-preflight.v1',
-          ...result
-        },
-        null,
-        2
-      )
-    );
-
-    process.exitCode = 0;
+    console.log(JSON.stringify({
+      schema: "nexmold.v7.14.release-preflight.v2",
+      ...result,
+    }, null, 2));
   } catch (error) {
-    console.error(
-      error instanceof Error ? error.message : String(error)
-    );
-
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   }
 }

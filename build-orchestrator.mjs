@@ -1,103 +1,75 @@
 #!/usr/bin/env node
 /**
- * NEXMOLD V7.14 鈥?Production Build Orchestrator
+ * NEXMOLD V7.14 — fail-closed production build orchestrator.
  *
- * Production order:
- *   1. Global kill-switch / structural precheck
- *   2. V7.14 Core Gate
- *   3. Route Conflict Gate
- *   4. Typecheck / optional tests
- *   5. Clean production build
- *   6. Immutable artifact audit + HTML manifest
- *   7. Runtime Gate
- *   8. Sitemap Gate
- *   9. Release Preflight
- *  10. Advance Last-Known-Good only after every mandatory gate passes
+ * Mandatory order:
+ *   PRECHECK
+ *   -> CORE GATE
+ *   -> REGIONAL PRODUCTION GATE
+ *   -> TYPECHECK
+ *   -> CONTRACT TESTS
+ *   -> ARTICLE FACTORY
+ *   -> ROUTE CONFLICT GATE
+ *   -> CLEAN BUILD
+ *   -> ARTIFACT AUDIT
+ *   -> RUNTIME GATE
+ *   -> SITEMAP GATE
+ *   -> RELEASE PREFLIGHT
+ *   -> LKG ADVANCE
  *
- * Fail-closed rule:
- *   Any mandatory gate failure aborts the release and MUST NOT advance LKG.
+ * No mandatory gate may silently pass by returning null/undefined.
  */
 
-import { createHash, randomUUID } from 'node:crypto';
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
-import {
-  basename,
-  dirname,
-  extname,
-  join,
-  normalize,
-  relative,
-  resolve,
-  sep,
-} from 'node:path';
-import { spawn } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createHash, randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { spawn } from "node:child_process";
+import { pathToFileURL, fileURLToPath } from "node:url";
 
-const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(process.env.NEXMOLD_ROOT ?? SCRIPT_DIR);
-const DIST = resolve(ROOT, 'dist');
-const CONTROL = resolve(ROOT, '.nexmold');
-const RELEASES = resolve(CONTROL, 'releases');
-const STATE_FILE = resolve(CONTROL, 'release-state.json');
-const LKG_FILE = resolve(CONTROL, 'last-known-good.json');
+const ROOT = path.resolve(process.env.NEXMOLD_ROOT ?? path.dirname(fileURLToPath(import.meta.url)));
+const DIST = path.resolve(ROOT, "dist");
+const CONTROL = path.resolve(ROOT, ".nexmold");
+const RELEASES = path.join(CONTROL, "releases");
+const LKG = path.join(CONTROL, "last-known-good.json");
+const epoch = process.env.NEXMOLD_BUILD_EPOCH ??
+  `${new Date().toISOString().replace(/[-:.]/g, "")}-${process.pid}-${randomUUID().slice(0, 8)}`;
+const RELEASE_DIR = path.join(RELEASES, epoch);
+const BUILD_LOG = path.join(RELEASE_DIR, "build.log");
 
-const BUILD_COMMAND = process.env.NEXMOLD_BUILD_COMMAND ?? 'npx astro build';
-const V714_ARTICLE_FACTORY_COMMAND =
-  process.env.NEXMOLD_V714_ARTICLE_FACTORY_COMMAND ??
-  'node --experimental-strip-types scripts/v714-article-factory.mjs';
-const TYPECHECK_COMMAND = process.env.NEXMOLD_TYPECHECK_COMMAND ?? 'npx astro check';
-const TEST_COMMAND = process.env.NEXMOLD_TEST_COMMAND ?? 'node --experimental-strip-types tests/contracts/v714-contracts.mjs';
-const HEALTH_URL = process.env.NEXMOLD_HEALTH_URL ?? '';
-const HEALTH_TIMEOUT_MS = Number(process.env.NEXMOLD_HEALTH_TIMEOUT_MS ?? 8000);
-const MAX_HTML_BYTES = Number(process.env.NEXMOLD_MAX_HTML_BYTES ?? 10 * 1024 * 1024);
-const CLEAN_DIST = parseBoolean(process.env.NEXMOLD_CLEAN_DIST, true);
-const KILL_SWITCH = parseBoolean(process.env.NEXMOLD_KILL_SWITCH, false);
-const EXPECTED_HTML_MANIFEST = process.env.NEXMOLD_EXPECTED_HTML_MANIFEST
-  ? resolve(ROOT, process.env.NEXMOLD_EXPECTED_HTML_MANIFEST)
-  : '';
-const SMOKE_ROUTES = (process.env.NEXMOLD_SMOKE_ROUTES ?? '/,/404.html,/sitemap.xml,/services/custom-injection-molding,/knowledge-hub/,/industries/v714/')
-  .split(',')
-  .map((x) => x.trim())
-  .filter(Boolean);
-
-const startedAt = new Date().toISOString();
-const epoch = buildEpochId();
-const RELEASE_DIR = resolve(RELEASES, epoch);
-const BUILD_LOG = resolve(RELEASE_DIR, 'build.log');
-const summary = [];
+const BUILD_COMMAND = process.env.NEXMOLD_BUILD_COMMAND ?? "npx astro build";
+const TYPECHECK_COMMAND = process.env.NEXMOLD_TYPECHECK_COMMAND ?? "npx astro check";
+const TEST_COMMAND = process.env.NEXMOLD_TEST_COMMAND ?? "node --experimental-strip-types tests/contracts/v714-contracts.mjs && node --experimental-strip-types tests/contracts/v714-regression.mjs";
+const ARTICLE_FACTORY_COMMAND = process.env.NEXMOLD_V714_ARTICLE_FACTORY_COMMAND ??
+  "node --experimental-strip-types scripts/v714-article-factory.mjs";
+const CLEAN_DIST = !["0", "false", "no", "off"].includes(
+  String(process.env.NEXMOLD_CLEAN_DIST ?? "true").toLowerCase(),
+);
+const KILL_SWITCH = ["1", "true", "yes", "on"].includes(
+  String(process.env.NEXMOLD_KILL_SWITCH ?? "false").toLowerCase(),
+);
 
 const GATES = Object.freeze({
-  core: resolve(ROOT, 'scripts', 'v714-core-gate.mjs'),
-  regional: resolve(ROOT, 'scripts', 'v714-regional-gate.mjs'),
-  routeConflict: resolve(ROOT, 'scripts', 'route-conflict-check.mjs'),
-  runtime: resolve(ROOT, 'scripts', 'runtime-gate.mjs'),
-  sitemap: resolve(ROOT, 'scripts', 'sitemap-gate.mjs'),
-  releasePreflight: resolve(ROOT, 'scripts', 'release-preflight.mjs'),
+  core: ["scripts/v714-core-gate.mjs", "runV714CoreGate"],
+  regional: ["scripts/v714-regional-gate.mjs", "runV714RegionalGate"],
+  runtime: ["scripts/runtime-gate.mjs", "runRuntimeGate"],
+  sitemap: ["scripts/sitemap-gate.mjs", "runSitemapGate"],
+  release: ["scripts/release-preflight.mjs", "runReleasePreflight"],
 });
 
-function parseBoolean(value, fallback) {
-  if (value == null || value === '') return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
-}
+const summary = [];
 
-function buildEpochId() {
-  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-  return `${stamp}-${process.pid}-${randomUUID().slice(0, 8)}`;
+function ensureRoot(file) {
+  const candidate = path.resolve(file);
+  const relative = path.relative(ROOT, candidate);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Path escapes project root: ${file}`);
+  }
 }
 
 function log(message) {
   const line = `${new Date().toISOString()} ${message}`;
   console.log(line);
-  if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, `${line}\n`, 'utf8');
+  if (fs.existsSync(RELEASE_DIR)) fs.appendFileSync(BUILD_LOG, `${line}\n`, "utf8");
 }
 
 function section(label) {
@@ -106,152 +78,106 @@ function section(label) {
   console.log(`=======================================================`);
 }
 
-function pass(label, detail = '') {
-  summary.push({ label, status: 'PASS', detail });
-  console.log(`PASS  ${label}${detail ? ` 鈥?${detail}` : ''}`);
+function pass(label, detail = "") {
+  summary.push({ label, status: "PASS", detail });
+  console.log(`PASS  ${label}${detail ? ` — ${detail}` : ""}`);
 }
 
-function warn(label, detail = '') {
-  summary.push({ label, status: 'WARN', detail });
-  console.warn(`WARN  ${label}${detail ? ` 鈥?${detail}` : ''}`);
+function skip(label, detail = "") {
+  summary.push({ label, status: "SKIPPED", detail });
+  console.warn(`SKIP  ${label}${detail ? ` — ${detail}` : ""}`);
 }
 
-function skip(label, detail = '') {
-  summary.push({ label, status: 'SKIPPED', detail });
-  console.warn(`SKIP  ${label}${detail ? ` 鈥?${detail}` : ''}`);
-}
-
-function fail(label, detail = '') {
-  summary.push({ label, status: 'FAIL', detail });
+function fail(label, detail = "") {
+  summary.push({ label, status: "FAIL", detail });
   throw new Error(`[${label}] ${detail}`);
 }
 
-function atomicWrite(filePath, value) {
-  mkdirSync(dirname(filePath), { recursive: true });
-  const temp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
-  writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-  rmSync(filePath, { force: true });
-  writeFileSync(filePath, readFileSync(temp));
-  rmSync(temp, { force: true });
+function writeJson(file, value) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
+  fs.writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  fs.rmSync(file, { force: true });
+  fs.renameSync(temp, file);
 }
 
-function sha256File(filePath) {
-  return createHash('sha256').update(readFileSync(filePath)).digest('hex');
-}
-
-function sha256Text(value) {
-  return createHash('sha256').update(value, 'utf8').digest('hex');
+function sha256File(file) {
+  return createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
 function collectFiles(dir) {
-  if (!existsSync(dir)) return [];
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...collectFiles(full));
-    else if (entry.isFile()) out.push(full);
+  if (!fs.existsSync(dir)) return [];
+  const output = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) output.push(...collectFiles(full));
+    else output.push(full);
   }
-  return out.sort();
+  return output.sort();
 }
 
-function ensureInsideRoot(target) {
-  const root = normalize(ROOT + sep).toLowerCase();
-  const candidate = normalize(resolve(target) + sep).toLowerCase();
-  if (!candidate.startsWith(root)) {
-    throw new Error(`Path escapes project root: ${target}`);
-  }
-}
-
-function normalizeRouteFromHtml(relativeHtmlPath) {
-  const normalized = relativeHtmlPath.split(sep).join('/');
-  if (normalized === 'index.html') return '/';
-  if (normalized.endsWith('/index.html')) {
-    return `/${normalized.slice(0, -'/index.html'.length)}/`.replace(/\/+/g, '/');
-  }
-  return `/${normalized.slice(0, -'.html'.length)}`;
-}
-
-function filePathForRoute(route) {
-  const clean = route.replace(/^\/+/, '');
-  if (route === '/') return join(DIST, 'index.html');
-  if (route.endsWith('/')) return join(DIST, clean, 'index.html');
-  return join(DIST, clean);
-}
-
-async function runCommand(command, label) {
-  log(`[${label}] $ ${command}`);
-  return await new Promise((resolveResult, reject) => {
-    const child = spawn(command, {
-      cwd: ROOT,
-      env: { ...process.env, NEXMOLD_BUILD_EPOCH: epoch },
-      shell: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    });
-
-    child.stdout.on('data', (chunk) => {
-      const text = chunk.toString();
-      process.stdout.write(text);
-      if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
-    });
-    child.stderr.on('data', (chunk) => {
-      const text = chunk.toString();
-      process.stderr.write(text);
-      if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
-    });
-    child.on('error', reject);
-    child.on('close', (code, signal) => {
-      if (code === 0) resolveResult({ code: 0, signal });
-      else reject(new Error(`${label} exited with code=${code} signal=${signal ?? 'none'}`));
-    });
-  });
+function routeForHtml(relativePath) {
+  const value = relativePath.split(path.sep).join("/");
+  if (value === "index.html") return "/";
+  if (value.endsWith("/index.html")) return `/${value.slice(0, -"/index.html".length)}/`;
+  return `/${value.slice(0, -".html".length)}`;
 }
 
 function normalizeGateResult(result) {
-  if (result == null) return { ok: true, detail: 'Gate returned no result; completion was successful.' };
-  if (typeof result === 'boolean') return { ok: result, detail: result ? 'PASS' : 'FAIL' };
-  if (typeof result === 'object') {
-    if (result.ok === false || result.pass === false || result.passed === false || result.success === false) {
-      return { ok: false, detail: result.detail ?? result.message ?? JSON.stringify(result) };
-    }
-    if (result.status === 'FAIL' || result.status === 'FAILED') {
-      return { ok: false, detail: result.detail ?? result.message ?? JSON.stringify(result) };
-    }
-    return {
-      ok: true,
-      detail: result.detail ?? result.message ?? result.status ?? 'Gate completed successfully.',
-    };
+  if (result === null || result === undefined) {
+    return { ok: false, detail: "Gate returned null/undefined; fail closed." };
   }
-  return { ok: true, detail: String(result) };
+  if (typeof result === "boolean") return { ok: result, detail: String(result) };
+  if (typeof result !== "object") return { ok: false, detail: `Unsupported gate result: ${typeof result}` };
+
+  const object = result;
+  if (
+    object.ok === false ||
+    object.pass === false ||
+    object.passed === false ||
+    object.success === false ||
+    object.status === "FAIL" ||
+    object.status === "FAILED"
+  ) {
+    return { ok: false, detail: object.detail ?? object.message ?? JSON.stringify(object) };
+  }
+
+  if (
+    object.ok !== true &&
+    object.pass !== true &&
+    object.passed !== true &&
+    object.success !== true &&
+    object.status !== "PASS" &&
+    object.status !== "PASSED" &&
+    object.status !== "VERIFIED"
+  ) {
+    return { ok: false, detail: `Gate returned an unrecognized success state: ${JSON.stringify(object)}` };
+  }
+
+  return { ok: true, detail: object.detail ?? object.message ?? object.status ?? "PASS" };
 }
 
-function gateContext() {
-  return {
-    root: ROOT,
-    projectRoot: ROOT,
-    dist: DIST,
-    controlDir: CONTROL,
-    releaseDir: RELEASE_DIR,
-    releasesDir: RELEASES,
-    epoch,
-    buildEpoch: epoch,
-  };
-}
+async function runExportedGate(relativePath, exportName, label) {
+  const modulePath = path.resolve(ROOT, relativePath);
+  ensureRoot(modulePath);
+  if (!fs.existsSync(modulePath)) fail(label, `Missing gate: ${relativePath}`);
 
-async function runExportedGate(modulePath, exportName, label) {
-  ensureInsideRoot(modulePath);
-  if (!existsSync(modulePath)) fail(label, `Required gate module missing: ${relative(ROOT, modulePath)}`);
-
-  log(`[${label}] import ${relative(ROOT, modulePath)} :: ${exportName}`);
-  const mod = await import(`${pathToFileURL(modulePath).href}?v714_epoch=${encodeURIComponent(epoch)}`);
-  const gate = mod[exportName];
-  if (typeof gate !== 'function') {
-    fail(label, `Expected export ${exportName}() was not found.`);
-  }
+  const module = await import(`${pathToFileURL(modulePath).href}?v714_epoch=${encodeURIComponent(epoch)}`);
+  const gate = module[exportName];
+  if (typeof gate !== "function") fail(label, `Missing export ${exportName}`);
 
   let result;
   try {
-    result = await gate(gateContext());
+    result = await gate({
+      root: ROOT,
+      projectRoot: ROOT,
+      dist: DIST,
+      controlDir: CONTROL,
+      releasesDir: RELEASES,
+      releaseDir: RELEASE_DIR,
+      epoch,
+      buildEpoch: epoch,
+    });
   } catch (error) {
     fail(label, error instanceof Error ? error.message : String(error));
   }
@@ -262,281 +188,193 @@ async function runExportedGate(modulePath, exportName, label) {
   return result;
 }
 
-async function runRouteConflictGate() {
-  const modulePath = GATES.routeConflict;
-  ensureInsideRoot(modulePath);
-  if (!existsSync(modulePath)) fail('ROUTE_CONFLICT_GATE', `Required gate module missing: ${relative(ROOT, modulePath)}`);
-
-  // route-conflict-check.mjs is intentionally allowed to execute its gate on import.
-  // The current V7.14 implementation reports its result and exits only on failure.
-  log(`[ROUTE_CONFLICT_GATE] import ${relative(ROOT, modulePath)}`);
-  try {
-    await import(`${pathToFileURL(modulePath).href}?v714_epoch=${encodeURIComponent(epoch)}`);
-  } catch (error) {
-    fail('ROUTE_CONFLICT_GATE', error instanceof Error ? error.message : String(error));
-  }
-  pass('ROUTE_CONFLICT_GATE', 'Route conflict gate completed successfully.');
-}
-
-function htmlManifest() {
-  const files = collectFiles(DIST).filter((file) => extname(file).toLowerCase() === '.html');
-  const entries = [];
-
-  for (const file of files) {
-    const size = statSync(file).size;
-    if (size > MAX_HTML_BYTES) {
-      throw new Error(`HTML file exceeds max size: ${relative(DIST, file)} (${size} bytes)`);
-    }
-    const rel = relative(DIST, file);
-    entries.push({
-      path: rel.split(sep).join('/'),
-      route: normalizeRouteFromHtml(rel),
-      bytes: size,
-      sha256: sha256File(file),
+async function runCommand(command, label) {
+  log(`[${label}] $ ${command}`);
+  await new Promise((resolve, reject) => {
+    const child = spawn(command, {
+      cwd: ROOT,
+      env: { ...process.env, NEXMOLD_BUILD_EPOCH: epoch },
+      shell: true,
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
     });
-  }
 
-  const routes = entries.map((x) => x.route);
-  const duplicates = routes.filter((route, index) => routes.indexOf(route) !== index);
-  if (duplicates.length) {
-    throw new Error(`Duplicate rendered routes detected: ${[...new Set(duplicates)].join(', ')}`);
-  }
-
-  const canonicalList = entries.map((x) => `${x.route}|${x.path}|${x.sha256}`).sort();
-  return {
-    schema: 'nexmold.v7.14.html-manifest.v1',
-    generatedAt: new Date().toISOString(),
-    count: entries.length,
-    setSha256: sha256Text(canonicalList.join('\n')),
-    entries,
-  };
-}
-
-function compareExpectedHtmlSet(manifest) {
-  if (!EXPECTED_HTML_MANIFEST) {
-    skip('GLOBAL_HTML_SET_EQUALITY', 'No expected HTML manifest configured. Current set is recorded but equality is not asserted.');
-    return;
-  }
-  if (!existsSync(EXPECTED_HTML_MANIFEST)) {
-    fail('GLOBAL_HTML_SET_EQUALITY', `Expected manifest not found: ${EXPECTED_HTML_MANIFEST}`);
-  }
-
-  let expected;
-  try {
-    expected = JSON.parse(readFileSync(EXPECTED_HTML_MANIFEST, 'utf8'));
-  } catch (error) {
-    fail('GLOBAL_HTML_SET_EQUALITY', `Cannot parse expected manifest: ${error instanceof Error ? error.message : String(error)}`);
-  }
-
-  const expectedRoutes = [...new Set((expected.entries ?? []).map((x) => x.route))].sort();
-  const currentRoutes = [...new Set(manifest.entries.map((x) => x.route))].sort();
-  if (sha256Text(expectedRoutes.join('\n')) !== sha256Text(currentRoutes.join('\n'))) {
-    const missing = expectedRoutes.filter((x) => !currentRoutes.includes(x));
-    const unexpected = currentRoutes.filter((x) => !expectedRoutes.includes(x));
-    fail(
-      'GLOBAL_HTML_SET_EQUALITY',
-      `Route-set mismatch. missing=${missing.slice(0, 20).join(', ') || 'none'} unexpected=${unexpected.slice(0, 20).join(', ') || 'none'}`,
-    );
-  }
-  pass('GLOBAL_HTML_SET_EQUALITY', `Route set matches expected manifest (${currentRoutes.length} routes).`);
-}
-
-function detectForbiddenArtifacts() {
-  const forbiddenNames = new Set([
-    '.env', '.env.local', '.env.production', '.env.development',
-    'id_rsa', 'id_ed25519', '.npmrc',
-  ]);
-  const hits = collectFiles(DIST).filter((file) => forbiddenNames.has(basename(file).toLowerCase()));
-  if (hits.length) {
-    fail('ARTIFACT_SECRETS', `Forbidden runtime artifacts in dist: ${hits.map((x) => relative(DIST, x)).join(', ')}`);
-  }
-  pass('ARTIFACT_SECRETS', 'No forbidden secret/config artifacts found in dist.');
-}
-
-function detectMalformedHtml(manifest) {
-  for (const entry of manifest.entries) {
-    const file = join(DIST, entry.path);
-    const html = readFileSync(file, 'utf8');
-    if (!/^\s*<!doctype html>/i.test(html)) warn('HTML_DOCTYPE', `Missing explicit <!doctype html>: ${entry.path}`);
-    if (!/<html\b/i.test(html) || !/<\/html>/i.test(html)) {
-      fail('HTML_INTEGRITY', `Malformed HTML shell: ${entry.path}`);
-    }
-  }
-  pass('HTML_INTEGRITY', `Validated ${manifest.count} rendered HTML files.`);
-}
-
-function smokeRoutes() {
-  for (const route of SMOKE_ROUTES) {
-    const target = filePathForRoute(route);
-    ensureInsideRoot(target);
-    if (!existsSync(target)) {
-      fail('STATIC_SMOKE', `Missing smoke route artifact: ${route} -> ${relative(ROOT, target)}`);
-    }
-  }
-  pass('STATIC_SMOKE', `Validated ${SMOKE_ROUTES.length} local route artifacts.`);
-}
-
-async function httpHealthCheck() {
-  if (!HEALTH_URL) {
-    skip('CDN_HEALTH', 'NEXMOLD_HEALTH_URL not configured; no remote health claim was made.');
-    return;
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
-  try {
-    const response = await fetch(HEALTH_URL, {
-      method: 'GET',
-      redirect: 'manual',
-      signal: controller.signal,
-      headers: { 'user-agent': 'NEXMOLD-V7.14-Orchestrator/1.0' },
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      process.stdout.write(text);
+      if (fs.existsSync(RELEASE_DIR)) fs.appendFileSync(BUILD_LOG, text, "utf8");
     });
-    if (response.status >= 500) fail('CDN_HEALTH', `Health URL returned HTTP ${response.status}.`);
-    if (response.status >= 400) {
-      warn('CDN_HEALTH', `Health URL returned HTTP ${response.status}.`);
-      return;
-    }
-    pass('CDN_HEALTH', `HTTP ${response.status} health check passed.`);
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-function writeReleaseState(status, extra = {}) {
-  atomicWrite(STATE_FILE, {
-    schema: 'nexmold.v7.14.release-state.v1',
-    status,
-    epoch,
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    projectRoot: ROOT,
-    dist: DIST,
-    summary,
-    ...extra,
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      process.stderr.write(text);
+      if (fs.existsSync(RELEASE_DIR)) fs.appendFileSync(BUILD_LOG, text, "utf8");
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${label} exited with code ${code}`));
+    });
   });
 }
 
+function auditDist() {
+  if (!fs.existsSync(DIST)) fail("BUILD", "dist directory missing after build");
+
+  const htmlFiles = collectFiles(DIST).filter((file) => path.extname(file).toLowerCase() === ".html");
+  if (!htmlFiles.length) fail("HTML_MANIFEST", "No HTML artifacts produced");
+
+  const entries = htmlFiles.map((file) => {
+    const relativePath = path.relative(DIST, file).split(path.sep).join("/");
+    const html = fs.readFileSync(file, "utf8");
+    if (!/^\s*<!doctype html>/i.test(html)) {
+      console.warn(`WARN  HTML_DOCTYPE — ${relativePath}`);
+    }
+    if (!/<html\b/i.test(html) || !/<\/html>/i.test(html)) {
+      fail("HTML_INTEGRITY", `Malformed HTML: ${relativePath}`);
+    }
+    return {
+      path: relativePath,
+      route: routeForHtml(relativePath),
+      bytes: Buffer.byteLength(html, "utf8"),
+      sha256: sha256File(file),
+    };
+  });
+
+  const routes = entries.map((entry) => entry.route);
+  const duplicates = routes.filter((route, index) => routes.indexOf(route) !== index);
+  if (duplicates.length) fail("HTML_ROUTE_DUPLICATE", [...new Set(duplicates)].join(", "));
+
+  const setHash = createHash("sha256")
+    .update(entries.map((entry) => `${entry.route}|${entry.path}|${entry.sha256}`).sort().join("\n"), "utf8")
+    .digest("hex");
+
+  const manifest = {
+    schema: "nexmold.v7.14.html-manifest.v2",
+    epoch,
+    count: entries.length,
+    setSha256: setHash,
+    entries,
+  };
+
+  writeJson(path.join(RELEASE_DIR, "html-manifest.json"), manifest);
+  pass("HTML_MANIFEST", `Recorded ${entries.length} HTML artifacts; setSha256=${setHash}`);
+  return manifest;
+}
+
+function auditForbiddenArtifacts() {
+  const forbidden = new Set([".env", ".env.local", ".env.production", ".npmrc", "id_rsa", "id_ed25519"]);
+  const hits = collectFiles(DIST).filter((file) => forbidden.has(path.basename(file).toLowerCase()));
+  if (hits.length) fail("ARTIFACT_SECRETS", hits.map((file) => path.relative(DIST, file)).join(", "));
+  pass("ARTIFACT_SECRETS", "No forbidden secret/config files in dist.");
+}
+
+function auditSmokeRoutes() {
+  const routes = ["/", "/404.html", "/sitemap.xml", "/services/custom-injection-molding", "/knowledge-hub/", "/industries/v714/"];
+  for (const route of routes) {
+    const clean = route.replace(/^\/+/, "");
+    const target =
+      route === "/" ? path.join(DIST, "index.html") :
+      route.endsWith("/") ? path.join(DIST, clean, "index.html") :
+      route.endsWith(".html") ? path.join(DIST, clean) :
+      path.join(DIST, clean, "index.html");
+    if (!fs.existsSync(target)) fail("STATIC_SMOKE", `${route} -> ${path.relative(ROOT, target)}`);
+  }
+  pass("STATIC_SMOKE", `Validated ${routes.length} local smoke routes.`);
+}
+
 async function main() {
-  console.log('=======================================================');
-  console.log('[NEXMOLD][V7.14] PRODUCTION BUILD ORCHESTRATOR');
-  console.log('=======================================================');
+  console.log("=======================================================");
+  console.log("[NEXMOLD][V7.14] PRODUCTION BUILD ORCHESTRATOR");
+  console.log("=======================================================");
   console.log(`Epoch: ${epoch}`);
   console.log(`Root : ${ROOT}`);
   console.log(`Dist : ${DIST}`);
 
-  mkdirSync(RELEASE_DIR, { recursive: true });
-  writeFileSync(BUILD_LOG, '', 'utf8');
+  fs.mkdirSync(RELEASE_DIR, { recursive: true });
+  fs.writeFileSync(BUILD_LOG, "", "utf8");
 
-  ensureInsideRoot(ROOT);
-  ensureInsideRoot(DIST);
-  ensureInsideRoot(CONTROL);
-
-  if (KILL_SWITCH) {
-    writeReleaseState('KILLED', { reason: 'NEXMOLD_KILL_SWITCH=true' });
-    fail('GLOBAL_KILL_SWITCH', 'Release blocked by NEXMOLD_KILL_SWITCH=true.');
+  for (const required of ["package.json", "astro.config.mjs", "src", "public"]) {
+    if (!fs.existsSync(path.join(ROOT, required))) fail("PRECHECK", `Missing ${required}`);
   }
-  pass('GLOBAL_KILL_SWITCH', 'OFF');
+  if (KILL_SWITCH) fail("GLOBAL_KILL_SWITCH", "NEXMOLD_KILL_SWITCH is enabled");
+  pass("GLOBAL_KILL_SWITCH", "OFF");
+  pass("PRECHECK", "Required project structure present.");
 
-  section('PRECHECK');
-  for (const file of ['package.json', 'astro.config.mjs']) {
-    if (!existsSync(resolve(ROOT, file))) fail('PRECHECK', `Required project file missing: ${file}`);
-  }
-  pass('PRECHECK', 'Required project structure present.');
+  section("V7.14_CORE_GATE");
+  await runExportedGate(...GATES.core, "V714_CORE_GATE");
 
-  section('V7.14_CORE_GATE');
-  await runExportedGate(GATES.core, 'runV714CoreGate', 'V714_CORE_GATE');
+  section("V7.14_REGIONAL_PRODUCTION_GATE");
+  await runExportedGate(...GATES.regional, "V714_REGIONAL_PRODUCTION_GATE");
 
-  section('V7.14_REGIONAL_PRODUCTION_GATE');
-  await runExportedGate(GATES.regional, 'runV714RegionalGate', 'V714_REGIONAL_PRODUCTION_GATE');
+  section("AUDIT");
+  await runCommand(TYPECHECK_COMMAND, "TYPECHECK");
+  pass("TYPE_CONTRACTS", "astro check passed.");
 
-  section('ROUTE_CONFLICT_GATE');
-  await runRouteConflictGate();
+  await runCommand(TEST_COMMAND, "CONTRACT_TESTS");
+  pass("CONTRACT_TESTS", "V7.14 contract suite passed.");
 
-  section('AUDIT');
-  await runCommand(TYPECHECK_COMMAND, 'TYPECHECK');
-  pass('TYPE_CONTRACTS', 'Type contracts verified.');
+  section("V7.14_ARTICLE_FACTORY");
+  await runCommand(ARTICLE_FACTORY_COMMAND, "V714_ARTICLE_FACTORY");
+  pass("V714_ARTICLE_FACTORY", "Regional -> ArticleProducer -> Renderer chain passed.");
 
-  if (TEST_COMMAND.trim()) {
-    await runCommand(TEST_COMMAND, 'TEST');
-    pass('CONTRACT_TESTS', 'Configured test suite passed.');
+  section("ROUTE_CONFLICT_GATE");
+  const routeGate = path.join(ROOT, "scripts", "route-conflict-check.mjs");
+  if (fs.existsSync(routeGate)) {
+    await runCommand("node scripts/route-conflict-check.mjs", "ROUTE_CONFLICT_GATE");
+    pass("ROUTE_CONFLICT_GATE", "Route conflict gate passed.");
   } else {
-    skip('CONTRACT_TESTS', 'NEXMOLD_TEST_COMMAND is not configured.');
+    fail("ROUTE_CONFLICT_GATE", "scripts/route-conflict-check.mjs missing");
   }
 
-  section('V7.14_ARTICLE_FACTORY');
-  await runCommand(
-    V714_ARTICLE_FACTORY_COMMAND,
-    'V714_ARTICLE_FACTORY',
-  );
-  pass(
-    'V714_ARTICLE_FACTORY',
-    'V7.14 article factory completed before Astro build.',
-  );
+  section("EPOCH");
+  if (CLEAN_DIST) fs.rmSync(DIST, { recursive: true, force: true });
+  fs.mkdirSync(DIST, { recursive: true });
+  pass("EPOCH", `Clean build epoch ${epoch} prepared.`);
 
-  section('EPOCH');
-  if (CLEAN_DIST && existsSync(DIST)) {
-    rmSync(DIST, { recursive: true, force: true });
-    log('[EPOCH] Existing dist removed before build.');
-  }
-  mkdirSync(RELEASE_DIR, { recursive: true });
-  pass('EPOCH', `Build epoch ${epoch} created.`);
+  section("BUILD");
+  await runCommand(BUILD_COMMAND, "BUILD");
+  pass("BUILD", "Astro production build completed.");
 
-  section('BUILD');
-  await runCommand(BUILD_COMMAND, 'BUILD');
-  if (!existsSync(DIST)) fail('BUILD', 'Build completed but dist directory is missing.');
-  pass('BUILD', 'Production static build completed.');
+  section("ARTIFACT_AUDIT");
+  const manifest = auditDist();
+  auditForbiddenArtifacts();
+  auditSmokeRoutes();
 
-  section('ARTIFACT_AUDIT');
-  const manifest = htmlManifest();
-  atomicWrite(resolve(RELEASE_DIR, 'html-manifest.json'), manifest);
-  pass('HTML_MANIFEST', `Recorded ${manifest.count} HTML artifacts; setSha256=${manifest.setSha256}`);
-  detectForbiddenArtifacts();
-  detectMalformedHtml(manifest);
-  compareExpectedHtmlSet(manifest);
-  smokeRoutes();
-  await httpHealthCheck();
+  section("V7.14_POST_BUILD_GATES");
+  await runExportedGate(...GATES.runtime, "RUNTIME_GATE");
+  await runExportedGate(...GATES.sitemap, "SITEMAP_GATE");
 
-  section('V7.14_POST_BUILD_GATES');
-  await runExportedGate(GATES.runtime, 'runRuntimeGate', 'RUNTIME_GATE');
-  await runExportedGate(GATES.sitemap, 'runSitemapGate', 'SITEMAP_GATE');
+  section("RELEASE_PREFLIGHT");
+  await runExportedGate(...GATES.release, "RELEASE_PREFLIGHT");
 
-  section('RELEASE_PREFLIGHT');
-  await runExportedGate(GATES.releasePreflight, 'runReleasePreflight', 'RELEASE_PREFLIGHT');
-
-  section('RELEASE');
   const releaseManifest = {
-    schema: 'nexmold.v7.14.release-manifest.v1',
-    status: 'VERIFIED',
+    schema: "nexmold.v7.14.release-manifest.v2",
+    status: "VERIFIED",
     epoch,
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    projectRoot: ROOT,
-    dist: DIST,
-    buildCommand: BUILD_COMMAND,
-    typecheckCommand: TYPECHECK_COMMAND,
-    testCommand: TEST_COMMAND || null,
-    healthUrl: HEALTH_URL || null,
+    verifiedAt: new Date().toISOString(),
     htmlManifest: `releases/${epoch}/html-manifest.json`,
-    htmlSetSha256: manifest.setSha256,
     htmlCount: manifest.count,
+    htmlSetSha256: manifest.setSha256,
+    canonicalChain: [
+      "Evidence",
+      "Claim",
+      "Eligibility",
+      "EpistemicFirewall",
+      "RegionalPublishArtifact",
+      "PublicationGate",
+      "Projection",
+      "ArticleProducer",
+      "ArticleRenderer",
+      "ArticleFactory",
+      "BuildOrchestrator",
+      "GitHubActions",
+    ],
     gates: summary,
-    productionWiring: {
-      version: 'V7.14',
-      coreGate: 'scripts/v714-core-gate.mjs#runV714CoreGate',
-      regionalProductionGate: 'scripts/v714-regional-gate.mjs#runV714RegionalGate',
-      canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
-      routeConflictGate: 'scripts/route-conflict-check.mjs',
-      runtimeGate: 'scripts/runtime-gate.mjs#runRuntimeGate',
-      sitemapGate: 'scripts/sitemap-gate.mjs#runSitemapGate',
-      releasePreflight: 'scripts/release-preflight.mjs#runReleasePreflight',
-    },
   };
 
-  atomicWrite(resolve(RELEASE_DIR, 'manifest.json'), releaseManifest);
-
-  // CRITICAL: LKG advances only here, after every mandatory gate has passed.
-  atomicWrite(LKG_FILE, {
-    schema: 'nexmold.v7.14.last-known-good.v1',
+  writeJson(path.join(RELEASE_DIR, "manifest.json"), releaseManifest);
+  writeJson(LKG, {
+    schema: "nexmold.v7.14.last-known-good.v2",
     epoch,
     verifiedAt: new Date().toISOString(),
     releaseManifest: `releases/${epoch}/manifest.json`,
@@ -544,33 +382,34 @@ async function main() {
     htmlCount: manifest.count,
   });
 
-  writeReleaseState('VERIFIED', {
-    releaseManifest: `releases/${epoch}/manifest.json`,
-    publicArtifactImpact: 0,
+  writeJson(path.join(CONTROL, "release-state.json"), {
+    schema: "nexmold.v7.14.release-state.v2",
+    status: "VERIFIED",
+    epoch,
+    summary,
+    lkgAdvanced: true,
   });
 
-  console.log('');
-  console.log('=======================================================');
-  console.log('[NEXMOLD][V7.14] FROZEN & VERIFIED');
-  console.log('=======================================================');
+  section("RELEASE");
+  console.log("[NEXMOLD][V7.14] FROZEN & VERIFIED");
   console.log(`Release epoch : ${epoch}`);
-  console.log(`HTML artifacts : ${manifest.count}`);
-  console.log(`HTML set hash  : ${manifest.setSha256}`);
-  console.log(`LKG            : ${LKG_FILE}`);
+  console.log(`HTML artifacts: ${manifest.count}`);
+  console.log(`HTML set hash : ${manifest.setSha256}`);
 }
 
 export { main as runBuildOrchestrator };
 
 main().catch((error) => {
   try {
-    writeReleaseState('FAILED', {
+    fs.mkdirSync(RELEASE_DIR, { recursive: true });
+    writeJson(path.join(CONTROL, "release-state.json"), {
+      schema: "nexmold.v7.14.release-state.v2",
+      status: "FAILED",
+      epoch,
       error: error instanceof Error ? error.message : String(error),
       lkgAdvanced: false,
     });
-  } catch {
-    // Preserve the original failure.
-  }
+  } catch {}
   console.error(`\n[NEXMOLD][V7.14][RELEASE] FAILED: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 });
-

@@ -1,45 +1,13 @@
 /**
- * NEXMOLD V7.14
- * Publication Gate
- *
- * Production contract:
- *
- * Evidence
- *   -> Semantic
- *   -> Eligibility
- *   -> Firewall
- *   -> RegionalPublishArtifact
- *   -> Publication Gate
- *   -> Projection
- *
- * HARD RULES
- * ------------------------------------------------------------------
- * 1. Gate never creates an artifact.
- * 2. Gate never infers eligibility.
- * 3. Gate never discovers evidence.
- * 4. Gate never generates URLs.
- * 5. Gate never mutates source data.
- * 6. Gate fails closed.
- * 7. A null artifact can never pass.
- * 8. A structurally invalid artifact can never pass.
- * 9. Artifact identity must agree with eligibility identity.
- * 10. Artifact is the only publishable projection source.
+ * NEXMOLD V7.14 — fail-closed Publication Gate.
+ * The gate never creates, mutates, discovers, or projects an artifact.
  */
-
 import type {
   EligibleRegionalDecision,
-  PageId,
   RegionalEligibilityDecision,
   RegionalPublishArtifact,
 } from "./types.ts";
-
-import type {
-  V714FirewallPass,
-} from "./epistemic-firewall.ts";
-
-/* ================================================================
-   CONTRACT
-   ================================================================ */
+import type { V714FirewallPass } from "./epistemic-firewall.ts";
 
 export interface V714PublicationGateInput {
   readonly eligibility: RegionalEligibilityDecision;
@@ -61,227 +29,98 @@ export type V714PublicationGateResult =
   | V714PublicationGatePass
   | V714PublicationGateBlock;
 
-/* ================================================================
-   REASON CODES
-   ================================================================ */
+export const V714PublicationGateReason = Object.freeze({
+  FIREWALL_NOT_PASSED: "V714_FIREWALL_NOT_PASSED",
+  ELIGIBILITY_NOT_ELIGIBLE: "V714_ELIGIBILITY_NOT_ELIGIBLE",
+  APPLICABILITY_NOT_APPLICABLE: "V714_APPLICABILITY_NOT_APPLICABLE",
+  COMPLIANCE_NOT_VERIFIED: "V714_COMPLIANCE_NOT_VERIFIED",
+  EVIDENCE_NOT_COMPLETE: "V714_EVIDENCE_NOT_COMPLETE",
+  ARTIFACT_ABSENT: "V714_PUBLIC_ARTIFACT_ABSENT",
+  ARTIFACT_INVALID: "V714_PUBLIC_ARTIFACT_INVALID",
+  ARTIFACT_CONTRACT_VERSION: "V714_ARTIFACT_CONTRACT_VERSION_INVALID",
+  ARTIFACT_PAGE_ID_MISMATCH: "V714_ARTIFACT_PAGE_ID_MISMATCH",
+  ARTIFACT_LOCALE_MISMATCH: "V714_ARTIFACT_LOCALE_MISMATCH",
+  ARTIFACT_REGION_MISMATCH: "V714_ARTIFACT_REGION_MISMATCH",
+  ARTIFACT_CANONICAL_MISSING: "V714_ARTIFACT_CANONICAL_MISSING",
+  ARTIFACT_HREFLANG_EMPTY: "V714_ARTIFACT_HREFLANG_EMPTY",
+  ARTIFACT_HASH_INVALID: "V714_ARTIFACT_HASH_INVALID",
+  ARTIFACT_ELIGIBILITY_MISMATCH: "V714_ARTIFACT_ELIGIBILITY_MISMATCH",
+  ARTIFACT_CLAIM_LINEAGE_INVALID: "V714_ARTIFACT_CLAIM_LINEAGE_INVALID",
+  ARTIFACT_EVIDENCE_LINEAGE_INVALID: "V714_ARTIFACT_EVIDENCE_LINEAGE_INVALID",
+} as const);
 
-export const V714PublicationGateReason = {
-  FIREWALL_NOT_PASSED:
-    "V714_FIREWALL_NOT_PASSED",
-
-  ELIGIBILITY_NOT_ELIGIBLE:
-    "V714_ELIGIBILITY_NOT_ELIGIBLE",
-
-  APPLICABILITY_NOT_APPLICABLE:
-    "V714_APPLICABILITY_NOT_APPLICABLE",
-
-  COMPLIANCE_NOT_VERIFIED:
-    "V714_COMPLIANCE_NOT_VERIFIED",
-
-  EVIDENCE_NOT_COMPLETE:
-    "V714_EVIDENCE_NOT_COMPLETE",
-
-  ARTIFACT_ABSENT:
-    "V714_PUBLIC_ARTIFACT_ABSENT",
-
-  ARTIFACT_INVALID:
-    "V714_PUBLIC_ARTIFACT_INVALID",
-
-  ARTIFACT_PAGE_ID_MISMATCH:
-    "V714_ARTIFACT_PAGE_ID_MISMATCH",
-
-  ARTIFACT_LOCALE_MISMATCH:
-    "V714_ARTIFACT_LOCALE_MISMATCH",
-
-  ARTIFACT_REGION_MISMATCH:
-    "V714_ARTIFACT_REGION_MISMATCH",
-
-  ARTIFACT_CANONICAL_MISSING:
-    "V714_ARTIFACT_CANONICAL_MISSING",
-
-  ARTIFACT_HREFLANG_EMPTY:
-    "V714_ARTIFACT_HREFLANG_EMPTY",
-
-  ARTIFACT_HASH_MISSING:
-    "V714_ARTIFACT_HASH_MISSING",
-
-  ARTIFACT_ELIGIBILITY_MISMATCH:
-    "V714_ARTIFACT_ELIGIBILITY_MISMATCH",
-} as const;
-
-/* ================================================================
-   SAFE RUNTIME HELPERS
-   ================================================================ */
-
-function isRecord(
-  value: unknown,
-): value is Record<string, unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value)
-  );
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function nonEmptyArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value) && value.length > 0;
 }
 
-function nonEmptyString(
-  value: unknown,
-): value is string {
-  return (
-    typeof value === "string" &&
-    value.trim().length > 0
-  );
-}
-
-function isNonEmptyArray(
-  value: unknown,
-): value is readonly unknown[] {
-  return (
-    Array.isArray(value) &&
-    value.length > 0
-  );
-}
-
-/* ================================================================
-   ARTIFACT STRUCTURAL VALIDATION
-   ================================================================ */
-
-/**
- * Runtime validation is deliberately structural.
- *
- * Why:
- *
- * RegionalPublishArtifact is branded with a unique symbol in
- * TypeScript. That brand does not survive JSON serialization.
- *
- * Therefore:
- *
- *   in-memory compiler boundary
- *       -> branded type
- *
- *   persisted production artifact
- *       -> structural contract validation
- *
- * This is the correct production boundary.
- */
 export function validateRegionalPublishArtifactRuntime(
   artifact: unknown,
 ): artifact is RegionalPublishArtifact {
-  if (!isRecord(artifact)) {
-    return false;
-  }
+  if (!isRecord(artifact)) return false;
+  if (!nonEmptyString(artifact.pageId)) return false;
+  if (!nonEmptyString(artifact.locale)) return false;
+  if (!nonEmptyString(artifact.region)) return false;
+  if (!nonEmptyString(artifact.canonicalUrl)) return false;
+  if (!nonEmptyArray(artifact.hreflangSet)) return false;
+  if (!nonEmptyString(artifact.pageContentHash)) return false;
+  if (!/^[a-f0-9]{64}$/i.test(artifact.pageContentHash)) return false;
+  if (artifact.contractVersion !== "V7.14-PUBLISH-ARTIFACT-3") return false;
+  if (!isRecord(artifact.seoEligibility)) return false;
+  if (!isRecord(artifact.evidence)) return false;
+  if (!Array.isArray(artifact.evidence.evidence)) return false;
+  if (!Array.isArray(artifact.evidence.semanticClaims)) return false;
+  if (artifact.evidence.completeness !== "COMPLETE") return false;
+  if (!Array.isArray(artifact.bindings)) return false;
+  if (artifact.bindings.length !== artifact.evidence.semanticClaims.length) return false;
 
-  if (
-    !nonEmptyString(
-      artifact.pageId,
-    )
-  ) {
-    return false;
-  }
+  const claimIds = artifact.evidence.semanticClaims.map((claim) =>
+    isRecord(claim) ? String(claim.id ?? "") : "",
+  );
+  if (claimIds.some((id) => !id) || new Set(claimIds).size !== claimIds.length) return false;
 
-  if (
-    !nonEmptyString(
-      artifact.locale,
-    )
-  ) {
-    return false;
-  }
+  const evidenceIds = new Set(
+    artifact.evidence.evidence.map((item) =>
+      isRecord(item) ? String(item.id ?? "") : "",
+    ),
+  );
+  if (evidenceIds.has("") || evidenceIds.size !== artifact.evidence.evidence.length) return false;
 
-  if (
-    !nonEmptyString(
-      artifact.region,
-    )
-  ) {
-    return false;
+  const bound = new Set<string>();
+  for (const rawBinding of artifact.bindings) {
+    if (!isRecord(rawBinding) || !isRecord(rawBinding.claim)) return false;
+    const claimId = String(rawBinding.claim.id ?? "");
+    if (!claimIds.includes(claimId) || bound.has(claimId)) return false;
+    if (!Array.isArray(rawBinding.evidenceIds) || rawBinding.evidenceIds.length === 0) return false;
+    for (const evidenceId of rawBinding.evidenceIds) {
+      if (!evidenceIds.has(String(evidenceId))) return false;
+    }
+    bound.add(claimId);
   }
-
-  if (
-    !nonEmptyString(
-      artifact.canonicalUrl,
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    !isNonEmptyArray(
-      artifact.hreflangSet,
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    !nonEmptyString(
-      artifact.pageContentHash,
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    !isRecord(
-      artifact.seoEligibility,
-    )
-  ) {
-    return false;
-  }
-
-  return true;
+  return claimIds.every((id) => bound.has(id));
 }
 
-/* ================================================================
-   ARTIFACT / ELIGIBILITY IDENTITY CHECK
-   ================================================================ */
-
-function validateArtifactIdentity(
+function identityReasons(
   artifact: RegionalPublishArtifact,
   eligibility: RegionalEligibilityDecision,
-): readonly string[] {
+): string[] {
   const reasons: string[] = [];
-
-  if (
-    artifact.pageId !==
-    eligibility.pageId
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .ARTIFACT_PAGE_ID_MISMATCH,
-    );
-  }
-
-  if (
-    artifact.locale !==
-    eligibility.locale
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .ARTIFACT_LOCALE_MISMATCH,
-    );
-  }
-
-  if (
-    artifact.region !==
-    eligibility.region
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .ARTIFACT_REGION_MISMATCH,
-    );
-  }
-
+  if (artifact.pageId !== eligibility.pageId) reasons.push(V714PublicationGateReason.ARTIFACT_PAGE_ID_MISMATCH);
+  if (artifact.locale !== eligibility.locale) reasons.push(V714PublicationGateReason.ARTIFACT_LOCALE_MISMATCH);
+  if (artifact.region !== eligibility.region) reasons.push(V714PublicationGateReason.ARTIFACT_REGION_MISMATCH);
   return reasons;
 }
 
-/* ================================================================
-   ELIGIBILITY CHECK
-   ================================================================ */
-
-function validateArtifactEligibility(
+function eligibilityReasons(
   artifact: RegionalPublishArtifact,
-  eligibility: RegionalEligibilityDecision,
-): readonly string[] {
+  eligibility: EligibleRegionalDecision,
+): string[] {
   const embedded = artifact.seoEligibility;
-
   if (
     embedded.pageId !== eligibility.pageId ||
     embedded.locale !== eligibility.locale ||
@@ -289,217 +128,43 @@ function validateArtifactEligibility(
     embedded.status !== eligibility.status ||
     embedded.applicability !== eligibility.applicability ||
     embedded.compliance !== eligibility.compliance ||
-    embedded.evidence.completeness !==
-      eligibility.evidence.completeness
+    embedded.evidence.completeness !== eligibility.evidence.completeness
   ) {
-    return [
-      V714PublicationGateReason
-        .ARTIFACT_ELIGIBILITY_MISMATCH,
-    ];
+    return [V714PublicationGateReason.ARTIFACT_ELIGIBILITY_MISMATCH];
   }
-
   return [];
 }
-
-function validateEligibility(
-  eligibility: RegionalEligibilityDecision,
-): readonly string[] {
-  const reasons: string[] = [];
-
-  if (
-    eligibility.status !==
-    "ELIGIBLE"
-  ) {
-    reasons.push(
-      `${V714PublicationGateReason.ELIGIBILITY_NOT_ELIGIBLE}:${String(
-        eligibility.status,
-      )}`,
-    );
-  }
-
-  if (
-    eligibility.applicability !==
-    "APPLICABLE"
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .APPLICABILITY_NOT_APPLICABLE,
-    );
-  }
-
-  if (
-    eligibility.compliance !==
-    "VERIFIED"
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .COMPLIANCE_NOT_VERIFIED,
-    );
-  }
-
-  if (
-    eligibility.evidence.completeness !==
-    "COMPLETE"
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .EVIDENCE_NOT_COMPLETE,
-    );
-  }
-
-  return reasons;
-}
-
-/* ================================================================
-   MAIN PUBLICATION GATE
-   ================================================================ */
 
 export function runPublicationGate(
   input: V714PublicationGateInput,
 ): V714PublicationGateResult {
   const reasons: string[] = [];
 
-  /* --------------------------------------------------------------
-     Gate 01 — Epistemic Firewall
-     -------------------------------------------------------------- */
+  if (!input.firewall?.ok) reasons.push(V714PublicationGateReason.FIREWALL_NOT_PASSED);
 
-  if (
-    !input.firewall ||
-    input.firewall.ok !== true
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .FIREWALL_NOT_PASSED,
-    );
+  const eligibility = input.eligibility;
+  if (eligibility.status !== "ELIGIBLE") {
+    reasons.push(`${V714PublicationGateReason.ELIGIBILITY_NOT_ELIGIBLE}:${eligibility.status}`);
+  }
+  if (eligibility.applicability !== "APPLICABLE") reasons.push(V714PublicationGateReason.APPLICABILITY_NOT_APPLICABLE);
+  if (eligibility.compliance !== "VERIFIED") reasons.push(V714PublicationGateReason.COMPLIANCE_NOT_VERIFIED);
+  if (eligibility.evidence.completeness !== "COMPLETE") reasons.push(V714PublicationGateReason.EVIDENCE_NOT_COMPLETE);
+
+  if (input.artifact === null) {
+    reasons.push(V714PublicationGateReason.ARTIFACT_ABSENT);
+  } else if (!validateRegionalPublishArtifactRuntime(input.artifact)) {
+    reasons.push(V714PublicationGateReason.ARTIFACT_INVALID);
+  } else {
+    reasons.push(...identityReasons(input.artifact, eligibility));
+    reasons.push(...eligibilityReasons(input.artifact, eligibility));
+    if (!nonEmptyString(input.artifact.canonicalUrl)) reasons.push(V714PublicationGateReason.ARTIFACT_CANONICAL_MISSING);
+    if (!nonEmptyArray(input.artifact.hreflangSet)) reasons.push(V714PublicationGateReason.ARTIFACT_HREFLANG_EMPTY);
+    if (!/^[a-f0-9]{64}$/i.test(input.artifact.pageContentHash)) reasons.push(V714PublicationGateReason.ARTIFACT_HASH_INVALID);
   }
 
-  /* --------------------------------------------------------------
-     Gate 02 — Eligibility
-     -------------------------------------------------------------- */
-
-  reasons.push(
-    ...validateEligibility(
-      input.eligibility,
-    ),
-  );
-
-  /* --------------------------------------------------------------
-     Gate 03 — Artifact existence
-     -------------------------------------------------------------- */
-
-  if (
-    input.artifact === null
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .ARTIFACT_ABSENT,
-    );
+  if (reasons.length > 0) {
+    return { ok: false, reasonCodes: [...new Set(reasons)] };
   }
 
-  /*
-   * Structural validation is performed before any property access.
-   *
-   * This prevents a malformed JSON artifact from being promoted
-   * through a TypeScript-only assertion.
-   */
-  if (
-    input.artifact !== null &&
-    !validateRegionalPublishArtifactRuntime(
-      input.artifact,
-    )
-  ) {
-    reasons.push(
-      V714PublicationGateReason
-        .ARTIFACT_INVALID,
-    );
-  }
-
-  /* --------------------------------------------------------------
-     Gate 04 — Artifact identity
-     -------------------------------------------------------------- */
-
-  if (
-    input.artifact !== null &&
-    validateRegionalPublishArtifactRuntime(
-      input.artifact,
-    )
-  ) {
-    reasons.push(
-      ...validateArtifactIdentity(
-        input.artifact,
-        input.eligibility,
-      ),
-    );
-
-    reasons.push(
-      ...validateArtifactEligibility(
-        input.artifact,
-        input.eligibility,
-      ),
-    );
-
-    if (
-      !nonEmptyString(
-        input.artifact.canonicalUrl,
-      )
-    ) {
-      reasons.push(
-        V714PublicationGateReason
-          .ARTIFACT_CANONICAL_MISSING,
-      );
-    }
-
-    if (
-      !isNonEmptyArray(
-        input.artifact.hreflangSet,
-      )
-    ) {
-      reasons.push(
-        V714PublicationGateReason
-          .ARTIFACT_HREFLANG_EMPTY,
-      );
-    }
-
-    if (
-      !nonEmptyString(
-        input.artifact.pageContentHash,
-      )
-    ) {
-      reasons.push(
-        V714PublicationGateReason
-          .ARTIFACT_HASH_MISSING,
-      );
-    }
-  }
-
-  /* --------------------------------------------------------------
-     FAIL CLOSED
-     -------------------------------------------------------------- */
-
-  if (
-    reasons.length > 0
-  ) {
-    return {
-      ok: false,
-      reasonCodes: [
-        ...new Set(reasons),
-      ],
-    };
-  }
-
-  /* --------------------------------------------------------------
-     Publication Pass
-     -------------------------------------------------------------- */
-
-  /*
-   * At this point artifact is known to be non-null and structurally
-   * valid. The runtime validator above establishes the boundary.
-   */
-  const artifact =
-    input.artifact as RegionalPublishArtifact;
-
-  return {
-    ok: true,
-    artifact,
-  };
+  return { ok: true, artifact: input.artifact as RegionalPublishArtifact };
 }
