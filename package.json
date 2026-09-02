@@ -17,7 +17,7 @@
     "v714:contracts": "node --experimental-strip-types tests/contracts/v714-contracts.mjs",
     "verify:secure": "npm run v714:secure",
     "release:preflight": "npm run v714:preflight",
-    "v714:regional": "node scripts/v714-regional-gate.mjs",
+    "v714:regional": "node --experimental-strip-types scripts/v714-regional-gate.mjs",
     "v714:evidence": "node scripts/v714-evidence-crawler.mjs"
   },
   "dependencies": {
