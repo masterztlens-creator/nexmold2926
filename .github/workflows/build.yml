@@ -1,0 +1,36 @@
+name: Astro Build CI
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 支持网页手动触发CI
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps (npm ci锁定依赖)
+        run: npm ci
+
+      - name: Astro类型检查 astro check
+        run: npx astro check
+
+      - name: Production build astro build
+        run: npx astro build
+
+      - name: Upload build产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: astro-dist
+          path: dist
