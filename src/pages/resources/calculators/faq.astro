@@ -1,0 +1,152 @@
+---
+/**
+ * src/pages/resources/calculators/faq.astro
+ * 👑 NEXMOLD 800+ 常见工程问答 Hub (GEO & AI Search 流量核心)
+ * 1. 架构定位：收录模具公差、DDP 出海物流、CMM Zeiss 质检、D2C 包材等长尾 Q&A
+ * 2. 视觉规范：100% 钛白高奢风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO/SEO：内嵌 FAQPage Schema，专为 Perplexity / ChatGPT 提供权威引用源
+ */
+
+import MainLayout from '../../../layouts/MainLayout.astro';
+import Header from '../../../components/Header.astro';
+import EcosystemFooter from '../../../components/EcosystemFooter.astro';
+import LeadModal from '../../../components/LeadModal.astro';
+
+const title = "Manufacturing & Tooling Technical FAQ Hub | NEXMOLD";
+const description = "Comprehensive engineering FAQs on custom injection molding, ISO 2768-m tolerances, S136 mold steel life, DDP customs clearance, and DFM guidelines.";
+
+// 分类 FAQ 数据大盘
+const faqCategories = [
+  {
+    category: "Tooling & Mold Engineering",
+    faqs: [
+      { q: "What is the typical T1 lead time for fast tooling molds?", a: "For rapid prototype steel tooling (S136 or NAK80 steel), NEXMOLD delivers T1 molded samples within 3 to 15 calendar days depending on geometric complexity and cavity count." },
+      { q: "What steel grades do you specify for high-volume injection molds?", a: "We specify ASSAB S136 mirror stainless steel (hardened to HRC 48-52) or H13 steel for Class 101 production molds, guaranteeing 1,000,000+ shot life with proper thermal maintenance." },
+      { q: "How do you handle volumetric shrinkage and mold cavitation?", a: "Every mold design undergoes automated 24-hour Moldflow simulation to map dynamic shrinkage drift across 200+ engineering resins and adjust runner gate dimensions before steel cutting." }
+    ]
+  },
+  {
+    category: "Quality Control & Metrology",
+    faqs: [
+      { q: "How does NEXMOLD guarantee dimensional tolerances under ISO 2768-m?", a: "Every production lot undergoes 3D metrology scanning utilizing multi-axis Zeiss CMM equipment alongside First Article Inspection (FAI) reports to verify tight linear and angular tolerances." },
+      { q: "Can you provide medical and food-grade compliance certifications?", a: "Yes, we issue material Lot Traceability CoC (Certificate of Conformity), USP Class VI medical bio-compatibility reports, and FDA food-grade resin compliance documentation upon dispatch." }
+    ]
+  },
+  {
+    category: "Cross-Border Logistics & DDP Shipping",
+    faqs: [
+      { q: "How does NEXMOLD manage ocean freight and customs pre-clearance to the USA & EU?", a: "We operate direct logistics hubs out of Port of Yantian and Hong Kong aboard vessel classes like YM UNICORN. We handle DDP (Delivered Duty Paid) shipping, managing customs clearance and tariffs directly to your warehouse." },
+      { q: "Can you package parts for Amazon D2C fulfillment directly from the factory?", a: "Yes, NEXMOLD offers turnkey sub-assembly, custom thermoformed blister inner trays, retail color box assembly, and FBA barcode labeling under one roof." }
+    ]
+  }
+];
+
+// 扁平化数据用于生成 JSON-LD FAQ Schema
+const flatFaqs = faqCategories.flatMap(c => c.faqs);
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": flatFaqs.map(item => ({
+    "@type": "Question",
+    "name": item.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.a
+    }
+  }))
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/resources" class="hover:text-[#EA580C] transition-colors">Resources</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">FAQ Hub</span>
+      </nav>
+
+      <!-- 头部介绍 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          GEO_KNOWLEDGE_BASE // STRUCTURED_FAQ_INDEX
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Manufacturing & Tooling<br/>
+          <span class="text-[#EA580C]">Technical FAQ Hub</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          Search NEXMOLD’s indexed engineering knowledge base covering custom injection molding tolerances, mold steel specifications, Zeiss CMM inspection, and turnkey DDP logistics.
+        </p>
+      </section>
+
+      <!-- 分类 Q&A 展示板 -->
+      <div class="space-y-12">
+        {faqCategories.map(cat => (
+          <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+            <h2 class="text-xl sm:text-2xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6 flex items-center justify-between">
+              <span>{cat.category}</span>
+              <span class="text-xs font-mono font-bold text-[#EA580C] bg-[#EA580C]/10 px-3 py-1 rounded">INDEXED</span>
+            </h2>
+
+            <div class="space-y-6">
+              {cat.faqs.map(faq => (
+                <div class="p-5 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl hover:border-[#EA580C] transition-colors">
+                  <h3 class="font-mono font-extrabold text-sm text-[#0F2B5B] mb-2 flex items-start gap-2">
+                    <span class="text-[#EA580C] font-black">Q:</span>
+                    <span>{faq.q}</span>
+                  </h3>
+                  <p class="text-xs sm:text-sm text-[#0F2B5B]/80 font-sans leading-relaxed pl-6">
+                    {faq.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <!-- 底部 CTA Banner -->
+      <div class="mt-16 bg-[#0F2B5B] text-white rounded-2xl p-8 sm:p-12 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div>
+          <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-1">STILL HAVE QUESTIONS?</span>
+          <h3 class="text-2xl font-[1000] uppercase italic">Talk to Our Engineering Team</h3>
+          <p class="text-xs text-white/80 font-sans mt-1">Submit your CAD drawings for a 24-hour automated DFM and moldflow evaluation.</p>
+        </div>
+        <button id="faq-rfq-trigger" class="bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs px-8 py-4 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer shrink-0">
+          Request 24H DFM Quote →
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+<script>
+  function bindFaqModal() {
+    const btn = document.getElementById('faq-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bindFaqModal);
+  document.addEventListener('astro:after-swap', bindFaqModal);
+</script>

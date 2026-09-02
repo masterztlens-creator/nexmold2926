@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:pc-injection-molding-design-guide",
+  "targetSlug": "pc-injection-molding-design-guide",
+  "sourceArticleSlug": "pc-injection-molding",
+  "slug": "pc-injection-molding-design-guide",
+  "lineage": {
+    "pageId": "v714:pc-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/pc-injection-molding-design-guide/",
+    "evidenceIds": [
+      "knowledge:pc-injection-molding"
+    ],
+    "semanticClaimIds": [
+      "claim:pc-injection-molding-design-guide"
+    ],
+    "sourceArtifactHash": "88dd37ec32e89dc26f5c7b9ce9acc257330e3244dc50c4d41935169abcfe533c"
+  },
+  "sourceArtifactHash": "88dd37ec32e89dc26f5c7b9ce9acc257330e3244dc50c4d41935169abcfe533c",
+  "sourceArtifact": {
+    "pageId": "v714:pc-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/pc-injection-molding-design-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:pc-injection-molding-design-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:pc-injection-molding",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#pc-injection-molding",
+            "contentHash": "pc-injection-molding:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:pc-injection-molding-design-guide",
+            "claimKey": "batch01.pc-injection-molding-design-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "88dd37ec32e89dc26f5c7b9ce9acc257330e3244dc50c4d41935169abcfe533c"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

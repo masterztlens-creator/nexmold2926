@@ -1,0 +1,800 @@
+{
+  "schema": "nexmold.v7.14.html-manifest.v1",
+  "generatedAt": "2026-08-29T11:28:42.502Z",
+  "count": 132,
+  "setSha256": "fb122a85d3ebc76c163e0edcd207dac0a4d1d829caab0b90479d310fba038531",
+  "entries": [
+    {
+      "path": "404.html",
+      "route": "/404",
+      "bytes": 2136,
+      "sha256": "bdb7f0318f620566cb607bb31375f871d71a63eb002d847cb973c0975936955d"
+    },
+    {
+      "path": "about/index.html",
+      "route": "/about/",
+      "bytes": 131046,
+      "sha256": "9a9ff1649edc78578f55f608ff25389e94563deb40a5f45e4dc2b8fb63f79dbb"
+    },
+    {
+      "path": "capabilities/index.html",
+      "route": "/capabilities/",
+      "bytes": 137972,
+      "sha256": "b99eab6daf50ab56d24940570f0067f289da5639a2be8e7f4cdbdb52a428727f"
+    },
+    {
+      "path": "capabilities/rapid-tooling-s136/index.html",
+      "route": "/capabilities/rapid-tooling-s136/",
+      "bytes": 130620,
+      "sha256": "0280229fafbe54363ebe89e7c21d1cba09acff91f98b4e4e124f146fdbed9ae4"
+    },
+    {
+      "path": "components/microfluidic-cartridges/index.html",
+      "route": "/components/microfluidic-cartridges/",
+      "bytes": 128639,
+      "sha256": "9053efc580936b5485e7b3f25a65a85963075532b3e9f71b9b78daf03dc4c7f6"
+    },
+    {
+      "path": "components/precision-gears/index.html",
+      "route": "/components/precision-gears/",
+      "bytes": 128643,
+      "sha256": "03ba4f645e3ea331e66696185c80cd0d8504262d035801785b824de3fb36eabc"
+    },
+    {
+      "path": "de/index.html",
+      "route": "/de/",
+      "bytes": 122840,
+      "sha256": "4451d6091e0ecc692fd228de2089496549c5b012ed7818e4ca61a9a2b64b2b97"
+    },
+    {
+      "path": "fr/index.html",
+      "route": "/fr/",
+      "bytes": 122800,
+      "sha256": "e6fdb9aff61fcd54245c90fecfb49a930613aeab65fdfecc07c162b524630c16"
+    },
+    {
+      "path": "free-dfm-analysis/index.html",
+      "route": "/free-dfm-analysis/",
+      "bytes": 121801,
+      "sha256": "da9932325ac9f74042a335c603a6a0fe2ce767720d79912c44e3d1f737260c0d"
+    },
+    {
+      "path": "index.html",
+      "route": "/",
+      "bytes": 270206,
+      "sha256": "1b27495b03cb8939dbb7f91e507bb9394f22f81abbdcf0c17630f3c428fb8d01"
+    },
+    {
+      "path": "industries/index.html",
+      "route": "/industries/",
+      "bytes": 224511,
+      "sha256": "9b07de2beaa177ec63821dc6c1c8918182b7d7344aaefa522b3fe2da9312c5bf"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/clamp-tonnage-calculator/index.html",
+      "route": "/knowledge-hub/calculators-tools/clamp-tonnage-calculator/",
+      "bytes": 128698,
+      "sha256": "68f8174412144acfe074e30de5c0a3d22e04995ce70f774a5ecb2c19baea8093"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/cycle-time-calculator/index.html",
+      "route": "/knowledge-hub/calculators-tools/cycle-time-calculator/",
+      "bytes": 128044,
+      "sha256": "843179698bcd1400a69a526a5332e7b0167a2ef076d693624e38c82b0a81466a"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/gate-runner-sizing/index.html",
+      "route": "/knowledge-hub/calculators-tools/gate-runner-sizing/",
+      "bytes": 128140,
+      "sha256": "f4edf276298043c67e234853d879363898b15d593b1b1b571be834f357d9c4d0"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/index.html",
+      "route": "/knowledge-hub/calculators-tools/",
+      "bytes": 114950,
+      "sha256": "6b475884c1ecdc5066df8ba98adab6508a8eba71dcd8f1870891579c34ea7d77"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/injection-molding-cost-estimator/index.html",
+      "route": "/knowledge-hub/calculators-tools/injection-molding-cost-estimator/",
+      "bytes": 128761,
+      "sha256": "fe8d5fb55523158fa1d90397d4da9bad7558c5cf8fb33b529081a18fafcce1da"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/shot-size-machine-selection/index.html",
+      "route": "/knowledge-hub/calculators-tools/shot-size-machine-selection/",
+      "bytes": 128523,
+      "sha256": "d18599aac3b6c15159c48941873efb578afac37f9f2f5fa74f1a382c75f9efa3"
+    },
+    {
+      "path": "knowledge-hub/calculators-tools/shrinkage-calculator/index.html",
+      "route": "/knowledge-hub/calculators-tools/shrinkage-calculator/",
+      "bytes": 128896,
+      "sha256": "c7e0114807d4a1b34ff3cac76222ad07660b0b635eded5bc7418a1a4116c5972"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/index.html",
+      "route": "/knowledge-hub/defects-solutions/",
+      "bytes": 114806,
+      "sha256": "0ccdc3d92304014c6269e40facb0fe9e6dea81e6c18d4931eb21e3ea1d9cf81b"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/injection-molding-defects-guide/index.html",
+      "route": "/knowledge-hub/defects-solutions/injection-molding-defects-guide/",
+      "bytes": 128556,
+      "sha256": "9e59ce8d1646dad896cf34bb34b588776a35019c8515eec5a843281e8a3414e9"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/injection-molding-flash/index.html",
+      "route": "/knowledge-hub/defects-solutions/injection-molding-flash/",
+      "bytes": 127647,
+      "sha256": "ad51b67936c78bf8eab6f0046bdcdbc1430fd86d3f2d9dd0fb2a22419c9adad8"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/injection-molding-short-shot/index.html",
+      "route": "/knowledge-hub/defects-solutions/injection-molding-short-shot/",
+      "bytes": 128345,
+      "sha256": "ffe099a77b863000dc1a4d75c574414e0207ceecf59685c338d50349c0db2056"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/injection-molding-warpage/index.html",
+      "route": "/knowledge-hub/defects-solutions/injection-molding-warpage/",
+      "bytes": 128079,
+      "sha256": "0a4ab1714fd4e4e67646fcdb62a990a4b58a00606fa6c0cc95d7fd56ceaeda9c"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/sink-marks-causes-solutions/index.html",
+      "route": "/knowledge-hub/defects-solutions/sink-marks-causes-solutions/",
+      "bytes": 127821,
+      "sha256": "17836b39649e777d0e278c63cb166de1e204f8900b5e2f5ae26635f85c79d541"
+    },
+    {
+      "path": "knowledge-hub/defects-solutions/weld-lines-knit-lines/index.html",
+      "route": "/knowledge-hub/defects-solutions/weld-lines-knit-lines/",
+      "bytes": 128069,
+      "sha256": "72e86408e805a11ed011335d7e20667ebcfda144037ab91d27f7fb1e96be443f"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/cosmetic-surface-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/cosmetic-surface-design/",
+      "bytes": 127550,
+      "sha256": "e5d0c6717b86314c8ce96e77a3e1a2313ac9dd6ba5ff7d4088da6b3921b1ea74"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/draft-angle-injection-molding/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/draft-angle-injection-molding/",
+      "bytes": 127339,
+      "sha256": "393741ad87dc8fb09f8d259a4a0c443a3a0fe90afeb1157153cd21242ac2b7cd"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/gate-location-best-practices/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/gate-location-best-practices/",
+      "bytes": 127360,
+      "sha256": "f76c9e06a603605f7e290aae59c96ecb9378aecf69d128286c16120b269b9958"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/",
+      "bytes": 119886,
+      "sha256": "69213a29f55c5efe0b6051dda14adcb6b59dcc893fe22ceef6ddcf2e8ef3353a"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/injection-mold-venting/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/injection-mold-venting/",
+      "bytes": 127111,
+      "sha256": "b59cd6c0a09fa038e353e9a4d3d3211957efc21b08facee927e4ee521db54a98"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/injection-molding-undercuts/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/injection-molding-undercuts/",
+      "bytes": 127828,
+      "sha256": "9c8f6a67db45ae744f755f0f232c736691fc68de8e34e3dcde1655a7fa498349"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/living-hinge-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/living-hinge-design/",
+      "bytes": 127406,
+      "sha256": "ab78e6e1e8887d027df72cb6741f25d1c105f7bd6d94f09a02dc2c58867046c1"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/overmolding-two-shot-dfm/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/overmolding-two-shot-dfm/",
+      "bytes": 127465,
+      "sha256": "3e613197407d48c62791f362402a6fa674b0738b5c344a88883b169eb28d35f6"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/parting-line-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/parting-line-design/",
+      "bytes": 127304,
+      "sha256": "7c0a2e956914d2987be2715ee29a22a602b67c2e0381237ae684fc2f484ffaa4"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/plastic-corner-radii/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/plastic-corner-radii/",
+      "bytes": 127654,
+      "sha256": "352084b60c6dd9ef2d5164db12a0c82892ad939d8052026cb6ddd0e8905f5fa2"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/plastic-screw-boss-thread-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/plastic-screw-boss-thread-design/",
+      "bytes": 127592,
+      "sha256": "b993252c5f051621ff609b2d24d5942204e05fb7b7d489ce6401339db685fd38"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/plastic-tolerance-stack-up/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/plastic-tolerance-stack-up/",
+      "bytes": 127767,
+      "sha256": "21e376631d1d89413d24d4791f78c58a042acccdb7382559c7353fde3a9123b4"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/plastic-wall-thickness-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/plastic-wall-thickness-design/",
+      "bytes": 127794,
+      "sha256": "afdcfd6bc1200f274cbc1b3bd9b79b17405d45a2bc15e7a4670c45b41bd8962f"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/rib-boss-gusset-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/rib-boss-gusset-design/",
+      "bytes": 127474,
+      "sha256": "da1e6cd81cc646c7c8f04cc977ff3d416a07868490eb5fa06db7cd5d50f55335"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/snap-fit-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/snap-fit-design/",
+      "bytes": 127117,
+      "sha256": "f9a01d516ec2adcb1dd1f27bdffcf64055884dd7c5dc4af49c83cb48c910e3ca"
+    },
+    {
+      "path": "knowledge-hub/dfm-tolerances/ultrasonic-welding-joint-design/index.html",
+      "route": "/knowledge-hub/dfm-tolerances/ultrasonic-welding-joint-design/",
+      "bytes": 127775,
+      "sha256": "287a15d70d89fcc45a7f3b4c02ec0acd01f4f49c44bcd705dbcc5f313f2293d9"
+    },
+    {
+      "path": "knowledge-hub/index.html",
+      "route": "/knowledge-hub/",
+      "bytes": 129118,
+      "sha256": "98b63f8d31de43c47eccab3ec91f4f2510b5c699639588e539719be157c373d4"
+    },
+    {
+      "path": "knowledge-hub/injection-molding-fundamentals/injection-molding-cost-drivers/index.html",
+      "route": "/knowledge-hub/injection-molding-fundamentals/injection-molding-cost-drivers/",
+      "bytes": 128602,
+      "sha256": "f7b08467d4d04c9b3cd552c17e1705f76bc2e6ded5396ffd7510519261277c2d"
+    },
+    {
+      "path": "knowledge-hub/injection-molding-fundamentals/injection-molding-machine-components/index.html",
+      "route": "/knowledge-hub/injection-molding-fundamentals/injection-molding-machine-components/",
+      "bytes": 128724,
+      "sha256": "833d19ab376efdb5a02bfed34b1388909255544917483b4379754e160be83848"
+    },
+    {
+      "path": "knowledge-hub/injection-molding-fundamentals/injection-molding-process/index.html",
+      "route": "/knowledge-hub/injection-molding-fundamentals/injection-molding-process/",
+      "bytes": 128463,
+      "sha256": "e230febb7f346a450b7b5945904ca3935218cc5a6285565462f317b555a9d071"
+    },
+    {
+      "path": "knowledge-hub/injection-molding-fundamentals/thermoplastic-vs-thermoset-vs-elastomer-molding/index.html",
+      "route": "/knowledge-hub/injection-molding-fundamentals/thermoplastic-vs-thermoset-vs-elastomer-molding/",
+      "bytes": 128787,
+      "sha256": "9f3985d982c48e8657d9e7924eabc554b861646f7f30b0e2e1b23838e86821e4"
+    },
+    {
+      "path": "knowledge-hub/injection-molding-fundamentals/what-is-injection-molding/index.html",
+      "route": "/knowledge-hub/injection-molding-fundamentals/what-is-injection-molding/",
+      "bytes": 129332,
+      "sha256": "251808f1f6e902064ac334c8d8a791707c7d04402ff0bb441c34c55e8c2db003"
+    },
+    {
+      "path": "knowledge-hub/materials/abs-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/abs-injection-molding/",
+      "bytes": 127480,
+      "sha256": "f233fc82ee724c5f821624258dde3edce6364f6ed95d1d2876fe60f2f5c4a78a"
+    },
+    {
+      "path": "knowledge-hub/materials/index.html",
+      "route": "/knowledge-hub/materials/",
+      "bytes": 114619,
+      "sha256": "d38de5d00b0b439e991e2964e3ae23ac22c96e4992238d7eeaa8dbd7b5a4d3b2"
+    },
+    {
+      "path": "knowledge-hub/materials/pa6-pa66-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/pa6-pa66-injection-molding/",
+      "bytes": 127774,
+      "sha256": "b2d8d27876e110796cd4f129f644423e45687d1f29e30461a13d848af526c999"
+    },
+    {
+      "path": "knowledge-hub/materials/pc-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/pc-injection-molding/",
+      "bytes": 127789,
+      "sha256": "96373cf882a5a59537fd88d6010de3329afdeb85625982b448db129655229110"
+    },
+    {
+      "path": "knowledge-hub/materials/peek-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/peek-injection-molding/",
+      "bytes": 127666,
+      "sha256": "8b2bf9746ae42edc891c77c555fa1f1d252cc39e29530205ab5b0e9e4c63027d"
+    },
+    {
+      "path": "knowledge-hub/materials/pom-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/pom-injection-molding/",
+      "bytes": 127367,
+      "sha256": "a8ea242d4866a295d72b3d6e98b08191f7272811cb577a327db1395c47bc9046"
+    },
+    {
+      "path": "knowledge-hub/materials/pp-injection-molding/index.html",
+      "route": "/knowledge-hub/materials/pp-injection-molding/",
+      "bytes": 127852,
+      "sha256": "bf9f1843f1d159968b0ad9de8e53990546948e0c558f73caff676d49a19bee9a"
+    },
+    {
+      "path": "knowledge-hub/production-quality/cavity-pressure-process-monitoring/index.html",
+      "route": "/knowledge-hub/production-quality/cavity-pressure-process-monitoring/",
+      "bytes": 128372,
+      "sha256": "411be4c27a24093355b20464d93e2ec0d41554c324cc6d881cb7f10b5d1099cb"
+    },
+    {
+      "path": "knowledge-hub/production-quality/family-mold-design/index.html",
+      "route": "/knowledge-hub/production-quality/family-mold-design/",
+      "bytes": 127795,
+      "sha256": "923ef29a52823370c09caac7415593e083a98033e04c68d47272b566384e1bd0"
+    },
+    {
+      "path": "knowledge-hub/production-quality/first-article-inspection-injection-molding/index.html",
+      "route": "/knowledge-hub/production-quality/first-article-inspection-injection-molding/",
+      "bytes": 128495,
+      "sha256": "6193543b9c9336dff959a4a3973be526fce8ceeac01dd48542cda7e92f51466a"
+    },
+    {
+      "path": "knowledge-hub/production-quality/gas-assisted-injection-molding/index.html",
+      "route": "/knowledge-hub/production-quality/gas-assisted-injection-molding/",
+      "bytes": 127978,
+      "sha256": "269e37748e060f179a1c072639c95a103fc69e824af19d834c8ad035688c3e36"
+    },
+    {
+      "path": "knowledge-hub/production-quality/injection-molding-cycle-optimization/index.html",
+      "route": "/knowledge-hub/production-quality/injection-molding-cycle-optimization/",
+      "bytes": 128135,
+      "sha256": "1af8104163c11a2be8dcb1cda8168cfd03448dd668af716ca79f042427fb8333"
+    },
+    {
+      "path": "knowledge-hub/production-quality/injection-molding-quality-control-plan/index.html",
+      "route": "/knowledge-hub/production-quality/injection-molding-quality-control-plan/",
+      "bytes": 128262,
+      "sha256": "b132bc36750cfbef4d90a77b9c780d2306fe1902334b9a6f442af60a6774c69c"
+    },
+    {
+      "path": "knowledge-hub/production-quality/injection-molding-traceability/index.html",
+      "route": "/knowledge-hub/production-quality/injection-molding-traceability/",
+      "bytes": 128298,
+      "sha256": "c965b27bcb3e2f423409e219e9437cf499ef1455ad1d94279d69cec2cb210b93"
+    },
+    {
+      "path": "knowledge-hub/production-quality/insert-molding-design/index.html",
+      "route": "/knowledge-hub/production-quality/insert-molding-design/",
+      "bytes": 127857,
+      "sha256": "d80dd860968e55216de166bbcaf9bc378e6797897b55b6bf2dd10833ecc9f5e6"
+    },
+    {
+      "path": "knowledge-hub/production-quality/micro-injection-molding/index.html",
+      "route": "/knowledge-hub/production-quality/micro-injection-molding/",
+      "bytes": 127976,
+      "sha256": "661feba1c1a2eeb799cb8b6b073768eb323d63212fad4ad24ebda3a89deb45e1"
+    },
+    {
+      "path": "knowledge-hub/production-quality/mold-trial-t1-t2-t3/index.html",
+      "route": "/knowledge-hub/production-quality/mold-trial-t1-t2-t3/",
+      "bytes": 127982,
+      "sha256": "3d4f3fc5e2a80cb002532a767c7715918245ed0a246a8409ab927765fedfb736"
+    },
+    {
+      "path": "knowledge-hub/production-quality/multi-cavity-mold-cavity-balance/index.html",
+      "route": "/knowledge-hub/production-quality/multi-cavity-mold-cavity-balance/",
+      "bytes": 128260,
+      "sha256": "61a60f994a09257e733e93c87c1049b8b5be3893d5606baeeb58d75902e81f9e"
+    },
+    {
+      "path": "knowledge-hub/production-quality/plastic-resin-drying-guide/index.html",
+      "route": "/knowledge-hub/production-quality/plastic-resin-drying-guide/",
+      "bytes": 128090,
+      "sha256": "d4a391e656729d8fa4633ec1f0e1b393192c3857ab338ae775a94b26f1e7472f"
+    },
+    {
+      "path": "knowledge-hub/production-quality/process-validation-iq-oq-pq/index.html",
+      "route": "/knowledge-hub/production-quality/process-validation-iq-oq-pq/",
+      "bytes": 128135,
+      "sha256": "0d774a014d6ba65b183ab7292c17325beb69ae540450a4c142827d3f1df99492"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/din-16742-tolerances/index.html",
+      "route": "/knowledge-hub/standards-tolerances/din-16742-tolerances/",
+      "bytes": 128066,
+      "sha256": "c583963f085156eb24585e2df8a23ed1d3a3ededcd79b99f542d32eeb140f538"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/gdt-for-plastic-injection-molded-parts/index.html",
+      "route": "/knowledge-hub/standards-tolerances/gdt-for-plastic-injection-molded-parts/",
+      "bytes": 128557,
+      "sha256": "0650128b7e957c7cf541d6ae50ffd2aadbc5271609bcd0a148343d929a694db5"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/iso-20457-plastic-part-tolerances/index.html",
+      "route": "/knowledge-hub/standards-tolerances/iso-20457-plastic-part-tolerances/",
+      "bytes": 128699,
+      "sha256": "aa4a37d781db0f747632e848c8600ca4f66fa8d836be0990b4c61a54243e9e78"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/iso-2768-general-tolerances/index.html",
+      "route": "/knowledge-hub/standards-tolerances/iso-2768-general-tolerances/",
+      "bytes": 128249,
+      "sha256": "e6dd05f100d78cf03195a04197f4abcbe4d4c2da719c8652d197ed37ff2ecf4d"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/spi-mold-finish-standards/index.html",
+      "route": "/knowledge-hub/standards-tolerances/spi-mold-finish-standards/",
+      "bytes": 128000,
+      "sha256": "e5e31a968e3c85a071c052a2eccfc2e21603d3e9a5da94372408a3485d0648ee"
+    },
+    {
+      "path": "knowledge-hub/standards-tolerances/vdi-3400-mold-texture/index.html",
+      "route": "/knowledge-hub/standards-tolerances/vdi-3400-mold-texture/",
+      "bytes": 127924,
+      "sha256": "2b8c912722a03971ffd7a3fafbb77e6c296a9d5832fbc194c874ed365979b6a4"
+    },
+    {
+      "path": "knowledge-hub/standards/index.html",
+      "route": "/knowledge-hub/standards/",
+      "bytes": 111344,
+      "sha256": "75a23fb82e06aed866416bc710734e43a18db46cdf9b744cf83abf95ce4db4b0"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/conformal-cooling/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/conformal-cooling/",
+      "bytes": 127928,
+      "sha256": "de6f360798a3009bdbafc12b31de834a954c019e818bc5c260abef93e9c76b2a"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/edm-vs-cnc-mold-tooling/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/edm-vs-cnc-mold-tooling/",
+      "bytes": 127987,
+      "sha256": "7a5576807c93ccf2d7faabc88b65d2fc42bed148ef57ea978c3e4be6df5440b0"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/hot-runner-vs-cold-runner/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/hot-runner-vs-cold-runner/",
+      "bytes": 128031,
+      "sha256": "74a1eba23c3afc1ad4ac44bdbab386010e0579bbac41328022e4dfd66c0d9e45"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/",
+      "bytes": 119315,
+      "sha256": "715c079ef10b65077db623f461f1da9bdf9a828baf331216eeb95d930a47f82f"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/injection-mold-cooling-channel-design/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/injection-mold-cooling-channel-design/",
+      "bytes": 128204,
+      "sha256": "1a19e83efaf296db5a49155fe8f22d75a36b797c2ba6775b976967e433fbec2f"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/injection-mold-maintenance/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/injection-mold-maintenance/",
+      "bytes": 128253,
+      "sha256": "156b19c4be37efdf0482b0cd636d5edcbb874fc48c49a44a1457115ec0f628a0"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/injection-mold-polishing/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/injection-mold-polishing/",
+      "bytes": 127951,
+      "sha256": "e8ce77b1895440e38fb125b1e4e4d8d871b50086d51183dc53096d3105215a19"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/injection-mold-steel-selection/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/injection-mold-steel-selection/",
+      "bytes": 128240,
+      "sha256": "ee8960e788172e128a4802c20c1d95a72e35e1f7ce4ebc0c95b2e6c5ee5d11be"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/mold-ejection-system-design/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/mold-ejection-system-design/",
+      "bytes": 127851,
+      "sha256": "e5d6092eb2ea87a67dd263b94c4986d723bda4258ee12116c48455d810782bbd"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/moldflow-analysis/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/moldflow-analysis/",
+      "bytes": 127830,
+      "sha256": "881eba5d818c67eaafe01f8f426171ceb85937cb1fd39fe403a3f36e44559e83"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/s136-vs-nak80-vs-718h/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/s136-vs-nak80-vs-718h/",
+      "bytes": 127811,
+      "sha256": "ecd10731552c45eb260eaa6c5741b5c152d7a805b0d43effb89783d73bd28a3c"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/scientific-injection-molding/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/scientific-injection-molding/",
+      "bytes": 127980,
+      "sha256": "08bccd2abfa2c9b59b975ead5d7d2d378f026a01811e51735324007a3955fb7a"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/slides-lifters-core-mechanisms/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/slides-lifters-core-mechanisms/",
+      "bytes": 128198,
+      "sha256": "7aebe3afa4215ab50abf3788919464f39924e9fa32f5c55bb45b8c6c756d4e5b"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/spi-vdi-3400-texture/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/spi-vdi-3400-texture/",
+      "bytes": 127878,
+      "sha256": "cff4d40d62cda4c21b09e4670b2f7a32bc7f0d95abee2360afe8f2475d12fcce"
+    },
+    {
+      "path": "knowledge-hub/tooling-metallurgy/valve-gate-vs-hot-tip/index.html",
+      "route": "/knowledge-hub/tooling-metallurgy/valve-gate-vs-hot-tip/",
+      "bytes": 127791,
+      "sha256": "7e55c5fcd838264d0b60dc89bcb5d25f2c42aab91adcb97c2eb4407223894e83"
+    },
+    {
+      "path": "materials/index.html",
+      "route": "/materials/",
+      "bytes": 451333,
+      "sha256": "3303c14de2d46ff709b86923b3747c57ca1c5f74e23dd0306c378ab81b767775"
+    },
+    {
+      "path": "products/index.html",
+      "route": "/products/",
+      "bytes": 137221,
+      "sha256": "c6708b8389dc828ab75e85a0d0fbf2674fdd5db8c9c9a0a43f60eda71db7e8e3"
+    },
+    {
+      "path": "quality/index.html",
+      "route": "/quality/",
+      "bytes": 120539,
+      "sha256": "1683fdbd90658b74340e004d02e83934ca731f610199e64b0591e695f510aea7"
+    },
+    {
+      "path": "quality/zeiss-cmm-inspection/index.html",
+      "route": "/quality/zeiss-cmm-inspection/",
+      "bytes": 128392,
+      "sha256": "70bdcb61973b7c123aebccd9f514ed5f5543c28149e872811e8da760a9669c6f"
+    },
+    {
+      "path": "resources/calculators/clamping-force-calculator/index.html",
+      "route": "/resources/calculators/clamping-force-calculator/",
+      "bytes": 129691,
+      "sha256": "4ab3b3deb44399a08660f42eeeee798d65c69dea361214158bd5ec92797bb4b2"
+    },
+    {
+      "path": "resources/calculators/cost-guide/index.html",
+      "route": "/resources/calculators/cost-guide/",
+      "bytes": 127308,
+      "sha256": "73a807c3a99af4c7a0e3e5372f1a141c5617c137ac90a66e469d2b2a96bd7446"
+    },
+    {
+      "path": "resources/calculators/draft-angle-calculator/index.html",
+      "route": "/resources/calculators/draft-angle-calculator/",
+      "bytes": 126413,
+      "sha256": "3abed8f8d5961c5a981438dc6b258070135dc50f14d77a705cc293c29498d90e"
+    },
+    {
+      "path": "resources/calculators/faq/index.html",
+      "route": "/resources/calculators/faq/",
+      "bytes": 129458,
+      "sha256": "09c4e053587b381c59c380d32823505d7f3cee5dd2a6cfb82127a075f5f00e93"
+    },
+    {
+      "path": "resources/calculators/injection-mold-cost-estimator/index.html",
+      "route": "/resources/calculators/injection-mold-cost-estimator/",
+      "bytes": 129477,
+      "sha256": "6c0ccdf26668905aaef79bc2d76caa953abfa9980975cd40bd49e2772528d3bb"
+    },
+    {
+      "path": "resources/calculators/instant-dfm-checker/index.html",
+      "route": "/resources/calculators/instant-dfm-checker/",
+      "bytes": 128368,
+      "sha256": "759754fbceaa32072f4fb3b6fc609ac6125a4bd2f1d55fd48b1ea86a718821a1"
+    },
+    {
+      "path": "resources/calculators/shrinkage-calculator/index.html",
+      "route": "/resources/calculators/shrinkage-calculator/",
+      "bytes": 125439,
+      "sha256": "45aaad820a57f121a96701d6d7667cae6e1fa81792590cb0ce998ceccf291e20"
+    },
+    {
+      "path": "resources/design-guides/defect-troubleshooting/index.html",
+      "route": "/resources/design-guides/defect-troubleshooting/",
+      "bytes": 126430,
+      "sha256": "0a4b543723ed14a7c076c02ea141c3536fa32076628173ae28d3c7c33aeb5678"
+    },
+    {
+      "path": "resources/design-guides/surface-finish/index.html",
+      "route": "/resources/design-guides/surface-finish/",
+      "bytes": 125885,
+      "sha256": "fa588a4d76fc987c5fcc25f8f71c3497d5ae0b3623268c056c9b3583fc888276"
+    },
+    {
+      "path": "resources/design-guides/wall-thickness/index.html",
+      "route": "/resources/design-guides/wall-thickness/",
+      "bytes": 125639,
+      "sha256": "36b7d5815ad9141783f09898ca9c7b343e0b850d28677e051199b0094f5ece84"
+    },
+    {
+      "path": "resources/faq/index.html",
+      "route": "/resources/faq/",
+      "bytes": 129609,
+      "sha256": "dff27936296e678be8e110e8ca4fd2c8188bf2db34d3c097449535ddae4dfaf6"
+    },
+    {
+      "path": "resources/index.html",
+      "route": "/resources/",
+      "bytes": 133778,
+      "sha256": "a4ba20a7416ff419f8a00dc72eafffda71528daf61bffe426d86a67ee4f1352e"
+    },
+    {
+      "path": "services/annealing/index.html",
+      "route": "/services/annealing/",
+      "bytes": 148360,
+      "sha256": "98933a82ffb02903da5e59b2d250b530524519334eb2fa7faf8cee0365de5666"
+    },
+    {
+      "path": "services/assembly-fba/index.html",
+      "route": "/services/assembly-fba/",
+      "bytes": 148348,
+      "sha256": "8604923ed3268c8f98c0ac35421a50d4edc1b9e9dad587a33fe4f1e663c45cae"
+    },
+    {
+      "path": "services/cleanroom-molding/index.html",
+      "route": "/services/cleanroom-molding/",
+      "bytes": 148224,
+      "sha256": "85c9c59d050df761ce07462b9ee13dd648fe298a2e5fe90279ad6e57d2d0e949"
+    },
+    {
+      "path": "services/cnc-milling/index.html",
+      "route": "/services/cnc-milling/",
+      "bytes": 148284,
+      "sha256": "4d27e43c6b95a5344fd3d4d5257f923e2da20367734daa0b8227d060eb8d10a4"
+    },
+    {
+      "path": "services/cnc-turning/index.html",
+      "route": "/services/cnc-turning/",
+      "bytes": 148372,
+      "sha256": "b852a65cafc28161e3ff3f065a725fbe129cbdba5327f25684ec80030904840c"
+    },
+    {
+      "path": "services/conformal-cooling/index.html",
+      "route": "/services/conformal-cooling/",
+      "bytes": 148324,
+      "sha256": "b4b5af330b9548821d0067a6f8e5028d9623f065046bbbfa8d25a15d08b10ce4"
+    },
+    {
+      "path": "services/custom-injection-molding/index.html",
+      "route": "/services/custom-injection-molding/",
+      "bytes": 134460,
+      "sha256": "582d240447c30ec099e79b1fd64a6a8eac2391bcef8da0cc3c000adf1709c508"
+    },
+    {
+      "path": "services/deep-hole-drilling/index.html",
+      "route": "/services/deep-hole-drilling/",
+      "bytes": 148344,
+      "sha256": "fca583a18e86e6b5f6ecf16fd8d2e533c6253b0c0470bf417fc2a19d25d2a217"
+    },
+    {
+      "path": "services/edm-machining/index.html",
+      "route": "/services/edm-machining/",
+      "bytes": 148252,
+      "sha256": "4ec9b760c0bd98df2631d66bb5124f166c86b4c7777a11df2b6b8044aa8c794c"
+    },
+    {
+      "path": "services/emi-shielding/index.html",
+      "route": "/services/emi-shielding/",
+      "bytes": 148300,
+      "sha256": "f1079a9e5e55f988af4fb313d55bae819bf2360e909e1d47f180f463b9af8e32"
+    },
+    {
+      "path": "services/gas-water-assist/index.html",
+      "route": "/services/gas-water-assist/",
+      "bytes": 148372,
+      "sha256": "77e582e3181317c7c22fa0c2208356aeafd21a83b5ccac75b4e60e414a941047"
+    },
+    {
+      "path": "services/hot-runner/index.html",
+      "route": "/services/hot-runner/",
+      "bytes": 148224,
+      "sha256": "3962586900941af3d18398295d20dd8c51c88f99ed1694fb51fd35e7d92ef586"
+    },
+    {
+      "path": "services/iml-imd/index.html",
+      "route": "/services/iml-imd/",
+      "bytes": 148276,
+      "sha256": "46b70b115a7e4d1bd58a6a2dbbff3cf7cafd73b3e641d22d6b6733016b53fe9c"
+    },
+    {
+      "path": "services/index.html",
+      "route": "/services/",
+      "bytes": 177738,
+      "sha256": "64bdc42c778aa812bd27a8c3313d05d1f487662c1844116b8d8626b89238ba88"
+    },
+    {
+      "path": "services/insert-molding/index.html",
+      "route": "/services/insert-molding/",
+      "bytes": 148300,
+      "sha256": "daa44fdd7d810a5d9068d0c2227f37c5b9b850ee44d22b772e2df05a3b60f604"
+    },
+    {
+      "path": "services/liquid-silicone/index.html",
+      "route": "/services/liquid-silicone/",
+      "bytes": 148332,
+      "sha256": "69b89d62e486edecf186953e28af05bbe5027e10fa58cce227d1431ba5f66ba5"
+    },
+    {
+      "path": "services/moldflow-analysis/index.html",
+      "route": "/services/moldflow-analysis/",
+      "bytes": 148236,
+      "sha256": "66ea6aac508fbadb0ee7bee528dad7529518401a11cfde0eef57e8e7435b58cf"
+    },
+    {
+      "path": "services/mucell-foaming/index.html",
+      "route": "/services/mucell-foaming/",
+      "bytes": 148260,
+      "sha256": "30d245d5beb7050516711ee5e27a48d2008ec0b32c0f01b49c9fc9b4a2545111"
+    },
+    {
+      "path": "services/overmolding/index.html",
+      "route": "/services/overmolding/",
+      "bytes": 148360,
+      "sha256": "cc4439da681f17e4c99c795cb0a25c35649139fb46bc214df9d8376c2bc5ada7"
+    },
+    {
+      "path": "services/production-tooling/index.html",
+      "route": "/services/production-tooling/",
+      "bytes": 148308,
+      "sha256": "c50b59de6e1722181dff414777b06cf109b273f3c954383b1ea9fba69bb6460f"
+    },
+    {
+      "path": "services/rapid-tooling/index.html",
+      "route": "/services/rapid-tooling/",
+      "bytes": 148308,
+      "sha256": "62591e233382938e582b0b0069b6fb05c508ebd7e03888888874bb25ebfc602a"
+    },
+    {
+      "path": "services/scientific-molding/index.html",
+      "route": "/services/scientific-molding/",
+      "bytes": 148344,
+      "sha256": "8754c330a4d18eab3b63271754a9b2f03a47a745911c2e3c48b1fed87326b46c"
+    },
+    {
+      "path": "services/stack-molds/index.html",
+      "route": "/services/stack-molds/",
+      "bytes": 148308,
+      "sha256": "c177cb8e0ee5ff2d60615767b0bc6fdc32013465023364f9239d4271cd7a9fd8"
+    },
+    {
+      "path": "services/steel-cavities/index.html",
+      "route": "/services/steel-cavities/",
+      "bytes": 148360,
+      "sha256": "6d6b45943cc9029786ed582eeb600deadb3d869aed8ac057799478c6e0082c5a"
+    },
+    {
+      "path": "services/surface-finishing/index.html",
+      "route": "/services/surface-finishing/",
+      "bytes": 148300,
+      "sha256": "842b9b9d49b0e3edaacf7a244496b072b7acc4214028c85197fd05e65527a846"
+    },
+    {
+      "path": "services/unscrewing-molds/index.html",
+      "route": "/services/unscrewing-molds/",
+      "bytes": 148296,
+      "sha256": "e3705bb3b4ccb7fbb5a68d98ec91dcd8f7986014b05960f1adb3aadf42beaf07"
+    },
+    {
+      "path": "services/zeiss-cmm/index.html",
+      "route": "/services/zeiss-cmm/",
+      "bytes": 148288,
+      "sha256": "092ef0a5948a3589bac92e657683b2c5341814195d6786a9c74fc87fd8d618b4"
+    }
+  ]
+}

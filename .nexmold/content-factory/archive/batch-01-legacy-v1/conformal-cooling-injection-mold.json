@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:conformal-cooling-injection-mold",
+  "targetSlug": "conformal-cooling-injection-mold",
+  "sourceArticleSlug": "conformal-cooling",
+  "slug": "conformal-cooling-injection-mold",
+  "lineage": {
+    "pageId": "v714:conformal-cooling-injection-mold",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/conformal-cooling-injection-mold/",
+    "evidenceIds": [
+      "knowledge:conformal-cooling"
+    ],
+    "semanticClaimIds": [
+      "claim:conformal-cooling-injection-mold"
+    ],
+    "sourceArtifactHash": "2b892a09f6ee018f6b62a4d85aa03f9d05d784792f7fad1154a0d6540277700c"
+  },
+  "sourceArtifactHash": "2b892a09f6ee018f6b62a4d85aa03f9d05d784792f7fad1154a0d6540277700c",
+  "sourceArtifact": {
+    "pageId": "v714:conformal-cooling-injection-mold",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/conformal-cooling-injection-mold/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:conformal-cooling-injection-mold",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:conformal-cooling",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#conformal-cooling",
+            "contentHash": "conformal-cooling:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:conformal-cooling-injection-mold",
+            "claimKey": "batch01.conformal-cooling-injection-mold"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "2b892a09f6ee018f6b62a4d85aa03f9d05d784792f7fad1154a0d6540277700c"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

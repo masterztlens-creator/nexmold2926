@@ -1,0 +1,24 @@
+{
+  "schema": "nexmold.v7.14.new-article-pilot-artifact.v1",
+  "pageId": "v714:injection-molding-ejection-system-design",
+  "articleId": "v714:injection-molding-ejection-system-design",
+  "title": "Injection Molding Ejection System Design: DFM Guidelines",
+  "slug": "injection-molding-ejection-system-design",
+  "locale": "en-US",
+  "region": "US",
+  "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-ejection-system-design/",
+  "production": {
+    "pilot": true,
+    "published": false,
+    "automaticPublication": false,
+    "existingContentModified": false
+  },
+  "source": {
+    "type": "new-v714-article-input",
+    "existingKnowledgeSourceUsed": false
+  },
+  "output": {
+    "markdown": ".nexmold\\content-factory\\new-article\\injection-molding-ejection-system-design.md",
+    "metadata": ".nexmold\\content-factory\\new-article\\injection-molding-ejection-system-design.json"
+  }
+}

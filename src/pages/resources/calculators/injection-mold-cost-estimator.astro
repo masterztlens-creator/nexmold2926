@@ -1,0 +1,272 @@
+---
+/**
+ * src/pages/resources/calculators/injection-mold-cost-estimator.astro
+ * 👑 NEXMOLD 注塑开模与单件成本估算器 (GEO 流量与高转化工具)
+ * 1. 架构定位：帮助北美/欧洲工程师与采购预算开模费用 (Tooling Cost) 与单件件价 (Unit Part Cost)
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. SEO / GEO：内嵌 Quick Answer、结构化计算公式与动态 Lead 转化
+ */
+
+import MainLayout from '../../../layouts/MainLayout.astro';
+import Header from '../../../components/Header.astro';
+import EcosystemFooter from '../../../components/EcosystemFooter.astro';
+import LeadModal from '../../../components/LeadModal.astro';
+
+const title = "Injection Mold Tooling & Part Unit Cost Estimator | NEXMOLD";
+const description = "Calculate estimated prototype and production injection mold costs, steel grade multipliers (S136, NAK80, P20), and per-part unit prices in real time.";
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/resources" class="hover:text-[#EA580C] transition-colors">Resources</a>
+        <span>/</span>
+        <a href="/resources/calculators/shrinkage-calculator" class="hover:text-[#EA580C] transition-colors">Calculators</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Mold Cost Estimator</span>
+      </nav>
+
+      <!-- 👑 GEO Quick Answer 抢占框 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          ENGINEERING_TOOLS // BUDGET_ESTIMATION_ENGINE
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Injection Mold &<br/>
+          <span class="text-[#EA580C]">Part Unit Cost Estimator</span>
+        </h1>
+        <!-- Featured Snippet Summary -->
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Quick Answer:</strong> Plastic injection tooling costs typically range from <strong>$2,500 for rapid prototype molds</strong> (NAK80/Aluminum) up to <strong>$25,000+ for SPI Class 101 multi-cavity production molds</strong> (ASSAB S136 stainless steel). Per-part unit cost is driven by resin volume, cycle time, and machine clamping force tonnage.
+        </p>
+      </section>
+
+      <!-- 计算器核心网格 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- 左侧：输入工程参数 -->
+        <div class="lg:col-span-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-6">
+          <h2 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4">
+            1. Configure Part & Tooling Variables
+          </h2>
+
+          <!-- 1. 零件物理尺寸与重量 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="part-weight" class="block font-mono text-xs font-black uppercase text-[#0F2B5B] mb-2">
+                Part Shot Weight (Grams)
+              </label>
+              <input type="number" id="part-weight" min="1" value="45" class="w-full bg-[#FAFAFA] border-2 border-[#0F2B5B]/20 rounded-lg p-3 font-mono text-xs font-bold text-[#0F2B5B] focus:border-[#EA580C] outline-none transition-colors" />
+            </div>
+            <div>
+              <label for="annual-volume" class="block font-mono text-xs font-black uppercase text-[#0F2B5B] mb-2">
+                Estimated Batch Volume (Pcs)
+              </label>
+              <input type="number" id="annual-volume" min="100" step="500" value="5000" class="w-full bg-[#FAFAFA] border-2 border-[#0F2B5B]/20 rounded-lg p-3 font-mono text-xs font-bold text-[#0F2B5B] focus:border-[#EA580C] outline-none transition-colors" />
+            </div>
+          </div>
+
+          <!-- 2. 模具类型与钢材选择 -->
+          <div>
+            <label for="steel-grade" class="block font-mono text-xs font-black uppercase text-[#0F2B5B] mb-2">
+              Mold Steel Grade & Life Rating
+            </label>
+            <select id="steel-grade" class="w-full bg-[#FAFAFA] border-2 border-[#0F2B5B]/20 rounded-lg p-3 font-mono text-xs font-bold text-[#0F2B5B] focus:border-[#EA580C] outline-none transition-colors">
+              <option value="1.0" selected>NAK80 Fast Tooling (T1 in 7-14 Days, 50k Shots)</option>
+              <option value="1.4">P20 Pre-Hardened Steel (100k - 250k Shots)</option>
+              <option value="2.2">ASSAB S136 Mirror Stainless (1,000,000+ Shots, Class 101)</option>
+              <option value="0.85">7075 Aluminum Prototype Tooling (10k Shots)</option>
+            </select>
+          </div>
+
+          <!-- 3. 模穴数 (Cavity Count) -->
+          <div>
+            <label for="cavity-count" class="block font-mono text-xs font-black uppercase text-[#0F2B5B] mb-2">
+              Mold Cavitation
+            </label>
+            <select id="cavity-count" class="w-full bg-[#FAFAFA] border-2 border-[#0F2B5B]/20 rounded-lg p-3 font-mono text-xs font-bold text-[#0F2B5B] focus:border-[#EA580C] outline-none transition-colors">
+              <option value="1" selected>1 Cavity (Single Part / Prototype Focus)</option>
+              <option value="2">2 Cavities (Balanced Production)</option>
+              <option value="4">4 Cavities (High Yield Mass Production)</option>
+              <option value="8">8 Cavities (Automated Multi-Cavity)</option>
+            </select>
+          </div>
+
+          <!-- 4. 树脂材料 -->
+          <div>
+            <label for="material-cost" class="block font-mono text-xs font-black uppercase text-[#0F2B5B] mb-2">
+              Resin Type ($ / KG)
+            </label>
+            <select id="material-cost" class="w-full bg-[#FAFAFA] border-2 border-[#0F2B5B]/20 rounded-lg p-3 font-mono text-xs font-bold text-[#0F2B5B] focus:border-[#EA580C] outline-none transition-colors">
+              <option value="2.8">ABS Commodity Grade ($2.80 / kg)</option>
+              <option value="3.5">Polycarbonate Optical Grade ($3.50 / kg)</option>
+              <option value="4.2">Nylon 66 + 30% Glass Fiber ($4.20 / kg)</option>
+              <option value="3.8">POM Acetal Engineering Grade ($3.80 / kg)</option>
+              <option value="85.0">PEEK High-Temp Medical Grade ($85.00 / kg)</option>
+            </select>
+          </div>
+
+          <!-- 算法与计算公式公开 (AI & Engineering Trust) -->
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl font-mono text-[11px] text-[#0F2B5B]/70 leading-relaxed">
+            <strong>Parametric Model:</strong> Tooling Cost = Base Cavity Geometry &#10005; Steel Multiplier &#10005; Cavity Factor<br/>
+            Unit Cost = (Shot Weight &#10005; Resin Price/kg) + Machine Amortization + Cycle Overhead
+          </div>
+        </div>
+
+        <!-- 右侧：估算结果与 DFM 转化面板 -->
+        <div class="lg:col-span-6 bg-[#0F2B5B] text-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-white/20 pb-4 mb-6">
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest">ESTIMATED_FINANCIAL_SUMMARY</span>
+              <span class="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded">DDP / FOB READY</span>
+            </div>
+
+            <div class="space-y-6">
+              <!-- NRE 模具费用 -->
+              <div>
+                <span class="text-xs font-mono text-white/60 block uppercase mb-1">Estimated Tooling / NRE Cost (One-Time)</span>
+                <div class="text-4xl sm:text-5xl font-[1000] font-mono text-[#EA580C]" id="result-mold-cost">
+                  $3,850 USD
+                </div>
+              </div>
+
+              <!-- 单件加工成本 -->
+              <div class="pt-4 border-t border-white/10">
+                <span class="text-xs font-mono text-white/60 block uppercase mb-1">Estimated Unit Price / Part</span>
+                <div class="text-3xl sm:text-4xl font-[1000] font-mono text-white" id="result-unit-cost">
+                  $1.24 USD / pc
+                </div>
+              </div>
+
+              <!-- 细分拆解 -->
+              <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 font-mono text-xs">
+                <div>
+                  <span class="text-white/60 block mb-1">Est. T1 Lead Time</span>
+                  <span class="font-bold text-white" id="result-lead-time">10 - 14 Calendar Days</span>
+                </div>
+                <div>
+                  <span class="text-white/60 block mb-1">Recommended Press</span>
+                  <span class="font-bold text-[#EA580C]" id="result-press-tonnage">120T Haitian Servo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DFM 引流与行动召唤 -->
+          <div class="mt-8 pt-6 border-t border-white/20">
+            <p class="text-xs font-sans text-white/80 leading-relaxed mb-4">
+              Need an official binding quotation with 24-hour automated DFM wall-thickness evaluation?
+            </p>
+            <button id="cost-rfq-trigger" type="button" class="w-full bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+              Upload 3D CAD (.STEP) for Formal Quote →
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 👑 SEO 补充知识大盘 (Knowledge Matrix) -->
+      <section class="mt-16 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Key Variables Driving Injection Mold & Tooling Costs
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs text-[#0F2B5B]/80">
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2 text-[#EA580C]">1. Steel Grade Selection</h4>
+            <p class="leading-relaxed">S136 stainless steel costs 40% more than P20 steel up-front but guarantees 1,000,000+ mold cycles, making it ideal for high-volume Class 101 medical and automotive manufacturing.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2 text-[#EA580C]">2. Geometric Complexity & Slides</h4>
+            <p class="leading-relaxed">Undercuts requiring side-actions, lifters, or hydraulic core pulls increase mold machining time on high-speed CNC and EDM equipment, directly impacting NRE tooling costs.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2 text-[#EA580C]">3. Multi-Cavity Amortization</h4>
+            <p class="leading-relaxed">Increasing mold cavities from 1 to 4 doubles initial tooling cost but reduces part unit cost by up to 60% due to machine cycle time parallelization.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script>
+  function setupCostCalculator() {
+    const partWeightInput = document.getElementById('part-weight') as HTMLInputElement | null;
+    const annualVolumeInput = document.getElementById('annual-volume') as HTMLInputElement | null;
+    const steelGradeSelect = document.getElementById('steel-grade') as HTMLSelectElement | null;
+    const cavitySelect = document.getElementById('cavity-count') as HTMLSelectElement | null;
+    const materialCostSelect = document.getElementById('material-cost') as HTMLSelectElement | null;
+
+    const resMoldCost = document.getElementById('result-mold-cost');
+    const resUnitCost = document.getElementById('result-unit-cost');
+    const resLeadTime = document.getElementById('result-lead-time');
+    const resPress = document.getElementById('result-press-tonnage');
+    const modalBtn = document.getElementById('cost-rfq-trigger');
+
+    if (!partWeightInput || !annualVolumeInput || !steelGradeSelect || !cavitySelect || !materialCostSelect) return;
+
+    function calculateCosts() {
+      const weight = parseFloat(partWeightInput!.value) || 10;
+      const volume = parseFloat(annualVolumeInput!.value) || 1000;
+      const steelMult = parseFloat(steelGradeSelect!.value) || 1.0;
+      const cavities = parseFloat(cavitySelect!.value) || 1;
+      const resinPricePerKg = parseFloat(materialCostSelect!.value) || 3.0;
+
+      // 估算基础开模费用 (NRE Mold Cost)
+      const baseToolingPrice = 3200;
+      const cavityMult = 1 + (cavities - 1) * 0.45;
+      const totalMoldCost = Math.round(baseToolingPrice * steelMult * cavityMult);
+
+      // 估算单件成本 (Unit Cost)
+      const resinCostPerPart = (weight / 1000) * resinPricePerKg * 1.15; // 含废料率
+      const machineProcessCost = (18 / (3600 / 25)) * (cavities === 1 ? 1 : 0.65); // Haitian 机台分摊
+      const unitPartCost = (resinCostPerPart + machineProcessCost + (totalMoldCost / (volume * 2))).toFixed(2);
+
+      // 交期与机台吨位判定
+      let leadTimeStr = "10 - 14 Days";
+      if (steelMult > 2.0) leadTimeStr = "21 - 30 Days (Class 101)";
+      else if (steelMult < 0.9) leadTimeStr = "5 - 9 Days (Fast Tooling)";
+
+      let pressTonnage = "90T Haitian Servo";
+      if (weight * cavities > 150) pressTonnage = "280T Haitian Servo";
+      if (weight * cavities > 500) pressTonnage = "650T - 1200T Haitian";
+
+      if (resMoldCost) resMoldCost.textContent = `$${totalMoldCost.toLocaleString()} USD`;
+      if (resUnitCost) resUnitCost.textContent = `$${unitPartCost} USD / pc`;
+      if (resLeadTime) resLeadTime.textContent = leadTimeStr;
+      if (resPress) resPress.textContent = pressTonnage;
+    }
+
+    partWeightInput.addEventListener('input', calculateCosts);
+    annualVolumeInput.addEventListener('input', calculateCosts);
+    steelGradeSelect.addEventListener('change', calculateCosts);
+    cavitySelect.addEventListener('change', calculateCosts);
+    materialCostSelect.addEventListener('change', calculateCosts);
+
+    if (modalBtn) {
+      modalBtn.addEventListener('click', () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      });
+    }
+
+    calculateCosts();
+  }
+
+  document.addEventListener('astro:page-load', setupCostCalculator);
+</script>

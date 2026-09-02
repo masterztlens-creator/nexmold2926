@@ -1,0 +1,103 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-undercuts-guide",
+  "targetSlug": "injection-molding-undercuts-guide",
+  "route": "/industries/v714/injection-molding-undercuts-guide/",
+  "sourceArticleSlug": "injection-molding-undercuts",
+  "sourceArticle": {
+    "slug": "injection-molding-undercuts",
+    "title": "Undercuts in Injection Molding: Design and Tooling Options"
+  },
+  "sourceArtifactHash": "66ccd4d13779f577366d8ee3e5b199f1ac735f86a1cdadc05580438b81230f4a",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-undercuts-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-undercuts-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-undercuts-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-undercuts",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-undercuts",
+            "contentHash": "2feef3ca3de064f4925bb7fabf4ad36c689910cb0f503e98401c0aff3c886ecd"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-undercuts-guide",
+            "claimKey": "v714.whitepaper.injection-molding-undercuts-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "66ccd4d13779f577366d8ee3e5b199f1ac735f86a1cdadc05580438b81230f4a"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding undercuts: side actions, lifters, slides and dfm strategy",
+      "injection mold undercut design guide",
+      "injection mold undercut DFM",
+      "injection mold undercut best practices",
+      "injection mold undercut design rules",
+      "injection mold undercut engineering guide",
+      "injection mold undercut slider",
+      "injection mold undercut lifter",
+      "injection mold undercut side action",
+      "injection mold undercut tooling cost",
+      "injection mold undercut mold design",
+      "injection mold undercut complex injection mold",
+      "injection mold undercut undercut depth",
+      "undercut depth in injection mold undercut",
+      "injection mold undercut undercut direction",
+      "undercut direction in injection mold undercut",
+      "injection mold undercut ejection direction",
+      "ejection direction in injection mold undercut",
+      "injection mold undercut parting line",
+      "parting line in injection mold undercut",
+      "injection mold undercut slide travel",
+      "slide travel in injection mold undercut",
+      "injection mold undercut lifter geometry",
+      "lifter geometry in injection mold undercut",
+      "injection mold undercut tooling space",
+      "tooling space in injection mold undercut",
+      "injection mold undercut cycle time",
+      "cycle time in injection mold undercut",
+      "injection mold undercut sticking",
+      "how to prevent sticking in injection mold undercut",
+      "injection mold undercut mechanism interference",
+      "how to prevent mechanism interference in injection mold undercut",
+      "injection mold undercut premature wear",
+      "how to prevent premature wear in injection mold undercut",
+      "injection mold undercut flash",
+      "how to prevent flash in injection mold undercut",
+      "injection mold undercut ejection damage",
+      "how to prevent ejection damage in injection mold undercut",
+      "injection mold undercut tooling failure",
+      "how to prevent tooling failure in injection mold undercut"
+    ],
+    "relatedTopics": [
+      "injection-molding-parting-line-design",
+      "injection-molding-boss-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

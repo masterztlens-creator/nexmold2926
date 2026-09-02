@@ -1,0 +1,1609 @@
+---
+/**
+ * src/pages/industries/index.astro
+ * NxMold Precision Manufacturing
+ * 全球工业标杆终极完美版：SaaS 级互动首屏 + 暗黑指挥舱 FAQ + Bento 矩阵 + 精密工具指挥舱
+ */
+
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const lang = 'en';
+
+const pageTitle = "Custom Plastic Injection Molding & Rapid Tooling | NxMold";
+const pageDescription = "Explore NxMold's ISO 9001:2015 certified plastic injection molding and rapid precision tooling matrix across 12 global industrial sectors, engineered in Dongguan, China.";
+const canonicalUrl = "https://nxmold.com/industries";
+
+const allSectors = [
+  { 
+    id: "appliances",
+    title: "Home Appliances & Hardware", 
+    cat: "FDA / ABS / PP", 
+    link: "/industries/home-appliances",
+    image: "/images/industries/nxmold-home-appliances-injection-molding.webp",
+    desc: "Direct factory toolmaking for Countertop Ice Maker Parts (Food-grade ABS) and Ultrasonic Welded Water Tanks (Hermetic pressure-tested reservoirs)."
+  },
+  { 
+    id: "automotive",
+    title: "Automotive & Child Safety", 
+    cat: "PA66 / PC", 
+    link: "/industries/automotive",
+    image: "/images/industries/nxmold-automotive-ev-structural-parts.webp",
+    desc: "Precision injection molding for Child Safety Seat Molds (High-impact structural components) and Automotive Interior Trims (Class-A surface finish)."
+  },
+  { 
+    id: "agtech",
+    title: "Commercial & AgTech", 
+    cat: "UV-PC / PP", 
+    link: "/industries/agtech",
+    image: "/images/industries/nxmold-commercial-agtech-system-modules.webp",
+    desc: "Engineering custom plastic modules for Vertical Farming Hydroponics (UV-resistant) and Smart IoT Sensor Housings (IP-rated weatherproof assemblies)."
+  },
+  { 
+    id: "industrial",
+    title: "Industrial Equipment", 
+    cat: "HDPE / POM", 
+    link: "/industries/industrial",
+    image: "/images/industries/nxmold-heavy-industrial-equipment-panels.webp",
+    desc: "Heavy-tonnage molding for Logistics Crates (Impact-resistant stackable bins) and Glass-Filled Structural Brackets (PA66+GF30 high-temp mounts)."
+  },
+  { 
+    id: "consumer-electronics",
+    title: "Consumer Electronics Hardware", 
+    cat: "PC / ABS / PMMA", 
+    link: "/industries/consumer-electronics",
+    image: "/images/industries/nxmold-consumer-electronics-outer-shells.webp",
+    desc: "High-gloss surface finish molding and micro-tolerance custom plastic injection molding for portable digital devices and smart gadget outer shells."
+  },
+  { 
+    id: "medical",
+    title: "Medical & Healthcare Devices", 
+    cat: "ISO 13485 / PEEK", 
+    link: "/industries/medical",
+    image: "/images/industries/nxmold-medical-healthcare-device-housings.webp",
+    desc: "Cleanroom-compatible medical injection molding for micro-fluidic cartridges, diagnostic equipment housings, and specialized medical plastic replacements."
+  },
+  { 
+    id: "energy-storage",
+    title: "New Energy Storage Casings", 
+    cat: "UL94 V-0 / PC+ABS", 
+    link: "/industries/energy-storage",
+    image: "/images/industries/nxmold-energy-storage-battery-casings.webp",
+    desc: "Robust flame-retardant (UL94 V-0) battery management housings and heavy-duty structural frames for commercial energy storage systems."
+  },
+  { 
+    id: "optical",
+    title: "Optical & Lighting Bezels", 
+    cat: "PMMA / PC", 
+    link: "/industries/optical",
+    image: "/images/industries/nxmold-optical-lighting-precision-bezels.webp",
+    desc: "Ultra-transparent lens optical injection molding, light-guide plates, and precision LED bezels requiring zero internal birefringence."
+  },
+  { 
+    id: "robotics",
+    title: "Robotic Automation Gear", 
+    cat: "POM / NYLON", 
+    link: "/industries/robotics",
+    image: "/images/industries/nxmold-robotic-automation-gear-casings.webp",
+    desc: "Durable, high-impact engineering plastic injection molding for composite gear casings and robotic arm structural components built for heavy industrial usage."
+  },
+  { 
+    id: "aerospace",
+    title: "Aerospace & Defense Hardware", 
+    cat: "PEI / PPS", 
+    link: "/industries/aerospace",
+    image: "/images/industries/nxmold-aerospace-defense-plastic-hardware.webp",
+    desc: "High-performance specialized polymer molding and precision structural parts built to endure extreme environmental stress and strict aerospace protocols."
+  },
+  { 
+    id: "smart-home",
+    title: "Smart Home Security Shells", 
+    cat: "ASA / PC", 
+    link: "/industries/smart-home",
+    image: "/images/industries/nxmold-smart-home-security-enclosures.webp",
+    desc: "Weather-resistant outdoor custom plastic camera enclosures, sensor brackets, and sleek IoT control panel bezels with immaculate tool finishes."
+  },
+  { 
+    id: "outdoor",
+    title: "Sports & Outdoor Gear", 
+    cat: "TPU / TPE", 
+    link: "/industries/outdoor",
+    image: "/images/industries/nxmold-sports-outdoor-gear-components.webp",
+    desc: "Rugged, UV-resistant custom mechanical components and structural molding for premium coolers, tactical gear, and high-performance hardwares."
+  }
+];
+
+const featuredCases = [
+  {
+    title: "High-Clarity Anti-Leak Water Tank Assembly",
+    sector: "Home Appliances",
+    material: "PMMA / Food-Grade ABS",
+    公差: "±0.05mm",
+    surface: "SPI A-2 Mirror Polish",
+    desc: "Engineered multi-cavity tooling with balanced hot runners to completely eliminate weld lines and internal stress, achieving 100% airtight ultrasonic welding sealing.",
+    image: "/images/industries/nxmold-home-appliances-injection-molding.webp"
+  },
+  {
+    title: "Countertop Commercial Ice Maker Components",
+    sector: "Smart Living",
+    material: "PP / POM (Wear-Resistant)",
+    公差: "±0.03mm",
+    surface: "VDI 24 Texturing",
+    desc: "Developed high-durability complex slide core mechanisms for continuous automated ejection loops, certified under strict FDA food-contact protocols.",
+    image: "/images/industries/nxmold-commercial-agtech-system-modules.webp"
+  },
+  {
+    title: "Lightweight EV Structural Housing Shells",
+    sector: "Automotive & EV",
+    material: "PA66 + 30% GF (Glass-Filled)",
+    公差: "±0.08mm",
+    surface: "VDI 30 Tactical Matte",
+    desc: "Optimized cavity pressure variables to control anisotropic shrinkage on heavy glass-fiber reinforcement, aligning perfectly to IATF 16949 structural field limits.",
+    image: "/images/industries/nxmold-automotive-ev-structural-parts.webp"
+  }
+];
+
+const bentoMaterials = [
+  { 
+    span: "lg:col-span-8",
+    sector: "Medical & Healthcare Devices", 
+    resins: ["PEEK", "PC", "COC", "COP", "Liquid Silicone"], 
+    compliance: "ISO 13485 Certified • Class 100,000 Cleanroom • USP Class VI", 
+    surface: "SPI A-1 Ultra-Gloss Mirror / SPI B-1",
+    image: "/images/industries/nxmold-medical-healthcare-device-housings.webp",
+    badge: "ISO 13485 // ZERO-DEFECT MEDICAL",
+    highlight: "Micro-fluidic cartridges & surgical-grade polymer enclosures."
+  },
+  { 
+    span: "lg:col-span-4",
+    sector: "Home Appliances", 
+    resins: ["ABS", "PP", "PS", "PMMA", "SAN"], 
+    compliance: "FDA Food-Contact • NSF Standard • UL94 V-0", 
+    surface: "SPI A-2 Mirror / VDI 21-27",
+    image: "/images/industries/nxmold-home-appliances-injection-molding.webp",
+    badge: "FDA COMPLIANT",
+    highlight: "Countertop ice makers & pressure-tested water reservoirs."
+  },
+  { 
+    span: "lg:col-span-4",
+    sector: "Automotive & EV Systems", 
+    resins: ["PA66+GF30", "PC/ABS", "PBT", "POM", "TPE"], 
+    compliance: "IATF 16949 • RoHS • REACH", 
+    surface: "VDI 27-33 Tactical Matte",
+    image: "/images/industries/nxmold-automotive-ev-structural-parts.webp",
+    badge: "IATF 16949",
+    highlight: "High-impact child safety seat parts & interior trims."
+  },
+  { 
+    span: "lg:col-span-8",
+    sector: "Industrial & New Energy Storage", 
+    resins: ["PA6+GF30", "POM", "HDPE", "PPO", "PVDF"], 
+    compliance: "UL94 V-0 Flame Retardant • DIN 16742 Series • ISO 9001", 
+    surface: "VDI 30 Heavy Industrial Texture",
+    image: "/images/industries/nxmold-heavy-industrial-equipment-panels.webp",
+    badge: "HEAVY-DUTY // UL94 V-0",
+    highlight: "Robust battery management casings & structural framing."
+  }
+];
+
+const faqs = [
+  {
+    ref: "REF_01",
+    q: "What is your typical lead time for rapid tooling and T1 samples?",
+    a: "Standard rapid tooling and T1 functional samples are typically delivered within 10 to 18 days, depending on part geometry and resin complexity. Accelerated 7-day expedite options are available for urgent validation runs."
+  },
+  {
+    ref: "REF_02",
+    q: "Do you support low-volume and custom SMB production runs?",
+    a: "Yes. Unlike mega-conglomerates with rigid high MOQs, NxMold specializes in agile manufacturing for small-to-medium B2B enterprises, accommodating flexible production quantities with absolute dimensional consistency."
+  },
+  {
+    ref: "REF_03",
+    q: "How do you protect our proprietary 3D CAD designs and intellectual property?",
+    a: "We sign strict mutual Non-Disclosure Agreements (NDA) prior to file exchange. As an independent direct-factory facility in Dongguan, your data remains fully secured under rigorous internal IP containment protocols."
+  },
+  {
+    ref: "REF_04",
+    q: "What quality assurance and inspection equipment do you use?",
+    a: "Every mold and production batch undergoes strict multi-axis inspection using our in-house Zeiss CMM (Coordinate Measuring Machine) systems, ensuring complete compliance with DIN 16742 precision tolerance standards."
+  }
+];
+---
+
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "ManufacturingBusiness",
+            "@id": "https://nxmold.com/#business",
+            "name": "NxMold Precision Manufacturing Co., Ltd.",
+            "alternateName": "东莞耐思模塑科技有限公司",
+            "url": "https://nxmold.com",
+            "logo": "https://nxmold.com/favicon.svg",
+            "description": "Direct-factory custom plastic injection molding, rapid precision tooling, and high-yield manufacturing based in Dongguan, China.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Dongguan",
+              "addressRegion": "Guangdong",
+              "addressCountry": "China"
+            },
+            "areaServed": ["United States", "Europe", "Global"],
+            "knowsAbout": ["Plastic Injection Molding", "Rapid Tooling", "DIN 16742 Standards", "Zeiss CMM Inspection", "VDI Texturing"]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is your typical lead time for rapid tooling and T1 samples?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Standard rapid tooling and T1 functional samples are typically delivered within 10 to 18 days, depending on part geometry and resin complexity."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do you support low-volume and custom SMB production runs?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, NxMold specializes in agile manufacturing for small-to-medium B2B enterprises, accommodating flexible production quantities with absolute dimensional consistency."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do you protect our proprietary 3D CAD designs and intellectual property?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We sign strict mutual Non-Disclosure Agreements (NDA) prior to file exchange and enforce rigorous internal IP containment protocols."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What quality assurance and inspection equipment do you use?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Every production batch undergoes multi-axis inspection using in-house Zeiss CMM systems, ensuring compliance with DIN 16742 precision tolerance standards."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+
+    <style>
+      :root {
+        --mx: 0;
+        --my: 0;
+        --stage-scale: 1;
+      }
+
+      .vdi-starry-surface { background-color: #030712; }
+      .bg-stars-layer {
+        background-image: 
+          radial-gradient(white 1.5px, transparent 0),
+          radial-gradient(rgba(234, 88, 12, 0.8) 2px, transparent 0),
+          radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 0);
+        background-size: 200px 200px, 300px 300px, 120px 120px;
+        animation: continuousStarDrift 120s linear infinite;
+      }
+      @keyframes continuousStarDrift {
+        0% { background-position: 0 0, 50px 70px, 120px 40px; }
+        100% { background-position: -2000px -2000px, -3000px -3000px, -1200px -1200px; }
+      }
+
+      .meteor-tail {
+        width: 2px; height: 150px;
+        background: linear-gradient(to bottom, #ffffff 0%, rgba(234, 88, 12, 0.5) 30%, transparent 100%);
+        border-radius: 50%; position: relative; opacity: 0;
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.2);
+      }
+      .meteor-tail::after {
+        content: ''; position: absolute; top: -2px; left: -3px; width: 8px; height: 8px;
+        background: #ffffff; border-radius: 50%;
+        box-shadow: 0 0 15px 4px #ea580c, 0 0 30px 5px rgba(255, 255, 255, 0.9);
+      }
+      @keyframes shootingStar {
+        0% { transform: translateY(-50vh); opacity: 0; }
+        10% { opacity: 1; filter: brightness(2); }
+        25% { transform: translateY(120vh); opacity: 0; filter: brightness(1); }
+        100% { transform: translateY(120vh); opacity: 0; }
+      }
+
+      .hud-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 7, 18, 0.95) 100%);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 25px 50px rgba(0, 0, 0, 0.85), inset 0 0 30px rgba(234, 88, 12, 0.08);
+        backdrop-filter: blur(25px);
+        clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+        position: relative;
+      }
+      .hud-card::before, .hud-card::after {
+        content: ''; position: absolute; width: 15px; height: 15px; pointer-events: none; z-index: 20;
+      }
+      .hud-card::before { top: 0; left: 0; border-top: 2px solid #EA580C; border-left: 2px solid #EA580C; }
+      .hud-card::after { bottom: 0; right: 0; border-bottom: 2px solid #EA580C; border-right: 2px solid #EA580C; }
+      .hud-scanline {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.015) 2px, rgba(255, 255, 255, 0.015) 4px);
+        pointer-events: none; z-index: 0;
+      }
+      @keyframes buttonShine { 100% { transform: translateX(200%) skewX(-20deg); } }
+      .card-flash-anim { animation: hudDataGlitch 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      @keyframes hudDataGlitch {
+        0% { opacity: 0; transform: scale(0.95) translateX(-10px); filter: brightness(2) blur(4px) hue-rotate(-20deg); }
+        50% { opacity: 0.8; transform: scale(1.02) translateX(2px); filter: brightness(1.5) blur(1px) hue-rotate(10deg); }
+        100% { opacity: 1; transform: scale(1) translateX(0); filter: brightness(1) blur(0) hue-rotate(0deg); }
+      }
+
+      @keyframes solarPulse {
+        0%, 100% { box-shadow: 0 15px 50px rgba(234, 88, 12, 0.4), 0 0 100px rgba(234, 88, 12, 0.2); transform: scale(1); }
+        50% { box-shadow: 0 25px 80px rgba(234, 88, 12, 0.7), 0 0 160px rgba(255, 120, 0, 0.3); transform: scale(1.03); }
+      }
+      .sun-sphere {
+        border-radius: 50%; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
+        background: #ffffff;
+        animation: solarPulse 5s ease-in-out infinite;
+      }
+      .sun-texture-layer {
+        position: absolute; inset: 0; background-size: cover; background-position: center; border-radius: 50%; z-index: 1;
+      }
+      .sun-volumetric-overlay {
+        position: absolute; inset: 0; border-radius: 50%;
+        box-shadow: inset -10px -10px 20px rgba(0, 0, 0, 0.3), inset 8px 8px 15px rgba(255, 255, 255, 0.9), inset 0 0 20px rgba(234, 88, 12, 0.2);
+        pointer-events: none; z-index: 10;
+      }
+
+      .satellite-sphere {
+        border-radius: 50%; position: absolute; 
+        background: #ffffff !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7), 0 0 10px rgba(234, 88, 12, 0.2);
+        transform: scale(1);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        cursor: pointer; pointer-events: auto !important;
+      }
+      .satellite-sphere:hover { transform: scale(1.4) !important; box-shadow: 0 0 40px #ea580c; z-index: 60; }
+      .planet-surface-wrap { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; pointer-events: none; }
+      .planet-texture {
+        position: absolute; inset: 0; background-size: cover; background-position: center;
+      }
+      .planet-lighting-overlay {
+        position: absolute; inset: 0; border-radius: 50%;
+        box-shadow: inset -6px -6px 12px rgba(0, 0, 0, 0.3), inset 3px 3px 8px rgba(255, 255, 255, 0.9);
+        pointer-events: none;
+      }
+
+      .stage-wrapper {
+        width: 100%; max-width: 100vw; overflow: hidden; display: flex; justify-content: center; align-items: center;
+      }
+      .solar-system-stage {
+        position: relative; width: 860px; height: 860px; margin: 0 auto;
+        transform: translate(calc(var(--mx) * -15px), calc(var(--my) * -15px)) scale(var(--stage-scale));
+        transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transform-origin: center center;
+        -webkit-font-smoothing: antialiased; 
+      }
+      .orbit-ring {
+        position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 20px rgba(234, 88, 12, 0.03), inset 0 0 20px rgba(255, 255, 255, 0.02); pointer-events: none;
+      }
+      .orbit-wrapper { width: 0; height: 0; animation: orbit-spin var(--duration) linear infinite; }
+      @keyframes orbit-spin {
+        0% { transform: rotate(var(--r-angle)) translateX(var(--r-radius)) rotate(calc(var(--r-angle) * -1)); }
+        100% { transform: rotate(calc(var(--r-angle) + 360deg)) translateX(var(--r-radius)) rotate(calc((var(--r-angle) + 360deg) * -1)); }
+      }
+
+      @media (max-width: 1024px) {
+        :root { --stage-scale: 0.75; }
+        .solar-system-stage { margin-top: -107px; margin-bottom: -107px; }
+      }
+
+      @media (max-width: 768px) {
+        :root { --stage-scale: 0.52; } 
+        .solar-system-stage { margin-top: -180px; margin-bottom: -180px; }
+        .orbit-planet .sat-text-container { display: none !important; }
+      }
+
+      @keyframes logoScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .logo-ticker {
+        display: flex; width: max-content; animation: logoScroll 30s linear infinite; align-items: center;
+      }
+      .logo-ticker:hover { animation-play-state: paused; }
+    </style>
+  </head>
+  
+  <body class="bg-white text-[#333333] font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-[#EA580C] selection:text-white overflow-x-hidden">
+
+    <Header lang={lang} />
+
+    <div class="bg-[#0F2B5B] text-white py-2 px-6 lg:px-16 text-xs font-mono tracking-[0.25em] flex flex-wrap items-center justify-between gap-4 border-b border-white/15">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-pulse"></span>
+        <span class="font-bold uppercase">ISO 9001:2015 Certified Direct Factory Manufacturing:</span>
+      </div>
+      <div class="flex items-center gap-6 text-[11px] text-slate-300">
+        <span>Dongguan Plant Fleet (90T-1200T)</span>
+        <span class="hidden sm:inline">•</span>
+        <span>Zeiss CMM Metrology Lab</span>
+        <span class="hidden md:inline">•</span>
+        <span>DIN 16742 Precision Standard</span>
+      </div>
+    </div>
+
+    <main class="flex-grow w-full overflow-hidden">
+      
+      <!-- Step 1: HERO + SaaS 级互动报价计算器预览 -->
+      <section class="relative min-h-[calc(100vh-80px)] flex flex-col justify-between overflow-hidden w-full bg-[#030712] border-b border-slate-800">
+        <div class="absolute inset-0 bg-cover bg-center opacity-35 scale-105 filter contrast-125" style="background-image: url('/images/industries/nxmold-home-appliances-injection-molding.webp');"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-[#030712]/95 via-[#0B1E40]/90 to-[#030712]/95"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] pointer-events-none"></div>
+        <div class="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#EA580C]/15 rounded-full blur-[160px] pointer-events-none"></div>
+
+        <div class="relative z-10 w-full max-w-[1600px] mx-auto px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center py-12 lg:py-6 my-auto">
+          <div class="lg:col-span-7 space-y-6">
+            <nav class="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.3em] text-slate-400">
+              <a href="/" class="hover:text-[#EA580C] transition-colors font-bold">HOME</a>
+              <span class="text-[#EA580C]">//</span>
+              <span class="text-white font-extrabold bg-white/10 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">INDUSTRIES & SECTORS</span>
+            </nav>
+
+            <div class="space-y-4">
+              <h1 class="text-4xl sm:text-6xl xl:text-7xl font-[1000] uppercase tracking-tighter text-white leading-[0.92]">
+                Global Industry <br />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-400 to-amber-200">Ecosystems.</span>
+              </h1>
+              <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-sans max-w-xl border-l-2 border-[#EA580C] pl-4 py-1 font-light tracking-wide">
+                Direct-factory custom plastic injection molding and rapid precision tooling solutions engineered for global industry leaders. Built with extreme tolerance control and massive capacity in Dongguan, China.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/15 max-w-lg font-mono">
+              <div>
+                <span class="block text-xl sm:text-2xl font-[1000] text-[#EA580C]">12 Sectors</span>
+                <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Global Verticals</span>
+              </div>
+              <div>
+                <span class="block text-xl sm:text-2xl font-[1000] text-white">90T–1200T</span>
+                <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Haitian Fleet</span>
+              </div>
+              <div>
+                <span class="block text-xl sm:text-2xl font-[1000] text-white">24h SLA</span>
+                <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Automated DFM</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5">
+            <div class="hud-card p-6 sm:p-8 space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-[#EA580C]/40 relative overflow-hidden">
+              <div class="hud-scanline"></div>
+              <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#EA580C] to-transparent"></div>
+              
+              <div class="relative z-10 flex items-center justify-between border-b border-white/10 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span class="font-mono text-[10px] text-[#EA580C] uppercase tracking-[0.25em] font-black">
+                    INSTANT DFM SIMULATOR
+                  </span>
+                </div>
+                <span class="font-mono text-[9px] text-slate-400 uppercase">DONGGUAN PLANT</span>
+              </div>
+
+              <div class="relative z-10 space-y-4 font-sans">
+                <div>
+                  <label class="block text-[10px] font-mono font-bold text-slate-300 uppercase mb-1.5">Select Resin Polymer</label>
+                  <select id="sim-resin" class="w-full bg-slate-900 border border-white/20 text-white text-xs font-mono rounded-lg px-3 py-2.5 focus:border-[#EA580C] focus:outline-none">
+                    <option value="abs">ABS (General Purpose / Appliance)</option>
+                    <option value="peeks">PEEK / Medical Grade (ISO 13485)</option>
+                    <option value="pa66">PA66 + 30% GF (Automotive Structural)</option>
+                    <option value="pc">PC / PMMA (Optical & High Transparency)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-[10px] font-mono text-slate-300 mb-1.5">
+                    <span>Estimated Production Volume</span>
+                    <span id="vol-display" class="text-[#EA580C] font-bold">5,000 pcs</span>
+                  </div>
+                  <input type="range" id="sim-vol" min="500" max="50000" step="500" value="5000" class="w-full accent-[#EA580C] cursor-pointer bg-slate-800 rounded-lg h-2" oninput="document.getElementById('vol-display').textContent = Number(this.value).toLocaleString() + ' pcs';" />
+                </div>
+
+                <div class="bg-black/50 border border-white/10 p-4 rounded-xl flex items-center justify-between font-mono">
+                  <div>
+                    <span class="block text-[9px] text-slate-400 uppercase">Estimated T1 Lead Time</span>
+                    <span class="text-sm font-bold text-white">12 – 15 Business Days</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="block text-[9px] text-slate-400 uppercase">Tooling Status</span>
+                    <span class="text-xs font-bold text-emerald-400">READY FOR DFM</span>
+                  </div>
+                </div>
+
+                <button 
+                  onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('hero_calculator')"
+                  class="w-full bg-[#EA580C] hover:bg-[#D94E07] text-white font-mono text-xs font-black uppercase tracking-[0.2em] py-3.5 px-4 transition-all shadow-[0_0_25px_rgba(234,88,12,0.5)] cursor-pointer"
+                >
+                  Upload CAD & Get Formal Quote →
+                </button>
+              </div>
+
+              <div class="relative z-10 flex items-center justify-center gap-4 text-[9px] font-mono text-slate-400 uppercase tracking-widest pt-1 border-t border-white/10">
+                <span>ISO 9001:2015</span>
+                <span>•</span>
+                <span>Zeiss CMM Verified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative z-20 w-full border-t border-white/10 bg-[#061022]/90 backdrop-blur-md overflow-hidden flex-shrink-0">
+          <div class="max-w-[1600px] mx-auto px-6 lg:px-16 flex flex-col md:flex-row items-center relative py-3">
+            <div class="flex-shrink-0 z-10 bg-[#061022] pr-8 text-center md:text-left mb-2 md:mb-0 relative shadow-[20px_0_20px_-15px_#061022]">
+              <span class="text-[8px] font-mono text-slate-400 uppercase tracking-[0.2em] block mb-0.5 font-bold">TRUSTED B2B PARTNERS</span>
+              <span class="text-[11px] font-extrabold text-white uppercase tracking-widest">Global Supply Chain</span>
+            </div>
+            <div class="flex-grow overflow-hidden relative opacity-70 hover:opacity-100 transition-opacity duration-300 flex items-center h-8">
+              <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#061022] to-transparent z-10"></div>
+              <div class="logo-ticker flex items-center">
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[1000] text-xl tracking-tighter uppercase font-sans">Panasonic</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[900] text-lg tracking-widest uppercase font-serif">BOSCH</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[1000] text-xl tracking-tight uppercase font-sans">SIEMENS</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-black text-xl tracking-[0.2em] uppercase font-mono">HONDA</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[800] text-2xl tracking-tighter uppercase font-sans">Philips</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-bold text-xl tracking-widest uppercase font-serif">LG</span>
+                
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[1000] text-xl tracking-tighter uppercase font-sans">Panasonic</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[900] text-lg tracking-widest uppercase font-serif">BOSCH</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[1000] text-xl tracking-tight uppercase font-sans">SIEMENS</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-black text-xl tracking-[0.2em] uppercase font-mono">HONDA</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-[800] text-2xl tracking-tighter uppercase font-sans">Philips</span>
+                <span class="flex-shrink-0 whitespace-nowrap mx-10 text-white font-bold text-xl tracking-widest uppercase font-serif">LG</span>
+              </div>
+              <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#061022] to-transparent z-10"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: 星系图矩阵 -->
+      <section class="vdi-starry-surface py-28 relative overflow-hidden select-none text-white z-0">
+        <div class="absolute inset-[-20%] pointer-events-none z-0" style="transform: translate(calc(var(--mx) * -30px), calc(var(--my) * -30px)); transition: transform 0.15s ease-out;">
+           <div class="absolute inset-0 bg-stars-layer opacity-80"></div>
+           <div class="absolute top-1/2 left-1/2 w-[120%] h-[500px] bg-gradient-to-r from-transparent via-[#1e3a8a]/30 to-transparent -translate-x-1/2 -translate-y-1/2 -rotate-[35deg] blur-[90px] mix-blend-screen"></div>
+           <div class="absolute top-1/2 left-1/2 w-[80%] h-[250px] bg-gradient-to-r from-transparent via-[#7e22ce]/25 to-transparent -translate-x-1/2 -translate-y-1/2 -rotate-[35deg] blur-[70px] mix-blend-screen"></div>
+           <div class="absolute top-1/2 left-1/2 w-[50%] h-[120px] bg-gradient-to-r from-transparent via-[#ea580c]/20 to-transparent -translate-x-1/2 -translate-y-1/2 -rotate-[35deg] blur-[50px] mix-blend-screen"></div>
+
+           <div class="absolute top-[10%] left-[20%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 8s linear infinite 0s;"></div></div>
+           <div class="absolute top-[30%] left-[80%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 12s linear infinite 3s;"></div></div>
+           <div class="absolute top-[-10%] left-[60%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 9s linear infinite 5s;"></div></div>
+           <div class="absolute top-[60%] left-[10%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 15s linear infinite 1s;"></div></div>
+           <div class="absolute top-[80%] left-[70%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 7s linear infinite 8s;"></div></div>
+           <div class="absolute top-[40%] left-[-5%] -rotate-45"><div class="meteor-tail" style="animation: shootingStar 10s linear infinite 11s;"></div></div>
+        </div>
+
+        <div class="max-w-[1600px] mx-auto px-6 lg:px-12 w-full space-y-16 relative z-10">
+          <div class="max-w-2xl mx-auto text-center space-y-2">
+            <span class="text-[10px] font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-white/5 border border-white/10 px-3.5 py-1 rounded-full inline-block shadow-lg">
+              MOLD TEXTURING & FINISHING // VDI SPECS
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-white leading-none">
+              Sectors We Serve<span class="text-[#EA580C]">.</span>
+            </h2>
+            <p class="text-slate-300 text-xs sm:text-sm font-light max-w-lg mx-auto">
+              Select any manufacturing node on the injection molding matrix below to cross-reference technical data and focus it as the primary display core.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-6">
+            <div class="lg:col-span-4 flex flex-col items-center lg:items-start space-y-6 relative">
+              <div id="sun-details-wrapper" class="hud-card p-7 sm:p-8 w-full max-w-sm text-left group mx-auto lg:mx-0">
+                <div class="hud-scanline"></div>
+                <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#EA580C] to-transparent opacity-80"></div>
+                
+                <div class="relative z-10 flex items-center justify-between border-b border-white/10 pb-3 mb-5">
+                  <div class="flex items-center gap-2.5">
+                    <div class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EA580C] opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#EA580C]"></span>
+                    </div>
+                    <span class="font-mono text-[10px] text-[#EA580C] uppercase tracking-[0.25em] font-black drop-shadow-[0_0_8px_rgba(234,88,12,0.8)]">
+                      ACTIVE SECTOR
+                    </span>
+                  </div>
+                  <span class="font-mono text-[8px] text-slate-500 uppercase tracking-widest">MOLD-RDY</span>
+                </div>
+
+                <div id="sun-details-panel" class="relative z-10 space-y-4">
+                  <h3 id="panel-title" class="text-xl sm:text-2xl font-[1000] uppercase text-white tracking-tight leading-snug drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
+                    {allSectors[0].title}
+                  </h3>
+                  
+                  <div class="relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#EA580C] to-transparent opacity-70"></div>
+                    <p id="panel-desc" class="text-[11px] sm:text-xs text-slate-300 font-light leading-relaxed pl-4">
+                      {allSectors[0].desc}
+                    </p>
+                  </div>
+                  
+                  <div class="pt-3">
+                    <a id="panel-link" href={allSectors[0].link} class="relative inline-flex items-center justify-center gap-2 bg-[#EA580C] text-white font-mono text-[11px] font-black uppercase tracking-[0.15em] py-3 px-6 overflow-hidden transition-all shadow-[0_0_20px_rgba(234,88,12,0.4)] group/btn border border-[#EA580C] hover:border-white/40">
+                      <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-[150%] skew-x-[-20deg] group-hover/btn:animate-[buttonShine_0.7s_ease-in-out_forwards]"></span>
+                      <span class="relative z-10 flex items-center gap-2">Explore Solutions <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="3" d="M9 5l7 7-7 7"></path></svg></span>
+                    </a>
+                  </div>
+                </div>
+                
+                <div class="relative z-10 flex justify-between items-end mt-5 pt-4 border-t border-white/10">
+                  <div class="flex gap-1.5">
+                    <span class="block w-1.5 h-1.5 bg-slate-600"></span>
+                    <span class="block w-1.5 h-1.5 bg-slate-600"></span>
+                    <span class="block w-1.5 h-1.5 bg-[#EA580C] shadow-[0_0_8px_#EA580C]"></span>
+                  </div>
+                  <span class="font-mono text-[7px] text-slate-500 uppercase tracking-widest">MOLD_DATA // SYNCHRONIZED</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-8 flex justify-center relative stage-wrapper">
+              <div class="solar-system-stage">
+                <div class="orbit-ring" style="width: 330px; height: 330px;"></div>
+                <div class="orbit-ring" style="width: 380px; height: 380px;"></div>
+                <div class="orbit-ring" style="width: 430px; height: 430px;"></div>
+                <div class="orbit-ring" style="width: 480px; height: 480px;"></div>
+                <div class="orbit-ring" style="width: 530px; height: 530px;"></div>
+                <div class="orbit-ring" style="width: 580px; height: 580px;"></div>
+                <div class="orbit-ring" style="width: 630px; height: 630px;"></div>
+                <div class="orbit-ring" style="width: 680px; height: 680px;"></div>
+                <div class="orbit-ring" style="width: 730px; height: 730px;"></div>
+                <div class="orbit-ring" style="width: 780px; height: 780px;"></div>
+                <div class="orbit-ring" style="width: 830px; height: 830px;"></div>
+
+                <div id="central-sun" 
+                     class="absolute z-30 top-1/2 left-1/2 flex flex-col items-center justify-center text-center" 
+                     style="width: 160px; height: 160px; margin-top: -80px; margin-left: -80px;"
+                     data-id={allSectors[0].id}
+                     data-title={allSectors[0].title}
+                     data-cat={allSectors[0].cat}
+                     data-desc={allSectors[0].desc}
+                     data-link={allSectors[0].link}
+                     data-image={allSectors[0].image}
+                >
+                  <div class="sun-sphere" id="sun-texture-wrap">
+                    <div class="sun-corona"></div>
+                    <div id="sun-img-bg" class="sun-texture-layer" style={`background-image: url('${allSectors[0].image}');`}></div>
+                    <div class="sun-volumetric-overlay"></div>
+                  </div>
+                  
+                  <div class="sat-text-container relative z-20 flex flex-col items-center justify-center space-y-1 px-2 pointer-events-none mt-2">
+                    <span id="sun-cat-text" class="text-[7px] font-mono text-orange-200 uppercase tracking-widest bg-black/75 px-2 py-0.5 rounded-full border border-orange-400/50 backdrop-blur-md shadow-lg">
+                      {allSectors[0].cat}
+                    </span>
+                    <h3 id="sun-title-text" class="text-[10px] font-[1000] uppercase text-white tracking-wide leading-tight drop-shadow-xl bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm line-clamp-2 mt-1">
+                      {allSectors[0].title}
+                    </h3>
+                  </div>
+                </div>
+
+                {allSectors.slice(1).map((s, idx) => {
+                  const radii = [165, 190, 215, 240, 265, 290, 315, 340, 365, 390, 415];
+                  const radius = radii[idx];
+                  const sizes = [42, 34, 46, 36, 40, 32, 44, 34, 38, 30, 42];
+                  const size = sizes[idx];
+                  const angleDeg = idx * 137.5;
+                  const isTextAbove = idx % 2 === 0;
+                  const orbitalDuration = 120; 
+
+                  return (
+                    <div 
+                      class="orbit-wrapper absolute top-1/2 left-1/2 z-40 pointer-events-none"
+                      style={`--r-angle: ${angleDeg}deg; --r-radius: ${radius}px; --duration: ${orbitalDuration}s;`}
+                    >
+                      <div 
+                        class="orbit-planet satellite-sphere absolute flex flex-col items-center justify-center p-1 text-center group"
+                        style={`width: ${size}px; height: ${size}px; left: 0; top: 0; margin-top: -${size/2}px; margin-left: -${size/2}px;`}
+                        data-id={s.id}
+                        data-title={s.title}
+                        data-cat={s.cat}
+                        data-desc={s.desc}
+                        data-link={s.link}
+                        data-image={s.image}
+                      >
+                        <div class="planet-surface-wrap sat-texture-wrap">
+                          <div class="planet-texture" style={`background-image: url('${s.image}');`}></div>
+                        </div>
+                        <div class="planet-lighting-overlay relative z-10"></div>
+                        
+                        <div class={`sat-text-container absolute ${isTextAbove ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-center space-y-1 pointer-events-none w-[120px] opacity-85 group-hover:opacity-100 transition-opacity`}>
+                          <span class="sat-cat-text text-[9px] font-mono text-[#EA580C] group-hover:text-white uppercase tracking-widest transition-colors bg-black/80 px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-md shadow-lg">
+                            {s.cat}
+                          </span>
+                          <h3 class="sat-title-text text-[10px] font-[1000] uppercase text-white tracking-tight leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] line-clamp-2 mt-0.5 text-center bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                            {s.title}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: 东莞工厂硬实力 -->
+      <section class="bg-[#030712] py-32 px-6 lg:px-16 border-b border-white/10 select-none relative overflow-hidden">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+        <div class="absolute top-1/2 right-10 w-[500px] h-[500px] bg-[#EA580C]/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+        <div class="max-w-[1400px] mx-auto space-y-16 relative z-10">
+          <div class="max-w-3xl space-y-4">
+            <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-white/5 border border-white/10 px-4 py-1.5 rounded-full inline-block shadow-lg">
+              DONGGUAN FACTORY COMMAND MATRIX // HARDWARE CAPABILITIES
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-white leading-none">
+              90T–1200T High-Yield Injection Fleet<span class="text-[#EA580C]">.</span>
+            </h2>
+            <p class="text-slate-300 text-sm sm:text-base font-light leading-relaxed">
+              Engineered in Dongguan core industrial zone — delivering 30% faster tooling iteration and superior cost efficiency vs. overseas competitors. Backed by closed-loop metrology and strict DIN 16742 standards.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-white/15 hover:border-[#EA580C] p-8 rounded-2xl space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden backdrop-blur-xl">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-[#EA580C] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div class="space-y-4 pt-2">
+                <div class="flex items-center justify-between">
+                  <div class="w-12 h-12 rounded-xl bg-[#EA580C]/15 border border-[#EA580C]/30 text-[#EA580C] flex items-center justify-center group-hover:bg-[#EA580C] group-hover:text-white transition-all shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                  </div>
+                  <span class="font-mono text-[10px] text-slate-400 uppercase tracking-widest bg-white/5 border border-white/10 px-3 py-1 rounded-full font-bold">01 // PRODUCTION</span>
+                </div>
+                <div class="pt-2">
+                  <span class="text-3xl sm:text-4xl font-[1000] text-white tracking-tight font-mono drop-shadow-md">23 SETS</span>
+                  <span class="block text-xs font-mono font-bold text-[#EA580C] uppercase tracking-wider mt-0.5">90T – 1200T Injection Fleet</span>
+                </div>
+                <p class="text-slate-300 text-xs sm:text-sm font-light leading-relaxed">
+                  Equipped with high-precision Haitian toggle molding machines, maintaining stable clamping force and continuous micro-processor monitoring for large-tonnage and multi-cavity tool runs.
+                </p>
+              </div>
+              <div class="pt-4 border-t border-white/10">
+                <a href="/capabilities/fleet" class="inline-flex items-center gap-2 text-xs font-mono text-[#EA580C] font-extrabold uppercase tracking-widest hover:text-white transition-colors group-hover:translate-x-1 duration-200">
+                  Explore Machinery Specs →
+                </a>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-white/15 hover:border-[#EA580C] p-8 rounded-2xl space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden backdrop-blur-xl">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-[#EA580C] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div class="space-y-4 pt-2">
+                <div class="flex items-center justify-between">
+                  <div class="w-12 h-12 rounded-xl bg-[#EA580C]/15 border border-[#EA580C]/30 text-[#EA580C] flex items-center justify-center group-hover:bg-[#EA580C] group-hover:text-white transition-all shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  </div>
+                  <span class="font-mono text-[10px] text-slate-400 uppercase tracking-widest bg-white/5 border border-white/10 px-3 py-1 rounded-full font-bold">02 // INSPECTION</span>
+                </div>
+                <div class="pt-2">
+                  <span class="text-3xl sm:text-4xl font-[1000] text-white tracking-tight font-mono drop-shadow-md">≥ 99.2%</span>
+                  <span class="block text-xs font-mono font-bold text-[#EA580C] uppercase tracking-wider mt-0.5">Yield Rate (±0.005mm CMM)</span>
+                </div>
+                <p class="text-slate-300 text-xs sm:text-sm font-light leading-relaxed">
+                  Strict adherence to DIN 16742 standards. Every production batch undergoes multi-axis geometric coordinates testing via Zeiss CMM equipment prior to global dispatch.
+                </p>
+              </div>
+              <div class="pt-4 border-t border-white/10">
+                <a href="/capabilities/metrology" class="inline-flex items-center gap-2 text-xs font-mono text-[#EA580C] font-extrabold uppercase tracking-widest hover:text-white transition-colors group-hover:translate-x-1 duration-200">
+                  View CMM Lab Standards →
+                </a>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-white/15 hover:border-[#EA580C] p-8 rounded-2xl space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden backdrop-blur-xl">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-[#EA580C] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div class="space-y-4 pt-2">
+                <div class="flex items-center justify-between">
+                  <div class="w-12 h-12 rounded-xl bg-[#EA580C]/15 border border-[#EA580C]/30 text-[#EA580C] flex items-center justify-center group-hover:bg-[#EA580C] group-hover:text-white transition-all shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 73.034l4-4m0 0l4 4m-4-4v12"></path></svg>
+                  </div>
+                  <span class="font-mono text-[10px] text-slate-400 uppercase tracking-widest bg-white/5 border border-white/10 px-3 py-1 rounded-full font-bold">03 // FINISHING</span>
+                </div>
+                <div class="pt-2">
+                  <span class="text-3xl sm:text-4xl font-[1000] text-white tracking-tight font-mono drop-shadow-md">VDI / SPI</span>
+                  <span class="block text-xs font-mono font-bold text-[#EA580C] uppercase tracking-wider mt-0.5">A-2 Mirror to Spark Textures</span>
+                </div>
+                <p class="text-slate-300 text-xs sm:text-sm font-light leading-relaxed">
+                  Advanced mold texturing capacities ranging from high-gloss SPI mirror finishes to specialized VDI 3400 spark erosion textures, engineered for flawless consumer touch-surfaces.
+                </p>
+              </div>
+              <div class="pt-4 border-t border-white/10">
+                <a href="/capabilities/finishing" class="inline-flex items-center gap-2 text-xs font-mono text-[#EA580C] font-extrabold uppercase tracking-widest hover:text-white transition-colors group-hover:translate-x-1 duration-200">
+                  View VDI Texture Gallery →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 4: 精选工程案例 (Case Studies) -->
+      <section class="bg-slate-50/50 pt-24 pb-12 px-6 lg:px-16 select-none border-b border-slate-200">
+        <div class="max-w-[1400px] mx-auto space-y-12">
+          <div class="max-w-3xl space-y-3">
+            <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-white border border-slate-200 px-4 py-1.5 rounded-full inline-block shadow-sm">
+              ENGINEERING EXCELLENCE // CASE STUDIES
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-[1000] uppercase tracking-tight text-[#0F2B5B] leading-none">
+              Featured Injection Molding Projects<span class="text-[#EA580C]">.</span>
+            </h2>
+            <p class="text-slate-600 text-sm font-light max-w-2xl">
+              Cross-reference our localized mold development performance metrics. Real parts engineered with micron-level tolerances and optimized cycle yields for Western B2B clients.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredCases.map((c) => (
+              <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:border-[#EA580C] transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                  <div class="w-full h-52 overflow-hidden bg-slate-100 border-b border-slate-200 relative">
+                    <div class="w-full h-full bg-cover bg-center filter contrast-105 group-hover:scale-105 transition-transform duration-500" style={`background-image: url('${c.image}');`}></div>
+                    <span class="absolute top-4 left-4 bg-[#0F2B5B] text-white text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-sm shadow-md">
+                      {c.sector}
+                    </span>
+                  </div>
+                  <div class="p-6 space-y-4">
+                    <h3 class="text-base font-[900] uppercase text-[#0F2B5B] tracking-tight leading-tight line-clamp-2 min-h-[40px]">
+                      {c.title}
+                    </h3>
+                    <p class="text-slate-600 text-xs font-light leading-relaxed line-clamp-3">
+                      {c.desc}
+                    </p>
+                  </div>
+                </div>
+                <div class="px-6 pb-6 pt-2">
+                  <div class="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-center font-mono text-[10px]">
+                    <div>
+                      <span class="block text-slate-400 uppercase tracking-wider text-[8px]">Material</span>
+                      <span class="font-bold text-slate-800 line-clamp-1">{c.material}</span>
+                    </div>
+                    <div>
+                      <span class="block text-slate-400 uppercase tracking-wider text-[8px]">Tolerance</span>
+                      <span class="font-bold text-[#EA580C]">{c.公差}</span>
+                    </div>
+                    <div>
+                      <span class="block text-slate-400 uppercase tracking-wider text-[8px]">Surface</span>
+                      <span class="font-bold text-slate-800 line-clamp-1">{c.surface}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 5: 敏捷制造优势 -->
+      <section class="bg-slate-900 py-28 px-6 lg:px-16 text-white border-b border-white/10 select-none relative overflow-hidden">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+        <div class="absolute top-1/3 left-10 w-96 h-96 bg-[#EA580C]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+        <div class="max-w-[1400px] mx-auto space-y-16 relative z-10">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-5 space-y-4">
+              <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-white/5 border border-white/10 px-4 py-1.5 rounded-full inline-block shadow-lg">
+                AGILE SUPPLY CHAIN FOR SMBS
+              </span>
+              <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-white leading-tight">
+                Zero Bureaucracy.<br />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-400 to-amber-200">Direct Factory Agility.</span>
+              </h2>
+              <p class="text-slate-300 text-sm sm:text-base font-light leading-relaxed">
+                We eliminate traditional middleman trading barriers and large-conglomerate delays. Growing hardware brands work directly with Dongguan toolmakers to secure rapid, flexible prototype-to-volume turnarounds.
+              </p>
+            </div>
+
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div class="bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-950 border border-white/15 hover:border-[#EA580C] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                <div class="h-40 overflow-hidden relative border-b border-white/10">
+                  <div class="absolute inset-0 bg-cover bg-center filter contrast-115 group-hover:scale-105 transition-transform duration-500" style="background-image: url('/images/industries/nxmold-automotive-ev-structural-parts.webp');"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                  <div class="absolute top-3 left-3 bg-black/75 border border-white/20 text-[#EA580C] font-mono text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
+                    01 // DIRECT PIPELINE
+                  </div>
+                </div>
+                <div class="p-6 space-y-3 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-base font-[900] uppercase text-white tracking-wide mb-2 group-hover:text-[#EA580C] transition-colors">
+                      Engineer-to-Engineer Pipelines
+                    </h3>
+                    <p class="text-slate-300 text-xs font-light leading-relaxed">
+                      Skip non-technical sales reps. Deal directly with our injection mold masters in Dongguan to resolve wall thickness, gating locations, and sink marks instantly via dynamic DFM reviews.
+                    </p>
+                  </div>
+                  <div class="pt-3 border-t border-white/10 font-mono text-[9px] text-[#EA580C] font-bold uppercase tracking-widest">
+                    Zero Middlemen Friction →
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-950 border border-white/15 hover:border-[#EA580C] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                <div class="h-40 overflow-hidden relative border-b border-white/10">
+                  <div class="absolute inset-0 bg-cover bg-center filter contrast-115 group-hover:scale-105 transition-transform duration-500" style="background-image: url('/images/industries/nxmold-home-appliances-injection-molding.webp');"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                  <div class="absolute top-3 left-3 bg-black/75 border border-white/20 text-[#EA580C] font-mono text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
+                    02 // SCALABILITY
+                  </div>
+                </div>
+                <div class="p-6 space-y-3 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-base font-[900] uppercase text-white tracking-wide mb-2 group-hover:text-[#EA580C] transition-colors">
+                      Flexible Run Scalability
+                    </h3>
+                    <p class="text-slate-300 text-xs font-light leading-relaxed">
+                      Whether you need customized plastic replacement components, low-volume T1 functional iterations, or standard multi-cavity product runs, we accommodate flexible volumes with absolute consistency.
+                    </p>
+                  </div>
+                  <div class="pt-3 border-t border-white/10 font-mono text-[9px] text-[#EA580C] font-bold uppercase tracking-widest">
+                    Prototype to Volume →
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-950 border border-white/15 hover:border-[#EA580C] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                <div class="h-40 overflow-hidden relative border-b border-white/10">
+                  <div class="absolute inset-0 bg-cover bg-center filter contrast-115 group-hover:scale-105 transition-transform duration-500" style="background-image: url('/images/industries/nxmold-commercial-agtech-system-modules.webp');"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                  <div class="absolute top-3 left-3 bg-black/75 border border-white/20 text-[#EA580C] font-mono text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
+                    03 // TOOLING SPEED
+                  </div>
+                </div>
+                <div class="p-6 space-y-3 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-base font-[900] uppercase text-white tracking-wide mb-2 group-hover:text-[#EA580C] transition-colors">
+                      Rapid Tooling Modifications
+                    </h3>
+                    <p class="text-slate-300 text-xs font-light leading-relaxed">
+                      Our individual direct operation ensures immediate alignment on engineering changes (ECN). Molds are modified directly in our internal toolroom, slicing downstream lead times by weeks.
+                    </p>
+                  </div>
+                  <div class="pt-3 border-t border-white/10 font-mono text-[9px] text-[#EA580C] font-bold uppercase tracking-widest">
+                    Internal Toolroom ECN →
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-950 border border-white/15 hover:border-[#EA580C] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                <div class="h-40 overflow-hidden relative border-b border-white/10">
+                  <div class="absolute inset-0 bg-cover bg-center filter contrast-115 group-hover:scale-105 transition-transform duration-500" style="background-image: url('/images/industries/nxmold-heavy-industrial-equipment-panels.webp');"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                  <div class="absolute top-3 left-3 bg-black/75 border border-white/20 text-[#EA580C] font-mono text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
+                    04 // IP SECURITY
+                  </div>
+                </div>
+                <div class="p-6 space-y-3 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-base font-[900] uppercase text-white tracking-wide mb-2 group-hover:text-[#EA580C] transition-colors">
+                      Uncompromising Intellectual Security
+                    </h3>
+                    <p class="text-slate-300 text-xs font-light leading-relaxed">
+                      Your proprietary STEP/IGES assemblies remain strictly confidential. As an independent dedicated facility, we offer elite IP containment protocols aligned with leading Western hardware firms.
+                    </p>
+                  </div>
+                  <div class="pt-3 border-t border-white/10 font-mono text-[9px] text-[#EA580C] font-bold uppercase tracking-widest">
+                    Strict NDA Protected →
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 6: 材料与合规对照矩阵 (Bento Grid) -->
+      <section class="bg-white py-32 px-6 lg:px-16 border-b border-slate-200 select-none">
+        <div class="max-w-[1400px] mx-auto space-y-16">
+          <div class="max-w-3xl space-y-4">
+            <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-orange-50 border border-orange-200 px-4 py-1.5 rounded-full inline-block shadow-sm">
+              MATERIAL SELECTION & CERTIFICATION MATRIX // BENTO GRID
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-[#0F2B5B] leading-none">
+              Resin Engineering & Industry Compliance<span class="text-[#EA580C]">.</span>
+            </h2>
+            <p class="text-slate-600 text-sm sm:text-base font-light leading-relaxed">
+              NxMold cross-references strict localized verification and geometric guidelines. Review standard high-performance polymers and certified parameters handled directly at our Dongguan plant.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {bentoMaterials.map((item) => (
+              <div class={`${item.span} bg-slate-50 border border-slate-200 hover:border-[#EA580C] rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group`}>
+                <div class="grid grid-cols-1 md:grid-cols-12 h-full items-stretch">
+                  <div class="md:col-span-5 h-64 md:h-full min-h-[260px] overflow-hidden bg-slate-900 relative">
+                    <div class="absolute inset-0 bg-cover bg-center filter contrast-110 group-hover:scale-105 transition-transform duration-700" style={`background-image: url('${item.image}');`}></div>
+                    <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-black/30 to-transparent"></div>
+                    <span class="absolute top-5 left-5 bg-[#EA580C] text-white text-[9px] font-mono font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg z-10">
+                      {item.badge}
+                    </span>
+                  </div>
+
+                  <div class="md:col-span-7 p-8 sm:p-10 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                      <h3 class="text-xl sm:text-2xl font-[1000] uppercase text-[#0F2B5B] tracking-tight">
+                        {item.sector}
+                      </h3>
+                      <p class="text-slate-700 text-xs sm:text-sm font-semibold leading-relaxed">
+                        {item.highlight}
+                      </p>
+                      
+                      <div class="space-y-2 pt-2">
+                        <span class="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Target Polymer Resins</span>
+                        <div class="flex flex-wrap gap-2">
+                          {item.resins.map((r) => (
+                            <span class="bg-white border border-slate-200 text-[#0F2B5B] font-mono text-xs font-bold px-3 py-1 rounded-md shadow-2xs">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-slate-200/80">
+                      <div class="space-y-1">
+                        <span class="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Compliance & Standards</span>
+                        <p class="text-slate-800 text-xs font-bold">
+                          {item.compliance}
+                        </p>
+                      </div>
+
+                      <div class="bg-white border border-slate-200/80 p-3.5 rounded-xl flex items-center justify-between font-mono text-xs">
+                        <span class="text-slate-400 font-bold uppercase">Surface Finish</span>
+                        <span class="text-[#EA580C] font-black">{item.surface}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 7: B2B 采购商高频疑问解答区 (暗黑科技指挥舱 FAQ) -->
+      <section class="bg-[#030712] py-32 px-6 lg:px-16 border-t border-white/10 select-none relative overflow-hidden text-white">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+        <div class="absolute bottom-10 left-10 w-96 h-96 bg-[#EA580C]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+        <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
+          <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-28">
+            <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-white/5 border border-white/10 px-4 py-1.5 rounded-full inline-block shadow-lg">
+              KNOWLEDGE HUB // B2B BUYER GUIDE
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-white leading-tight">
+              Expert Answers for <br />
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-400 to-amber-200">Global Engineers.</span>
+            </h2>
+            <p class="text-slate-300 text-sm sm:text-base font-light leading-relaxed max-w-md">
+              Clear insights into our Dongguan direct-factory tooling workflows, lead times, and quality assurance protocols. Engineered for complete transparency.
+            </p>
+            <div class="pt-4">
+              <button 
+                onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('faq_consult')"
+                class="inline-flex items-center gap-2 bg-white/10 hover:bg-[#EA580C] text-white border border-white/20 hover:border-[#EA580C] font-mono text-xs font-bold uppercase tracking-widest py-3.5 px-6 transition-all duration-300 cursor-pointer"
+              >
+                Ask an Engineer Directly →
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-4">
+            {faqs.map((faq) => (
+              <details class="group bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-white/15 hover:border-[#EA580C] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-all duration-300 overflow-hidden backdrop-blur-xl">
+                <summary class="p-6 sm:p-8 cursor-pointer flex items-center justify-between font-sans list-none select-none">
+                  <div class="flex items-center gap-4">
+                    <span class="font-mono text-xs font-bold text-[#EA580C] bg-white/5 border border-white/10 px-3 py-1 rounded-md">
+                      [{faq.ref}]
+                    </span>
+                    <h3 class="text-base sm:text-lg font-[900] uppercase text-white tracking-tight group-hover:text-[#EA580C] transition-colors">
+                      {faq.q}
+                    </h3>
+                  </div>
+                  <div class="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#EA580C] text-slate-300 group-hover:text-white flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                    <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </summary>
+                <div class="px-6 sm:px-8 pb-8 pt-2 text-slate-300 text-xs sm:text-sm font-light leading-relaxed border-t border-white/10 mt-2">
+                  <p class="pl-14">{faq.a}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 8: 底部询盘 CTA -->
+      <section class="py-16 bg-[#050b14] text-white text-center relative overflow-hidden select-none border-t border-white/10">
+        <div class="max-w-[1200px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-5 relative z-10">
+          <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-[0.3em] block">
+            ACCELERATE YOUR HARDWARE DEVELOPMENT
+          </span>
+          <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic tracking-tight leading-tight">
+            Ready to Mold Your Precision Components?
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 font-semibold max-w-xl mx-auto leading-relaxed">
+            Upload your 3D STEP or IGES CAD files now. Get automated DFM feedback and an instant engineering quote within 24 hours.
+          </p>
+
+          <div class="pt-2">
+            <button 
+              onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('bottom_cta')"
+              class="bg-[#EA580C] hover:bg-[#D94E07] text-white font-mono text-xs font-black uppercase tracking-[0.2em] px-8 py-4 rounded-xs transition-colors shadow-2xl cursor-pointer"
+            >
+              Upload CAD & Get Instant Quote →
+            </button>
+          </div>
+
+          <p class="text-[10px] font-mono text-slate-400 font-bold uppercase pt-1">
+            STRICT NDA PROTECTED | ISO 9001:2015 AUDITED DONGGUAN FACILITY
+          </p>
+        </div>
+      </section>
+
+      <!-- Step 9: 专属工程计算器与工具入口 (🔴 终极标杆级重构：SaaS 级工程工具指挥舱矩阵) -->
+      <section class="bg-gradient-to-b from-white via-slate-50 to-slate-100 py-32 px-6 lg:px-16 border-t border-slate-200 select-none relative overflow-hidden">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,43,91,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,43,91,0.015)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none"></div>
+        
+        <div class="max-w-[1400px] mx-auto space-y-16 relative z-10">
+          
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200/80 pb-10">
+            <div class="max-w-3xl space-y-4">
+              <span class="text-xs font-mono font-bold text-[#EA580C] uppercase tracking-[0.25em] bg-orange-50 border border-orange-200 px-4 py-1.5 rounded-full inline-block shadow-sm">
+                DFM ACCELERATION // FREE ENGINEERING TOOLS
+              </span>
+              <h2 class="text-3xl sm:text-5xl font-[1000] uppercase tracking-tight text-[#0F2B5B] leading-none">
+                Molding Calculators & Resources<span class="text-[#EA580C]">.</span>
+              </h2>
+              <p class="text-slate-600 text-sm sm:text-base font-light leading-relaxed">
+                Empower your hardware development. Access our proprietary injection molding calculators, material shrinkage databases, and DIN 16742 tolerance handbooks to validate your CAD designs instantly.
+              </p>
+            </div>
+            <div class="flex-shrink-0">
+              <a href="/knowledge-hub" class="inline-flex items-center gap-2.5 bg-[#0F2B5B] hover:bg-[#EA580C] text-white font-mono text-xs font-extrabold uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg group">
+                View All Resources <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Card 1 -->
+            <a href="/calculators/tonnage" class="bg-white border-2 border-slate-200/80 hover:border-[#EA580C] p-8 rounded-3xl shadow-[0_10px_30px_rgba(15,43,91,0.04)] hover:shadow-[0_20px_40px_rgba(234,88,12,0.12)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden hover:-translate-y-1.5">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 group-hover:bg-[#EA580C] transition-colors"></div>
+              <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                  <div class="w-14 h-14 bg-slate-100 group-hover:bg-orange-50 border border-slate-200 group-hover:border-orange-200 rounded-2xl flex items-center justify-center text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                  </div>
+                  <span class="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">TOOL // 01</span>
+                </div>
+                <div class="space-y-2">
+                  <h3 class="text-base font-[1000] uppercase text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors tracking-tight leading-snug">Clamping Tonnage Calculator</h3>
+                  <p class="text-slate-600 text-xs font-light leading-relaxed">Calculate required machine tonnage based on projected area and material flow length.</p>
+                </div>
+              </div>
+              <div class="mt-8 pt-4 border-t border-slate-100 font-mono text-[10px] text-[#EA580C] font-black uppercase tracking-widest flex items-center justify-between">
+                <span>Launch Tool</span>
+                <span class="transform group-hover:translate-x-1.5 transition-transform">→</span>
+              </div>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="/resources/draft-angle-guide" class="bg-white border-2 border-slate-200/80 hover:border-[#EA580C] p-8 rounded-3xl shadow-[0_10px_30px_rgba(15,43,91,0.04)] hover:shadow-[0_20px_40px_rgba(234,88,12,0.12)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden hover:-translate-y-1.5">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 group-hover:bg-[#EA580C] transition-colors"></div>
+              <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                  <div class="w-14 h-14 bg-slate-100 group-hover:bg-orange-50 border border-slate-200 group-hover:border-orange-200 rounded-2xl flex items-center justify-center text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                  </div>
+                  <span class="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">GUIDE // 02</span>
+                </div>
+                <div class="space-y-2">
+                  <h3 class="text-base font-[1000] uppercase text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors tracking-tight leading-snug">Draft Angle & Wall Thickness</h3>
+                  <p class="text-slate-600 text-xs font-light leading-relaxed">Interactive guide for VDI/SPI surface textures and recommended draft angles per resin.</p>
+                </div>
+              </div>
+              <div class="mt-8 pt-4 border-t border-slate-100 font-mono text-[10px] text-[#EA580C] font-black uppercase tracking-widest flex items-center justify-between">
+                <span>View Guide</span>
+                <span class="transform group-hover:translate-x-1.5 transition-transform">→</span>
+              </div>
+            </a>
+
+            <!-- Card 3 -->
+            <a href="/materials/shrinkage-database" class="bg-white border-2 border-slate-200/80 hover:border-[#EA580C] p-8 rounded-3xl shadow-[0_10px_30px_rgba(15,43,91,0.04)] hover:shadow-[0_20px_40px_rgba(234,88,12,0.12)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden hover:-translate-y-1.5">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 group-hover:bg-[#EA580C] transition-colors"></div>
+              <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                  <div class="w-14 h-14 bg-slate-100 group-hover:bg-orange-50 border border-slate-200 group-hover:border-orange-200 rounded-2xl flex items-center justify-center text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2v-0.005V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                  </div>
+                  <span class="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">DATA // 03</span>
+                </div>
+                <div class="space-y-2">
+                  <h3 class="text-base font-[1000] uppercase text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors tracking-tight leading-snug">Material Shrinkage Database</h3>
+                  <p class="text-slate-600 text-xs font-light leading-relaxed">Comprehensive shrinkage rate data for over 50+ engineering polymers (ABS, PC, PEEK, etc.).</p>
+                </div>
+              </div>
+              <div class="mt-8 pt-4 border-t border-slate-100 font-mono text-[10px] text-[#EA580C] font-black uppercase tracking-widest flex items-center justify-between">
+                <span>Search Data</span>
+                <span class="transform group-hover:translate-x-1.5 transition-transform">→</span>
+              </div>
+            </a>
+
+            <!-- Card 4 -->
+            <a href="/resources/din-16742" class="bg-white border-2 border-slate-200/80 hover:border-[#EA580C] p-8 rounded-3xl shadow-[0_10px_30px_rgba(15,43,91,0.04)] hover:shadow-[0_20px_40px_rgba(234,88,12,0.12)] transition-all duration-300 group flex flex-col justify-between relative overflow-hidden hover:-translate-y-1.5">
+              <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 group-hover:bg-[#EA580C] transition-colors"></div>
+              <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                  <div class="w-14 h-14 bg-slate-100 group-hover:bg-orange-50 border border-slate-200 group-hover:border-orange-200 rounded-2xl flex items-center justify-center text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  </div>
+                  <span class="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">REF // 04</span>
+                </div>
+                <div class="space-y-2">
+                  <h3 class="text-base font-[1000] uppercase text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors tracking-tight leading-snug">DIN 16742 Tolerance Standard</h3>
+                  <p class="text-slate-600 text-xs font-light leading-relaxed">Reference tables for international plastic molding geometric dimensioning and tolerancing.</p>
+                </div>
+              </div>
+              <div class="mt-8 pt-4 border-t border-slate-100 font-mono text-[10px] text-[#EA580C] font-black uppercase tracking-widest flex items-center justify-between">
+                <span>Read Handbook</span>
+                <span class="transform group-hover:translate-x-1.5 transition-transform">→</span>
+              </div>
+            </a>
+          </div>
+
+        </div>
+      </section>
+
+```astro
+
+
+
+<!-- Step 10: V7.14 Production Intelligence Entry -->
+<section class="bg-[#030712] py-28 px-6 lg:px-16 border-t border-white/10 select-none relative overflow-hidden">
+  <!-- Technical Grid -->
+  <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+
+  <!-- Ambient Glow -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#EA580C]/10 rounded-full blur-[180px] pointer-events-none"></div>
+
+  <div class="max-w-[1400px] mx-auto relative z-10">
+
+    <!-- Header -->
+    <div class="max-w-4xl mx-auto text-center space-y-5">
+
+      <span class="inline-flex items-center gap-2 text-[10px] sm:text-xs font-mono font-black text-[#EA580C] uppercase tracking-[0.3em] bg-[#EA580C]/5 border border-[#EA580C]/30 px-4 py-2 rounded-full shadow-lg">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C] shadow-[0_0_10px_rgba(234,88,12,0.9)]"></span>
+        NEXMOLD // PRODUCTION INTELLIGENCE
+      </span>
+
+      <h2 class="text-4xl sm:text-6xl lg:text-7xl font-[1000] uppercase tracking-tight text-white leading-[0.9]">
+        V7.14
+        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-400 to-amber-200">
+          Manufacturing Intelligence.
+        </span>
+      </h2>
+
+      <p class="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base font-light leading-relaxed">
+        Evidence-driven engineering intelligence for verified claims,
+        regional publishing, and production-grade manufacturing data.
+      </p>
+
+    </div>
+
+    <!-- Intelligence Matrix -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-14">
+
+      <!-- Evidence -->
+      <div class="group bg-slate-900/70 border border-white/10 hover:border-[#EA580C]/60 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div class="flex items-center justify-between mb-8">
+          <div class="w-11 h-11 rounded-xl bg-[#EA580C]/10 border border-[#EA580C]/25 flex items-center justify-center text-[#EA580C]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 3v18m9-9H3m15.5-6.5L5.5 18.5M18.5 18.5L5.5 5.5" />
+            </svg>
+          </div>
+          <span class="font-mono text-[9px] text-slate-500 tracking-widest">
+            01
+          </span>
+        </div>
+
+        <h3 class="text-sm font-black uppercase tracking-wider text-white mb-2 group-hover:text-[#EA580C] transition-colors">
+          Evidence Graph
+        </h3>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Engineering evidence, source lineage, and structured manufacturing knowledge.
+        </p>
+      </div>
+
+      <!-- Claims -->
+      <div class="group bg-slate-900/70 border border-white/10 hover:border-[#EA580C]/60 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div class="flex items-center justify-between mb-8">
+          <div class="w-11 h-11 rounded-xl bg-[#EA580C]/10 border border-[#EA580C]/25 flex items-center justify-center text-[#EA580C]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="font-mono text-[9px] text-slate-500 tracking-widest">
+            02
+          </span>
+        </div>
+
+        <h3 class="text-sm font-black uppercase tracking-wider text-white mb-2 group-hover:text-[#EA580C] transition-colors">
+          Claim Verification
+        </h3>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Claim-level validation designed to prevent unsupported engineering assertions.
+        </p>
+      </div>
+
+      <!-- Regional -->
+      <div class="group bg-slate-900/70 border border-white/10 hover:border-[#EA580C]/60 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div class="flex items-center justify-between mb-8">
+          <div class="w-11 h-11 rounded-xl bg-[#EA580C]/10 border border-[#EA580C]/25 flex items-center justify-center text-[#EA580C]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0c2.21-2.49 3.5-5.59 3.5-9S14.21 5.49 12 3m0 18c-2.21-2.49-3.5-5.59-3.5-9S9.79 5.49 12 3M3 12h18" />
+            </svg>
+          </div>
+          <span class="font-mono text-[9px] text-slate-500 tracking-widest">
+            03
+          </span>
+        </div>
+
+        <h3 class="text-sm font-black uppercase tracking-wider text-white mb-2 group-hover:text-[#EA580C] transition-colors">
+          Regional Intelligence
+        </h3>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Regional eligibility and publishing intelligence for market-specific outputs.
+        </p>
+      </div>
+
+      <!-- Publication -->
+      <div class="group bg-slate-900/70 border border-white/10 hover:border-[#EA580C]/60 rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div class="flex items-center justify-between mb-8">
+          <div class="w-11 h-11 rounded-xl bg-[#EA580C]/10 border border-[#EA580C]/25 flex items-center justify-center text-[#EA580C]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12l2 2 4-4m5-7H4a1 1 0 00-1 1v18l4-3 4 3 4-3 4 3V4a1 1 0 00-1-1z" />
+            </svg>
+          </div>
+          <span class="font-mono text-[9px] text-slate-500 tracking-widest">
+            04
+          </span>
+        </div>
+
+        <h3 class="text-sm font-black uppercase tracking-wider text-white mb-2 group-hover:text-[#EA580C] transition-colors">
+          Publication Gate
+        </h3>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Production safeguards ensuring only validated artifacts reach publication.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Entry Panel -->
+    <div class="mt-10 border border-white/10 bg-black/30 backdrop-blur-xl rounded-3xl p-8 sm:p-10 lg:p-12 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+
+        <div class="space-y-3">
+          <div class="font-mono text-[9px] text-[#EA580C] uppercase tracking-[0.25em] font-black">
+            SYSTEM ACCESS // V7.14
+          </div>
+
+          <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
+            Evidence → Verification → Publication
+          </h3>
+
+          <p class="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+            Explore the production intelligence layer behind NEXMOLD's
+            engineering content and regional publishing system.
+          </p>
+        </div>
+
+        <!-- Temporary visual button: route will be connected after confirmation -->
+        <a
+          href="/v714"
+          class="flex-shrink-0 inline-flex items-center justify-center gap-3 bg-[#EA580C] hover:bg-[#D94E07] text-white font-mono text-xs sm:text-sm font-black uppercase tracking-[0.18em] px-7 py-4 rounded-xl shadow-[0_10px_35px_rgba(234,88,12,0.25)] hover:shadow-[0_15px_45px_rgba(234,88,12,0.4)] transition-all duration-300 group"
+        >
+          Enter V7.14
+          <svg
+            class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M5 12h14m-5-5l5 5-5 5"
+            />
+          </svg>
+        </a>
+
+      </div>
+
+      <!-- System Status Line -->
+      <div class="mt-8 pt-5 border-t border-white/10 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[9px] uppercase tracking-widest">
+        <span class="text-slate-500">
+          Production Layer
+        </span>
+        <span class="text-slate-400">
+          Evidence Driven
+        </span>
+        <span class="text-slate-400">
+          Claim Verified
+        </span>
+        <span class="text-slate-400">
+          Regional Ready
+        </span>
+        <span class="inline-flex items-center gap-1.5 text-[#EA580C]">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+          V7.14
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+```
+
+
+
+    </main>
+
+    <Footer />
+
+    <dialog id="lead-modal" class="backdrop:bg-[#0F2B5B]/80 rounded-xs p-0 border border-[#0F2B5B]/20 max-w-lg w-full shadow-2xl">
+      <div class="bg-white p-6 sm:p-8 relative">
+        <button id="close-modal-btn" class="absolute top-4 right-4 text-[#0F2B5B]/50 hover:text-[#0F2B5B] font-mono text-lg font-bold cursor-pointer">✕</button>
+        
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-widest block mb-1">RFQ & DFM REVIEW</span>
+        <h3 class="text-xl font-black uppercase text-[#0F2B5B] mb-2">Request Custom Quote</h3>
+        <p class="text-xs text-[#0F2B5B]/70 mb-6 font-medium">Upload your 3D STEP/IGES CAD files or project requirements for rapid analysis.</p>
+
+        <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request successfully submitted!'); const m = document.getElementById('lead-modal'); if (m) m.close();">
+          <div>
+            <label class="block text-[11px] font-mono font-bold text-[#0F2B5B] uppercase mb-1">Work Email *</label>
+            <input type="email" required placeholder="engineer@company.com" class="w-full px-3 py-2 text-xs border border-[#0F2B5B]/20 focus:border-[#EA580C] focus:outline-none rounded-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono font-bold text-[#0F2B5B] uppercase mb-1">Project Details / Part Quantity</label>
+            <textarea rows="3" placeholder="e.g., ABS material, 5,000 pcs, T1 needed in 10 days" class="w-full px-3 py-2 text-xs border border-[#0F2B5B]/20 focus:border-[#EA580C] focus:outline-none rounded-xs"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs font-black uppercase py-3 tracking-widest transition-colors rounded-xs cursor-pointer">
+            Submit For Instant DFM & Quote
+          </button>
+        </form>
+      </div>
+    </dialog>
+
+    <script is:inline>
+      document.addEventListener('mousemove', function(e) {
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        document.documentElement.style.setProperty('--mx', x);
+        document.documentElement.style.setProperty('--my', y);
+      });
+
+      document.addEventListener('click', function(e) {
+        const sat = e.target.closest('.orbit-planet');
+        if (!sat) return;
+
+        const sunEl = document.getElementById('central-sun');
+        if (!sunEl) return;
+
+        const satData = {
+          id: sat.getAttribute('data-id'),
+          title: sat.getAttribute('data-title'),
+          cat: sat.getAttribute('data-cat'),
+          desc: sat.getAttribute('data-desc'),
+          link: sat.getAttribute('data-link'),
+          image: sat.getAttribute('data-image')
+        };
+
+        const sunData = {
+          id: sunEl.getAttribute('data-id'),
+          title: sunEl.getAttribute('data-title'),
+          cat: sunEl.getAttribute('data-cat'),
+          desc: sunEl.getAttribute('data-desc'),
+          link: sunEl.getAttribute('data-link'),
+          image: sunEl.getAttribute('data-image')
+        };
+
+        if (!satData.id || !sunData.id) return;
+
+        const sunWrap = document.getElementById('sun-texture-wrap');
+        const satWrap = sat.querySelector('.sat-texture-wrap');
+        
+        if (sunWrap) { sunWrap.classList.remove('card-flash-anim'); void sunWrap.offsetWidth; sunWrap.classList.add('card-flash-anim'); }
+        if (satWrap) { satWrap.classList.remove('card-flash-anim'); void satWrap.offsetWidth; satWrap.classList.add('card-flash-anim'); }
+
+        setTimeout(() => {
+          sunEl.setAttribute('data-id', satData.id);
+          sunEl.setAttribute('data-title', satData.title);
+          sunEl.setAttribute('data-cat', satData.cat);
+          sunEl.setAttribute('data-desc', satData.desc);
+          sunEl.setAttribute('data-link', satData.link);
+          sunEl.setAttribute('data-image', satData.image);
+
+          sat.setAttribute('data-id', sunData.id);
+          sat.setAttribute('data-title', sunData.title);
+          sat.setAttribute('data-cat', sunData.cat);
+          sat.setAttribute('data-desc', sunData.desc);
+          sat.setAttribute('data-link', sunData.link);
+          sat.setAttribute('data-image', sunData.image);
+
+          document.getElementById('sun-img-bg').style.backgroundImage = `url('${satData.image}')`;
+          document.getElementById('sun-cat-text').textContent = satData.cat;
+          document.getElementById('sun-title-text').textContent = satData.title;
+
+          sat.querySelector('.planet-texture').style.backgroundImage = `url('${satData.image}')`;
+          sat.querySelector('.sat-cat-text').textContent = sunData.cat;
+          sat.querySelector('.sat-title-text').textContent = sunData.title;
+
+          document.getElementById('panel-title').textContent = satData.title;
+          document.getElementById('panel-desc').textContent = satData.desc;
+          document.getElementById('panel-link').setAttribute('href', satData.link);
+
+          const detailsWrapper = document.getElementById('sun-details-wrapper');
+          if (detailsWrapper) {
+            detailsWrapper.classList.remove('card-flash-anim');
+            void detailsWrapper.offsetWidth; 
+            detailsWrapper.classList.add('card-flash-anim');
+          }
+        }, 200);
+      });
+      
+      window.NEXMOLD_OPEN_LEAD_MODAL = function() {
+        const modal = document.getElementById('lead-modal');
+        if (modal && typeof modal.showModal === 'function') {
+          modal.showModal();
+        } else {
+          alert('Opening RFQ portal...');
+        }
+      };
+      
+      document.addEventListener('DOMContentLoaded', () => {
+         const closeBtn = document.getElementById('close-modal-btn');
+         const modal = document.getElementById('lead-modal');
+         if (closeBtn && modal) {
+            closeBtn.addEventListener('click', () => {
+               if (typeof modal.close === 'function') modal.close();
+            });
+         }
+      });
+    </script>
+  </body>
+</html>

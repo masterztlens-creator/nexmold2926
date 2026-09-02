@@ -1,0 +1,1844 @@
+﻿===== V7.14 BL01 ADAPTER RECON =====
+Generated: 2026-08-31 13:04:52
+
+===== 1. BL01 REFERENCES =====
+
+  src\pages\industries\v714\index.astro:23:
+  src\pages\industries\v714\index.astro:24:const FACTORY_DIR = path.join(
+  src\pages\industries\v714\index.astro:25:  ROOT,
+  src\pages\industries\v714\index.astro:26:  ".nexmold",
+> src\pages\industries\v714\index.astro:27:  "content-factory",
+> src\pages\industries\v714\index.astro:28:  "batch-01",
+  src\pages\industries\v714\index.astro:29:);
+  src\pages\industries\v714\index.astro:30:
+  src\pages\industries\v714\index.astro:31:const REPORT_FILE = path.join(
+  src\pages\industries\v714\index.astro:32:  FACTORY_DIR,
+  src\pages\industries\v714\index.astro:33:  "production-report.json",
+  src\pages\industries\v714\index.astro:34:);
+  src\pages\industries\v714\index.astro:35:
+  src\pages\industries\v714\index.astro:36:/**
+  src\pages\industries\v714\index.astro:37: * ------------------------------------------------------------
+  src\pages\industries\v714\index.astro:38: * Safe frontmatter parser
+  src\pages\industries\v714\index.astro:39: * ------------------------------------------------------------
+  src\pages\industries\v714\index.astro:40: */
+  src\pages\industries\v714\[slug].astro:20: *   - Never publish automatically
+  src\pages\industries\v714\[slug].astro:21: *   - Never redirect to /knowledge/
+  src\pages\industries\v714\[slug].astro:22: *
+  src\pages\industries\v714\[slug].astro:23: * Source:
+> src\pages\industries\v714\[slug].astro:24: *   .nexmold/content-factory/batch-01/
+  src\pages\industries\v714\[slug].astro:25: *
+  src\pages\industries\v714\[slug].astro:26: * The factory directory is treated as the current V7.14
+  src\pages\industries\v714\[slug].astro:27: * production artifact source. The page itself is presentation
+  src\pages\industries\v714\[slug].astro:28: * only.
+  src\pages\industries\v714\[slug].astro:29: * ============================================================
+  src\pages\industries\v714\[slug].astro:30: */
+  src\pages\industries\v714\[slug].astro:31:
+  src\pages\industries\v714\[slug].astro:32:interface WhitePaperFrontmatter {
+  src\pages\industries\v714\[slug].astro:33:  title?: string;
+  src\pages\industries\v714\[slug].astro:34:  description?: string;
+  src\pages\industries\v714\[slug].astro:35:  category?: string;
+  src\pages\industries\v714\[slug].astro:36:  slug?: string;
+  src\pages\industries\v714\[slug].astro:753:export function getStaticPaths() {
+  src\pages\industries\v714\[slug].astro:754:  const factoryDir = path.join(
+  src\pages\industries\v714\[slug].astro:755:    process.cwd(),
+  src\pages\industries\v714\[slug].astro:756:    ".nexmold",
+> src\pages\industries\v714\[slug].astro:757:    "content-factory",
+> src\pages\industries\v714\[slug].astro:758:    "batch-01",
+  src\pages\industries\v714\[slug].astro:759:  );
+  src\pages\industries\v714\[slug].astro:760:
+  src\pages\industries\v714\[slug].astro:761:  if (!fs.existsSync(factoryDir)) {
+  src\pages\industries\v714\[slug].astro:762:    return [];
+  src\pages\industries\v714\[slug].astro:763:  }
+  src\pages\industries\v714\[slug].astro:764:
+  src\pages\industries\v714\[slug].astro:765:  const files = fs
+  src\pages\industries\v714\[slug].astro:766:    .readdirSync(factoryDir)
+  src\pages\industries\v714\[slug].astro:767:    .filter(
+  src\pages\industries\v714\[slug].astro:768:      (file) =>
+  src\pages\industries\v714\[slug].astro:769:        file.endsWith(".md") &&
+  src\pages\industries\v714\[slug].astro:770:        file !== "production-report.md",
+  src\regional\article-contract.ts:32:
+  src\regional\article-contract.ts:33:  readonly evidenceIds: readonly string[];
+  src\regional\article-contract.ts:34:  readonly semanticClaimIds: readonly string[];
+  src\regional\article-contract.ts:35:
+> src\regional\article-contract.ts:36:  readonly sourceArtifactHash: ContentHash;
+  src\regional\article-contract.ts:37:}
+  src\regional\article-contract.ts:38:
+  src\regional\article-contract.ts:39:export interface V714ArticleContract {
+  src\regional\article-contract.ts:40:  readonly schema: "nexmold.v7.14.article-contract.v1";
+  src\regional\article-contract.ts:41:
+  src\regional\article-contract.ts:42:  readonly articleId: RegionalPublishArtifact["pageId"];
+  src\regional\article-contract.ts:43:
+  src\regional\article-contract.ts:44:  readonly title: string;
+  src\regional\article-contract.ts:45:  readonly slug: string;
+  src\regional\article-contract.ts:46:
+  src\regional\article-contract.ts:47:  readonly category: string;
+  src\regional\article-contract.ts:48:  readonly categorySlug: string;
+  src\regional\article-contract.ts:66:  readonly seoKeywords: readonly string[];
+  src\regional\article-contract.ts:67:
+  src\regional\article-contract.ts:68:  readonly lineage: V714ArticleLineage;
+  src\regional\article-contract.ts:69:
+> src\regional\article-contract.ts:70:  readonly sourceArtifact: RegionalPublishArtifact;
+  src\regional\article-contract.ts:71:}
+  src\regional\article-producer.ts:154:
+  src\regional\article-producer.ts:155:export interface WhitePaperLineageV2 {
+  src\regional\article-producer.ts:156:  readonly sourceArticleSlug: string;
+  src\regional\article-producer.ts:157:  readonly canonicalUrl: RegionalPublishArtifact["canonicalUrl"];
+> src\regional\article-producer.ts:158:  readonly sourceArtifactHash: RegionalPublishArtifact["pageContentHash"];
+  src\regional\article-producer.ts:159:  readonly evidenceIds: readonly string[];
+  src\regional\article-producer.ts:160:  readonly semanticClaimIds: readonly string[];
+  src\regional\article-producer.ts:161:}
+  src\regional\article-producer.ts:162:
+  src\regional\article-producer.ts:163:export interface WhitePaperArticleV2 {
+  src\regional\article-producer.ts:164:  readonly schema:
+  src\regional\article-producer.ts:165:    "nexmold.v7.14.white-paper.v2";
+  src\regional\article-producer.ts:166:
+  src\regional\article-producer.ts:167:  readonly documentType:
+  src\regional\article-producer.ts:168:    "ENGINEERING_WHITE_PAPER";
+  src\regional\article-producer.ts:169:
+  src\regional\article-producer.ts:170:  readonly articleId: string;
+  src\regional\article-producer.ts:215:    readonly content: string;
+  src\regional\article-producer.ts:216:    readonly type: string;
+  src\regional\article-producer.ts:217:  }[];
+  src\regional\article-producer.ts:218:
+> src\regional\article-producer.ts:219:  readonly sourceArtifactHash:
+  src\regional\article-producer.ts:220:    RegionalPublishArtifact["pageContentHash"];
+  src\regional\article-producer.ts:221:
+  src\regional\article-producer.ts:222:  readonly evidenceIds: readonly string[];
+  src\regional\article-producer.ts:223:
+  src\regional\article-producer.ts:224:  readonly semanticClaimIds: readonly string[];
+  src\regional\article-producer.ts:225:}
+  src\regional\article-producer.ts:226:
+  src\regional\article-producer.ts:227:/* ============================================================
+  src\regional\article-producer.ts:228: * 3. INPUT
+  src\regional\article-producer.ts:229: * ============================================================
+  src\regional\article-producer.ts:230: */
+  src\regional\article-producer.ts:231:
+  src\regional\article-producer.ts:2070:
+  src\regional\article-producer.ts:2071:        canonicalUrl:
+  src\regional\article-producer.ts:2072:          artifact.canonicalUrl,
+  src\regional\article-producer.ts:2073:
+> src\regional\article-producer.ts:2074:        sourceArtifactHash:
+  src\regional\article-producer.ts:2075:          artifact.pageContentHash,
+  src\regional\article-producer.ts:2076:
+  src\regional\article-producer.ts:2077:        evidenceIds,
+  src\regional\article-producer.ts:2078:
+  src\regional\article-producer.ts:2079:        semanticClaimIds,
+  src\regional\article-producer.ts:2080:      },
+  src\regional\article-producer.ts:2081:
+  src\regional\article-producer.ts:2082:      content,
+  src\regional\article-producer.ts:2083:
+> src\regional\article-producer.ts:2084:      sourceArtifactHash:
+  src\regional\article-producer.ts:2085:        artifact.pageContentHash,
+  src\regional\article-producer.ts:2086:
+  src\regional\article-producer.ts:2087:      evidenceIds,
+  src\regional\article-producer.ts:2088:
+  src\regional\article-producer.ts:2089:      semanticClaimIds,
+  src\regional\article-producer.ts:2090:    };
+  src\regional\article-producer.ts:2091:
+  src\regional\article-producer.ts:2092:  /* ==========================================================
+  src\regional\article-producer.ts:2093:   * 35. FINAL INVARIANTS
+  src\regional\article-producer.ts:2094:   * ==========================================================
+  src\regional\article-producer.ts:2095:   */
+  src\regional\article-producer.ts:2096:
+  src\regional\article-producer.ts:2267:
+  src\regional\article-producer.ts:2268:      semanticClaimIds:
+  src\regional\article-producer.ts:2269:        whitePaper.lineage.semanticClaimIds,
+  src\regional\article-producer.ts:2270:
+> src\regional\article-producer.ts:2271:      sourceArtifactHash:
+> src\regional\article-producer.ts:2272:        whitePaper.lineage.sourceArtifactHash,
+  src\regional\article-producer.ts:2273:    },
+  src\regional\article-producer.ts:2274:
+> src\regional\article-producer.ts:2275:    sourceArtifact:
+  src\regional\article-producer.ts:2276:      artifact,
+  src\regional\article-producer.ts:2277:  };
+  src\regional\article-producer.ts:2278:}
+  src\regional\article-producer.ts:2279:
+  src\regional\article-producer.ts:2280:/* ============================================================
+  src\regional\article-producer.ts:2281: * 37. TYPE GUARD
+  src\regional\article-producer.ts:2282: * ============================================================
+  src\regional\article-producer.ts:2283: */
+  src\regional\article-producer.ts:2284:
+  src\regional\article-producer.ts:2285:export function isWhitePaperArticleV2(
+  src\regional\article-producer.ts:2286:  value: unknown,
+  src\regional\article-producer.ts:2287:): value is WhitePaperArticleV2 {
+  src\regional\article-renderer.ts:61:    `categorySlug: "${escapeYaml(article.categorySlug)}"`,
+  src\regional\article-renderer.ts:62:    `locale: "${escapeYaml(String(article.lineage.locale))}"`,
+  src\regional\article-renderer.ts:63:    `region: "${escapeYaml(String(article.lineage.region))}"`,
+  src\regional\article-renderer.ts:64:    `canonicalUrl: "${escapeYaml(String(article.lineage.canonicalUrl))}"`,
+> src\regional\article-renderer.ts:65:    `sourceArtifactHash: "${escapeYaml(String(article.lineage.sourceArtifactHash))}"`,
+  src\regional\article-renderer.ts:66:    `schema: "${escapeYaml(article.schema)}"`,
+  src\regional\article-renderer.ts:67:    "---",
+  src\regional\article-renderer.ts:68:  ].join("\n");
+  src\regional\article-renderer.ts:69:
+  src\regional\article-renderer.ts:70:  const sections: string[] = [];
+  src\regional\article-renderer.ts:71:
+  src\regional\article-renderer.ts:72:  if (article.directAnswer.trim()) {
+  src\regional\article-renderer.ts:73:    sections.push(
+  src\regional\article-renderer.ts:74:      [
+  src\regional\article-renderer.ts:75:        "## Direct Engineering Answer",
+  src\regional\article-renderer.ts:76:        "",
+  src\regional\article-renderer.ts:77:        escapeMarkdown(article.directAnswer),
+  scripts\generate-batch-01.mjs:2:import path from "node:path";
+  scripts\generate-batch-01.mjs:3:
+  scripts\generate-batch-01.mjs:4:const ROOT = process.cwd();
+  scripts\generate-batch-01.mjs:5:
+> scripts\generate-batch-01.mjs:6:const OUT_DIR = path.join(ROOT, ".nexmold", "content-factory");
+> scripts\generate-batch-01.mjs:7:const OUT_FILE = path.join(OUT_DIR, "batch-01-keyword-manifest.json");
+  scripts\generate-batch-01.mjs:8:
+  scripts\generate-batch-01.mjs:9:fs.mkdirSync(OUT_DIR, { recursive: true });
+  scripts\generate-batch-01.mjs:10:
+  scripts\generate-batch-01.mjs:11:const candidates = [
+  scripts\generate-batch-01.mjs:12:  {
+  scripts\generate-batch-01.mjs:13:    id: "BL01",
+  scripts\generate-batch-01.mjs:14:    keyword: "injection molding wall thickness design",
+  scripts\generate-batch-01.mjs:15:    slug: "injection-molding-wall-thickness-design",
+  scripts\generate-batch-01.mjs:16:    cluster: "dfm",
+  scripts\generate-batch-01.mjs:17:    intent: "engineering",
+  scripts\generate-batch-01.mjs:18:    stage: "evaluate",
+  scripts\generate-batch-01.mjs:19:    priority: 100
+  scripts\generate-batch-01.mjs:266:});
+  scripts\generate-batch-01.mjs:267:
+  scripts\generate-batch-01.mjs:268:const manifest = {
+  scripts\generate-batch-01.mjs:269:  schema: "nexmold.v7.14.long-tail-keyword-manifest.v1",
+> scripts\generate-batch-01.mjs:270:  batch: "BATCH-01",
+  scripts\generate-batch-01.mjs:271:  generatedAt: new Date().toISOString(),
+  scripts\generate-batch-01.mjs:272:  policy: {
+  scripts\generate-batch-01.mjs:273:    modifyExistingContent: false,
+  scripts\generate-batch-01.mjs:274:    publishAutomatically: false,
+  scripts\generate-batch-01.mjs:275:    evidenceRequired: true,
+  scripts\generate-batch-01.mjs:276:    semanticCollisionReviewRequired: true,
+  scripts\generate-batch-01.mjs:277:    v714PublicationGateRequired: true
+  scripts\generate-batch-01.mjs:278:  },
+  scripts\generate-batch-01.mjs:279:  summary: {
+  scripts\generate-batch-01.mjs:280:    totalCandidates: routeCandidates.length,
+  scripts\generate-batch-01.mjs:281:    slugCollisions: routeCandidates.filter(x =>
+  scripts\generate-batch-01.mjs:282:      x.status === "BLOCKED_SLUG_COLLISION"
+  scripts\inspect-batch-01-wiring.mjs:5:
+  scripts\inspect-batch-01-wiring.mjs:6:const manifestPath = path.join(
+  scripts\inspect-batch-01-wiring.mjs:7:  ROOT,
+  scripts\inspect-batch-01-wiring.mjs:8:  ".nexmold",
+> scripts\inspect-batch-01-wiring.mjs:9:  "content-factory",
+> scripts\inspect-batch-01-wiring.mjs:10:  "batch-01-keyword-manifest.json"
+  scripts\inspect-batch-01-wiring.mjs:11:);
+  scripts\inspect-batch-01-wiring.mjs:12:
+  scripts\inspect-batch-01-wiring.mjs:13:const manifest = JSON.parse(
+  scripts\inspect-batch-01-wiring.mjs:14:  fs.readFileSync(manifestPath, "utf8")
+  scripts\inspect-batch-01-wiring.mjs:15:);
+  scripts\inspect-batch-01-wiring.mjs:16:
+  scripts\inspect-batch-01-wiring.mjs:17:const files = {
+  scripts\inspect-batch-01-wiring.mjs:18:  types: path.join(ROOT, "src", "regional", "types.ts"),
+  scripts\inspect-batch-01-wiring.mjs:19:  producer: path.join(ROOT, "src", "regional", "article-producer.ts"),
+  scripts\inspect-batch-01-wiring.mjs:20:  contract: path.join(ROOT, "src", "regional", "article-contract.ts"),
+  scripts\inspect-batch-01-wiring.mjs:21:  compiler: path.join(ROOT, "src", "regional", "regionalCompiler.ts"),
+  scripts\inspect-batch-01-wiring.mjs:22:  renderer: path.join(ROOT, "src", "regional", "article-renderer.ts"),
+  scripts\inspect-batch-01-wiring.mjs:111:  console.log("NO SITE CONTENT MODIFIED.");
+  scripts\inspect-batch-01-wiring.mjs:112:  process.exit(1);
+  scripts\inspect-batch-01-wiring.mjs:113:}
+  scripts\inspect-batch-01-wiring.mjs:114:
+> scripts\inspect-batch-01-wiring.mjs:115:console.log("[READY] BATCH-01 INPUT WIRING IS PRESENT.");
+  scripts\inspect-batch-01-wiring.mjs:116:console.log("NO ARTICLE GENERATED.");
+  scripts\inspect-batch-01-wiring.mjs:117:console.log("NO SITE CONTENT MODIFIED.");
+  scripts\inspect-batch-01-wiring.mjs:118:console.log("NEXT: BUILD THE EVIDENCE/CLAIM INPUT FOR BL01.");
+  scripts\inspect-batch-01-wiring.mjs:119:console.log("=======================================================");
+  scripts\v714-article-factory.mjs:20: * White Paper Content Engine v2
+  scripts\v714-article-factory.mjs:21: *      ↓
+  scripts\v714-article-factory.mjs:22: * Markdown
+  scripts\v714-article-factory.mjs:23: *      ↓
+> scripts\v714-article-factory.mjs:24: * .nexmold/content-factory/batch-01/
+  scripts\v714-article-factory.mjs:25: *
+  scripts\v714-article-factory.mjs:26: * IMPORTANT:
+  scripts\v714-article-factory.mjs:27: *
+  scripts\v714-article-factory.mjs:28: * 1. Existing KnowledgeArticle is evidence/source lineage.
+  scripts\v714-article-factory.mjs:29: * 2. Existing KnowledgeArticle content is NOT copied into the article.
+  scripts\v714-article-factory.mjs:30: * 3. White Paper content is generated by white-paper-content-v2.ts.
+  scripts\v714-article-factory.mjs:31: * 4. Public route is /industries/v714/<slug>/
+  scripts\v714-article-factory.mjs:32: * 5. Existing output is never overwritten.
+  scripts\v714-article-factory.mjs:33: * 6. Automatic publication remains disabled.
+  scripts\v714-article-factory.mjs:34: */
+  scripts\v714-article-factory.mjs:35:
+  scripts\v714-article-factory.mjs:36:import fs from "node:fs";
+  scripts\v714-article-factory.mjs:54:
+  scripts\v714-article-factory.mjs:55:const FACTORY_DIR = path.join(
+  scripts\v714-article-factory.mjs:56:  ROOT,
+  scripts\v714-article-factory.mjs:57:  ".nexmold",
+> scripts\v714-article-factory.mjs:58:  "content-factory",
+> scripts\v714-article-factory.mjs:59:  "batch-01",
+  scripts\v714-article-factory.mjs:60:);
+  scripts\v714-article-factory.mjs:61:
+  scripts\v714-article-factory.mjs:62:const MANIFEST_FILE = path.join(
+  scripts\v714-article-factory.mjs:63:  ROOT,
+  scripts\v714-article-factory.mjs:64:  ".nexmold",
+> scripts\v714-article-factory.mjs:65:  "content-factory",
+> scripts\v714-article-factory.mjs:66:  "batch-01-keyword-manifest.json",
+  scripts\v714-article-factory.mjs:67:);
+  scripts\v714-article-factory.mjs:68:
+  scripts\v714-article-factory.mjs:69:const SOURCE_RESOLUTION_FILE = path.join(
+  scripts\v714-article-factory.mjs:70:  ROOT,
+  scripts\v714-article-factory.mjs:71:  ".nexmold",
+> scripts\v714-article-factory.mjs:72:  "content-factory",
+> scripts\v714-article-factory.mjs:73:  "batch-01-source-resolution.json",
+  scripts\v714-article-factory.mjs:74:);
+  scripts\v714-article-factory.mjs:75:
+  scripts\v714-article-factory.mjs:76:const REPORT_FILE = path.join(
+  scripts\v714-article-factory.mjs:77:  FACTORY_DIR,
+  scripts\v714-article-factory.mjs:78:  "production-report.json",
+  scripts\v714-article-factory.mjs:79:);
+  scripts\v714-article-factory.mjs:80:
+  scripts\v714-article-factory.mjs:81:fs.mkdirSync(
+  scripts\v714-article-factory.mjs:82:  FACTORY_DIR,
+  scripts\v714-article-factory.mjs:83:  { recursive: true },
+  scripts\v714-article-factory.mjs:84:);
+  scripts\v714-article-factory.mjs:85:
+  scripts\v714-article-factory.mjs:272:}
+  scripts\v714-article-factory.mjs:273:
+  scripts\v714-article-factory.mjs:274:requireFile(
+  scripts\v714-article-factory.mjs:275:  MANIFEST_FILE,
+> scripts\v714-article-factory.mjs:276:  "Batch-01 manifest",
+  scripts\v714-article-factory.mjs:277:);
+  scripts\v714-article-factory.mjs:278:
+  scripts\v714-article-factory.mjs:279:requireFile(
+  scripts\v714-article-factory.mjs:280:  SOURCE_RESOLUTION_FILE,
+> scripts\v714-article-factory.mjs:281:  "Batch-01 source resolution",
+  scripts\v714-article-factory.mjs:282:);
+  scripts\v714-article-factory.mjs:283:
+  scripts\v714-article-factory.mjs:284:const manifest = JSON.parse(
+  scripts\v714-article-factory.mjs:285:  fs.readFileSync(
+  scripts\v714-article-factory.mjs:286:    MANIFEST_FILE,
+  scripts\v714-article-factory.mjs:287:    "utf8",
+  scripts\v714-article-factory.mjs:288:  ),
+  scripts\v714-article-factory.mjs:289:);
+  scripts\v714-article-factory.mjs:290:
+  scripts\v714-article-factory.mjs:291:if (
+  scripts\v714-article-factory.mjs:292:  manifest.schema !==
+  scripts\v714-article-factory.mjs:293:  "nexmold.v7.14.long-tail-keyword-manifest.v1"
+  scripts\v714-article-factory.mjs:311:);
+  scripts\v714-article-factory.mjs:312:
+  scripts\v714-article-factory.mjs:313:if (
+  scripts\v714-article-factory.mjs:314:  sourceResolution.schema !==
+> scripts\v714-article-factory.mjs:315:  "nexmold.v7.14.batch-01-source-resolution.v1"
+  scripts\v714-article-factory.mjs:316:) {
+  scripts\v714-article-factory.mjs:317:  fatal(
+  scripts\v714-article-factory.mjs:318:    "Invalid V7.14 source-resolution schema.",
+  scripts\v714-article-factory.mjs:319:  );
+  scripts\v714-article-factory.mjs:320:}
+  scripts\v714-article-factory.mjs:321:
+  scripts\v714-article-factory.mjs:322:if (!Array.isArray(sourceResolution.results)) {
+  scripts\v714-article-factory.mjs:323:  fatal(
+  scripts\v714-article-factory.mjs:324:    "sourceResolution.results must be an array.",
+  scripts\v714-article-factory.mjs:325:  );
+  scripts\v714-article-factory.mjs:326:}
+  scripts\v714-article-factory.mjs:327:
+  scripts\v714-article-factory.mjs:844:              title:
+  scripts\v714-article-factory.mjs:845:                source.title,
+  scripts\v714-article-factory.mjs:846:            },
+  scripts\v714-article-factory.mjs:847:
+> scripts\v714-article-factory.mjs:848:          sourceArtifactHash:
+  scripts\v714-article-factory.mjs:849:            artifact.pageContentHash,
+  scripts\v714-article-factory.mjs:850:
+  scripts\v714-article-factory.mjs:851:          artifact,
+  scripts\v714-article-factory.mjs:852:
+  scripts\v714-article-factory.mjs:853:          seo: {
+  scripts\v714-article-factory.mjs:854:            longTailQueries:
+  scripts\v714-article-factory.mjs:855:              whitePaper.longTailQueries,
+  scripts\v714-article-factory.mjs:856:
+  scripts\v714-article-factory.mjs:857:            relatedTopics:
+  scripts\v714-article-factory.mjs:858:              whitePaper.relatedTopics,
+  scripts\v714-article-factory.mjs:859:          },
+  scripts\v714-article-factory.mjs:860:
+  scripts\v714-batch01-source-resolution.mjs:1:#!/usr/bin/env node
+  scripts\v714-batch01-source-resolution.mjs:2:
+  scripts\v714-batch01-source-resolution.mjs:3:/**
+  scripts\v714-batch01-source-resolution.mjs:4: * NEXMOLD V7.14
+> scripts\v714-batch01-source-resolution.mjs:5: * Batch-01 Semantic Source Resolution
+  scripts\v714-batch01-source-resolution.mjs:6: *
+  scripts\v714-batch01-source-resolution.mjs:7: * Purpose:
+> scripts\v714-batch01-source-resolution.mjs:8: *   Resolve Batch-01 keyword candidates to the existing
+  scripts\v714-batch01-source-resolution.mjs:9: *   canonical KnowledgeArticle source.
+  scripts\v714-batch01-source-resolution.mjs:10: *
+  scripts\v714-batch01-source-resolution.mjs:11: * IMPORTANT:
+  scripts\v714-batch01-source-resolution.mjs:12: *   - Does NOT modify src/data/knowledge.ts
+  scripts\v714-batch01-source-resolution.mjs:13: *   - Does NOT modify existing pages
+  scripts\v714-batch01-source-resolution.mjs:14: *   - Does NOT publish
+  scripts\v714-batch01-source-resolution.mjs:15: *   - Does NOT alter V7.14 Producer / Compiler / Firewall
+  scripts\v714-batch01-source-resolution.mjs:16: *   - Semantic collision candidates remain BLOCKED
+  scripts\v714-batch01-source-resolution.mjs:17: *
+  scripts\v714-batch01-source-resolution.mjs:18: * Output:
+> scripts\v714-batch01-source-resolution.mjs:19: *   .nexmold/content-factory/batch-01-source-resolution.json
+  scripts\v714-batch01-source-resolution.mjs:20: */
+  scripts\v714-batch01-source-resolution.mjs:21:
+  scripts\v714-batch01-source-resolution.mjs:22:import fs from "node:fs";
+  scripts\v714-batch01-source-resolution.mjs:23:import path from "node:path";
+  scripts\v714-batch01-source-resolution.mjs:24:
+  scripts\v714-batch01-source-resolution.mjs:25:const ROOT = process.cwd();
+  scripts\v714-batch01-source-resolution.mjs:26:
+  scripts\v714-batch01-source-resolution.mjs:27:const MANIFEST_FILE = path.join(
+  scripts\v714-batch01-source-resolution.mjs:28:  ROOT,
+  scripts\v714-batch01-source-resolution.mjs:29:  ".nexmold",
+> scripts\v714-batch01-source-resolution.mjs:30:  "content-factory",
+> scripts\v714-batch01-source-resolution.mjs:31:  "batch-01-keyword-manifest.json",
+  scripts\v714-batch01-source-resolution.mjs:32:);
+  scripts\v714-batch01-source-resolution.mjs:33:
+  scripts\v714-batch01-source-resolution.mjs:34:const KNOWLEDGE_FILE = path.join(
+  scripts\v714-batch01-source-resolution.mjs:35:  ROOT,
+  scripts\v714-batch01-source-resolution.mjs:36:  "src",
+  scripts\v714-batch01-source-resolution.mjs:37:  "data",
+  scripts\v714-batch01-source-resolution.mjs:38:  "knowledge.ts",
+  scripts\v714-batch01-source-resolution.mjs:39:);
+  scripts\v714-batch01-source-resolution.mjs:40:
+  scripts\v714-batch01-source-resolution.mjs:41:const OUTPUT_FILE = path.join(
+  scripts\v714-batch01-source-resolution.mjs:42:  ROOT,
+  scripts\v714-batch01-source-resolution.mjs:43:  ".nexmold",
+> scripts\v714-batch01-source-resolution.mjs:44:  "content-factory",
+> scripts\v714-batch01-source-resolution.mjs:45:  "batch-01-source-resolution.json",
+  scripts\v714-batch01-source-resolution.mjs:46:);
+  scripts\v714-batch01-source-resolution.mjs:47:
+  scripts\v714-batch01-source-resolution.mjs:48:function fatal(message) {
+  scripts\v714-batch01-source-resolution.mjs:49:  console.error(`[NEXMOLD][V7.14][FATAL] ${message}`);
+  scripts\v714-batch01-source-resolution.mjs:50:  process.exitCode = 1;
+  scripts\v714-batch01-source-resolution.mjs:51:}
+  scripts\v714-batch01-source-resolution.mjs:52:
+  scripts\v714-batch01-source-resolution.mjs:53:if (!fs.existsSync(MANIFEST_FILE)) {
+  scripts\v714-batch01-source-resolution.mjs:54:  fatal(`Manifest not found: ${MANIFEST_FILE}`);
+  scripts\v714-batch01-source-resolution.mjs:55:  process.exit();
+  scripts\v714-batch01-source-resolution.mjs:56:}
+  scripts\v714-batch01-source-resolution.mjs:57:
+  scripts\v714-batch01-source-resolution.mjs:68:  !manifest ||
+  scripts\v714-batch01-source-resolution.mjs:69:  manifest.schema !==
+  scripts\v714-batch01-source-resolution.mjs:70:    "nexmold.v7.14.long-tail-keyword-manifest.v1"
+  scripts\v714-batch01-source-resolution.mjs:71:) {
+> scripts\v714-batch01-source-resolution.mjs:72:  fatal("Invalid Batch-01 manifest schema.");
+  scripts\v714-batch01-source-resolution.mjs:73:  process.exit();
+  scripts\v714-batch01-source-resolution.mjs:74:}
+  scripts\v714-batch01-source-resolution.mjs:75:
+  scripts\v714-batch01-source-resolution.mjs:76:if (!Array.isArray(manifest.candidates)) {
+  scripts\v714-batch01-source-resolution.mjs:77:  fatal("Manifest candidates must be an array.");
+  scripts\v714-batch01-source-resolution.mjs:78:  process.exit();
+  scripts\v714-batch01-source-resolution.mjs:79:}
+  scripts\v714-batch01-source-resolution.mjs:80:
+  scripts\v714-batch01-source-resolution.mjs:81:const knowledgeSource = fs.readFileSync(
+  scripts\v714-batch01-source-resolution.mjs:82:  KNOWLEDGE_FILE,
+  scripts\v714-batch01-source-resolution.mjs:83:  "utf8",
+  scripts\v714-batch01-source-resolution.mjs:84:);
+  scripts\v714-batch01-source-resolution.mjs:224:}
+  scripts\v714-batch01-source-resolution.mjs:225:
+  scripts\v714-batch01-source-resolution.mjs:226:const output = {
+  scripts\v714-batch01-source-resolution.mjs:227:  schema:
+> scripts\v714-batch01-source-resolution.mjs:228:    "nexmold.v7.14.batch-01-source-resolution.v1",
+  scripts\v714-batch01-source-resolution.mjs:229:
+  scripts\v714-batch01-source-resolution.mjs:230:  generatedAt:
+  scripts\v714-batch01-source-resolution.mjs:231:    new Date().toISOString(),
+  scripts\v714-batch01-source-resolution.mjs:232:
+  scripts\v714-batch01-source-resolution.mjs:233:  sourceManifest:
+  scripts\v714-batch01-source-resolution.mjs:234:    path.relative(
+  scripts\v714-batch01-source-resolution.mjs:235:      ROOT,
+  scripts\v714-batch01-source-resolution.mjs:236:      MANIFEST_FILE,
+  scripts\v714-batch01-source-resolution.mjs:237:    ),
+  scripts\v714-batch01-source-resolution.mjs:238:
+  scripts\v714-batch01-source-resolution.mjs:239:  sourceKnowledge:
+  scripts\v714-batch01-source-resolution.mjs:240:    path.relative(
+  scripts\v714-batch01-source-resolution.mjs:270:
+  scripts\v714-batch01-source-resolution.mjs:271:console.log("");
+  scripts\v714-batch01-source-resolution.mjs:272:console.log("=======================================================");
+  scripts\v714-batch01-source-resolution.mjs:273:console.log(
+> scripts\v714-batch01-source-resolution.mjs:274:  "[NEXMOLD][V7.14] BATCH-01 SOURCE RESOLUTION",
+  scripts\v714-batch01-source-resolution.mjs:275:);
+  scripts\v714-batch01-source-resolution.mjs:276:console.log("=======================================================");
+  scripts\v714-batch01-source-resolution.mjs:277:console.log(
+  scripts\v714-batch01-source-resolution.mjs:278:  `Knowledge articles    : ${knowledgeSlugs.size}`,
+  scripts\v714-batch01-source-resolution.mjs:279:);
+  scripts\v714-batch01-source-resolution.mjs:280:console.log(
+  scripts\v714-batch01-source-resolution.mjs:281:  `Batch candidates      : ${summary.candidates}`,
+  scripts\v714-batch01-source-resolution.mjs:282:);
+  scripts\v714-batch01-source-resolution.mjs:283:console.log(
+  scripts\v714-batch01-source-resolution.mjs:284:  `Resolved existing     : ${summary.resolved}`,
+  scripts\v714-batch01-source-resolution.mjs:285:);
+  scripts\v714-batch01-source-resolution.mjs:286:console.log(
+  scripts\v714-new-article-pilot.mjs:8: *
+  scripts\v714-new-article-pilot.mjs:9: * IMPORTANT:
+  scripts\v714-new-article-pilot.mjs:10: * - Does NOT read src/data/knowledge.ts
+  scripts\v714-new-article-pilot.mjs:11: * - Does NOT modify existing pages
+> scripts\v714-new-article-pilot.mjs:12: * - Does NOT modify Batch-01
+  scripts\v714-new-article-pilot.mjs:13: * - Does NOT publish
+  scripts\v714-new-article-pilot.mjs:14: *
+  scripts\v714-new-article-pilot.mjs:15: * Output:
+> scripts\v714-new-article-pilot.mjs:16: * .nexmold/content-factory/new-article/
+  scripts\v714-new-article-pilot.mjs:17: */
+  scripts\v714-new-article-pilot.mjs:18:
+  scripts\v714-new-article-pilot.mjs:19:import fs from "node:fs";
+  scripts\v714-new-article-pilot.mjs:20:import path from "node:path";
+  scripts\v714-new-article-pilot.mjs:21:
+  scripts\v714-new-article-pilot.mjs:22:const ROOT = process.cwd();
+  scripts\v714-new-article-pilot.mjs:23:
+  scripts\v714-new-article-pilot.mjs:24:const OUT_DIR = path.join(
+  scripts\v714-new-article-pilot.mjs:25:  ROOT,
+  scripts\v714-new-article-pilot.mjs:26:  ".nexmold",
+> scripts\v714-new-article-pilot.mjs:27:  "content-factory",
+  scripts\v714-new-article-pilot.mjs:28:  "new-article",
+  scripts\v714-new-article-pilot.mjs:29:);
+  scripts\v714-new-article-pilot.mjs:30:
+  scripts\v714-new-article-pilot.mjs:31:const SLUG =
+  scripts\v714-new-article-pilot.mjs:32:  "injection-molding-ejection-system-design";
+  scripts\v714-new-article-pilot.mjs:33:
+  scripts\v714-new-article-pilot.mjs:34:const ARTICLE_ID =
+  scripts\v714-new-article-pilot.mjs:35:  `v714:${SLUG}`;
+  scripts\v714-new-article-pilot.mjs:36:
+  scripts\v714-new-article-pilot.mjs:37:const PAGE_ID =
+  scripts\v714-new-article-pilot.mjs:38:  ARTICLE_ID;
+  scripts\v714-new-article-pilot.mjs:39:
+
+
+
+
+===== 2. REGIONALCOMPILEINPUT REFERENCES =====
+
+  src\regional\eligibility.ts:22: * - mutate input.
+  src\regional\eligibility.ts:23: */
+  src\regional\eligibility.ts:24:
+  src\regional\eligibility.ts:25:import type {
+  src\regional\eligibility.ts:26:  ComplianceClaim,
+> src\regional\eligibility.ts:27:  RegionalCompileInput,
+  src\regional\eligibility.ts:28:  RegionalEligibilityDecision,
+  src\regional\eligibility.ts:29:  RegionalApplicability,
+  src\regional\eligibility.ts:30:  EvidenceCompleteness,
+  src\regional\eligibility.ts:31:} from "./types.ts";
+  src\regional\eligibility.ts:32:
+  src\regional\eligibility.ts:33:export const ELIGIBILITY_ENGINE_VERSION = "V7.13-P1-S02" as const;
+  src\regional\eligibility.ts:34:
+  src\regional\eligibility.ts:35:export const REASON = {
+  src\regional\eligibility.ts:36:  APPLICABILITY_NOT_APPLICABLE:
+  src\regional\eligibility.ts:37:    "REGIONAL_APPLICABILITY_NOT_APPLICABLE",
+  src\regional\eligibility.ts:38:  APPLICABILITY_UNKNOWN:
+  src\regional\eligibility.ts:39:    "REGIONAL_APPLICABILITY_UNKNOWN",
+  src\regional\eligibility.ts:40:  COMPLIANCE_NOT_VERIFIED:
+  src\regional\eligibility.ts:41:    "REGIONAL_COMPLIANCE_NOT_VERIFIED",
+  src\regional\eligibility.ts:42:  COMPLIANCE_REQUIRES_REVIEW:
+  src\regional\eligibility.ts:63:
+  src\regional\eligibility.ts:64:function isNonEmptyString(value: unknown): value is string {
+  src\regional\eligibility.ts:65:  return typeof value === "string" && value.length > 0;
+  src\regional\eligibility.ts:66:}
+  src\regional\eligibility.ts:67:
+> src\regional\eligibility.ts:68:function isLocale(value: unknown): value is RegionalCompileInput["locale"] {
+  src\regional\eligibility.ts:69:  switch (value) {
+  src\regional\eligibility.ts:70:    case "en-US":
+  src\regional\eligibility.ts:71:    case "en-GB":
+  src\regional\eligibility.ts:72:    case "de-DE":
+  src\regional\eligibility.ts:73:      return true;
+  src\regional\eligibility.ts:74:    default:
+  src\regional\eligibility.ts:75:      return false;
+  src\regional\eligibility.ts:76:  }
+  src\regional\eligibility.ts:77:}
+  src\regional\eligibility.ts:78:
+> src\regional\eligibility.ts:79:function isRegion(value: unknown): value is RegionalCompileInput["region"] {
+  src\regional\eligibility.ts:80:  switch (value) {
+  src\regional\eligibility.ts:81:    case "US":
+  src\regional\eligibility.ts:82:    case "GB":
+  src\regional\eligibility.ts:83:    case "DE":
+  src\regional\eligibility.ts:84:      return true;
+  src\regional\eligibility.ts:85:    default:
+  src\regional\eligibility.ts:86:      return false;
+  src\regional\eligibility.ts:87:  }
+  src\regional\eligibility.ts:88:}
+  src\regional\eligibility.ts:89:
+  src\regional\eligibility.ts:90:function isRegionalApplicability(
+  src\regional\eligibility.ts:91:  value: unknown,
+  src\regional\eligibility.ts:92:): value is RegionalApplicability {
+  src\regional\eligibility.ts:93:  switch (value) {
+  src\regional\eligibility.ts:94:    case "APPLICABLE":
+  src\regional\eligibility.ts:128:}
+  src\regional\eligibility.ts:129:
+  src\regional\eligibility.ts:130:/**
+  src\regional\eligibility.ts:131: * Runtime validation protects the JSON/JS boundary.
+  src\regional\eligibility.ts:132: *
+> src\regional\eligibility.ts:133: * Because the public function is contract-typed as RegionalCompileInput,
+  src\regional\eligibility.ts:134: * this validator never fabricates branded identifiers. A malformed object
+  src\regional\eligibility.ts:135: * cannot enter the decision state machine.
+  src\regional\eligibility.ts:136: */
+> src\regional\eligibility.ts:137:function isValidCompileInput(
+> src\regional\eligibility.ts:138:  input: RegionalCompileInput,
+  src\regional\eligibility.ts:139:): boolean {
+  src\regional\eligibility.ts:140:  if (!isObject(input)) return false;
+  src\regional\eligibility.ts:141:
+  src\regional\eligibility.ts:142:  if (!isNonEmptyString(input.pageId)) return false;
+  src\regional\eligibility.ts:143:  if (!isLocale(input.locale)) return false;
+  src\regional\eligibility.ts:144:  if (!isRegion(input.region)) return false;
+  src\regional\eligibility.ts:145:
+  src\regional\eligibility.ts:146:  if (!isRegionalApplicability(input.applicability)) return false;
+  src\regional\eligibility.ts:147:  if (!isComplianceClaim(input.compliance)) return false;
+  src\regional\eligibility.ts:148:
+  src\regional\eligibility.ts:149:  if (!isObject(input.semantic)) return false;
+  src\regional\eligibility.ts:150:  if (!isNonEmptyString(input.semantic.pageId)) return false;
+  src\regional\eligibility.ts:151:  if (!isLocale(input.semantic.locale)) return false;
+  src\regional\eligibility.ts:152:  if (!isRegion(input.semantic.region)) return false;
+  src\regional\eligibility.ts:153:  if (!Array.isArray(input.semantic.semanticClaimIds)) return false;
+  src\regional\eligibility.ts:159:
+  src\regional\eligibility.ts:160:  return true;
+  src\regional\eligibility.ts:161:}
+  src\regional\eligibility.ts:162:
+  src\regional\eligibility.ts:163:function collectReasonCodes(
+> src\regional\eligibility.ts:164:  input: RegionalCompileInput,
+  src\regional\eligibility.ts:165:): readonly string[] {
+  src\regional\eligibility.ts:166:  const reasonCodes: string[] = [];
+  src\regional\eligibility.ts:167:
+  src\regional\eligibility.ts:168:  if (input.applicability === "NOT_APPLICABLE") {
+  src\regional\eligibility.ts:169:    reasonCodes.push(REASON.APPLICABILITY_NOT_APPLICABLE);
+  src\regional\eligibility.ts:170:  } else if (input.applicability !== "APPLICABLE") {
+  src\regional\eligibility.ts:171:    reasonCodes.push(REASON.APPLICABILITY_UNKNOWN);
+  src\regional\eligibility.ts:172:  }
+  src\regional\eligibility.ts:173:
+  src\regional\eligibility.ts:174:  if (input.compliance === "REQUIRES_REVIEW") {
+  src\regional\eligibility.ts:175:    reasonCodes.push(REASON.COMPLIANCE_REQUIRES_REVIEW);
+  src\regional\eligibility.ts:176:  } else if (input.compliance === "NOT_VERIFIED") {
+  src\regional\eligibility.ts:177:    reasonCodes.push(REASON.COMPLIANCE_NOT_VERIFIED);
+  src\regional\eligibility.ts:178:  } else if (input.compliance !== "VERIFIED") {
+  src\regional\eligibility.ts:179:    reasonCodes.push(REASON.COMPLIANCE_UNKNOWN);
+  src\regional\eligibility.ts:187:
+  src\regional\eligibility.ts:188:  return reasonCodes;
+  src\regional\eligibility.ts:189:}
+  src\regional\eligibility.ts:190:
+  src\regional\eligibility.ts:191:function finalNonPublishStatus(
+> src\regional\eligibility.ts:192:  input: RegionalCompileInput,
+  src\regional\eligibility.ts:193:): "BLOCKED" | "NOT_APPLICABLE" | "REQUIRES_REVIEW" {
+  src\regional\eligibility.ts:194:  switch (input.applicability) {
+  src\regional\eligibility.ts:195:    case "NOT_APPLICABLE":
+  src\regional\eligibility.ts:196:      return "NOT_APPLICABLE";
+  src\regional\eligibility.ts:197:
+  src\regional\eligibility.ts:198:    case "APPLICABLE":
+  src\regional\eligibility.ts:199:      switch (input.compliance) {
+  src\regional\eligibility.ts:200:        case "REQUIRES_REVIEW":
+  src\regional\eligibility.ts:201:          return "REQUIRES_REVIEW";
+  src\regional\eligibility.ts:202:
+  src\regional\eligibility.ts:203:        case "VERIFIED":
+  src\regional\eligibility.ts:204:        case "NOT_VERIFIED":
+  src\regional\eligibility.ts:205:        case "UNKNOWN":
+  src\regional\eligibility.ts:206:          return "BLOCKED";
+  src\regional\eligibility.ts:207:
+  src\regional\eligibility.ts:226: *                鈫? *             ELIGIBLE
+  src\regional\eligibility.ts:227: *
+  src\regional\eligibility.ts:228: * Every other state is non-publishable.
+  src\regional\eligibility.ts:229: */
+  src\regional\eligibility.ts:230:export function evaluateRegionalEligibility(
+> src\regional\eligibility.ts:231:  input: RegionalCompileInput,
+  src\regional\eligibility.ts:232:): RegionalEligibilityDecision {
+> src\regional\eligibility.ts:233:  if (!isValidCompileInput(input)) {
+  src\regional\eligibility.ts:234:    throw new Error(REASON.INPUT_INVALID);
+  src\regional\eligibility.ts:235:  }
+  src\regional\eligibility.ts:236:
+  src\regional\eligibility.ts:237:  const isApplicable = input.applicability === "APPLICABLE";
+  src\regional\eligibility.ts:238:  const isVerified = input.compliance === "VERIFIED";
+  src\regional\eligibility.ts:239:  const isComplete = input.evidence.completeness === "COMPLETE";
+  src\regional\eligibility.ts:240:
+  src\regional\eligibility.ts:241:  /**
+  src\regional\eligibility.ts:242:   * Golden path:
+  src\regional\eligibility.ts:243:   *
+  src\regional\eligibility.ts:244:   * APPLICABLE + VERIFIED + COMPLETE
+  src\regional\eligibility.ts:245:   *              ↓
+  src\regional\eligibility.ts:246:   *          ELIGIBLE
+  src\regional\eligibility.ts:247:   *
+  src\regional\eligibility.ts:248:   * The evidence completeness narrowing is made explicit here so the
+  src\regional\Producer.ts:8: *
+  src\regional\Producer.ts:9: * Canonical flow:
+  src\regional\Producer.ts:10: *
+  src\regional\Producer.ts:11: *   Production Input
+  src\regional\Producer.ts:12: *       ->
+> src\regional\Producer.ts:13: *   RegionalCompileInput
+  src\regional\Producer.ts:14: *       +
+  src\regional\Producer.ts:15: *   Claim / Evidence Binding
+  src\regional\Producer.ts:16: *       ->
+  src\regional\Producer.ts:17: *   compileRegionalPage()
+  src\regional\Producer.ts:18: *       ->
+  src\regional\Producer.ts:19: *   Eligibility
+  src\regional\Producer.ts:20: *       ->
+  src\regional\Producer.ts:21: *   Epistemic Firewall
+  src\regional\Producer.ts:22: *       ->
+  src\regional\Producer.ts:23: *   Regional Publish Artifact
+  src\regional\Producer.ts:24: *       ->
+  src\regional\Producer.ts:25: *   Publication Gate
+  src\regional\Producer.ts:26: *       ->
+  src\regional\Producer.ts:27: *   Route / Hreflang Projection
+  src\regional\Producer.ts:28: *
+  src\regional\Producer.ts:41:  type V714RegionalCompilerInput,
+  src\regional\Producer.ts:42:} from "./regionalCompiler.ts";
+  src\regional\Producer.ts:43:
+  src\regional\Producer.ts:44:import type {
+  src\regional\Producer.ts:45:  CanonicalUrl,
+> src\regional\Producer.ts:46:  RegionalCompileInput,
+  src\regional\Producer.ts:47:  RegionalCompileResult,
+  src\regional\Producer.ts:48:} from "./types.ts";
+  src\regional\Producer.ts:49:
+  src\regional\Producer.ts:50:import type {
+  src\regional\Producer.ts:51:  V714ClaimEvidenceBinding,
+  src\regional\Producer.ts:52:} from "./epistemic-firewall.ts";
+  src\regional\Producer.ts:53:
+  src\regional\Producer.ts:54:/**
+  src\regional\Producer.ts:55: * ------------------------------------------------------------
+  src\regional\Producer.ts:56: * Producer Input
+  src\regional\Producer.ts:57: * ------------------------------------------------------------
+  src\regional\Producer.ts:58: *
+  src\regional\Producer.ts:59: * The producer receives already-resolved production facts.
+  src\regional\Producer.ts:60: *
+  src\regional\Producer.ts:61: * It is deliberately forbidden from inventing:
+  src\regional\Producer.ts:65: *   - publication artifacts
+  src\regional\Producer.ts:66: *
+  src\regional\Producer.ts:67: * Those responsibilities remain downstream.
+  src\regional\Producer.ts:68: */
+  src\regional\Producer.ts:69:export interface V714ProducerInput {
+> src\regional\Producer.ts:70:  readonly compileInput: RegionalCompileInput;
+  src\regional\Producer.ts:71:  readonly bindings: readonly V714ClaimEvidenceBinding[];
+  src\regional\Producer.ts:72:  readonly canonicalUrl: CanonicalUrl;
+> src\regional\Producer.ts:73:  readonly hreflangSet: readonly RegionalCompileInput["locale"][];
+  src\regional\Producer.ts:74:  readonly canonicalByLocale: ReadonlyMap<
+> src\regional\Producer.ts:75:    RegionalCompileInput["locale"],
+  src\regional\Producer.ts:76:    CanonicalUrl
+  src\regional\Producer.ts:77:  >;
+  src\regional\Producer.ts:78:}
+  src\regional\Producer.ts:79:
+  src\regional\Producer.ts:80:/**
+  src\regional\Producer.ts:81: * ------------------------------------------------------------
+  src\regional\Producer.ts:82: * Producer Result
+  src\regional\Producer.ts:83: * ------------------------------------------------------------
+  src\regional\Producer.ts:84: *
+  src\regional\Producer.ts:85: * Invalid producer input is blocked before entering the
+  src\regional\Producer.ts:86: * canonical compiler.
+  src\regional\Producer.ts:87: *
+  src\regional\Producer.ts:88: * A blocked producer result intentionally carries no
+  src\regional\Producer.ts:89: * RegionalCompileResult because the compiler has not evaluated
+  src\regional\Producer.ts:90: * the supplied input yet.
+  src\regional\Producer.ts:150:    );
+  src\regional\Producer.ts:151:
+  src\regional\Producer.ts:152:    return reasons;
+  src\regional\Producer.ts:153:  }
+  src\regional\Producer.ts:154:
+> src\regional\Producer.ts:155:  if (!isObject(input.compileInput)) {
+  src\regional\Producer.ts:156:    reasons.push(
+  src\regional\Producer.ts:157:      "V714_PRODUCER_COMPILE_INPUT_INVALID",
+  src\regional\Producer.ts:158:    );
+  src\regional\Producer.ts:159:
+  src\regional\Producer.ts:160:    return reasons;
+  src\regional\Producer.ts:161:  }
+  src\regional\Producer.ts:162:
+  src\regional\Producer.ts:163:  if (
+  src\regional\Producer.ts:164:    !isNonEmptyString(
+> src\regional\Producer.ts:165:      input.compileInput.pageId,
+  src\regional\Producer.ts:166:    )
+  src\regional\Producer.ts:167:  ) {
+  src\regional\Producer.ts:168:    reasons.push(
+  src\regional\Producer.ts:169:      "V714_PRODUCER_PAGE_ID_INVALID",
+  src\regional\Producer.ts:170:    );
+  src\regional\Producer.ts:171:  }
+  src\regional\Producer.ts:172:
+  src\regional\Producer.ts:173:  if (
+  src\regional\Producer.ts:174:    !isNonEmptyString(
+> src\regional\Producer.ts:175:      input.compileInput.locale,
+  src\regional\Producer.ts:176:    )
+  src\regional\Producer.ts:177:  ) {
+  src\regional\Producer.ts:178:    reasons.push(
+  src\regional\Producer.ts:179:      "V714_PRODUCER_LOCALE_INVALID",
+  src\regional\Producer.ts:180:    );
+  src\regional\Producer.ts:181:  }
+  src\regional\Producer.ts:182:
+  src\regional\Producer.ts:183:  if (
+  src\regional\Producer.ts:184:    !isNonEmptyString(
+> src\regional\Producer.ts:185:      input.compileInput.region,
+  src\regional\Producer.ts:186:    )
+  src\regional\Producer.ts:187:  ) {
+  src\regional\Producer.ts:188:    reasons.push(
+  src\regional\Producer.ts:189:      "V714_PRODUCER_REGION_INVALID",
+  src\regional\Producer.ts:190:    );
+  src\regional\Producer.ts:191:  }
+  src\regional\Producer.ts:192:
+  src\regional\Producer.ts:193:  if (!Array.isArray(input.bindings)) {
+  src\regional\Producer.ts:194:    reasons.push(
+  src\regional\Producer.ts:195:      "V714_PRODUCER_BINDINGS_INVALID",
+  src\regional\Producer.ts:196:    );
+  src\regional\Producer.ts:197:  }
+  src\regional\Producer.ts:198:
+  src\regional\Producer.ts:199:  if (!isNonEmptyString(input.canonicalUrl)) {
+  src\regional\Producer.ts:200:    reasons.push(
+  src\regional\Producer.ts:241: */
+  src\regional\Producer.ts:242:function validateEvidenceBoundary(
+  src\regional\Producer.ts:243:  input: V714ProducerInput,
+  src\regional\Producer.ts:244:): string[] {
+  src\regional\Producer.ts:245:  const reasons: string[] = [];
+> src\regional\Producer.ts:246:  const compileInput = input.compileInput;
+  src\regional\Producer.ts:247:
+  src\regional\Producer.ts:248:  /**
+> src\regional\Producer.ts:249:   * RegionalCompileInput.evidence is a snapshot object:
+  src\regional\Producer.ts:250:   *
+  src\regional\Producer.ts:251:   *   evidence: {
+  src\regional\Producer.ts:252:   *     evidence: EvidenceRef[]
+  src\regional\Producer.ts:253:   *     ...
+  src\regional\Producer.ts:254:   *   }
+  src\regional\Producer.ts:255:   */
+  src\regional\Producer.ts:256:  if (
+> src\regional\Producer.ts:257:    !isObject(compileInput.evidence) ||
+> src\regional\Producer.ts:258:    !Array.isArray(compileInput.evidence.evidence)
+  src\regional\Producer.ts:259:  ) {
+  src\regional\Producer.ts:260:    reasons.push(
+  src\regional\Producer.ts:261:      "V714_PRODUCER_EVIDENCE_INVALID",
+  src\regional\Producer.ts:262:    );
+  src\regional\Producer.ts:263:  }
+  src\regional\Producer.ts:264:
+  src\regional\Producer.ts:265:  if (
+  src\regional\Producer.ts:266:    !Array.isArray(
+> src\regional\Producer.ts:267:      compileInput.semantic.semanticClaimIds,
+  src\regional\Producer.ts:268:    )
+  src\regional\Producer.ts:269:  ) {
+  src\regional\Producer.ts:270:    reasons.push(
+  src\regional\Producer.ts:271:      "V714_PRODUCER_SEMANTIC_CLAIMS_INVALID",
+  src\regional\Producer.ts:272:    );
+  src\regional\Producer.ts:273:  }
+  src\regional\Producer.ts:274:
+  src\regional\Producer.ts:275:  if (!Array.isArray(input.bindings)) {
+  src\regional\Producer.ts:276:    reasons.push(
+  src\regional\Producer.ts:277:      "V714_PRODUCER_BINDINGS_INVALID",
+  src\regional\Producer.ts:278:    );
+  src\regional\Producer.ts:279:
+  src\regional\Producer.ts:280:    return reasons;
+  src\regional\Producer.ts:281:  }
+  src\regional\Producer.ts:282:
+  src\regional\Producer.ts:283:  /**
+  src\regional\Producer.ts:284:   * No evidence means no publication.
+  src\regional\Producer.ts:285:   */
+  src\regional\Producer.ts:286:  if (
+> src\regional\Producer.ts:287:    isObject(compileInput.evidence) &&
+> src\regional\Producer.ts:288:    Array.isArray(compileInput.evidence.evidence) &&
+> src\regional\Producer.ts:289:    compileInput.evidence.evidence.length === 0
+  src\regional\Producer.ts:290:  ) {
+  src\regional\Producer.ts:291:    reasons.push(
+  src\regional\Producer.ts:292:      "V714_PRODUCER_EVIDENCE_ZERO",
+  src\regional\Producer.ts:293:    );
+  src\regional\Producer.ts:294:  }
+  src\regional\Producer.ts:295:
+  src\regional\Producer.ts:296:  /**
+  src\regional\Producer.ts:297:   * No semantic claims means no publication.
+  src\regional\Producer.ts:298:   */
+  src\regional\Producer.ts:299:  if (
+  src\regional\Producer.ts:300:    Array.isArray(
+> src\regional\Producer.ts:301:      compileInput.semantic.semanticClaimIds,
+  src\regional\Producer.ts:302:    ) &&
+> src\regional\Producer.ts:303:    compileInput.semantic.semanticClaimIds.length === 0
+  src\regional\Producer.ts:304:  ) {
+  src\regional\Producer.ts:305:    reasons.push(
+  src\regional\Producer.ts:306:      "V714_PRODUCER_CLAIM_ZERO",
+  src\regional\Producer.ts:307:    );
+  src\regional\Producer.ts:308:  }
+  src\regional\Producer.ts:309:
+  src\regional\Producer.ts:310: 
+  src\regional\Producer.ts:311:
+  src\regional\Producer.ts:312:  
+  src\regional\Producer.ts:313:
+  src\regional\Producer.ts:314:  /**
+  src\regional\Producer.ts:315:   * Every binding must reference at least one evidence ID.
+  src\regional\Producer.ts:316:   */
+  src\regional\Producer.ts:317:  for (const binding of input.bindings) {
+  src\regional\Producer.ts:318:    if (
+  src\regional\Producer.ts:328:  /**
+  src\regional\Producer.ts:329:   * Every binding evidence ID must exist in the supplied
+  src\regional\Producer.ts:330:   * evidence snapshot.
+  src\regional\Producer.ts:331:   */
+  src\regional\Producer.ts:332:  if (
+> src\regional\Producer.ts:333:    isObject(compileInput.evidence) &&
+> src\regional\Producer.ts:334:    Array.isArray(compileInput.evidence.evidence)
+  src\regional\Producer.ts:335:  ) {
+  src\regional\Producer.ts:336:    const evidenceIds = new Set(
+> src\regional\Producer.ts:337:      compileInput.evidence.evidence.map(
+  src\regional\Producer.ts:338:        (evidence) =>
+  src\regional\Producer.ts:339:          String(evidence.id),
+  src\regional\Producer.ts:340:      ),
+  src\regional\Producer.ts:341:    );
+  src\regional\Producer.ts:342:
+  src\regional\Producer.ts:343:    for (const binding of input.bindings) {
+  src\regional\Producer.ts:344:      for (const evidenceId of binding.evidenceIds) {
+  src\regional\Producer.ts:345:        if (!evidenceIds.has(String(evidenceId))) {
+  src\regional\Producer.ts:346:          reasons.push(
+  src\regional\Producer.ts:347:            `V714_PRODUCER_EVIDENCE_UNRESOLVED:${String(evidenceId)}`,
+  src\regional\Producer.ts:348:          );
+  src\regional\Producer.ts:349:        }
+  src\regional\Producer.ts:350:      }
+  src\regional\Producer.ts:351:    }
+  src\regional\Producer.ts:352:  }
+  src\regional\Producer.ts:405:   * authority.
+  src\regional\Producer.ts:406:   *
+  src\regional\Producer.ts:407:   * All decisions are delegated to the canonical compiler.
+  src\regional\Producer.ts:408:   */
+  src\regional\Producer.ts:409:  const compilerInput: V714RegionalCompilerInput = {
+> src\regional\Producer.ts:410:    compileInput: input.compileInput,
+  src\regional\Producer.ts:411:    bindings: input.bindings,
+  src\regional\Producer.ts:412:    canonicalUrl: input.canonicalUrl,
+  src\regional\Producer.ts:413:    hreflangSet: input.hreflangSet,
+  src\regional\Producer.ts:414:    canonicalByLocale:
+  src\regional\Producer.ts:415:      input.canonicalByLocale,
+  src\regional\Producer.ts:416:  };
+  src\regional\Producer.ts:417:
+  src\regional\Producer.ts:418:  const result =
+  src\regional\Producer.ts:419:    compileRegionalPage(
+  src\regional\Producer.ts:420:      compilerInput,
+  src\regional\Producer.ts:421:    );
+  src\regional\Producer.ts:422:
+  src\regional\Producer.ts:423:  /**
+  src\regional\Producer.ts:424:   * ----------------------------------------------------------
+  src\regional\Producer.ts:425:   * Compiler Block
+  src\regional\regionalCompiler.ts:13: *   -> Route / Hreflang Projection
+  src\regional\regionalCompiler.ts:14: *
+  src\regional\regionalCompiler.ts:15: * FAIL CLOSED.
+  src\regional\regionalCompiler.ts:16: *
+  src\regional\regionalCompiler.ts:17: * This compiler does not infer evidence.
+> src\regional\regionalCompiler.ts:18: * A producer must supply an explicit RegionalCompileInput.
+  src\regional\regionalCompiler.ts:19: */
+  src\regional\regionalCompiler.ts:20:
+  src\regional\regionalCompiler.ts:21:import {
+  src\regional\regionalCompiler.ts:22:  evaluateRegionalEligibility,
+  src\regional\regionalCompiler.ts:23:} from "./eligibility.ts";
+  src\regional\regionalCompiler.ts:24:
+  src\regional\regionalCompiler.ts:25:import {
+  src\regional\regionalCompiler.ts:26:  runEpistemicFirewall,
+  src\regional\regionalCompiler.ts:27:  type V714ClaimEvidenceBinding,
+  src\regional\regionalCompiler.ts:28:} from "./epistemic-firewall.ts";
+  src\regional\regionalCompiler.ts:29:
+  src\regional\regionalCompiler.ts:30:import {
+  src\regional\regionalCompiler.ts:31:  createRegionalPublishArtifact,
+  src\regional\regionalCompiler.ts:32:  projectRegionalRoute,
+  src\regional\regionalCompiler.ts:33:  projectHreflang,
+  src\regional\regionalCompiler.ts:37:  runPublicationGate,
+  src\regional\regionalCompiler.ts:38:} from "./publication-gate.ts";
+  src\regional\regionalCompiler.ts:39:
+  src\regional\regionalCompiler.ts:40:import type {
+  src\regional\regionalCompiler.ts:41:  CanonicalUrl,
+> src\regional\regionalCompiler.ts:42:  RegionalCompileInput,
+  src\regional\regionalCompiler.ts:43:  RegionalCompileResult,
+  src\regional\regionalCompiler.ts:44:} from "./types.ts";
+  src\regional\regionalCompiler.ts:45:
+  src\regional\regionalCompiler.ts:46:export interface V714RegionalCompilerInput {
+> src\regional\regionalCompiler.ts:47:  readonly compileInput: RegionalCompileInput;
+  src\regional\regionalCompiler.ts:48:  readonly bindings: readonly V714ClaimEvidenceBinding[];
+  src\regional\regionalCompiler.ts:49:  readonly canonicalUrl: CanonicalUrl;
+> src\regional\regionalCompiler.ts:50:  readonly hreflangSet: readonly RegionalCompileInput["locale"][];
+  src\regional\regionalCompiler.ts:51:  readonly canonicalByLocale: ReadonlyMap<
+> src\regional\regionalCompiler.ts:52:    RegionalCompileInput["locale"],
+  src\regional\regionalCompiler.ts:53:    CanonicalUrl
+  src\regional\regionalCompiler.ts:54:  >;
+  src\regional\regionalCompiler.ts:55:}
+  src\regional\regionalCompiler.ts:56:
+  src\regional\regionalCompiler.ts:57:export interface V714RegionalCompilerBlocked {
+  src\regional\regionalCompiler.ts:58:  readonly published: false;
+  src\regional\regionalCompiler.ts:59:  readonly result: RegionalCompileResult;
+  src\regional\regionalCompiler.ts:60:  readonly reasonCodes: readonly string[];
+  src\regional\regionalCompiler.ts:61:}
+  src\regional\regionalCompiler.ts:62:
+  src\regional\regionalCompiler.ts:63:export interface V714RegionalCompilerPublished {
+  src\regional\regionalCompiler.ts:64:  readonly published: true;
+  src\regional\regionalCompiler.ts:65:  readonly result: RegionalCompileResult;
+  src\regional\regionalCompiler.ts:66:}
+  src\regional\regionalCompiler.ts:67:
+  src\regional\regionalCompiler.ts:70:  | V714RegionalCompilerBlocked;
+  src\regional\regionalCompiler.ts:71:
+  src\regional\regionalCompiler.ts:72:export function compileRegionalPage(
+  src\regional\regionalCompiler.ts:73:  input: V714RegionalCompilerInput,
+  src\regional\regionalCompiler.ts:74:): V714RegionalCompilerResult {
+> src\regional\regionalCompiler.ts:75:  const compileInput = input.compileInput;
+  src\regional\regionalCompiler.ts:76:
+  src\regional\regionalCompiler.ts:77:  /*
+  src\regional\regionalCompiler.ts:78:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:79:   * 1. Eligibility
+  src\regional\regionalCompiler.ts:80:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:81:   *
+  src\regional\regionalCompiler.ts:82:   * Eligibility consumes already-resolved applicability,
+  src\regional\regionalCompiler.ts:83:   * compliance and evidence facts.
+  src\regional\regionalCompiler.ts:84:   */
+  src\regional\regionalCompiler.ts:85:  const eligibility = evaluateRegionalEligibility(
+> src\regional\regionalCompiler.ts:86:    compileInput,
+  src\regional\regionalCompiler.ts:87:  );
+  src\regional\regionalCompiler.ts:88:
+  src\regional\regionalCompiler.ts:89:  /*
+  src\regional\regionalCompiler.ts:90:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:91:   * 2. Epistemic Firewall
+  src\regional\regionalCompiler.ts:92:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:93:   */
+  src\regional\regionalCompiler.ts:94:  const firewall = runEpistemicFirewall({
+> src\regional\regionalCompiler.ts:95:    evidence: compileInput.evidence,
+  src\regional\regionalCompiler.ts:96:    semanticClaimIds:
+> src\regional\regionalCompiler.ts:97:      compileInput.semantic.semanticClaimIds,
+  src\regional\regionalCompiler.ts:98:    bindings: input.bindings,
+  src\regional\regionalCompiler.ts:99:  });
+  src\regional\regionalCompiler.ts:100:
+  src\regional\regionalCompiler.ts:101:  /*
+  src\regional\regionalCompiler.ts:102:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:103:   * 3. Immediate fail-closed boundary
+  src\regional\regionalCompiler.ts:104:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:105:   *
+  src\regional\regionalCompiler.ts:106:   * Nothing publishable can be constructed unless BOTH
+  src\regional\regionalCompiler.ts:107:   * eligibility and firewall pass.
+  src\regional\regionalCompiler.ts:108:   */
+  src\regional\regionalCompiler.ts:109:  if (!eligibility.status ||
+  src\regional\regionalCompiler.ts:110:      eligibility.status !== "ELIGIBLE" ||
+  src\regional\regionalCompiler.ts:111:      !firewall.ok) {
+  src\regional\regionalCompiler.ts:112:    return {
+  src\regional\regionalCompiler.ts:130:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:131:   * 4. Regional Publish Artifact
+  src\regional\regionalCompiler.ts:132:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:133:   */
+  src\regional\regionalCompiler.ts:134:  const artifact = createRegionalPublishArtifact({
+> src\regional\regionalCompiler.ts:135:    input: compileInput,
+  src\regional\regionalCompiler.ts:136:    eligibility,
+  src\regional\regionalCompiler.ts:137:    firewall,
+  src\regional\regionalCompiler.ts:138:    canonicalUrl: input.canonicalUrl,
+  src\regional\regionalCompiler.ts:139:    hreflangSet: input.hreflangSet,
+  src\regional\regionalCompiler.ts:140:  });
+  src\regional\regionalCompiler.ts:141:
+  src\regional\regionalCompiler.ts:142:  /*
+  src\regional\regionalCompiler.ts:143:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:144:   * 5. Publication Gate
+  src\regional\regionalCompiler.ts:145:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:146:   */
+  src\regional\regionalCompiler.ts:147:  const publication = runPublicationGate({
+  src\regional\regionalCompiler.ts:148:    eligibility,
+  src\regional\regionalCompiler.ts:149:    firewall,
+  src\regional\regionalCompiler.ts:150:    artifact,
+  src\regional\regionalPublishArtifact.ts:12:  ContentHash,
+  src\regional\regionalPublishArtifact.ts:13:  EligibleRegionalDecision,
+  src\regional\regionalPublishArtifact.ts:14:  HreflangProjection,
+  src\regional\regionalPublishArtifact.ts:15:  Locale,
+  src\regional\regionalPublishArtifact.ts:16:  PageId,
+> src\regional\regionalPublishArtifact.ts:17:  RegionalCompileInput,
+  src\regional\regionalPublishArtifact.ts:18:  RegionalPublishArtifact,
+  src\regional\regionalPublishArtifact.ts:19:  RegionalRouteProjection,
+  src\regional\regionalPublishArtifact.ts:20:} from './types.ts';
+  src\regional\regionalPublishArtifact.ts:21:
+  src\regional\regionalPublishArtifact.ts:22:import {
+  src\regional\regionalPublishArtifact.ts:23:  regionalPublishArtifactBrand,
+  src\regional\regionalPublishArtifact.ts:24:} from './types.ts';
+  src\regional\regionalPublishArtifact.ts:25:
+  src\regional\regionalPublishArtifact.ts:26:import type { V714FirewallPass } from './epistemic-firewall.ts';
+  src\regional\regionalPublishArtifact.ts:27:
+  src\regional\regionalPublishArtifact.ts:28:export const REGIONAL_PUBLISH_ARTIFACT_VERSION =
+  src\regional\regionalPublishArtifact.ts:29:  'V7.14-PUBLISH-ARTIFACT-1' as const;
+  src\regional\regionalPublishArtifact.ts:30:
+  src\regional\regionalPublishArtifact.ts:31:type ArtifactInput = {
+> src\regional\regionalPublishArtifact.ts:32:  readonly input: RegionalCompileInput;
+  src\regional\regionalPublishArtifact.ts:33:  readonly eligibility: EligibleRegionalDecision;
+  src\regional\regionalPublishArtifact.ts:34:  readonly firewall: V714FirewallPass;
+  src\regional\regionalPublishArtifact.ts:35:  readonly canonicalUrl: CanonicalUrl;
+  src\regional\regionalPublishArtifact.ts:36:  readonly hreflangSet: readonly Locale[];
+  src\regional\regionalPublishArtifact.ts:37:};
+  src\regional\regionalPublishArtifact.ts:38:
+  src\regional\regionalPublishArtifact.ts:39:function hash(value: unknown): ContentHash {
+  src\regional\regionalPublishArtifact.ts:40:  const canonical =
+  src\regional\regionalPublishArtifact.ts:41:    typeof value === 'object' && value !== null
+  src\regional\regionalPublishArtifact.ts:42:      ? JSON.stringify(value, Object.keys(value as object).sort())
+  src\regional\regionalPublishArtifact.ts:43:      : JSON.stringify(value);
+  src\regional\regionalPublishArtifact.ts:44:
+  src\regional\regionalPublishArtifact.ts:45:  return createHash('sha256')
+  src\regional\regionalPublishArtifact.ts:46:    .update(canonical, 'utf8')
+  src\regional\regionalPublishArtifact.ts:47:    .digest('hex') as ContentHash;
+  src\regional\types.ts:1:/**
+  src\regional\types.ts:2: * NEXMOLD V7.13 鈥?Regional Compiler Contract Layer
+  src\regional\types.ts:3: *
+  src\regional\types.ts:4: * Phase 1 / Step 01
+  src\regional\types.ts:5: *
+> src\regional\types.ts:6: * RegionalCompileInput explicitly carries the already-resolved
+  src\regional\types.ts:7: * applicability/compliance facts required by the eligibility phase.
+  src\regional\types.ts:8: */
+  src\regional\types.ts:9:
+  src\regional\types.ts:10:export type Locale = "en-US" | "en-GB" | "de-DE";
+  src\regional\types.ts:11:export type Region = "US" | "GB" | "DE";
+  src\regional\types.ts:12:
+  src\regional\types.ts:13:export type PageId = string & { readonly __brand: "PageId" };
+  src\regional\types.ts:14:export type CanonicalUrl = string & { readonly __brand: "CanonicalUrl" };
+  src\regional\types.ts:15:export type ContentHash = string & { readonly __brand: "ContentHash" };
+  src\regional\types.ts:16:export type EvidenceId = string & { readonly __brand: "EvidenceId" };
+  src\regional\types.ts:17:export type SemanticClaimId = string & {
+  src\regional\types.ts:18:  readonly __brand: "SemanticClaimId";
+  src\regional\types.ts:19:};
+  src\regional\types.ts:20:
+  src\regional\types.ts:21:export type RegionalApplicability =
+  src\regional\types.ts:151:export interface HreflangProjection {
+  src\regional\types.ts:152:  readonly pageId: PageId;
+  src\regional\types.ts:153:  readonly edges: readonly HreflangEdge[];
+  src\regional\types.ts:154:}
+  src\regional\types.ts:155:
+> src\regional\types.ts:156:export interface RegionalCompileInput {
+  src\regional\types.ts:157:  readonly pageId: PageId;
+  src\regional\types.ts:158:  readonly locale: Locale;
+  src\regional\types.ts:159:  readonly region: Region;
+  src\regional\types.ts:160:
+  src\regional\types.ts:161:  /**
+  src\regional\types.ts:162:   * Already-resolved facts from the upstream semantic phase.
+  src\regional\types.ts:163:   * Eligibility MUST consume these facts; it MUST NOT infer them.
+  src\regional\types.ts:164:   */
+  src\regional\types.ts:165:  readonly applicability: RegionalApplicability;
+  src\regional\types.ts:166:  readonly compliance: ComplianceClaim;
+  src\regional\types.ts:167:
+  src\regional\types.ts:168:  readonly semantic: RegionalSemanticProjection;
+  src\regional\types.ts:169:  readonly evidence: RegionalEvidenceSnapshot;
+  src\regional\types.ts:170:}
+  src\regional\types.ts:171:
+  scripts\inspect-batch-01-wiring.mjs:72:console.log("");
+  scripts\inspect-batch-01-wiring.mjs:73:console.log("[PRODUCTION CHAIN TOKENS]");
+  scripts\inspect-batch-01-wiring.mjs:74:console.log("-------------------------------------------------------");
+  scripts\inspect-batch-01-wiring.mjs:75:
+  scripts\inspect-batch-01-wiring.mjs:76:const tokenChecks = [
+> scripts\inspect-batch-01-wiring.mjs:77:  ["types", "RegionalCompileInput"],
+  scripts\inspect-batch-01-wiring.mjs:78:  ["types", "RegionalPublishArtifact"],
+  scripts\inspect-batch-01-wiring.mjs:79:  ["producer", "V714ArticleSource"],
+  scripts\inspect-batch-01-wiring.mjs:80:  ["producer", "produceV714Article"],
+  scripts\inspect-batch-01-wiring.mjs:81:  ["contract", "V714ArticleContract"],
+  scripts\inspect-batch-01-wiring.mjs:82:  ["contract", "evidenceIds"],
+  scripts\inspect-batch-01-wiring.mjs:83:  ["contract", "semanticClaimIds"],
+  scripts\inspect-batch-01-wiring.mjs:84:  ["compiler", "evaluateRegionalEligibility"],
+  scripts\inspect-batch-01-wiring.mjs:85:  ["compiler", "runEpistemicFirewall"],
+  scripts\inspect-batch-01-wiring.mjs:86:  ["compiler", "createRegionalPublishArtifact"],
+  scripts\inspect-batch-01-wiring.mjs:87:  ["compiler", "runPublicationGate"],
+  scripts\inspect-batch-01-wiring.mjs:88:  ["compiler", "projectRegionalRoute"],
+  scripts\inspect-batch-01-wiring.mjs:89:  ["renderer", "renderV714ArticleMarkdown"],
+  scripts\inspect-batch-01-wiring.mjs:90:];
+  scripts\inspect-batch-01-wiring.mjs:91:
+  scripts\inspect-batch-01-wiring.mjs:92:let failures = 0;
+  scripts\v714-article-factory.mjs:636:  ];
+  scripts\v714-article-factory.mjs:637:
+  scripts\v714-article-factory.mjs:638:  const canonicalUrl =
+  scripts\v714-article-factory.mjs:639:    `https://www.nexmold.com/industries/v714/${targetSlug}/`;
+  scripts\v714-article-factory.mjs:640:
+> scripts\v714-article-factory.mjs:641:  const compileInput = {
+  scripts\v714-article-factory.mjs:642:    pageId:
+  scripts\v714-article-factory.mjs:643:      `v714:whitepaper:${targetSlug}`,
+  scripts\v714-article-factory.mjs:644:
+  scripts\v714-article-factory.mjs:645:    locale:
+  scripts\v714-article-factory.mjs:646:      "en-US",
+  scripts\v714-article-factory.mjs:647:
+  scripts\v714-article-factory.mjs:648:    region:
+  scripts\v714-article-factory.mjs:649:      "US",
+  scripts\v714-article-factory.mjs:650:
+  scripts\v714-article-factory.mjs:651:    applicability:
+  scripts\v714-article-factory.mjs:652:      "APPLICABLE",
+  scripts\v714-article-factory.mjs:653:
+  scripts\v714-article-factory.mjs:654:    compliance:
+  scripts\v714-article-factory.mjs:655:      "VERIFIED",
+  scripts\v714-article-factory.mjs:656:
+  scripts\v714-article-factory.mjs:662:  let producerResult;
+  scripts\v714-article-factory.mjs:663:
+  scripts\v714-article-factory.mjs:664:  try {
+  scripts\v714-article-factory.mjs:665:    producerResult =
+  scripts\v714-article-factory.mjs:666:      runV714Producer({
+> scripts\v714-article-factory.mjs:667:        compileInput,
+  scripts\v714-article-factory.mjs:668:
+  scripts\v714-article-factory.mjs:669:        bindings,
+  scripts\v714-article-factory.mjs:670:
+  scripts\v714-article-factory.mjs:671:        canonicalUrl,
+  scripts\v714-article-factory.mjs:672:
+  scripts\v714-article-factory.mjs:673:        hreflangSet: [
+  scripts\v714-article-factory.mjs:674:          "en-US",
+  scripts\v714-article-factory.mjs:675:        ],
+  scripts\v714-article-factory.mjs:676:
+  scripts\v714-article-factory.mjs:677:        canonicalByLocale:
+  scripts\v714-article-factory.mjs:678:          new Map([
+  scripts\v714-article-factory.mjs:679:            [
+  scripts\v714-article-factory.mjs:680:              "en-US",
+  scripts\v714-article-factory.mjs:681:              canonicalUrl,
+  scripts\v714-article-factory.mjs:682:            ],
+  scripts\v714-regional-gate.mjs:59:        claimKey: 'v714.production.gate.fixture',
+  scripts\v714-regional-gate.mjs:60:      },
+  scripts\v714-regional-gate.mjs:61:    ],
+  scripts\v714-regional-gate.mjs:62:  };
+  scripts\v714-regional-gate.mjs:63:
+> scripts\v714-regional-gate.mjs:64:  const compileInput = {
+  scripts\v714-regional-gate.mjs:65:    pageId,
+  scripts\v714-regional-gate.mjs:66:    locale,
+  scripts\v714-regional-gate.mjs:67:    region,
+  scripts\v714-regional-gate.mjs:68:    applicability: 'APPLICABLE',
+  scripts\v714-regional-gate.mjs:69:    compliance: 'VERIFIED',
+  scripts\v714-regional-gate.mjs:70:    evidence,
+  scripts\v714-regional-gate.mjs:71:    semantic: {
+  scripts\v714-regional-gate.mjs:72:      pageId,
+  scripts\v714-regional-gate.mjs:73:      locale,
+  scripts\v714-regional-gate.mjs:74:      region,
+  scripts\v714-regional-gate.mjs:75:      semanticClaimIds: [claimId],
+  scripts\v714-regional-gate.mjs:76:    },
+  scripts\v714-regional-gate.mjs:77:  };
+  scripts\v714-regional-gate.mjs:78:
+  scripts\v714-regional-gate.mjs:79:  const bindings = [
+  scripts\v714-regional-gate.mjs:85:      evidenceIds: [evidenceId],
+  scripts\v714-regional-gate.mjs:86:    },
+  scripts\v714-regional-gate.mjs:87:  ];
+  scripts\v714-regional-gate.mjs:88:
+  scripts\v714-regional-gate.mjs:89:  return {
+> scripts\v714-regional-gate.mjs:90:    compileInput,
+  scripts\v714-regional-gate.mjs:91:    bindings,
+  scripts\v714-regional-gate.mjs:92:    canonicalUrl,
+  scripts\v714-regional-gate.mjs:93:    hreflangSet: [locale],
+  scripts\v714-regional-gate.mjs:94:    canonicalByLocale: new Map([[locale, canonicalUrl]]),
+  scripts\v714-regional-gate.mjs:95:  };
+  scripts\v714-regional-gate.mjs:96:}
+  scripts\v714-regional-gate.mjs:97:
+  scripts\v714-regional-gate.mjs:98:async function importRegional(root, file) {
+  scripts\v714-regional-gate.mjs:99:  const url = pathToFileURL(resolve(root, 'src', 'regional', file)).href;
+  scripts\v714-regional-gate.mjs:100:  return import(`${url}?v714_gate=${Date.now()}`);
+  scripts\v714-regional-gate.mjs:101:}
+  scripts\v714-regional-gate.mjs:102:
+  scripts\v714-regional-gate.mjs:103:export async function runV714RegionalGate(context = {}) {
+  scripts\v714-regional-gate.mjs:104:  const root = resolve(context.projectRoot ?? process.cwd());
+  scripts\v714-regional-gate.mjs:105:
+  scripts\v714-regional-gate.mjs:127:  const artifact = positive.result.artifact;
+  scripts\v714-regional-gate.mjs:128:  const route = positive.result.route;
+  scripts\v714-regional-gate.mjs:129:  const hreflang = positive.result.hreflang;
+  scripts\v714-regional-gate.mjs:130:
+  scripts\v714-regional-gate.mjs:131:  assert(Object.isFrozen(artifact), 'RegionalPublishArtifact must be immutable');
+> scripts\v714-regional-gate.mjs:132:  assert(artifact.pageId === fixture.compileInput.pageId, 'artifact pageId mismatch');
+> scripts\v714-regional-gate.mjs:133:  assert(artifact.locale === fixture.compileInput.locale, 'artifact locale mismatch');
+> scripts\v714-regional-gate.mjs:134:  assert(artifact.region === fixture.compileInput.region, 'artifact region mismatch');
+  scripts\v714-regional-gate.mjs:135:  assert(artifact.canonicalUrl === fixture.canonicalUrl, 'artifact canonical mismatch');
+  scripts\v714-regional-gate.mjs:136:  assert(/^[a-f0-9]{64}$/i.test(artifact.pageContentHash), 'artifact hash is not SHA-256 shaped');
+  scripts\v714-regional-gate.mjs:137:  assert(route.artifact === artifact, 'route must project the exact artifact object');
+  scripts\v714-regional-gate.mjs:138:  assert(route.contentHash === artifact.pageContentHash, 'route hash must equal artifact hash');
+  scripts\v714-regional-gate.mjs:139:  assert(route.canonicalUrl === artifact.canonicalUrl, 'route canonical must equal artifact canonical');
+  scripts\v714-regional-gate.mjs:140:  assert(hreflang.pageId === artifact.pageId, 'hreflang page identity mismatch');
+  scripts\v714-regional-gate.mjs:141:  assert(hreflang.edges.length === 1, 'fixture must produce exactly one hreflang edge');
+  scripts\v714-regional-gate.mjs:142:  assert(hreflang.edges[0].targetCanonicalUrl === fixture.canonicalUrl, 'hreflang canonical mismatch');
+  scripts\v714-regional-gate.mjs:143:
+  scripts\v714-regional-gate.mjs:144:  const preflight = preflightMod.runRegionalReleasePreflight(positive.result);
+  scripts\v714-regional-gate.mjs:145:  assert(preflight.passed === true, `regional release preflight failed: ${preflight.checks.filter((x) => !x.passed).map((x) => x.id).join(', ')}`);
+  scripts\v714-regional-gate.mjs:146:
+  scripts\v714-regional-gate.mjs:147:  // ------------------------------------------------------------
+  scripts\v714-regional-gate.mjs:148:  // Adversarial paths: every mutation must produce zero public artifact.
+  scripts\v714-regional-gate.mjs:149:  // ------------------------------------------------------------
+  scripts\v714-regional-gate.mjs:150:  const incomplete = structuredClone(fixture);
+> scripts\v714-regional-gate.mjs:151:  incomplete.compileInput.evidence.completeness = 'INCOMPLETE';
+  scripts\v714-regional-gate.mjs:152:  blocked(producerMod.runV714Producer(incomplete), 'incomplete evidence');
+  scripts\v714-regional-gate.mjs:153:
+  scripts\v714-regional-gate.mjs:154:  const unbound = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:155:  unbound.bindings = [];
+  scripts\v714-regional-gate.mjs:156:  blocked(producerMod.runV714Producer(unbound), 'missing claim binding');
+  scripts\v714-regional-gate.mjs:157:
+  scripts\v714-regional-gate.mjs:158:  const unresolvedEvidence = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:159:  unresolvedEvidence.bindings[0].evidenceIds = ['evidence:does-not-exist'];
+  scripts\v714-regional-gate.mjs:160:  blocked(producerMod.runV714Producer(unresolvedEvidence), 'unresolved evidence');
+  scripts\v714-regional-gate.mjs:161:
+  scripts\v714-regional-gate.mjs:162:  const noApplicability = structuredClone(fixture);
+> scripts\v714-regional-gate.mjs:163:  noApplicability.compileInput.applicability = 'NOT_APPLICABLE';
+  scripts\v714-regional-gate.mjs:164:  blocked(producerMod.runV714Producer(noApplicability), 'not applicable');
+  scripts\v714-regional-gate.mjs:165:
+  scripts\v714-regional-gate.mjs:166:  const badCanonical = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:167:  badCanonical.canonicalUrl = '   ';
+  scripts\v714-regional-gate.mjs:168:  blocked(producerMod.runV714Producer(badCanonical), 'empty canonical');
+  scripts\v714-regional-gate.mjs:169:
+  scripts\v714-regional-gate.mjs:170:  // Direct compiler adversarial assertion: blocked compile results contain no artifact.
+  scripts\v714-regional-gate.mjs:171:  const directBlocked = compilerMod.compileRegionalPage(unbound);
+  scripts\v714-regional-gate.mjs:172:  assert(directBlocked.published === false, 'direct compiler must block missing binding');
+  scripts\v714-regional-gate.mjs:173:  assert(directBlocked.result.artifact === null, 'blocked compiler result must have artifact=null');
+  scripts\v714-regional-gate.mjs:174:  assert(directBlocked.result.route === null, 'blocked compiler result must have route=null');
+  scripts\v714-regional-gate.mjs:175:  assert(directBlocked.result.hreflang === null, 'blocked compiler result must have hreflang=null');
+  scripts\v714-regional-gate.mjs:176:
+  scripts\v714-regional-gate.mjs:177:  const blockedCount = 6;
+  scripts\v714-regional-gate.mjs:178:  console.log(`[NEXMOLD][V7.14][REGIONAL] PASS — canonical producer/compiler chain verified`);
+
+
+
+
+===== 3. BINDINGS REFERENCES =====
+
+  src\data\industryData.json:12272:            "Advanced applications in Snowboarding Equipment"
+  src\data\industryData.json:12273:          ]
+  src\data\industryData.json:12274:        }
+  src\data\industryData.json:12275:      },
+  src\data\industryData.json:12276:      "subsystems": {
+> src\data\industryData.json:12277:        "snowboard-bindings-and-boot-co": {
+> src\data\industryData.json:12278:          "name": "Snowboard bindings and boot components requiring injection molded parts (straps, bases) that maintain toughness without fracturing in sub-zero temperatures. (Burton Snowboards Supply Chain)",
+  src\data\industryData.json:12279:          "app": "Snowboarding Equipment",
+  src\data\industryData.json:12280:          "pain": "Requires injection molding of PET. Key process utilizes gas-assisted molding. Critical DFM focus on mitigating short shot and optimizing tool design.",
+  src\data\industryData.json:12281:          "semanticProfile": {
+  src\data\industryData.json:12282:            "materials": [
+  src\data\industryData.json:12283:              "Sub-zero impact-resistant PA",
+  src\data\industryData.json:12284:              "Cold-weather flexible TPU",
+  src\data\industryData.json:12285:              "Cold-tough polymers"
+  src\data\industryData.json:12286:            ],
+  src\data\industryData.json:12287:            "processes": [
+  src\data\industryData.json:12288:              "Low-temperature impact testing",
+  src\data\industryData.json:12289:              "Flexural fatigue molding",
+  src\data\industryData.json:12290:              "Winter sports structural engineering"
+  src\data\industryData.json:12291:            ],
+  src\data\industryData.json:12292:            "requirements": [
+  src\data\industryData.json:12293:              "weather resistance"
+  src\data\industryData.json:12299:              "fracture proof snowboard base plates",
+  src\data\industryData.json:12300:              "extreme cold resilient polymer injection"
+  src\data\industryData.json:12301:            ]
+  src\data\industryData.json:12302:          },
+  src\data\industryData.json:12303:          "canonicalEntity": {
+> src\data\industryData.json:12304:            "id": "industry:snowboarding-equipment:subsystem:snowboard-bindings-and-boot-co",
+  src\data\industryData.json:12305:            "type": "engineering-application",
+> src\data\industryData.json:12306:            "label": "Snowboard bindings and boot components requiring injection molded parts (straps, bases) that maintain toughness without fracturing in sub-zero temperatures. (Burton Snowboards Supply Chain)",
+  src\data\industryData.json:12307:            "aliases": [
+> src\data\industryData.json:12308:              "snowboard bindings and boot co",
+  src\data\industryData.json:12309:              "Snowboarding Equipment"
+  src\data\industryData.json:12310:            ]
+  src\data\industryData.json:12311:          }
+  src\data\industryData.json:12312:        }
+  src\data\industryData.json:12313:      },
+  src\data\industryData.json:12314:      "taxonomy": {
+  src\data\industryData.json:12315:        "sector": "industrial-engineering",
+  src\data\industryData.json:12316:        "industrySlug": "snowboarding-equipment",
+  src\data\industryData.json:12317:        "entityType": "engineering-industry"
+  src\data\industryData.json:12318:      },
+  src\data\industryData.json:12319:      "semanticProfile": {
+  src\data\industryData.json:12320:        "materials": [
+  src\data\industryData.json:12321:          "Sub-zero impact-resistant PA",
+  src\data\industryData.json:12322:          "Cold-weather flexible TPU",
+  src\data\industryData.json:12323:          "Cold-tough polymers"
+  src\data\raw_clients_396.json:2132:    },
+  src\data\raw_clients_396.json:2133:    {
+  src\data\raw_clients_396.json:2134:        "id": 96,
+  src\data\raw_clients_396.json:2135:        "company": "Burton Snowboards",
+  src\data\raw_clients_396.json:2136:        "industry": "Snowboarding Equipment",
+> src\data\raw_clients_396.json:2137:        "description": "Snowboard bindings and boot components requiring injection molded parts (straps, bases) that maintain toughness without fracturing in sub-zero temperatures.",
+  src\data\raw_clients_396.json:2138:        "key_materials": [
+  src\data\raw_clients_396.json:2139:            "Sub-zero impact-resistant PA",
+  src\data\raw_clients_396.json:2140:            "Cold-weather flexible TPU",
+  src\data\raw_clients_396.json:2141:            "Cold-tough polymers"
+  src\data\raw_clients_396.json:2142:        ],
+  src\data\raw_clients_396.json:2143:        "key_processes": [
+  src\data\raw_clients_396.json:2144:            "Low-temperature impact testing",
+  src\data\raw_clients_396.json:2145:            "Flexural fatigue molding",
+  src\data\raw_clients_396.json:2146:            "Winter sports structural engineering"
+  src\data\raw_clients_396.json:2147:        ],
+  src\data\raw_clients_396.json:2148:        "long_tail_keywords": [
+  src\data\raw_clients_396.json:2149:            "sub zero temperature snowboard binding molding",
+  src\data\raw_clients_396.json:2150:            "cold weather flexible plastic straps",
+  src\data\raw_clients_396.json:2151:            "winter sports equipment impact resistant parts",
+  src\data\raw_clients_396.json:2152:            "fracture proof snowboard base plates",
+  src\regional\epistemic-firewall.ts:3:  RegionalEvidenceSnapshot,
+  src\regional\epistemic-firewall.ts:4:  SemanticClaimId,
+  src\regional\epistemic-firewall.ts:5:  SemanticClaimRef,
+  src\regional\epistemic-firewall.ts:6:} from "./types.ts";
+  src\regional\epistemic-firewall.ts:7:
+> src\regional\epistemic-firewall.ts:8:export interface V714ClaimEvidenceBinding {
+  src\regional\epistemic-firewall.ts:9:  readonly claim: SemanticClaimRef;
+  src\regional\epistemic-firewall.ts:10:  readonly evidenceIds: readonly string[];
+  src\regional\epistemic-firewall.ts:11:}
+  src\regional\epistemic-firewall.ts:12:
+  src\regional\epistemic-firewall.ts:13:export interface V714FirewallInput {
+  src\regional\epistemic-firewall.ts:14:  readonly evidence: RegionalEvidenceSnapshot;
+  src\regional\epistemic-firewall.ts:15:  readonly semanticClaimIds: readonly SemanticClaimId[];
+> src\regional\epistemic-firewall.ts:16:  readonly bindings: readonly V714ClaimEvidenceBinding[];
+  src\regional\epistemic-firewall.ts:17:}
+  src\regional\epistemic-firewall.ts:18:
+  src\regional\epistemic-firewall.ts:19:export interface V714FirewallPass {
+  src\regional\epistemic-firewall.ts:20:  readonly ok: true;
+  src\regional\epistemic-firewall.ts:21:  readonly checkedClaims: number;
+  src\regional\epistemic-firewall.ts:22:  readonly checkedEvidence: number;
+  src\regional\epistemic-firewall.ts:23:}
+  src\regional\epistemic-firewall.ts:24:
+  src\regional\epistemic-firewall.ts:25:export interface V714FirewallBlock {
+  src\regional\epistemic-firewall.ts:26:  readonly ok: false;
+  src\regional\epistemic-firewall.ts:27:  readonly reasonCodes: readonly string[];
+  src\regional\epistemic-firewall.ts:28:}
+  src\regional\epistemic-firewall.ts:29:
+  src\regional\epistemic-firewall.ts:30:export type V714FirewallResult =
+  src\regional\epistemic-firewall.ts:31:  | V714FirewallPass
+  src\regional\epistemic-firewall.ts:58: *    sourceLocator and contentHash.
+  src\regional\epistemic-firewall.ts:59: * 8. Evidence semantic claims must not silently diverge
+  src\regional\epistemic-firewall.ts:60: *    from the declared semantic projection.
+  src\regional\epistemic-firewall.ts:61: *
+  src\regional\epistemic-firewall.ts:62: * This module never infers missing evidence.
+> src\regional\epistemic-firewall.ts:63: * This module never infers missing claim bindings.
+  src\regional\epistemic-firewall.ts:64: */
+  src\regional\epistemic-firewall.ts:65:export function runEpistemicFirewall(
+  src\regional\epistemic-firewall.ts:66:  input: V714FirewallInput,
+  src\regional\epistemic-firewall.ts:67:): V714FirewallResult {
+  src\regional\epistemic-firewall.ts:68:  const reasons: string[] = [];
+  src\regional\epistemic-firewall.ts:69:
+  src\regional\epistemic-firewall.ts:70:  const declaredClaimIds = new Set(
+  src\regional\epistemic-firewall.ts:71:    input.semanticClaimIds.map((id) => String(id)),
+  src\regional\epistemic-firewall.ts:72:  );
+  src\regional\epistemic-firewall.ts:73:
+> src\regional\epistemic-firewall.ts:74:  const bindingClaimIds = input.bindings.map(
+  src\regional\epistemic-firewall.ts:75:    (binding) => String(binding.claim.id),
+  src\regional\epistemic-firewall.ts:76:  );
+  src\regional\epistemic-firewall.ts:77:
+  src\regional\epistemic-firewall.ts:78:  /*
+  src\regional\epistemic-firewall.ts:79:   * ------------------------------------------------------------
+  src\regional\epistemic-firewall.ts:80:   * Evidence boundary
+  src\regional\epistemic-firewall.ts:81:   * ------------------------------------------------------------
+  src\regional\epistemic-firewall.ts:82:   */
+  src\regional\epistemic-firewall.ts:83:
+  src\regional\epistemic-firewall.ts:84:  if (input.evidence.completeness !== "COMPLETE") {
+  src\regional\epistemic-firewall.ts:85:    reasons.push("V714_EVIDENCE_NOT_COMPLETE");
+  src\regional\epistemic-firewall.ts:86:  }
+  src\regional\epistemic-firewall.ts:87:
+  src\regional\epistemic-firewall.ts:88:  if (input.evidence.evidence.length === 0) {
+  src\regional\epistemic-firewall.ts:89:    reasons.push("V714_EVIDENCE_EMPTY");
+  src\regional\epistemic-firewall.ts:97:
+  src\regional\epistemic-firewall.ts:98:  if (input.semanticClaimIds.length === 0) {
+  src\regional\epistemic-firewall.ts:99:    reasons.push("V714_SEMANTIC_CLAIMS_EMPTY");
+  src\regional\epistemic-firewall.ts:100:  }
+  src\regional\epistemic-firewall.ts:101:
+> src\regional\epistemic-firewall.ts:102:  if (input.bindings.length === 0) {
+> src\regional\epistemic-firewall.ts:103:    reasons.push("V714_CLAIM_BINDINGS_EMPTY");
+  src\regional\epistemic-firewall.ts:104:  }
+  src\regional\epistemic-firewall.ts:105:
+  src\regional\epistemic-firewall.ts:106:  /*
+  src\regional\epistemic-firewall.ts:107:   * Every declared semantic claim MUST have exactly
+  src\regional\epistemic-firewall.ts:108:   * one binding entry.
+  src\regional\epistemic-firewall.ts:109:   */
+  src\regional\epistemic-firewall.ts:110:
+  src\regional\epistemic-firewall.ts:111:  for (const claimId of declaredClaimIds) {
+  src\regional\epistemic-firewall.ts:112:    const count = bindingClaimIds.filter(
+  src\regional\epistemic-firewall.ts:113:      (bindingId) => bindingId === claimId,
+  src\regional\epistemic-firewall.ts:114:    ).length;
+  src\regional\epistemic-firewall.ts:115:
+  src\regional\epistemic-firewall.ts:116:    if (count === 0) {
+  src\regional\epistemic-firewall.ts:117:      reasons.push(
+  src\regional\epistemic-firewall.ts:118:        `V714_CLAIM_BINDING_MISSING:${claimId}`,
+  src\regional\epistemic-firewall.ts:129:  /*
+  src\regional\epistemic-firewall.ts:130:   * No binding may introduce a claim that was not declared
+  src\regional\epistemic-firewall.ts:131:   * by the semantic projection.
+  src\regional\epistemic-firewall.ts:132:   */
+  src\regional\epistemic-firewall.ts:133:
+> src\regional\epistemic-firewall.ts:134:  for (const binding of input.bindings) {
+  src\regional\epistemic-firewall.ts:135:    const claimId = String(binding.claim.id);
+  src\regional\epistemic-firewall.ts:136:
+  src\regional\epistemic-firewall.ts:137:    if (!declaredClaimIds.has(claimId)) {
+  src\regional\epistemic-firewall.ts:138:      reasons.push(
+  src\regional\epistemic-firewall.ts:139:        `V714_CLAIM_BINDING_UNDECLARED:${claimId}`,
+  src\regional\epistemic-firewall.ts:140:      );
+  src\regional\epistemic-firewall.ts:141:    }
+  src\regional\epistemic-firewall.ts:142:  }
+  src\regional\epistemic-firewall.ts:143:
+  src\regional\epistemic-firewall.ts:144:  /*
+  src\regional\epistemic-firewall.ts:145:   * ------------------------------------------------------------
+  src\regional\epistemic-firewall.ts:146:   * Binding validation
+  src\regional\epistemic-firewall.ts:147:   * ------------------------------------------------------------
+  src\regional\epistemic-firewall.ts:148:   */
+  src\regional\epistemic-firewall.ts:149:
+  src\regional\epistemic-firewall.ts:150:  const evidenceIds = new Set(
+  src\regional\epistemic-firewall.ts:151:    input.evidence.evidence.map((item) => String(item.id)),
+  src\regional\epistemic-firewall.ts:152:  );
+  src\regional\epistemic-firewall.ts:153:
+> src\regional\epistemic-firewall.ts:154:  for (const binding of input.bindings) {
+  src\regional\epistemic-firewall.ts:155:    if (!isNonEmptyString(binding.claim.id)) {
+  src\regional\epistemic-firewall.ts:156:      reasons.push("V714_CLAIM_ID_INVALID");
+  src\regional\epistemic-firewall.ts:157:    }
+  src\regional\epistemic-firewall.ts:158:
+  src\regional\epistemic-firewall.ts:159:    if (!isNonEmptyString(binding.claim.claimKey)) {
+  src\regional\epistemic-firewall.ts:160:      reasons.push("V714_CLAIM_KEY_INVALID");
+  src\regional\epistemic-firewall.ts:161:    }
+  src\regional\epistemic-firewall.ts:162:
+  src\regional\epistemic-firewall.ts:163:    if (binding.evidenceIds.length === 0) {
+  src\regional\epistemic-firewall.ts:164:      reasons.push(
+  src\regional\epistemic-firewall.ts:165:        `V714_CLAIM_WITHOUT_EVIDENCE:${binding.claim.claimKey}`,
+  src\regional\epistemic-firewall.ts:166:      );
+  src\regional\epistemic-firewall.ts:167:      continue;
+  src\regional\epistemic-firewall.ts:168:    }
+  src\regional\epistemic-firewall.ts:169:
+  src\regional\Producer.ts:46:  RegionalCompileInput,
+  src\regional\Producer.ts:47:  RegionalCompileResult,
+  src\regional\Producer.ts:48:} from "./types.ts";
+  src\regional\Producer.ts:49:
+  src\regional\Producer.ts:50:import type {
+> src\regional\Producer.ts:51:  V714ClaimEvidenceBinding,
+  src\regional\Producer.ts:52:} from "./epistemic-firewall.ts";
+  src\regional\Producer.ts:53:
+  src\regional\Producer.ts:54:/**
+  src\regional\Producer.ts:55: * ------------------------------------------------------------
+  src\regional\Producer.ts:56: * Producer Input
+  src\regional\Producer.ts:57: * ------------------------------------------------------------
+  src\regional\Producer.ts:58: *
+  src\regional\Producer.ts:59: * The producer receives already-resolved production facts.
+  src\regional\Producer.ts:60: *
+  src\regional\Producer.ts:61: * It is deliberately forbidden from inventing:
+  src\regional\Producer.ts:62: *   - evidence
+  src\regional\Producer.ts:63: *   - claims
+  src\regional\Producer.ts:64: *   - eligibility
+  src\regional\Producer.ts:65: *   - publication artifacts
+  src\regional\Producer.ts:66: *
+  src\regional\Producer.ts:67: * Those responsibilities remain downstream.
+  src\regional\Producer.ts:68: */
+  src\regional\Producer.ts:69:export interface V714ProducerInput {
+  src\regional\Producer.ts:70:  readonly compileInput: RegionalCompileInput;
+> src\regional\Producer.ts:71:  readonly bindings: readonly V714ClaimEvidenceBinding[];
+  src\regional\Producer.ts:72:  readonly canonicalUrl: CanonicalUrl;
+  src\regional\Producer.ts:73:  readonly hreflangSet: readonly RegionalCompileInput["locale"][];
+  src\regional\Producer.ts:74:  readonly canonicalByLocale: ReadonlyMap<
+  src\regional\Producer.ts:75:    RegionalCompileInput["locale"],
+  src\regional\Producer.ts:76:    CanonicalUrl
+  src\regional\Producer.ts:77:  >;
+  src\regional\Producer.ts:78:}
+  src\regional\Producer.ts:79:
+  src\regional\Producer.ts:80:/**
+  src\regional\Producer.ts:81: * ------------------------------------------------------------
+  src\regional\Producer.ts:82: * Producer Result
+  src\regional\Producer.ts:83: * ------------------------------------------------------------
+  src\regional\Producer.ts:84: *
+  src\regional\Producer.ts:85: * Invalid producer input is blocked before entering the
+  src\regional\Producer.ts:86: * canonical compiler.
+  src\regional\Producer.ts:188:    reasons.push(
+  src\regional\Producer.ts:189:      "V714_PRODUCER_REGION_INVALID",
+  src\regional\Producer.ts:190:    );
+  src\regional\Producer.ts:191:  }
+  src\regional\Producer.ts:192:
+> src\regional\Producer.ts:193:  if (!Array.isArray(input.bindings)) {
+  src\regional\Producer.ts:194:    reasons.push(
+> src\regional\Producer.ts:195:      "V714_PRODUCER_BINDINGS_INVALID",
+  src\regional\Producer.ts:196:    );
+  src\regional\Producer.ts:197:  }
+  src\regional\Producer.ts:198:
+  src\regional\Producer.ts:199:  if (!isNonEmptyString(input.canonicalUrl)) {
+  src\regional\Producer.ts:200:    reasons.push(
+  src\regional\Producer.ts:201:      "V714_PRODUCER_CANONICAL_URL_INVALID",
+  src\regional\Producer.ts:202:    );
+  src\regional\Producer.ts:203:  }
+  src\regional\Producer.ts:204:
+  src\regional\Producer.ts:205:  if (!Array.isArray(input.hreflangSet)) {
+  src\regional\Producer.ts:206:    reasons.push(
+  src\regional\Producer.ts:207:      "V714_PRODUCER_HREFLANG_SET_INVALID",
+  src\regional\Producer.ts:208:    );
+  src\regional\Producer.ts:209:  }
+  src\regional\Producer.ts:210:
+  src\regional\Producer.ts:229: *
+  src\regional\Producer.ts:230: *   Evidence
+  src\regional\Producer.ts:231: *     +
+  src\regional\Producer.ts:232: *   Semantic Claims
+  src\regional\Producer.ts:233: *     +
+> src\regional\Producer.ts:234: *   Claim/Evidence bindings
+  src\regional\Producer.ts:235: *
+  src\regional\Producer.ts:236: * This function does not verify epistemic truth.
+  src\regional\Producer.ts:237: *
+  src\regional\Producer.ts:238: * That remains the responsibility of:
+  src\regional\Producer.ts:239: *
+  src\regional\Producer.ts:240: *   runEpistemicFirewall()
+  src\regional\Producer.ts:241: */
+  src\regional\Producer.ts:242:function validateEvidenceBoundary(
+  src\regional\Producer.ts:243:  input: V714ProducerInput,
+  src\regional\Producer.ts:244:): string[] {
+  src\regional\Producer.ts:245:  const reasons: string[] = [];
+  src\regional\Producer.ts:246:  const compileInput = input.compileInput;
+  src\regional\Producer.ts:247:
+  src\regional\Producer.ts:248:  /**
+  src\regional\Producer.ts:249:   * RegionalCompileInput.evidence is a snapshot object:
+  src\regional\Producer.ts:270:    reasons.push(
+  src\regional\Producer.ts:271:      "V714_PRODUCER_SEMANTIC_CLAIMS_INVALID",
+  src\regional\Producer.ts:272:    );
+  src\regional\Producer.ts:273:  }
+  src\regional\Producer.ts:274:
+> src\regional\Producer.ts:275:  if (!Array.isArray(input.bindings)) {
+  src\regional\Producer.ts:276:    reasons.push(
+> src\regional\Producer.ts:277:      "V714_PRODUCER_BINDINGS_INVALID",
+  src\regional\Producer.ts:278:    );
+  src\regional\Producer.ts:279:
+  src\regional\Producer.ts:280:    return reasons;
+  src\regional\Producer.ts:281:  }
+  src\regional\Producer.ts:282:
+  src\regional\Producer.ts:283:  /**
+  src\regional\Producer.ts:284:   * No evidence means no publication.
+  src\regional\Producer.ts:285:   */
+  src\regional\Producer.ts:286:  if (
+  src\regional\Producer.ts:287:    isObject(compileInput.evidence) &&
+  src\regional\Producer.ts:288:    Array.isArray(compileInput.evidence.evidence) &&
+  src\regional\Producer.ts:289:    compileInput.evidence.evidence.length === 0
+  src\regional\Producer.ts:290:  ) {
+  src\regional\Producer.ts:291:    reasons.push(
+  src\regional\Producer.ts:292:      "V714_PRODUCER_EVIDENCE_ZERO",
+  src\regional\Producer.ts:312:  
+  src\regional\Producer.ts:313:
+  src\regional\Producer.ts:314:  /**
+  src\regional\Producer.ts:315:   * Every binding must reference at least one evidence ID.
+  src\regional\Producer.ts:316:   */
+> src\regional\Producer.ts:317:  for (const binding of input.bindings) {
+  src\regional\Producer.ts:318:    if (
+  src\regional\Producer.ts:319:      !Array.isArray(binding.evidenceIds) ||
+  src\regional\Producer.ts:320:      binding.evidenceIds.length === 0
+  src\regional\Producer.ts:321:    ) {
+  src\regional\Producer.ts:322:      reasons.push(
+  src\regional\Producer.ts:323:        `V714_PRODUCER_BINDING_WITHOUT_EVIDENCE:${String(binding.claim.id)}`,
+  src\regional\Producer.ts:324:      );
+  src\regional\Producer.ts:325:    }
+  src\regional\Producer.ts:326:  }
+  src\regional\Producer.ts:327:
+  src\regional\Producer.ts:328:  /**
+  src\regional\Producer.ts:329:   * Every binding evidence ID must exist in the supplied
+  src\regional\Producer.ts:330:   * evidence snapshot.
+  src\regional\Producer.ts:331:   */
+  src\regional\Producer.ts:332:  if (
+  src\regional\Producer.ts:338:        (evidence) =>
+  src\regional\Producer.ts:339:          String(evidence.id),
+  src\regional\Producer.ts:340:      ),
+  src\regional\Producer.ts:341:    );
+  src\regional\Producer.ts:342:
+> src\regional\Producer.ts:343:    for (const binding of input.bindings) {
+  src\regional\Producer.ts:344:      for (const evidenceId of binding.evidenceIds) {
+  src\regional\Producer.ts:345:        if (!evidenceIds.has(String(evidenceId))) {
+  src\regional\Producer.ts:346:          reasons.push(
+  src\regional\Producer.ts:347:            `V714_PRODUCER_EVIDENCE_UNRESOLVED:${String(evidenceId)}`,
+  src\regional\Producer.ts:348:          );
+  src\regional\Producer.ts:349:        }
+  src\regional\Producer.ts:350:      }
+  src\regional\Producer.ts:351:    }
+  src\regional\Producer.ts:352:  }
+  src\regional\Producer.ts:353:
+  src\regional\Producer.ts:354:  return [...new Set(reasons)];
+  src\regional\Producer.ts:355:}
+  src\regional\Producer.ts:356:/**
+  src\regional\Producer.ts:357: * ------------------------------------------------------------
+  src\regional\Producer.ts:358: * Producer
+  src\regional\Producer.ts:406:   *
+  src\regional\Producer.ts:407:   * All decisions are delegated to the canonical compiler.
+  src\regional\Producer.ts:408:   */
+  src\regional\Producer.ts:409:  const compilerInput: V714RegionalCompilerInput = {
+  src\regional\Producer.ts:410:    compileInput: input.compileInput,
+> src\regional\Producer.ts:411:    bindings: input.bindings,
+  src\regional\Producer.ts:412:    canonicalUrl: input.canonicalUrl,
+  src\regional\Producer.ts:413:    hreflangSet: input.hreflangSet,
+  src\regional\Producer.ts:414:    canonicalByLocale:
+  src\regional\Producer.ts:415:      input.canonicalByLocale,
+  src\regional\Producer.ts:416:  };
+  src\regional\Producer.ts:417:
+  src\regional\Producer.ts:418:  const result =
+  src\regional\Producer.ts:419:    compileRegionalPage(
+  src\regional\Producer.ts:420:      compilerInput,
+  src\regional\Producer.ts:421:    );
+  src\regional\Producer.ts:422:
+  src\regional\Producer.ts:423:  /**
+  src\regional\Producer.ts:424:   * ----------------------------------------------------------
+  src\regional\Producer.ts:425:   * Compiler Block
+  src\regional\Producer.ts:426:   * ----------------------------------------------------------
+  src\regional\regionalCompiler.ts:22:  evaluateRegionalEligibility,
+  src\regional\regionalCompiler.ts:23:} from "./eligibility.ts";
+  src\regional\regionalCompiler.ts:24:
+  src\regional\regionalCompiler.ts:25:import {
+  src\regional\regionalCompiler.ts:26:  runEpistemicFirewall,
+> src\regional\regionalCompiler.ts:27:  type V714ClaimEvidenceBinding,
+  src\regional\regionalCompiler.ts:28:} from "./epistemic-firewall.ts";
+  src\regional\regionalCompiler.ts:29:
+  src\regional\regionalCompiler.ts:30:import {
+  src\regional\regionalCompiler.ts:31:  createRegionalPublishArtifact,
+  src\regional\regionalCompiler.ts:32:  projectRegionalRoute,
+  src\regional\regionalCompiler.ts:33:  projectHreflang,
+  src\regional\regionalCompiler.ts:34:} from "./regionalPublishArtifact.ts";
+  src\regional\regionalCompiler.ts:35:
+  src\regional\regionalCompiler.ts:36:import {
+  src\regional\regionalCompiler.ts:37:  runPublicationGate,
+  src\regional\regionalCompiler.ts:38:} from "./publication-gate.ts";
+  src\regional\regionalCompiler.ts:39:
+  src\regional\regionalCompiler.ts:40:import type {
+  src\regional\regionalCompiler.ts:41:  CanonicalUrl,
+  src\regional\regionalCompiler.ts:42:  RegionalCompileInput,
+  src\regional\regionalCompiler.ts:43:  RegionalCompileResult,
+  src\regional\regionalCompiler.ts:44:} from "./types.ts";
+  src\regional\regionalCompiler.ts:45:
+  src\regional\regionalCompiler.ts:46:export interface V714RegionalCompilerInput {
+  src\regional\regionalCompiler.ts:47:  readonly compileInput: RegionalCompileInput;
+> src\regional\regionalCompiler.ts:48:  readonly bindings: readonly V714ClaimEvidenceBinding[];
+  src\regional\regionalCompiler.ts:49:  readonly canonicalUrl: CanonicalUrl;
+  src\regional\regionalCompiler.ts:50:  readonly hreflangSet: readonly RegionalCompileInput["locale"][];
+  src\regional\regionalCompiler.ts:51:  readonly canonicalByLocale: ReadonlyMap<
+  src\regional\regionalCompiler.ts:52:    RegionalCompileInput["locale"],
+  src\regional\regionalCompiler.ts:53:    CanonicalUrl
+  src\regional\regionalCompiler.ts:54:  >;
+  src\regional\regionalCompiler.ts:55:}
+  src\regional\regionalCompiler.ts:56:
+  src\regional\regionalCompiler.ts:57:export interface V714RegionalCompilerBlocked {
+  src\regional\regionalCompiler.ts:58:  readonly published: false;
+  src\regional\regionalCompiler.ts:59:  readonly result: RegionalCompileResult;
+  src\regional\regionalCompiler.ts:60:  readonly reasonCodes: readonly string[];
+  src\regional\regionalCompiler.ts:61:}
+  src\regional\regionalCompiler.ts:62:
+  src\regional\regionalCompiler.ts:63:export interface V714RegionalCompilerPublished {
+  src\regional\regionalCompiler.ts:93:   */
+  src\regional\regionalCompiler.ts:94:  const firewall = runEpistemicFirewall({
+  src\regional\regionalCompiler.ts:95:    evidence: compileInput.evidence,
+  src\regional\regionalCompiler.ts:96:    semanticClaimIds:
+  src\regional\regionalCompiler.ts:97:      compileInput.semantic.semanticClaimIds,
+> src\regional\regionalCompiler.ts:98:    bindings: input.bindings,
+  src\regional\regionalCompiler.ts:99:  });
+  src\regional\regionalCompiler.ts:100:
+  src\regional\regionalCompiler.ts:101:  /*
+  src\regional\regionalCompiler.ts:102:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:103:   * 3. Immediate fail-closed boundary
+  src\regional\regionalCompiler.ts:104:   * ------------------------------------------------------------
+  src\regional\regionalCompiler.ts:105:   *
+  src\regional\regionalCompiler.ts:106:   * Nothing publishable can be constructed unless BOTH
+  src\regional\regionalCompiler.ts:107:   * eligibility and firewall pass.
+  src\regional\regionalCompiler.ts:108:   */
+  src\regional\regionalCompiler.ts:109:  if (!eligibility.status ||
+  src\regional\regionalCompiler.ts:110:      eligibility.status !== "ELIGIBLE" ||
+  src\regional\regionalCompiler.ts:111:      !firewall.ok) {
+  src\regional\regionalCompiler.ts:112:    return {
+  src\regional\regionalCompiler.ts:113:      published: false,
+  scripts\v714-article-factory.mjs:618:    semanticClaimIds: [
+  scripts\v714-article-factory.mjs:619:      claimId,
+  scripts\v714-article-factory.mjs:620:    ],
+  scripts\v714-article-factory.mjs:621:  };
+  scripts\v714-article-factory.mjs:622:
+> scripts\v714-article-factory.mjs:623:  const bindings = [
+  scripts\v714-article-factory.mjs:624:    {
+  scripts\v714-article-factory.mjs:625:      claim: {
+  scripts\v714-article-factory.mjs:626:        id: claimId,
+  scripts\v714-article-factory.mjs:627:
+  scripts\v714-article-factory.mjs:628:        claimKey:
+  scripts\v714-article-factory.mjs:629:          `v714.whitepaper.${targetSlug}`,
+  scripts\v714-article-factory.mjs:630:      },
+  scripts\v714-article-factory.mjs:631:
+  scripts\v714-article-factory.mjs:632:      evidenceIds: [
+  scripts\v714-article-factory.mjs:633:        evidenceId,
+  scripts\v714-article-factory.mjs:634:      ],
+  scripts\v714-article-factory.mjs:635:    },
+  scripts\v714-article-factory.mjs:636:  ];
+  scripts\v714-article-factory.mjs:637:
+  scripts\v714-article-factory.mjs:638:  const canonicalUrl =
+  scripts\v714-article-factory.mjs:664:  try {
+  scripts\v714-article-factory.mjs:665:    producerResult =
+  scripts\v714-article-factory.mjs:666:      runV714Producer({
+  scripts\v714-article-factory.mjs:667:        compileInput,
+  scripts\v714-article-factory.mjs:668:
+> scripts\v714-article-factory.mjs:669:        bindings,
+  scripts\v714-article-factory.mjs:670:
+  scripts\v714-article-factory.mjs:671:        canonicalUrl,
+  scripts\v714-article-factory.mjs:672:
+  scripts\v714-article-factory.mjs:673:        hreflangSet: [
+  scripts\v714-article-factory.mjs:674:          "en-US",
+  scripts\v714-article-factory.mjs:675:        ],
+  scripts\v714-article-factory.mjs:676:
+  scripts\v714-article-factory.mjs:677:        canonicalByLocale:
+  scripts\v714-article-factory.mjs:678:          new Map([
+  scripts\v714-article-factory.mjs:679:            [
+  scripts\v714-article-factory.mjs:680:              "en-US",
+  scripts\v714-article-factory.mjs:681:              canonicalUrl,
+  scripts\v714-article-factory.mjs:682:            ],
+  scripts\v714-article-factory.mjs:683:          ]),
+  scripts\v714-article-factory.mjs:684:      });
+  scripts\v714-regional-gate.mjs:74:      region,
+  scripts\v714-regional-gate.mjs:75:      semanticClaimIds: [claimId],
+  scripts\v714-regional-gate.mjs:76:    },
+  scripts\v714-regional-gate.mjs:77:  };
+  scripts\v714-regional-gate.mjs:78:
+> scripts\v714-regional-gate.mjs:79:  const bindings = [
+  scripts\v714-regional-gate.mjs:80:    {
+  scripts\v714-regional-gate.mjs:81:      claim: {
+  scripts\v714-regional-gate.mjs:82:        id: claimId,
+  scripts\v714-regional-gate.mjs:83:        claimKey: 'v714.production.gate.fixture',
+  scripts\v714-regional-gate.mjs:84:      },
+  scripts\v714-regional-gate.mjs:85:      evidenceIds: [evidenceId],
+  scripts\v714-regional-gate.mjs:86:    },
+  scripts\v714-regional-gate.mjs:87:  ];
+  scripts\v714-regional-gate.mjs:88:
+  scripts\v714-regional-gate.mjs:89:  return {
+  scripts\v714-regional-gate.mjs:90:    compileInput,
+> scripts\v714-regional-gate.mjs:91:    bindings,
+  scripts\v714-regional-gate.mjs:92:    canonicalUrl,
+  scripts\v714-regional-gate.mjs:93:    hreflangSet: [locale],
+  scripts\v714-regional-gate.mjs:94:    canonicalByLocale: new Map([[locale, canonicalUrl]]),
+  scripts\v714-regional-gate.mjs:95:  };
+  scripts\v714-regional-gate.mjs:96:}
+  scripts\v714-regional-gate.mjs:97:
+  scripts\v714-regional-gate.mjs:98:async function importRegional(root, file) {
+  scripts\v714-regional-gate.mjs:99:  const url = pathToFileURL(resolve(root, 'src', 'regional', file)).href;
+  scripts\v714-regional-gate.mjs:100:  return import(`${url}?v714_gate=${Date.now()}`);
+  scripts\v714-regional-gate.mjs:101:}
+  scripts\v714-regional-gate.mjs:102:
+  scripts\v714-regional-gate.mjs:103:export async function runV714RegionalGate(context = {}) {
+  scripts\v714-regional-gate.mjs:104:  const root = resolve(context.projectRoot ?? process.cwd());
+  scripts\v714-regional-gate.mjs:105:
+  scripts\v714-regional-gate.mjs:106:  const [producerMod, preflightMod, compilerMod] = await Promise.all([
+  scripts\v714-regional-gate.mjs:150:  const incomplete = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:151:  incomplete.compileInput.evidence.completeness = 'INCOMPLETE';
+  scripts\v714-regional-gate.mjs:152:  blocked(producerMod.runV714Producer(incomplete), 'incomplete evidence');
+  scripts\v714-regional-gate.mjs:153:
+  scripts\v714-regional-gate.mjs:154:  const unbound = structuredClone(fixture);
+> scripts\v714-regional-gate.mjs:155:  unbound.bindings = [];
+  scripts\v714-regional-gate.mjs:156:  blocked(producerMod.runV714Producer(unbound), 'missing claim binding');
+  scripts\v714-regional-gate.mjs:157:
+  scripts\v714-regional-gate.mjs:158:  const unresolvedEvidence = structuredClone(fixture);
+> scripts\v714-regional-gate.mjs:159:  unresolvedEvidence.bindings[0].evidenceIds = ['evidence:does-not-exist'];
+  scripts\v714-regional-gate.mjs:160:  blocked(producerMod.runV714Producer(unresolvedEvidence), 'unresolved evidence');
+  scripts\v714-regional-gate.mjs:161:
+  scripts\v714-regional-gate.mjs:162:  const noApplicability = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:163:  noApplicability.compileInput.applicability = 'NOT_APPLICABLE';
+  scripts\v714-regional-gate.mjs:164:  blocked(producerMod.runV714Producer(noApplicability), 'not applicable');
+  scripts\v714-regional-gate.mjs:165:
+  scripts\v714-regional-gate.mjs:166:  const badCanonical = structuredClone(fixture);
+  scripts\v714-regional-gate.mjs:167:  badCanonical.canonicalUrl = '   ';
+  scripts\v714-regional-gate.mjs:168:  blocked(producerMod.runV714Producer(badCanonical), 'empty canonical');
+  scripts\v714-regional-gate.mjs:169:
+  scripts\v714-regional-gate.mjs:170:  // Direct compiler adversarial assertion: blocked compile results contain no artifact.
+  scripts\v714-regional-gate.mjs:171:  const directBlocked = compilerMod.compileRegionalPage(unbound);
+  scripts\v714-regional-gate.mjs:172:  assert(directBlocked.published === false, 'direct compiler must block missing binding');
+  scripts\v714-regional-gate.mjs:173:  assert(directBlocked.result.artifact === null, 'blocked compiler result must have artifact=null');
+  scripts\v714-regional-gate.mjs:174:  assert(directBlocked.result.route === null, 'blocked compiler result must have route=null');
+
+
+
+
+===== 4. CANDIDATE ADAPTER / PRODUCER / FIREWALL FILES =====
+
+FullName                                      Length LastWriteTime     
+--------                                      ------ -------------     
+E:\nexmold\src\regional\article-producer.ts    54373 2026/8/30 22:57:08
+E:\nexmold\src\regional\epistemic-firewall.ts   6048 2026/8/29 19:06:13
+E:\nexmold\src\regional\Producer.ts            10497 2026/8/31 12:49:34
+E:\nexmold\scripts\runtime-adapter.local.mjs    1904 2026/8/28 16:23:46
+
+
+
+
+===== 5. BL01 JSON STRUCTURE =====
+{
+    "schema":  "nexmold.v7.14.article-factory-artifact.v1",
+    "articleId":  "v714:injection-molding-wall-thickness-design",
+    "targetSlug":  "injection-molding-wall-thickness-design",
+    "sourceArticleSlug":  "plastic-wall-thickness-design",
+    "slug":  "injection-molding-wall-thickness-design",
+    "lineage":  {
+                    "pageId":  "v714:injection-molding-wall-thickness-design",
+                    "locale":  "en-US",
+                    "region":  "US",
+                    "canonicalUrl":  "https://www.nexmold.com/knowledge/injection-molding-wall-thickness-design/",
+                    "evidenceIds":  [
+                                        "knowledge:plastic-wall-thickness-design"
+                                    ],
+                    "semanticClaimIds":  [
+                                             "claim:injection-molding-wall-thickness-design"
+                                         ],
+                    "sourceArtifactHash":  "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a"
+                },
+    "sourceArtifactHash":  "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a",
+    "sourceArtifact":  {
+                           "pageId":  "v714:injection-molding-wall-thickness-design",
+                           "locale":  "en-US",
+                           "region":  "US",
+                           "canonicalUrl":  "https://www.nexmold.com/knowledge/injection-molding-wall-thickness-design/",
+                           "hreflangSet":  [
+                                               "en-US"
+                                           ],
+                           "seoEligibility":  {
+                                                  "pageId":  "v714:injection-molding-wall-thickness-design",
+                                                  "locale":  "en-US",
+                                                  "region":  "US",
+                                                  "applicability":  "APPLICABLE",
+                                                  "compliance":  "VERIFIED",
+                                                  "evidence":  {
+                                                                   "evidence":  [
+                                                                                    {
+                                                                                        "id":  "knowledge:plastic-wall-thickness-design",
+                                                                                        "sourceType":  "knowledge-base",
+                                                                                        "sourceLocator":  "src/data/knowledge.ts#plastic-wall-thickness-design",
+                                                                                        "contentHash":  "plastic-wall-thickness-design:2026-08-23"
+                                                                                    }
+                                                                                ],
+                                                                   "semanticClaims":  [
+                                                                                          {
+                                                                                              "id":  "claim:injection-molding-wall-thickness-design",
+                                                                                              "claimKey":  "batch01.injection-molding-wall-thickness-design"
+                                                                                          }
+                                                                                      ],
+                                                                   "completeness":  "COMPLETE"
+                                                               },
+                                                  "status":  "ELIGIBLE",
+                                                  "reasonCodes":  [
+
+                                                                  ]
+                                              },
+                           "pageContentHash":  "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a"
+                       },
+    "production":  {
+                       "published":  true,
+                       "automaticPublication":  false,
+                       "existingContentModified":  false
+                   }
+}

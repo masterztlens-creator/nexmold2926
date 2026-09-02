@@ -1,0 +1,105 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-boss-design",
+  "targetSlug": "injection-molding-boss-design",
+  "route": "/industries/v714/injection-molding-boss-design/",
+  "sourceArticleSlug": "rib-boss-gusset-design",
+  "sourceArticle": {
+    "slug": "rib-boss-gusset-design",
+    "title": "Rib, Boss and Gusset Design for Injection Molding"
+  },
+  "sourceArtifactHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-boss-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "9700e8436bb8e8bf59b2d36bec95d46656074475b8a5f32f177c3946b5a39b85"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-boss-design",
+            "claimKey": "v714.whitepaper.injection-molding-boss-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding boss design: screw bosses, inserts, draft, cooling and dfm",
+      "injection molded boss design guide",
+      "injection molded boss DFM",
+      "injection molded boss best practices",
+      "injection molded boss design rules",
+      "injection molded boss engineering guide",
+      "injection molded boss screw boss design",
+      "injection molded boss boss thickness",
+      "injection molded boss boss diameter",
+      "injection molded boss insert molding",
+      "injection molded boss sink prevention",
+      "injection molded boss plastic enclosure",
+      "injection molded boss threaded insert",
+      "injection molded boss boss outer diameter",
+      "boss outer diameter in injection molded boss",
+      "injection molded boss boss inner diameter",
+      "boss inner diameter in injection molded boss",
+      "injection molded boss boss wall thickness",
+      "boss wall thickness in injection molded boss",
+      "injection molded boss boss height",
+      "boss height in injection molded boss",
+      "injection molded boss draft",
+      "draft in injection molded boss",
+      "injection molded boss screw type",
+      "screw type in injection molded boss",
+      "injection molded boss insert type",
+      "insert type in injection molded boss",
+      "injection molded boss rib support",
+      "rib support in injection molded boss",
+      "injection molded boss sink marks",
+      "how to prevent sink marks in injection molded boss",
+      "injection molded boss cracking",
+      "how to prevent cracking in injection molded boss",
+      "injection molded boss boss breakage",
+      "how to prevent boss breakage in injection molded boss",
+      "injection molded boss ejection sticking",
+      "how to prevent ejection sticking in injection molded boss",
+      "injection molded boss insert misalignment",
+      "how to prevent insert misalignment in injection molded boss",
+      "injection molded boss stress whitening",
+      "how to prevent stress whitening in injection molded boss"
+    ],
+    "relatedTopics": [
+      "injection-molding-rib-design",
+      "injection-molding-wall-thickness-design",
+      "injection-molding-undercuts-guide"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

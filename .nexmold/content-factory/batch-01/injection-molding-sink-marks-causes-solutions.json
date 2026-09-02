@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-sink-marks-causes-solutions",
+  "targetSlug": "injection-molding-sink-marks-causes-solutions",
+  "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+  "sourceArticleSlug": "sink-marks-causes-solutions",
+  "sourceArticle": {
+    "slug": "sink-marks-causes-solutions",
+    "title": "Sink Marks in Injection Molding: Causes and Solutions"
+  },
+  "sourceArtifactHash": "a7de528da24dba8a43c8a2bc4d128d7100b133bc467f30e8571b3929d61ee2cf",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-sink-marks-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-sink-marks-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-sink-marks-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:sink-marks-causes-solutions",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#sink-marks-causes-solutions",
+            "contentHash": "6513b6450942a3bc965050847e43dd662756469e0bff5fd71c9c47f13ebfed65"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-sink-marks-causes-solutions",
+            "claimKey": "v714.whitepaper.injection-molding-sink-marks-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "a7de528da24dba8a43c8a2bc4d128d7100b133bc467f30e8571b3929d61ee2cf"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding sink marks: causes, root causes, prevention and process control",
+      "injection molding sink marks design guide",
+      "injection molding sink marks DFM",
+      "injection molding sink marks best practices",
+      "injection molding sink marks design rules",
+      "injection molding sink marks engineering guide",
+      "injection molding sink marks causes",
+      "injection molding sink marks solutions",
+      "injection molding sink marks prevention",
+      "injection molding sink marks troubleshooting",
+      "injection molding sink marks rib sink",
+      "injection molding sink marks boss sink",
+      "injection molding sink marks plastic molding defects",
+      "injection molding sink marks section thickness",
+      "section thickness in injection molding sink marks",
+      "injection molding sink marks packing pressure",
+      "packing pressure in injection molding sink marks",
+      "injection molding sink marks packing time",
+      "packing time in injection molding sink marks",
+      "injection molding sink marks mold temperature",
+      "mold temperature in injection molding sink marks",
+      "injection molding sink marks cooling time",
+      "cooling time in injection molding sink marks",
+      "injection molding sink marks material shrinkage",
+      "material shrinkage in injection molding sink marks",
+      "injection molding sink marks rib thickness",
+      "rib thickness in injection molding sink marks",
+      "injection molding sink marks boss geometry",
+      "boss geometry in injection molding sink marks",
+      "injection molding sink marks surface depressions",
+      "how to prevent surface depressions in injection molding sink marks",
+      "injection molding sink marks internal voids",
+      "how to prevent internal voids in injection molding sink marks",
+      "injection molding sink marks dimensional drift",
+      "how to prevent dimensional drift in injection molding sink marks",
+      "injection molding sink marks cosmetic rejection",
+      "how to prevent cosmetic rejection in injection molding sink marks"
+    ],
+    "relatedTopics": [
+      "injection-molding-wall-thickness-design",
+      "injection-molding-rib-design",
+      "injection-molding-boss-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

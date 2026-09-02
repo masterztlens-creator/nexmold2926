@@ -1,0 +1,211 @@
+---
+/**
+ * SocialProof.astro - NEXMOLD 第二层 (纯粹三色极简重工风)
+ * 严格遵照：纯白 (#FFFFFF) + 工业深蓝 (#0F2B5B) + 工业橙 (#EA580C)
+ * 彻底修复 TS7053 索引类型报错
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+// ⚡️ 显式声明 Record<string, any> 并补全多语言，彻底消除 TS7053 报错
+const i18n: Record<string, any> = {
+  en: {
+    badge: "GLOBAL MANUFACTURING NETWORK & CAPABILITY",
+    title: "On-Demand Scalability. Zero Middleman Risks.",
+    subtitle: "Engineered for North American & European OEMs needing high-yield structural components without prototype-only price markups.",
+    vs_title: "BRIDGING THE GAP IN DIGITAL MANUFACTURING",
+    vs_protolabs: "VS. Prototype Specialists (e.g. Protolabs): 40-60% lower unit costs for 1,000 to 100,000+ production runs.",
+    vs_xometry: "VS. Broker Marketplaces (e.g. Xometry): 100% owned precision press fleet ensures zero batch variance.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Automated Servo Press Fleet",
+    metric_2_val: "3-15 Days",
+    metric_2_lbl: "Fast Tooling & T1 Samples",
+    metric_3_val: "99.2%",
+    metric_3_lbl: "Appliance Part Yield Rate",
+    metric_4_val: "Direct DDP",
+    metric_4_lbl: "Ocean Freight Logistics",
+    feature_1_title: "Automated Fleet Operations",
+    feature_1_desc: "Centralized robotic feeding lines operating 90T to 1200T injection presses for high-yield, low-variance production.",
+    feature_2_title: "Seamless Ocean Express",
+    feature_2_desc: "Direct port freight contracts ensuring FCL/LCL DDP delivery straight to Long Beach, Rotterdam, and Hamburg.",
+    feature_3_title: "ISO 2768-m & FAI Audit",
+    feature_3_desc: "Every production batch includes full First Article Inspection (FAI) analytics, MTR certifications, and CMM logs."
+  },
+  de: {
+    badge: "GLOBALE FERTIGUNGSNETZWERK",
+    title: "Skalierbare Präzision. Ohne Zwischenhändler.",
+    subtitle: "Entwickelt für OEM-Partner in Europa und Nordamerika, die hohe Erstausbeute bei Serienbauteilen suchen.",
+    vs_title: "DIE PERFEKTE ALTERNATIVE FÜR DIE SERIENFERTIGUNG",
+    vs_protolabs: "VS. Prototypen-Anbieter: 40-60% günstigere Stückpreise bei Klein- und Mittelserien (1.000 - 100.000+ Stk.).",
+    vs_xometry: "VS. Reine Marktplätze: Eigener Maschinenpark garantiert gleichbleibende Serienqualität.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Automatisierter Maschinenpark",
+    metric_2_val: "3-15 Tage",
+    metric_2_lbl: "Schneller Werkzeugbau & T1",
+    metric_3_val: "99,2%",
+    metric_3_lbl: "Erstausbeute-Quote",
+    metric_4_val: "Direkt DDP",
+    metric_4_lbl: "Seefracht-Logistik",
+    feature_1_title: "Präzisions-Maschinenpark",
+    feature_1_desc: "Zentralisierte Roboter-Spritzgießsysteme für höchste Stabilität bei komplexen Bauteilen.",
+    feature_2_title: "Globale Seefracht-Anbindung",
+    feature_2_desc: "Direkte FCL/LCL DDP-Verschiffung zu europäischen und nordamerikanischen Logistik-Hubs.",
+    feature_3_title: "ISO 2768-m & FAI Konformität",
+    feature_3_desc: "Vollständige EMPB/FAI-Prüfberichte, Materialzertifikate und Messprotokolle für jede Lieferung."
+  },
+  fr: {
+    badge: "RÉSEAU MONDIAL DE FABRICATION",
+    title: "Production Scalable. Sans Risque d'Intermédiaire.",
+    subtitle: "Conçu pour les équipementiers nécessitant des composants structurels à fort rendement sans surcoût de prototype.",
+    vs_title: "L'ALTERNATIVE IDÉALE POUR LA SÉRIE",
+    vs_protolabs: "VS. Spécialistes Prototypage: Coûts unitaires 40 à 60% inférieurs pour les séries de 1 000 à 100 000+ pièces.",
+    vs_xometry: "VS. Courtiers & Marketplace: Parc de presses en propre garantissant une qualité constante sans variation.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Parc de Presses Automatisées",
+    metric_2_val: "3-15 Jours",
+    metric_2_lbl: "Outillage Rapide & Échantillons T1",
+    metric_3_val: "99,2%",
+    metric_3_lbl: "Rendement Structurel High-Yield",
+    metric_4_val: "Direct DDP",
+    metric_4_lbl: "Logistique Fret Maritime",
+    feature_1_title: "Exploitation du Parc Automated",
+    feature_1_desc: "Lignes d'injection automatisées alimentées par robots pour des composants à faible variance.",
+    feature_2_title: "Fret Direct Express",
+    feature_2_desc: "Livraison DDP directe vers les principaux ports européens et nord-américains sans intermédiaires.",
+    feature_3_title: "Audits ISO 2768-m et FAI",
+    feature_3_desc: "Rapports FAI complets, fiches techniques des matériaux et relevés dimensionnels CMM."
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+const certs = [
+  { name: "ISO 9001:2015", desc: "Quality System" },
+  { name: "ISO 2768-m", desc: "Tolerance Audit" },
+  { name: "UL94-V0", desc: "Flame Retardant" },
+  { name: "RoHS / REACH", desc: "Material Compliance" }
+];
+
+const capabilitiesTags = [
+  "SPI-A2 / SPI-C1 Finish",
+  "ABS, PC, PEEK, PA66+GF",
+  "M6/M8 Brass Inserts",
+  "Multi-Cavity Molds",
+  "24H DFM Evaluation"
+];
+---
+
+<section class="bg-white text-[#0F2B5B] py-16 border-b border-[#0F2B5B]/15 relative overflow-hidden" id="social-proof">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    <div class="max-w-3xl mb-10">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="w-6 h-[3px] bg-[#EA580C]"></span>
+        <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-[0.25em]">
+          {t.badge}
+        </span>
+      </div>
+      <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-[#0F2B5B]">
+        {t.title}
+      </h2>
+      <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- 竞品痛点截流条 -->
+    <div class="bg-[#0F2B5B] text-white p-6 sm:p-8 rounded-sm mb-10 border-l-4 border-[#EA580C] shadow-lg">
+      <div class="font-mono text-[#EA580C] text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+        {t.vs_title}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans leading-relaxed">
+        <div class="flex items-start gap-2 bg-white/10 p-3 rounded-sm border border-white/10">
+          <span class="text-[#EA580C] font-black">✓</span>
+          <span class="text-white/90">{t.vs_protolabs}</span>
+        </div>
+        <div class="flex items-start gap-2 bg-white/10 p-3 rounded-sm border border-white/10">
+          <span class="text-[#EA580C] font-black">✓</span>
+          <span class="text-white/90">{t.vs_xometry}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 指标看板 -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+      <div class="bg-white border-2 border-[#0F2B5B]/15 p-6 rounded-sm shadow-xs hover:border-[#EA580C] transition-colors">
+        <div class="text-[#EA580C] text-[clamp(1.8rem,2.8vw,2.4rem)] font-[1000] font-mono mb-1 tracking-tight">{t.metric_1_val}</div>
+        <div class="text-[#0F2B5B] font-mono text-[11px] font-bold uppercase tracking-wider">{t.metric_1_lbl}</div>
+      </div>
+      <div class="bg-white border-2 border-[#0F2B5B]/15 p-6 rounded-sm shadow-xs hover:border-[#EA580C] transition-colors">
+        <div class="text-[#EA580C] text-[clamp(1.8rem,2.8vw,2.4rem)] font-[1000] font-mono mb-1 tracking-tight">{t.metric_2_val}</div>
+        <div class="text-[#0F2B5B] font-mono text-[11px] font-bold uppercase tracking-wider">{t.metric_2_lbl}</div>
+      </div>
+      <div class="bg-white border-2 border-[#0F2B5B]/15 p-6 rounded-sm shadow-xs hover:border-[#0F2B5B] transition-colors">
+        <div class="text-[#0F2B5B] text-[clamp(1.8rem,2.8vw,2.4rem)] font-[1000] font-mono mb-1 tracking-tight">{t.metric_3_val}</div>
+        <div class="text-[#0F2B5B] font-mono text-[11px] font-bold uppercase tracking-wider">{t.metric_3_lbl}</div>
+      </div>
+      <div class="bg-white border-2 border-[#0F2B5B]/15 p-6 rounded-sm shadow-xs hover:border-[#0F2B5B] transition-colors">
+        <div class="text-[#0F2B5B] text-[clamp(1.8rem,2.8vw,2.4rem)] font-[1000] font-mono mb-1 tracking-tight">{t.metric_4_val}</div>
+        <div class="text-[#0F2B5B] font-mono text-[11px] font-bold uppercase tracking-wider">{t.metric_4_lbl}</div>
+      </div>
+    </div>
+
+    <!-- 认证徽章 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      {certs.map(c => (
+        <div class="flex items-center gap-3 p-3 bg-white border border-[#0F2B5B]/15 rounded-sm">
+          <div class="w-7 h-7 rounded-full bg-[#0F2B5B] text-white font-mono font-black text-xs flex items-center justify-center shrink-0">
+            ✓
+          </div>
+          <div>
+            <div class="font-mono text-xs font-bold text-[#0F2B5B] leading-none">{c.name}</div>
+            <div class="text-[10px] text-[#0F2B5B]/60 font-mono mt-1">{c.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- GEO 实体标签 -->
+    <div class="flex flex-wrap items-center gap-2 mb-10 py-3 px-4 bg-white rounded-sm border border-[#0F2B5B]/15">
+      <span class="text-[10px] font-mono font-black text-[#0F2B5B]/50 uppercase tracking-widest mr-2">VERIFIED SPECS:</span>
+      {capabilitiesTags.map(tag => (
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#0F2B5B]/20 text-[#0F2B5B] font-mono text-[10px] font-bold rounded-sm hover:border-[#EA580C] transition-colors cursor-default">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+          {tag}
+        </span>
+      ))}
+    </div>
+
+    <!-- 3 大能力支柱 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-[#0F2B5B]/15">
+      <div class="border-l-2 border-[#EA580C] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+          <h3 class="font-bold text-[#0F2B5B] uppercase text-xs tracking-wider">{t.feature_1_title}</h3>
+        </div>
+        <p class="text-[#0F2B5B]/75 text-[11px] leading-relaxed">{t.feature_1_desc}</p>
+      </div>
+
+      <div class="border-l-2 border-[#0F2B5B] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#0F2B5B]"></span>
+          <h3 class="font-bold text-[#0F2B5B] uppercase text-xs tracking-wider">{t.feature_2_title}</h3>
+        </div>
+        <p class="text-[#0F2B5B]/75 text-[11px] leading-relaxed">{t.feature_2_desc}</p>
+      </div>
+
+      <div class="border-l-2 border-[#EA580C] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+          <h3 class="font-bold text-[#0F2B5B] uppercase text-xs tracking-wider">{t.feature_3_title}</h3>
+        </div>
+        <p class="text-[#0F2B5B]/75 text-[11px] leading-relaxed">{t.feature_3_desc}</p>
+      </div>
+    </div>
+
+  </div>
+</section>

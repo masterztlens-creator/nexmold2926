@@ -1,0 +1,307 @@
+2026-08-30T03:17:49.931Z [GATE_FILE] runtime: scripts\runtime-gate.mjs
+2026-08-30T03:17:49.932Z [GATE_FILE] sitemap: scripts\sitemap-gate.mjs
+2026-08-30T03:17:49.932Z [GATE_FILE] releasePreflight: scripts\release-preflight.mjs
+2026-08-30T03:17:49.933Z [GATE_FILE] routeConflict: scripts\route-conflict-check.mjs
+2026-08-30T03:17:49.934Z [GATE_FILE] core: scripts\v714-core-gate.mjs
+2026-08-30T03:17:49.935Z [RUNTIME_GATE] $ node "E:\nexmold\scripts\runtime-gate.mjs"
+2026-08-30T03:17:50.090Z [SITEMAP_GATE] $ node "E:\nexmold\scripts\sitemap-gate.mjs"
+2026-08-30T03:17:50.249Z [RELEASE_PREFLIGHT] $ node "E:\nexmold\scripts\release-preflight.mjs"
+{
+  "schema": "nexmold.v7.14.release-preflight.v1",
+  "gate": "release-preflight",
+  "passed": true,
+  "checks": [
+    {
+      "id": "exists:package.json",
+      "passed": true
+    },
+    {
+      "id": "exists:astro.config.mjs",
+      "passed": true
+    },
+    {
+      "id": "exists:src",
+      "passed": true
+    },
+    {
+      "id": "exists:public",
+      "passed": true
+    }
+  ]
+}
+2026-08-30T03:17:50.412Z [ROUTE_CONFLICT_GATE] $ node "E:\nexmold\scripts\route-conflict-check.mjs"
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/about:/[lang]
+------------------------------------------------------------
+{
+  "gate": "route-conflict",
+  "policy": "V7.14.1",
+  "passed": true,
+  "filesScanned": 31,
+  "staticRoutes": 27,
+  "dynamicRoutes": 4,
+  "conflicts": 0,
+  "shadowedRoutes": 11,
+  "warnings": 11,
+  "hardConflicts": 0,
+  "routeOwners": [
+    {
+      "route": "/",
+      "rel": "index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/[lang]",
+      "rel": "[lang]/index.astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/about",
+      "rel": "about.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/capabilities",
+      "rel": "capabilities/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/capabilities/rapid-tooling-s136",
+      "rel": "capabilities/rapid-tooling-s136.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/components/microfluidic-cartridges",
+      "rel": "components/microfluidic-cartridges.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/components/precision-gears",
+      "rel": "components/precision-gears.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/free-dfm-analysis",
+      "rel": "free-dfm-analysis/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/industries",
+      "rel": "industries/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/knowledge-hub",
+      "rel": "knowledge-hub/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/knowledge-hub/[category]",
+      "rel": "knowledge-hub/[category]/index.astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/knowledge-hub/[category]/[slug]",
+      "rel": "knowledge-hub/[category]/[slug].astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/materials",
+      "rel": "materials/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/products",
+      "rel": "products/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/quality",
+      "rel": "quality.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/quality/zeiss-cmm-inspection",
+      "rel": "quality/zeiss-cmm-inspection.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources",
+      "rel": "resources/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/clamping-force-calculator",
+      "rel": "resources/calculators/clamping-force-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/cost-guide",
+      "rel": "resources/calculators/cost-guide.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/draft-angle-calculator",
+      "rel": "resources/calculators/draft-angle-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/faq",
+      "rel": "resources/calculators/faq.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/injection-mold-cost-estimator",
+      "rel": "resources/calculators/injection-mold-cost-estimator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/instant-dfm-checker",
+      "rel": "resources/calculators/instant-dfm-checker.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/shrinkage-calculator",
+      "rel": "resources/calculators/shrinkage-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/defect-troubleshooting",
+      "rel": "resources/design-guides/defect-troubleshooting.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/surface-finish",
+      "rel": "resources/design-guides/surface-finish.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/wall-thickness",
+      "rel": "resources/design-guides/wall-thickness.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/faq",
+      "rel": "resources/faq.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/services",
+      "rel": "services/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/services/[slug]",
+      "rel": "services/[slug].astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/services/custom-injection-molding",
+      "rel": "services/custom-injection-molding.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    }
+  ]
+}
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/capabilities:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/free-dfm-analysis:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/industries:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/knowledge-hub:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/materials:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/products:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/quality:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/resources:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/services:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/services/custom-injection-molding:/services/[slug]
+2026-08-30T03:17:50.588Z [V714_CORE_GATE] $ node "E:\nexmold\scripts\v714-core-gate.mjs"
+[NEXMOLD][V7.14][CORE] Evidence -> Claim -> Firewall -> Publication Gate
+[NEXMOLD][V7.14][CORE] Evidence contract: PRESENT
+[NEXMOLD][V7.14][CORE] Eligibility contract: PRESENT
+[NEXMOLD][V7.14][CORE] Epistemic Firewall: PRESENT
+[NEXMOLD][V7.14][CORE] Publication Gate: PRESENT
+[NEXMOLD][V7.14][CORE] Evidence contract: PASS
+[NEXMOLD][V7.14][CORE] Claim boundary: CLOSED
+[NEXMOLD][V7.14][CORE] Epistemic Firewall: PRESENT
+[NEXMOLD][V7.14][CORE] Publication Gate: PRESENT
+[NEXMOLD][V7.14][CORE] Public Artifact = 0
+[NEXMOLD][V7.14][CORE] PASS
+{
+  "orchestrator": "V7.14-CORE",
+  "phase": "core-pass",
+  "passed": true,
+  "reason": "V714_PUBLIC_BOUNDARY_CLOSED",
+  "contracts": [
+    {
+      "name": "Evidence contract",
+      "passed": true,
+      "path": "src/regional/types.ts"
+    },
+    {
+      "name": "Eligibility contract",
+      "passed": true,
+      "path": "src/regional/eligibility.ts"
+    },
+    {
+      "name": "Epistemic Firewall",
+      "passed": true,
+      "path": "src/regional/epistemic-firewall.ts"
+    },
+    {
+      "name": "Publication Gate",
+      "passed": true,
+      "path": "src/regional/publication-gate.ts"
+    }
+  ],
+  "publicArtifacts": {
+    "passed": true,
+    "count": 0,
+    "artifacts": []
+  }
+}
+2026-08-30T03:17:50.750Z [TYPECHECK] $ npx astro check
+Unable to read E:\nexmold\package.json
+  [1mLocation:[22m
+    [4mE:\nexmold\node_modules\vitefu\src\index.js:41:11[24m
+  [1mStack trace:[22m
+[2m    at file:///E:/nexmold/node_modules/vitefu/src/index.js:41:11
+    at async createVite (file:///E:/nexmold/node_modules/astro/dist/core/create-vite.js:77:23)
+    at async syncInternal (file:///E:/nexmold/node_modules/astro/dist/core/sync/index.js:85:28)
+    at async check (file:///E:/nexmold/node_modules/astro/dist/cli/check/index.js:28:5)
+    at async cli (file:///E:/nexmold/node_modules/astro/dist/cli/index.js:234:5)[22m
+  [1mCaused by:[22m
+[2m  Unexpected token '﻿', "﻿{
+    "n"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at async crawlFrameworkPkgs (file:///E:/nexmold/node_modules/vitefu/src/index.js:40:19)
+    at async createTempViteServer (file:///E:/nexmold/node_modules/astro/dist/core/sync/index.js:169:5)
+    at async sync (file:///E:/nexmold/node_modules/astro/dist/core/sync/index.js:47:10)
+    at async runCommand (file:///E:/nexmold/node_modules/astro/dist/cli/index.js:219:27)[22m

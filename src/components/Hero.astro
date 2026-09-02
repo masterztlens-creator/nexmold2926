@@ -1,0 +1,369 @@
+---
+/**
+ * Hero.astro - GKP 数据驱动 & 多语言硬编码彻底修复版
+ * 1. 顶部：即时信任 & 风险消除 (★★★★★ 4.9/5 TrustScore + ISO 9001/2768-m/Quick-Turn T1/Free DFM)
+ * 2. 左侧：高优雅 Title Case 混排，高亮 GKP $172 核心词 + 分流双 CTA + 规范数字 Stat 卡片
+ * 3. 右侧：3D CMM 动态激光扫描展台 & 完备多语言参数背书 (修复英语硬编码)
+ * 4. 底部：GPU 加速无缝跑马灯大牌流动墙
+ */
+import { Image } from 'astro:assets';
+import heroComponent from '../assets/images/hero-injection-component.png';
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+
+// ⚡️ 完整多语言字典 (彻底清除右侧 CMM 展台与 Image Alt 的硬编码英语)
+const i18n = {
+  en: {
+    rating_score: "4.9/5 TrustScore",
+    rating_desc: "Verified Engineering & Procurement Buyers",
+    cert_tags: ["ISO 9001:2015", "ISO 2768-m Precision", "7-14 Days T1 Tooling", "Free DFM Review"],
+
+    h1_title: "Quick-Turn <span class='hero-highlight'>Injection Molding</span> & Fast Tooling Direct from Factory",
+    subtitle: "Custom <strong>plastic injection molding</strong>, <strong>low-volume manufacturing</strong>, and <strong>prototype tooling</strong>. From 100 pcs prototypes to 1M+ OEM production parts with instant 24H DFM analysis.",
+
+    cta_primary: "UPLOAD CAD FILE (.STEP/.IGES) →",
+    cta_secondary: "REQUEST QUICK QUOTE",
+    risk_sub: "🔒 Strict NDA Signed Before Drawing Review • Instant DFM Analysis & No-Obligation Quote",
+
+    stat1_val: "10,000 m²",
+    stat1_lbl: "Dedicated Facility",
+    stat2_val: "90T-1200T",
+    stat2_lbl: "Haitian Machine Fleet",
+    stat3_val: "7-14 Days",
+    stat3_lbl: "Fast T1 Tooling",
+    stat4_val: "26+",
+    stat4_lbl: "Countries Served",
+
+    cmm_badge: "CMM_METROLOGY",
+    cmm_status: "CT_SCAN: PASSED",
+    cmm_resin_label: "RESIN:",
+    cmm_resin_val: "ABS / PC / PEEK / ULTEM / TPU",
+    cmm_qual_label: "QUALIFICATION:",
+    cmm_qual_val: "100% CMM FAI Report",
+    cmm_covered: "SPECIALTY PROCESSES: Insert Molding • Overmolding • PEEK • Medical & Auto",
+    img_alt: "NEXMOLD Precision Plastic Injection Molded Component Showcase",
+
+    proof_label: "GLOBAL OEM & SUPPLY CHAIN PARTNERS:",
+    proof_stat: "500+ Programs Delivered Across 26 Countries"
+  },
+  de: {
+    rating_score: "4.9/5 TrustScore",
+    rating_desc: "Verifizierte Einkäufer & Ingenieure",
+    cert_tags: ["ISO 9001:2015", "ISO 2768-m Präzision", "7-14 Tage T1 Werkzeuge", "Kostenloses DFM"],
+
+    h1_title: "Schneller <span class='hero-highlight'>Spritzguss</span> & Schneller Formenbau direkt vom Hersteller",
+    subtitle: "Kundenspezifischer <strong>Kunststoffspritzguss</strong>, <strong>Kleinserienfertigung</strong> & <strong>Schneller Werkzeugbau</strong>. Von 100 Prototypen bis 1M+ Serienbauteilen mit 24H DFM-Prüfung.",
+
+    cta_primary: "CAD-DATEI HOCHLADEN (.STEP) →",
+    cta_secondary: "SCHNELLES ANGEBOT ANFORDERN",
+    risk_sub: "🔒 Geheimhaltungsvereinbarung (NDA) vor Prüfung • Unverbindliches Angebot",
+
+    stat1_val: "10.000 m²",
+    stat1_lbl: "Eigene Fabrik",
+    stat2_val: "90T-1200T",
+    stat2_lbl: "Haitian Maschinenpark",
+    stat3_val: "7-14 Tage",
+    stat3_lbl: "Schnelle T1 Bemusterung",
+    stat4_val: "26+",
+    stat4_lbl: "Belieferte Länder",
+
+    cmm_badge: "CMM_MÉTROLOGIE",
+    cmm_status: "CT_SCAN: BESTANDEN",
+    cmm_resin_label: "HARZ/MATERIAL:",
+    cmm_resin_val: "ABS / PC / PEEK / ULTEM / TPU",
+    cmm_qual_label: "QUALIFIKATION:",
+    cmm_qual_val: "100% CMM FAI Prüfbericht",
+    cmm_covered: "SPEZIALVERFAHREN: Einlegeguss • Zweikomponenten • PEEK • Medizin",
+    img_alt: "NEXMOLD Präzisions-Spritzguss-Bauteil Präsentation",
+
+    proof_label: "OEM- & LIEFERKETTEN-PARTNER:",
+    proof_stat: "500+ Projekte in 26 Ländern"
+  },
+  fr: {
+    rating_score: "Note 4.9/5",
+    rating_desc: "Acheteurs & Ingénieurs Vérifiés",
+    cert_tags: ["ISO 9001:2015", "Précision ISO 2768-m", "Outillage T1 en 7-14 Jours", "DFM Gratuit"],
+
+    h1_title: "Moulage par <span class='hero-highlight'>Injection Rapide</span> & Outillage en Direct de l'Usine",
+    subtitle: "<strong>Moulage par injection plastique</strong> sur mesure, <strong>production en petites séries</strong> & <strong>outillage rapide</strong>. De 100 pièces prototypes à plus d'un million avec DFM sous 24h.",
+
+    cta_primary: "ENVOYER FICHIER CAD (.STEP) →",
+    cta_secondary: "DEMANDER UN DEVIS RAPIDE",
+    risk_sub: "🔒 NDA signé avant révision des plans • Devis gratuit sans engagement",
+
+    stat1_val: "10 000 m²",
+    stat1_lbl: "Usine Dédiée",
+    stat2_val: "90T-1200T",
+    stat2_lbl: "Parc de Presses Haitian",
+    stat3_val: "7-14 Jours",
+    stat3_lbl: "Outillage T1 Rapide",
+    stat4_val: "26+",
+    stat4_lbl: "Pays Desservis",
+
+    cmm_badge: "CMM_MÉTROLOGIE",
+    cmm_status: "CT_SCAN: VALIDÉ",
+    cmm_resin_label: "RÉSINE:",
+    cmm_resin_val: "ABS / PC / PEEK / ULTEM / TPU",
+    cmm_qual_label: "QUALIFICATION:",
+    cmm_qual_val: "Rapport d'inspection 100% CMM",
+    cmm_covered: "PROCÉDÉS SPÉCIAUX: Surmoulage • Inserts • PEEK • Auto & Médical",
+    img_alt: "Présentation des composants moulés par injection de précision NEXMOLD",
+
+    proof_label: "PARTENAIRES OEM ET CHAÎNE D'APPROVISIONNEMENT:",
+    proof_stat: "500+ Programmes dans 26 Pays"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+// 跑马灯 Logo 数组数据化，避免 HTML 手动复制两份
+const brandLogos = [
+  { name: "SHARKNINJA", region: "USA", fontStyle: "font-sans font-black tracking-tighter" },
+  { name: "De'Longhi", region: "ITALY", fontStyle: "font-serif font-bold italic" },
+  { name: "HONEYWELL", region: "USA", fontStyle: "font-mono font-black tracking-widest" },
+  { name: "BISSELL", region: "USA", fontStyle: "font-mono font-bold tracking-wider" },
+  { name: "PHILIPS OEM", region: "EU", fontStyle: "font-sans font-black" },
+  { name: "LASKO", region: "USA", fontStyle: "font-mono font-black tracking-widest" }
+];
+---
+
+<section 
+  class="relative bg-white flex flex-col justify-between overflow-hidden border-b border-[#0F2B5B]/15 select-none pt-8 pb-10" 
+  id="hero-unit"
+>
+  <!-- 🏭 背景：3D CAD 坐标图纸网格 -->
+  <div class="absolute inset-0 bg-[radial-gradient(#0f2b5b_1px,transparent_1px)] [bg-size:32px_32px] opacity-10 pointer-events-none"></div>
+
+  <div class="relative z-20 max-w-[1600px] mx-auto px-[clamp(1.5rem,4vw,3.5rem)] w-full">
+    
+    <!-- 🟢 1. 顶部：即时信任 & 风险消除 -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-6 mb-8 border-b border-[#0F2B5B]/10">
+      
+      <div class="flex items-center gap-3">
+        <div class="flex items-center text-[#EA580C] text-sm tracking-widest">
+          ★★★★★
+        </div>
+        <span class="font-mono text-xs font-black text-[#0F2B5B] uppercase">
+          {t.rating_score}
+        </span>
+        <span class="text-xs text-[#0F2B5B]/60 font-sans hidden sm:inline">
+          ({t.rating_desc})
+        </span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        {t.cert_tags.map(tag => (
+          <span class="font-mono text-[10.5px] font-bold text-[#0F2B5B] bg-[#F8FAFC] border border-[#0F2B5B]/15 px-2.5 py-1 rounded-xs">
+            ✓ {tag}
+          </span>
+        ))}
+      </div>
+
+    </div>
+
+    <!-- 🎯 2. Hero 核心主视角 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center mb-10">
+      
+      <!-- 左侧：主标题、分流双 CTA、4 大厂区数据 -->
+      <div class="lg:col-span-6 space-y-8">
+        
+        <h1 class="text-[clamp(1.75rem,3.8vw,3.8rem)] font-[1000] tracking-tight uppercase italic leading-[1.1] text-[#0F2B5B] set-html-content" set:html={t.h1_title}>
+        </h1>
+
+        <p class="text-[clamp(1.0rem,1.3vw,1.15rem)] text-[#0F2B5B]/85 font-sans leading-relaxed border-l-4 border-[#EA580C] pl-4 set-html-content" set:html={t.subtitle}></p>
+
+        <!-- ⚡ 分流双 CTA 按钮通道：主按钮调起 CAD 弹窗，副按钮平滑滚动至第 12 屏 RFQ -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <button 
+              onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('cad_upload')"
+              class="bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs font-black px-8 py-4 rounded-xs uppercase tracking-wider text-center transition-all shadow-md hover:shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {t.cta_primary}
+            </button>
+
+            <a 
+              href="#rfq"
+              class="bg-white hover:bg-[#0F2B5B]/5 text-[#0F2B5B] border-2 border-[#0F2B5B] font-mono text-xs font-black px-8 py-4 rounded-xs uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center"
+            >
+              {t.cta_secondary}
+            </a>
+          </div>
+
+          <p class="font-mono text-[10.5px] font-bold text-[#0F2B5B]/70">
+            {t.risk_sub}
+          </p>
+        </div>
+
+        <!-- 📊 4 大真实工厂与经验指标 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-[#0F2B5B]/10">
+          <div class="bg-[#F8FAFC] p-3 border border-[#0F2B5B]/10 rounded-xs text-center">
+            <span class="font-mono text-xl sm:text-2xl font-[1000] text-[#EA580C] block leading-none mb-1">
+              {t.stat1_val}
+            </span>
+            <span class="font-mono text-[10px] font-bold text-[#0F2B5B]/80 uppercase block">
+              {t.stat1_lbl}
+            </span>
+          </div>
+
+          <div class="bg-[#F8FAFC] p-3 border border-[#0F2B5B]/10 rounded-xs text-center">
+            <span class="font-mono text-xl sm:text-2xl font-[1000] text-[#0F2B5B] block leading-none mb-1">
+              {t.stat2_val}
+            </span>
+            <span class="font-mono text-[10px] font-bold text-[#0F2B5B]/80 uppercase block">
+              {t.stat2_lbl}
+            </span>
+          </div>
+
+          <div class="bg-[#F8FAFC] p-3 border border-[#0F2B5B]/10 rounded-xs text-center">
+            <span class="font-mono text-xl sm:text-2xl font-[1000] text-[#0F2B5B] block leading-none mb-1">
+              {t.stat3_val}
+            </span>
+            <span class="font-mono text-[10px] font-bold text-[#0F2B5B]/80 uppercase block">
+              {t.stat3_lbl}
+            </span>
+          </div>
+
+          <div class="bg-[#F8FAFC] p-3 border border-[#0F2B5B]/10 rounded-xs text-center">
+            <span class="font-mono text-xl sm:text-2xl font-[1000] text-[#EA580C] block leading-none mb-1">
+              {t.stat4_val}
+            </span>
+            <span class="font-mono text-[10px] font-bold text-[#0F2B5B]/80 uppercase block">
+              {t.stat4_lbl}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 右侧：3D CMM 数字孪生扫描展台 (彻底消除英语硬编码) -->
+      <div class="lg:col-span-6 relative flex items-center justify-center">
+        <div class="relative w-full max-w-[580px] aspect-[4/3] flex items-center justify-center group overflow-hidden rounded-sm border-2 border-[#0F2B5B]/15 shadow-xl bg-[#F8FAFC]">
+          
+          <svg class="absolute inset-0 w-full h-full text-[#0F2B5B]/15 pointer-events-none opacity-60" viewBox="0 0 400 300">
+            <line x1="200" y1="0" x2="200" y2="300" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4,4"/>
+            <line x1="0" y1="150" x2="400" y2="150" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4,4"/>
+            <circle cx="200" cy="150" r="110" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,6"/>
+          </svg>
+
+          <!-- ⚡ 动态红外/橙色 CMM 激光扫描线 -->
+          <div class="laser-scanner absolute left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#EA580C] to-transparent shadow-[0_0_12px_#EA580C] z-30 pointer-events-none opacity-90"></div>
+
+          <!-- 左上角 CMM 质检状态 -->
+          <div class="absolute top-3.5 left-3.5 bg-[#0F2B5B] text-white font-mono text-[9px] px-3 py-1.5 rounded-sm shadow-md flex items-center gap-3 z-30">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-ping"></span>
+              <span class="text-white/80">{t.cmm_badge}</span>
+            </div>
+            <span class="text-white/30">|</span>
+            <span class="text-[#EA580C] font-bold">{t.cmm_status}</span>
+          </div>
+
+          <div class="relative w-full h-full flex items-center justify-center p-6">
+            <Image 
+              src={heroComponent} 
+              alt={t.img_alt} 
+              loading="eager" 
+              fetchpriority="high"
+              class="w-full h-full object-contain contrast-[1.05] brightness-[1.02] group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            />
+            
+            <div class="absolute bottom-3.5 right-3.5 left-3.5 sm:left-auto sm:max-w-xs bg-[#0F2B5B] text-white border border-white/10 p-3 rounded-sm shadow-xl flex flex-col gap-1 font-mono text-[9px] z-30">
+              <div class="flex items-center justify-between border-b border-white/10 pb-1 gap-4">
+                <span class="text-white/60">{t.cmm_resin_label}</span>
+                <span class="text-[#EA580C] font-bold">{t.cmm_resin_val}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-white/10 pb-1 gap-4">
+                <span class="text-white/60">{t.cmm_qual_label}</span>
+                <span class="text-white font-bold">{t.cmm_qual_val}</span>
+              </div>
+              <div class="text-[#EA580C] font-bold text-[8.5px] pt-0.5">
+                {t.cmm_covered}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 🛡️ 3. 底部：大牌文本品牌墙 (数据驱动渲染，优雅去冗余) -->
+    <div class="pt-6 border-t border-[#0F2B5B]/15 overflow-hidden">
+      <div class="flex flex-col xl:flex-row items-center gap-4 xl:gap-8">
+        
+        <!-- 左侧固定标题 -->
+        <div class="shrink-0 flex items-center gap-2.5 bg-white pr-4 z-10">
+          <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-pulse"></span>
+          <span class="font-mono text-[11px] font-black uppercase text-[#0F2B5B] tracking-wider whitespace-nowrap">
+            {t.proof_label}
+          </span>
+          <span class="hidden xl:block w-[1px] h-4 bg-[#0F2B5B]/20"></span>
+        </div>
+
+        <!-- 中间：大厂纯文本标牌无缝滚动 (两组循环数据驱动) -->
+        <div class="w-full overflow-hidden relative flex-1 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+          <div class="flex items-center w-max animate-marquee hover:[animation-play-state:paused]">
+            
+            {/* 动态渲染两组相同节点实现无缝循环 */}
+            {[0, 1].map((groupIndex) => (
+              <div class="flex items-center gap-4 pr-4 shrink-0" aria-hidden={groupIndex === 1 ? "true" : undefined}>
+                {brandLogos.map((brand) => (
+                  <div class="flex items-center gap-2 bg-[#F8FAFC] border border-[#0F2B5B]/15 px-3.5 py-1.5 rounded-xs">
+                    <span class={`text-xs text-[#0F2B5B] ${brand.fontStyle}`}>{brand.name}</span>
+                    <span class="font-mono text-[9px] text-[#0F2B5B]/50 border-l border-[#0F2B5B]/15 pl-2">{brand.region}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+          </div>
+        </div>
+
+        <!-- 右侧数据与信任标注 -->
+        <div class="shrink-0 font-mono text-[11px] font-black text-[#EA580C] bg-[#EA580C]/10 border border-[#EA580C]/25 px-3.5 py-1.5 rounded-xs whitespace-nowrap">
+          {t.proof_stat}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ⚡️ 全局样式保护 -->
+<style is:global>
+  .hero-highlight {
+    color: #EA580C !important;
+    font-weight: 900 !important;
+  }
+</style>
+
+<style>
+  @keyframes laserScan {
+    0% { top: 8%; opacity: 0.1; }
+    50% { top: 88%; opacity: 0.95; }
+    100% { top: 8%; opacity: 0.1; }
+  }
+
+  .laser-scanner {
+    animation: laserScan 4.5s ease-in-out infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ⚡️ GPU 硬件合成层优化，确保低端手机 60fps 平滑度 */
+  .animate-marquee {
+    animation: marquee 25s linear infinite;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+</style>

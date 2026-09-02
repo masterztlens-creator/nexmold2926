@@ -1,0 +1,217 @@
+---
+/**
+ * src/pages/products/index.astro
+ * 👑 NEXMOLD 全产业链 Product Cluster 顶级 Hub 聚合页
+ * 1. 架构定位：承接整站所有零件、部件与组件（Custom Components）的长尾流量中枢
+ * 2. 视觉规范：100% 钛白高奢风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO/SEO：内嵌 ItemList & CollectionPage Schema，为 10万+ 叶子节点提供强大的权重锚点
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const title = "Products & Component Manufacturing Cluster | NEXMOLD";
+const description = "Explore NEXMOLD's full-spectrum custom manufacturing product catalog: injection molded enclosures, precision CNC manifolds, medical diagnostic trays, and turnkey packaging.";
+
+// 1. 注塑件大类
+const injectionProducts = [
+  { name: "Electronic & Equipment Housings", desc: "High-gloss, IP68 sealed optical & ergonomic plastic enclosures", href: "/injection-molding/consumer-electronics/custom-electronic-housings", tag: "HIGH-GLOSS" },
+  { name: "Medical Diagnostic Trays", desc: "Cleanroom USP Class VI fluidic manifolds & sterilizable labware", href: "/peek/medical-consumables/custom-surgical-trays", tag: "USP CLASS VI" },
+  { name: "Automotive Connectors & Caps", desc: "IATF 16949 PA66+30%GF flame-retardant under-hood components", href: "/nylon66/automotive/custom-connectors", tag: "IATF 16949" },
+  { name: "Overmolded Soft Grips & Seals", desc: "Rigid plastic + TPE/TPU dual-shot ergonomic handles and gaskets", href: "/tpe/consumer/custom-overmolded-grips", tag: "DUAL-SHOT 2K" }
+];
+
+// 2. CNC 精密零件大类
+const cncProducts = [
+  { name: "Aluminum Fluidic Manifolds", desc: "6061-T6 / 7075 precision milled manifolds with anodized finishes", href: "/aluminum-6061/industrial/custom-fluidic-manifolds", tag: "±0.01mm" },
+  { name: "Structural Brackets & Mounts", desc: "High-strength aerospace & automotive 5-axis milled brackets", href: "/aluminum-7075/aerospace/custom-structural-brackets", tag: "5-AXIS MILLED" },
+  { name: "Heat Sinks & Thermal Plates", desc: "High-thermal conductivity copper & aluminum EV cooling plates", href: "/copper/ev-mobility/custom-cooling-plates", tag: "THERMAL" }
+];
+
+// 3. 模具与模架大类
+const toolingProducts = [
+  { name: "Rapid Prototype Tooling (T1 in 3-15 Days)", desc: "Aluminum & S136 steel prototype molds for fast market validation", href: "/tooling/rapid-prototype-molds", tag: "3-15 DAYS T1" },
+  { name: "High-Volume Production Steel Molds", desc: "SPI Class 101/102 ASSAB S136 hardened steel molds (1M+ shots)", href: "/tooling/production-steel-molds", tag: "1M+ SHOTS" },
+  { name: "2K & Multi-Cavity Molds", desc: "Hot runner multi-cavity servo tooling for high-yield production", href: "/tooling/multi-cavity-molds", tag: "HIGH YIELD" }
+];
+
+// 4. 一站式包材与组装
+const assemblyProducts = [
+  { name: "Ultrasonic Welded Sub-Assemblies", desc: "Hermetically sealed plastic components with zero adhesives", href: "/assembly/ultrasonic-welding", tag: "HERMETIC" },
+  { name: "Custom Thermoforming & Blister Trays", desc: "Custom ESD & retail blister inner packaging trays", href: "/packaging/thermoforming-trays", tag: "BLISTER PACK" },
+  { name: "Full-Box Build & Retail Packaging", desc: "Pad printing, silk screening & custom retail color box assembly", href: "/assembly/full-box-build", tag: "TURNKEY" }
+];
+
+// CollectionPage Schema
+const collectionSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": title,
+  "description": description,
+  "url": "https://nexmold.com/products",
+  "hasPart": [
+    ...injectionProducts.map(i => ({ "@type": "Product", "name": i.name, "description": i.desc })),
+    ...cncProducts.map(i => ({ "@type": "Product", "name": i.name, "description": i.desc }))
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Products Cluster</span>
+      </nav>
+
+      <!-- 顶层 Banner -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-16">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          TOPIC_CLUSTER_ROOT // MANUFACTURING_KNOWLEDGE_GRAPH
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Custom Component<br/>
+          <span class="text-[#EA580C]">Manufacturing Cluster</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          Browse NEXMOLD’s comprehensive custom component catalog. From rapid prototype tooling and high-yield injection molding to 5-axis CNC machining and turnkey box-build packaging.
+        </p>
+      </section>
+
+      <!-- 四大核心产品集群板块 -->
+      <div class="space-y-16">
+        
+        <!-- 模块 1: 注塑成型部件 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">CLUSTER_01</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Injection Molded Components</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              HAITIAN 90T - 1200T FLEET
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {injectionProducts.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View DFM Specs →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 2: CNC 精密机加件 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">CLUSTER_02</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Precision CNC Machined Parts</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              3-AXIS / 5-AXIS MILLING
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {cncProducts.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View Machining Specs →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 3: 模具与模架矩阵 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">CLUSTER_03</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Rapid Tooling & Steel Molds</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              S136 / H13 / NAK80 STEEL
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {toolingProducts.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#EA580C] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View Tooling Guidelines →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 4: 一站式组装与包装 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">CLUSTER_04</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Turnkey Assembly & Packaging</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#EA580C]/10 text-[#EA580C] px-3 py-1.5 rounded">
+              ONE-STOP SUPPLY CHAIN
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {assemblyProducts.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View Box Build Specs →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<!-- Schema 注入 -->
+<script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />

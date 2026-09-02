@@ -1,0 +1,126 @@
+---
+/**
+ * Process.astro - 技术生命周期 (Technical Lifecycle)
+ * 1. 修复警告：利用 index 变量生成动态动画延迟，消灭 ts(6133).
+ * 2. 视觉增强：为步骤卡片添加序列化 AOS 动画.
+ * 3. 术语对齐：维持 DFM、FAI、CPK 等核心工业标准术语.
+ * 4. 供应链补完：注入深圳盐田港运力协同、货代风险主动追踪与供应链容灾分流保障。
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en', location = "Global" } = Astro.props;
+
+const i18n = {
+  en: {
+    protocol_code: "PROTOCOL: ISO_9001 // SUPPLY_CHAIN_CONTINUITY",
+    tag_label: "EXECUTION_FLOW",
+    title_1: "Technical",
+    title_2: "Lifecycle",
+    sub_desc: `High-precision injection molding SOP optimized for ${location} industrial standards with integrated South China port logistics risk management.`,
+    steps: [
+      { no: "01", title: "DFM & Moldflow", detail: "Digital engineering analysis to optimize gate location and cooling efficiency, resolving geometric structural risks before cutting steel.", status: "ENG_VALID" },
+      { no: "02", title: "Precision Tooling", detail: "Multi-cavity mold fabrication using high-speed CNC and AgieCharmilles EDM, qualified under rigorous internal SPI metrics.", status: "IN_TOOLING" },
+      { no: "03", title: "Scientific Molding", detail: `Validation with full FAI & CPK reports to meet ${location} quality requirements. Raw material traceability data sheets provided upon shipment.`, status: "SAMPLING" },
+      { no: "04", title: "Global Logistics", detail: "Direct container freight routing from Port of Yantian with active forwarder tracking and strategic dynamic rerouting fallback protocols.", status: "SHIPPING" }
+    ]
+  },
+  de: {
+    protocol_code: "PROTOKOLL: ISO_9001 // LIEFERKETTEN_KONTINUITÄT",
+    tag_label: "AUSFÜHRUNGSFLUSS",
+    title_1: "Technischer",
+    title_2: "Lebenszyklus",
+    sub_desc: `Hochpräzisions-Spritzguss-SOP, optimiert für Industriestandards in ${location} mit integriertem Logistik-Risikomanagement für südchinesische Häfen.`,
+    steps: [
+      { no: "01", title: "DFM & Moldflow", detail: "Digitale Analyse zur Optimierung von Anspritzpunkten und Kühlungseffizienz, um geometrische Risiken vor dem Stahlschnitt zu eliminieren.", status: "ENG_VALID" },
+      { no: "02", title: "Präzisionswerkzeuge", detail: "Bau von Mehrkavitäten-Werkzeugen mit Hochgeschwindigkeits-CNC und EDM, qualifiziert nach strengen internen SPI-Metriken.", status: "WERKZEUGBAU" },
+      { no: "03", title: "Wissenschaftliches Spritzen", detail: `Validierung mit vollständigen FAI- und CPK-Berichten für ${location}. Materialrückverfolgbarkeitsdatenblätter bei Versand bereitgestellt.`, status: "BEMUSTERUNG" },
+      { no: "04", title: "Globale Logistik", detail: "Direktes Container-Routing vom Hafen Yantian mit aktivem Spediteur-Tracking und strategischen Protokollen für Ausweichrouten.", status: "VERSAND" }
+    ]
+  },
+  fr: {
+    protocol_code: "PROTOCOLE: ISO_9001 // CONTINUITÉ_CHAÎNE",
+    tag_label: "FLUX_D'EXÉCUTION",
+    title_1: "Cycle de Vie",
+    title_2: "Technique",
+    sub_desc: `SOP de moulage par injection haute précision optimisée pour le marché de ${location}, avec gestion intégrée des risques logistiques des ports du sud de la Chine.`,
+    steps: [
+      { no: "01", title: "DFM & Moldflow", detail: "Analyse d'ingénierie numérique pour optimiser l'injection et le refroidissement, résolvant les risques structurels avant la découpe de l'acier.", status: "VAL_ENG" },
+      { no: "02", title: "Outillage Précis", detail: "Fabrication de moules multi-empreintes via CNC haute vitesse et EDM, qualifiée selon les métriques strictes de la SPI.", status: "OUTILLAGE" },
+      { no: "03", title: "Moulage Scientifique", detail: `Validation avec rapports FAI & CPK complets pour ${location}. Fiches de traçabilité des matériaux fournies à l'expédition.`, status: "ÉCHANTILLON" },
+      { no: "04", title: "Logistique Globale", detail: "Acheminement direct des conteneurs depuis le port de Yantian avec suivi actif du transitaire et protocoles de déroutement dynamique.", status: "EXPÉDITION" }
+    ]
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="relative bg-[#0B1221] py-[clamp(4rem,10vw,12rem)] border-b border-white/5 overflow-hidden" id="process">
+  <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px); background-size: 60px 60px;"></div>
+
+  <div class="max-w-[1400px] mx-auto px-[clamp(1.5rem,5vw,8rem)] relative z-10">
+    
+    <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-12 mb-[clamp(4rem,8vw,10rem)]" data-aos="fade-up">
+      <div class="max-w-4xl">
+        <div class="flex items-center gap-4 mb-6">
+          <span class="text-[#F97316] font-mono text-[10px] uppercase tracking-[0.4em]">{t.tag_label}</span>
+          <div class="h-px w-12 bg-[#F97316]/30"></div>
+          <span class="text-white/20 font-mono text-[9px] tracking-widest">{t.protocol_code}</span>
+        </div>
+        <h2 class="font-[1000] text-white uppercase tracking-tighter italic leading-[0.85] text-[clamp(2.5rem,8vw,9rem)]">
+          {t.title_1} <br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/20">{t.title_2}</span>
+        </h2>
+      </div>
+      <p class="text-[#94A3B8] text-[clamp(0.875rem,1.5vw,1.1rem)] font-light max-w-sm border-l border-[#F97316]/40 pl-6 leading-relaxed italic">
+        {t.sub_desc}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-px bg-white/5 border border-white/5">
+      {t.steps.map((step, index) => (
+        <div 
+          class="group relative bg-[#0B1221] p-[clamp(1.5rem,4vw,3rem)] transition-all duration-500 hover:bg-white/[0.02]"
+          data-aos="fade-up"
+          data-aos-delay={index * 100} 
+        >
+          <div class="flex justify-between items-start mb-12">
+            <span class="text-[clamp(2rem,4vw,3.5rem)] font-[1000] text-white/5 group-hover:text-[#F97316]/20 transition-colors italic leading-none font-mono">
+              {step.no}
+            </span>
+            <span class="text-[8px] font-mono text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+              {step.status}
+            </span>
+          </div>
+
+          <h3 class="text-[clamp(1.25rem,2vw,1.75rem)] font-black text-white uppercase italic tracking-tight mb-6 group-hover:text-[#F97316] transition-colors">
+            {step.title}
+          </h3>
+          <p class="text-[#94A3B8] text-sm lg:text-base font-light leading-relaxed mb-12 opacity-80 group-hover:opacity-100 transition-opacity">
+            {step.detail}
+          </p>
+
+          <div class="flex space-x-1.5 opacity-10 group-hover:opacity-40 transition-opacity">
+             {[1,2,3,4,5,6,7,8].map(i => (
+                <div class:list={["h-3 w-[1px] bg-white", i % 4 === 0 && "h-5 bg-[#F97316]"]}></div>
+             ))}
+          </div>
+
+          <div class="absolute top-0 left-0 w-0 h-[2px] bg-[#F97316] group-hover:w-full transition-all duration-700"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  h2 {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+</style>

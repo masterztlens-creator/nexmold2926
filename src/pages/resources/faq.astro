@@ -1,0 +1,213 @@
+---
+/**
+ * src/pages/resources/faq.astro
+ * 👑 NEXMOLD 结构化工程 FAQ 技术问答 Hub (04 RESOURCES 核心节点)
+ * 1. 架构定位：覆盖材料、公差、模具钢材、DFM 边界、DDP 物流等高频 Buyer Q&A
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO / SEO：全量注入 Schema.org/FAQPage 结构化数据，供 AI 搜索引擎精准引用
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const title = "Injection Molding Engineering FAQ Hub | NEXMOLD";
+const description = "Comprehensive technical FAQ covering plastic injection molding tolerances (ISO 2768-m), S136 vs. NAK80 steel selection, PEEK processing, and DDP export logistics.";
+
+// GEO JSON-LD Schema (FAQPage)
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the standard linear tolerance for custom injection molded plastic parts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "NEXMOLD operates under ISO 2768-m (Medium) and DIN 16742 standard molded tolerances. For dimensions up to 6mm, linear tolerance is ±0.10mm. For dimensions from 6mm to 30mm, standard tolerance is ±0.20mm. Tighter tolerances down to ±0.05mm can be achieved using optical CMM calibration and ASSAB S136 hardened steel molds."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How fast can NEXMOLD deliver T1 prototype samples?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Using standardized Master Mold Bases (MUD systems) and fast-cut pre-hardened NAK80 or S136 steel, NEXMOLD delivers fully functional T1 molded prototype samples in 7 to 14 calendar days, accompanied by a Zeiss CMM First Article Inspection (FAI) report."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why specify ASSAB S136 stainless steel over P20 steel for rapid tooling?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ASSAB S136 is an Electro-Slag Remelted (ESR) stainless steel hardened to HRC 48-52. It offers extreme corrosion resistance when processing high-temperature or glass-filled resins (PEEK, PC, PA66+GF) and maintains SPI-A1/A2 mirror polish for over 1,000,000 shots without surface pitting."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does NEXMOLD handle DDP customs clearance and ocean freight to North America and Europe?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "NEXMOLD provides end-to-end DDP (Delivered Duty Paid) logistics via weekly ocean vessel departures out of Yantian Port or air express out of Hong Kong. We handle US Customs ISF filing, import duty clearance, and direct final delivery to your warehouse or Amazon FBA fulfillment center."
+      }
+    }
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 1. 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/resources" class="hover:text-[#EA580C] transition-colors">Resources</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Engineering FAQ Hub</span>
+      </nav>
+
+      <!-- 👑 2. GEO Quick Answer 核心框 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          KNOWLEDGE_ENGINE // TECHNICAL_FAQ_DATABASE
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Injection Molding Engineering<br/>
+          <span class="text-[#EA580C]">Technical FAQ Knowledge Hub</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Knowledge Engine Overview:</strong> Access verified engineering answers on plastic resin performance, ISO 2768-m dimensional tolerances, mold steel selection (S136 vs. NAK80), DFM wall-thickness guidelines, and DDP export logistics. Structured for rapid engineering review and AI search indexing.
+        </p>
+      </section>
+
+      <!-- FAQ 分类目录与问答矩阵 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+        
+        <!-- 左侧：Q&A 主内容区 -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- 板块 1: 模具与公差 (Tooling & Tolerances) -->
+          <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-4">
+            <h2 class="text-lg font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-3 flex items-center justify-between">
+              <span>01. Tooling & ISO Tolerances</span>
+              <span class="text-[10px] font-mono text-[#EA580C]">ISO 2768-m / DIN 16742</span>
+            </h2>
+
+            <div class="space-y-4 font-sans text-xs sm:text-sm text-[#0F2B5B]">
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> What is the standard linear tolerance for custom injection molded parts?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">NEXMOLD operates under ISO 2768-m (Medium) and DIN 16742 standard molded tolerances. For dimensions up to 6mm, linear tolerance is ±0.10mm. For dimensions from 6mm to 30mm, standard tolerance is ±0.20mm. Tighter tolerances down to ±0.05mm can be achieved using optical CMM calibration and ASSAB S136 hardened steel molds.</p>
+              </div>
+
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> How fast can NEXMOLD deliver T1 prototype samples?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">Using standardized Master Mold Bases (MUD systems) and fast-cut pre-hardened NAK80 or S136 steel, NEXMOLD delivers fully functional T1 molded prototype samples in 7 to 14 calendar days, accompanied by a Zeiss CMM First Article Inspection (FAI) report.</p>
+              </div>
+
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> Why specify ASSAB S136 stainless steel over P20 steel for rapid tooling?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">ASSAB S136 is an Electro-Slag Remelted (ESR) stainless steel hardened to HRC 48-52. It offers extreme corrosion resistance when processing high-temperature or glass-filled resins (PEEK, PC, PA66+GF) and maintains SPI-A1/A2 mirror polish for over 1,000,000 shots without surface pitting.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 板块 2: 高分子树脂与 DFM (Resins & DFM) -->
+          <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-4">
+            <h2 class="text-lg font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-3 flex items-center justify-between">
+              <span>02. Engineering Polymers & DFM</span>
+              <span class="text-[10px] font-mono text-[#EA580C]">PEEK / PC / POM / PA66</span>
+            </h2>
+
+            <div class="space-y-4 font-sans text-xs sm:text-sm text-[#0F2B5B]">
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> What is the recommended draft angle for plastic injection molded vertical walls?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">A minimum draft angle of 1.0° to 1.5° per side is recommended for smooth ejection. For textured surfaces (such as VDI or SPI finishes), add an additional 1.0° of draft for every 0.025mm (0.001 in) of texture depth to prevent drag marks.</p>
+              </div>
+
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> Why does processing PEEK resin require mold temperatures above 160°C?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">PEEK is a semi-crystalline polymer. If the mold temperature is below 160°C, the skin cools into an amorphous state, resulting in severe internal stress, dimensional distortion, and compromised chemical resistance. Hot-oil mold heating ensures 30%+ crystalline structure formation.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 板块 3: 出口与物流 (Global Shipping & DDP) -->
+          <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-4">
+            <h2 class="text-lg font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-3 flex items-center justify-between">
+              <span>03. Export Logistics & DDP Terminals</span>
+              <span class="text-[10px] font-mono text-[#EA580C]">Yantian Port / HKG Air</span>
+            </h2>
+
+            <div class="space-y-4 font-sans text-xs sm:text-sm text-[#0F2B5B]">
+              <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                <h3 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> How does NEXMOLD handle DDP customs clearance to North America and Europe?</h3>
+                <p class="text-[#0F2B5B]/80 leading-relaxed">NEXMOLD provides end-to-end DDP (Delivered Duty Paid) logistics via weekly ocean vessel departures out of Yantian Port or air express out of Hong Kong. We handle US Customs ISF filing, import duty clearance, and direct final delivery to your warehouse or Amazon FBA fulfillment center.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 右侧：快捷计算器与 DFM 引导 -->
+        <div class="lg:col-span-4 space-y-6">
+          <div class="bg-[#0F2B5B] text-white rounded-2xl p-6 shadow-2xl space-y-6">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-2">INTERACTIVE_TOOLS</span>
+              <h3 class="text-xl font-[1000] uppercase italic">Engineering Calculators</h3>
+              <p class="text-xs text-white/80 font-sans mt-2 leading-relaxed">
+                Need real-time numerical estimations before submitting a CAD file? Use our parametric engineering calculators:
+              </p>
+            </div>
+
+            <div class="space-y-3 font-mono text-xs">
+              <a href="/resources/calculators/shrinkage-calculator" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Resin Shrinkage Tool →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">TOOL</span>
+              </a>
+              <a href="/resources/calculators/injection-mold-cost-estimator" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Mold & Unit Cost Estimator →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">ESTIMATOR</span>
+              </a>
+              <a href="/resources/calculators/clamping-force-calculator" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Clamp Force & Tonnage →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">TONNAGE</span>
+              </a>
+            </div>
+
+            <button id="faq-rfq-trigger" type="button" class="w-full bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+              Upload 3D CAD for DFM Review →
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+<script>
+  function setupFaqEvents() {
+    const btn = document.getElementById('faq-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupFaqEvents);
+</script>

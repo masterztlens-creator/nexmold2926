@@ -1,0 +1,177 @@
+---
+/**
+ * TrustBar.astro - NEXMOLD 实体工厂与全球物流信任背书 (层级二：白底高质感版)
+ * 1. 消除中间商疑虑：展现东莞注塑基地 + 盐田港海运直发 (FCL/LCL DDP)
+ * 2. 硬核工厂指标：海天 90T-1200T 机队、家电件 99.2% 良率、ISO 9001 认证
+ * 3. 视觉规范：全站白底/微灰通透风格，配重工机械黄 (#D97706) Accent 点缀
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n = {
+  en: {
+    badge: "GLOBAL LOGISTICS & FACTORY FOOTPRINT",
+    title: "Direct Export Engineering. Zero Middleman Risks.",
+    subtitle: "Built for OEM partners across North America & Europe. Combining Dongguan heavy tooling capacity with direct Port of Yantian ocean transit.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Genuine Haitian Machine Fleet",
+    metric_2_val: "3-15 Days",
+    metric_2_lbl: "Fast Tooling & T1 Samples",
+    metric_3_val: "99.2%",
+    metric_3_lbl: "Appliance Part Yield Rate",
+    metric_4_val: "Yantian Base",
+    metric_4_lbl: "Direct FCL/LCL DDP Freight",
+    feature_1_title: "Dongguan Injection Base",
+    feature_1_desc: "Operating heavy-duty Haitian machines with automated centralized feeding for stable structural component yields.",
+    feature_2_title: "Yantian Port Ocean Direct",
+    feature_2_desc: "Streamlined FOB / CIF / DDP ocean forwarder contracts with full customs clearance to North American and European ports.",
+    feature_3_title: "ISO & FAI Compliance",
+    feature_3_desc: "Every batch includes Full First Article Inspection (FAI) reports, Material Data Sheets, and ISO 2768-m tolerance audits."
+  },
+  de: {
+    badge: "GLOBALE LOGISTIK & FABRIK-PRÄSENZ",
+    title: "Direktexport ohne Zwischenhändler.",
+    subtitle: "Entwickelt für OEM-Kunden in Europa und Nordamerika. Kombination aus Dongguan-Werkzeugbau und Yantian-Seefracht.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Haitian Maschinenpark",
+    metric_2_val: "3-15 Tage",
+    metric_2_lbl: "Schneller Werkzeugbau & T1",
+    metric_3_val: "99,2%",
+    metric_3_lbl: "Erstausbeute-Quote",
+    metric_4_val: "Yantian Port",
+    metric_4_lbl: "Direkte DDP Seefracht",
+    feature_1_title: "Fertigung Dongguan",
+    feature_1_desc: "Einsatz von Haitian-Spritzgießmaschinen mit zentraler Materialzuführung für höchste Stabilität.",
+    feature_2_title: "Seefracht ab Hafen Yantian",
+    feature_2_desc: "Direkte Containerverschiffung (DDP/FCL) nach Hamburg, Rotterdam und Übersee-Häfen.",
+    feature_3_title: "ISO & FAI Konformität",
+    feature_3_desc: "Jede Lieferung enthält vollständige Erstbemusterungsberichte (EMPB/FAI) und ISO-2768-m Prüfprotokolle."
+  },
+  fr: {
+    badge: "LOGISTIQUE MONDIALE ET EMPREINTE USINE",
+    title: "Exportation Directe Usine. Sans Intermédiaires.",
+    subtitle: "Conçu pour les équipementiers d'Amérique du Nord et d'Europe. Alliance de la capacité de Dongguan et du fret de Yantian.",
+    metric_1_val: "90T - 1200T",
+    metric_1_lbl: "Parc de Machines Haitian",
+    metric_2_val: "3-15 Jours",
+    metric_2_lbl: "Outillage Rapide & Échantillons T1",
+    metric_3_val: "99,2%",
+    metric_3_lbl: "Taux de Rendement Structurel",
+    metric_4_val: "Port de Yantian",
+    metric_4_lbl: "Fret Maritime DDP Direct",
+    feature_1_title: "Base d'Injection de Dongguan",
+    feature_1_desc: "Exploitation de presses Haitian automatisées pour des composants structurels à fort rendement.",
+    feature_2_title: "Fret Maritime Yantian Direct",
+    feature_2_desc: "Contrats d'expédition directe FCL/LCL DDP vers les principaux ports européens et nord-américains.",
+    feature_3_title: "Conformité ISO et FAI",
+    feature_3_desc: "Rapports FAI complets, fiches techniques des matériaux et audits de tolérance ISO 2768-m."
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="bg-slate-50 text-slate-800 py-16 border-b border-slate-200 relative overflow-hidden" id="trust-bar">
+  <!-- 极简网格背景 -->
+  <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [bg-size:24px_24px] opacity-40 pointer-events-none"></div>
+
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    
+    <!-- 头部信任标语 -->
+    <div class="max-w-3xl mb-12" data-aos="fade-up">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="w-6 h-[2px] bg-[#D97706]"></span>
+        <span class="text-[#D97706] font-mono text-[11px] font-extrabold uppercase tracking-[0.25em]">
+          {t.badge}
+        </span>
+      </div>
+      <h2 class="text-[clamp(1.6rem,3vw,2.5rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-slate-900">
+        {t.title}
+      </h2>
+      <p class="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-2xl">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- 核心指标看板 (4 项微灰底白框高质感卡片) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12" data-aos="fade-up" data-aos-delay="100">
+      
+      <div class="bg-white border border-slate-200/80 p-6 rounded-sm shadow-sm relative group hover:border-[#D97706] hover:shadow-md transition-all duration-300">
+        <div class="text-[#D97706] text-[clamp(1.6rem,2.5vw,2.2rem)] font-[1000] font-mono mb-1 tracking-tight">
+          {t.metric_1_val}
+        </div>
+        <div class="text-slate-700 font-mono text-[11px] font-bold uppercase tracking-wider">
+          {t.metric_1_lbl}
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200/80 p-6 rounded-sm shadow-sm relative group hover:border-[#D97706] hover:shadow-md transition-all duration-300">
+        <div class="text-[#D97706] text-[clamp(1.6rem,2.5vw,2.2rem)] font-[1000] font-mono mb-1 tracking-tight">
+          {t.metric_2_val}
+        </div>
+        <div class="text-slate-700 font-mono text-[11px] font-bold uppercase tracking-wider">
+          {t.metric_2_lbl}
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200/80 p-6 rounded-sm shadow-sm relative group hover:border-[#D97706] hover:shadow-md transition-all duration-300">
+        <div class="text-emerald-600 text-[clamp(1.6rem,2.5vw,2.2rem)] font-[1000] font-mono mb-1 tracking-tight">
+          {t.metric_3_val}
+        </div>
+        <div class="text-slate-700 font-mono text-[11px] font-bold uppercase tracking-wider">
+          {t.metric_3_lbl}
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200/80 p-6 rounded-sm shadow-sm relative group hover:border-[#D97706] hover:shadow-md transition-all duration-300">
+        <div class="text-amber-600 text-[clamp(1.6rem,2.5vw,2.2rem)] font-[1000] font-mono mb-1 tracking-tight">
+          {t.metric_4_val}
+        </div>
+        <div class="text-slate-700 font-mono text-[11px] font-bold uppercase tracking-wider">
+          {t.metric_4_lbl}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3 大实体能力支柱 Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200/80" data-aos="fade-up" data-aos-delay="150">
+      
+      <div class="border-l-2 border-[#D97706] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
+          <h3 class="font-bold text-slate-900 uppercase text-xs tracking-wider">{t.feature_1_title}</h3>
+        </div>
+        <p class="text-slate-600 text-[11px] leading-relaxed">
+          {t.feature_1_desc}
+        </p>
+      </div>
+
+      <div class="border-l-2 border-[#D97706] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <h3 class="font-bold text-slate-900 uppercase text-xs tracking-wider">{t.feature_2_title}</h3>
+        </div>
+        <p class="text-slate-600 text-[11px] leading-relaxed">
+          {t.feature_2_desc}
+        </p>
+      </div>
+
+      <div class="border-l-2 border-[#D97706] pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <h3 class="font-bold text-slate-900 uppercase text-xs tracking-wider">{t.feature_3_title}</h3>
+        </div>
+        <p class="text-slate-600 text-[11px] leading-relaxed">
+          {t.feature_3_desc}
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>

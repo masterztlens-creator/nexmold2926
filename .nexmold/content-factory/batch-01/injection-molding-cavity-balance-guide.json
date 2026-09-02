@@ -1,0 +1,103 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-cavity-balance-guide",
+  "targetSlug": "injection-molding-cavity-balance-guide",
+  "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+  "sourceArticleSlug": "multi-cavity-mold-cavity-balance",
+  "sourceArticle": {
+    "slug": "multi-cavity-mold-cavity-balance",
+    "title": "Cavity Balance in Multi-Cavity Injection Molds"
+  },
+  "sourceArtifactHash": "477cbbacd0493a878d808ea5190f20aa299402893760458a8cb79e415f668235",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-cavity-balance-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-cavity-balance-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-cavity-balance-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:multi-cavity-mold-cavity-balance",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#multi-cavity-mold-cavity-balance",
+            "contentHash": "48f564f2c0d24db9762490006d6b4b7a41f50b0a7fb05cc317c6662385a060f3"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-cavity-balance-guide",
+            "claimKey": "v714.whitepaper.injection-molding-cavity-balance-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "477cbbacd0493a878d808ea5190f20aa299402893760458a8cb79e415f668235"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection mold cavity balance: multi-cavity filling, pressure, runner design and quality",
+      "multi-cavity injection mold balance design guide",
+      "multi-cavity injection mold balance DFM",
+      "multi-cavity injection mold balance best practices",
+      "multi-cavity injection mold balance design rules",
+      "multi-cavity injection mold balance engineering guide",
+      "multi-cavity injection mold balance multi-cavity",
+      "multi-cavity injection mold balance runner balance",
+      "multi-cavity injection mold balance hot runner",
+      "multi-cavity injection mold balance cavity pressure",
+      "multi-cavity injection mold balance fill balance",
+      "multi-cavity injection mold balance process capability",
+      "multi-cavity injection mold balance cavity count",
+      "cavity count in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance runner length",
+      "runner length in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance runner diameter",
+      "runner diameter in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance gate restriction",
+      "gate restriction in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance pressure drop",
+      "pressure drop in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance fill time",
+      "fill time in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance temperature balance",
+      "temperature balance in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance cavity-to-cavity variation",
+      "cavity-to-cavity variation in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance cavity imbalance",
+      "how to prevent cavity imbalance in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance weight variation",
+      "how to prevent weight variation in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance fill variation",
+      "how to prevent fill variation in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance dimensional variation",
+      "how to prevent dimensional variation in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance flash",
+      "how to prevent flash in multi-cavity injection mold balance",
+      "multi-cavity injection mold balance short shot",
+      "how to prevent short shot in multi-cavity injection mold balance"
+    ],
+    "relatedTopics": [
+      "injection-molding-gate-location",
+      "injection-molding-cycle-time-optimization-guide"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

@@ -1,0 +1,125 @@
+---
+/**
+ * src/pages/quality.astro
+ * NEXMOLD 质量与合规性主体系页面
+ * 1. 视觉：完美契合首页暗黑工业风（#0B1221）与高对比度工业橙（#F97316） [cite: 21]。
+ * 2. 性能：Astro 6.x 原生极速静态渲染，无冗余 JS。
+ * 3. 商业逻辑：通过 DIN 16742 标准、Mitutoyo CMM、盐田港物流連続性协议实施对大厂的信任压制 [cite: 27, 29, 49]。
+ */
+
+const lang = 'en';
+const location = 'North America & Europe';
+const title = "Quality Assurance & Industrial Compliance | NEXMOLD";
+const description = "Explore NEXMOLD's zero-defect orthographic metrology system. Built on DIN 16742 tolerances, SPI mold classifications, and active South China logistics risk mitigation.";
+
+import MainLayout from '../layouts/MainLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<MainLayout title={title} description={description} lang={lang} location={location}>
+  
+  <Header lang={lang} />
+
+  <main class="bg-[#0B1221] lg:pl-[100px] relative text-white font-sans overflow-hidden">
+    
+    <section class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,8rem)] pt-[clamp(6rem,12vw,14rem)] pb-[clamp(4rem,8vw,8rem)] relative z-10">
+      <div class="border-l-4 border-[#F97316] pl-6 max-w-4xl" data-aos="fade-right">
+        <span class="text-[#F97316] font-mono text-[10px] uppercase tracking-[0.4em]">PROTOCOL: QUALITY_V5_METROLOGY</span>
+        <h1 class="text-[clamp(2.5rem,6vw,6.5rem)] font-[1000] uppercase tracking-tighter leading-[0.85] italic mt-4 mb-6">
+          Zero-Defect<br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/30">Orthographic Metrics</span>
+        </h1>
+        <p class="text-[#94A3B8] text-[clamp(1rem,1.5vw,1.25rem)] font-light leading-relaxed max-w-2xl">
+          At NEXMOLD, quality is not a marketing catchphrase. It is an immutable data chain dictated by <strong class="text-white">DIN 16742 tolerances</strong>, rigid SPI mold classes, and absolute physical telemetry via Mitutoyo CMM. [cite: 27, 29]
+        </p>
+      </div>
+    </section>
+
+    <section class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,8rem)] py-12 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5 border border-white/5">
+        
+        <div class="bg-[#0B1221] p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/5 group transition-all duration-500 hover:bg-white/[0.01]">
+          <span class="text-xs font-mono text-[#F97316] block mb-6">// METRIC_01</span>
+          <h3 class="text-xl font-black uppercase italic tracking-tight mb-4">SPI Class Tooling Standards</h3>
+          <p class="text-[#94A3B8] text-sm font-light leading-relaxed mb-6">
+            We build molds optimized for operational life cycle efficiency. From <strong class="text-white">SPI Class 101</strong> premium production molds utilizing S136-H steel to <strong class="text-white">Class 103</strong> rapid bridge tooling, we strictly control wear vectors. 
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">S136-H PREMIUM</span>
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">SPI_CLASS_101</span>
+          </div>
+        </div>
+
+        <div class="bg-[#0B1221] p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/5 group transition-all duration-500 hover:bg-white/[0.01]">
+          <span class="text-xs font-mono text-[#F97316] block mb-6">// METRIC_02</span>
+          <h3 class="text-xl font-black uppercase italic tracking-tight mb-4">DIN 16742 Plastic Tolerances</h3>
+          <p class="text-[#94A3B8] text-sm font-light leading-relaxed mb-6">
+            Eliminating geometric variance. Our injection molding lines run under strict <strong class="text-white">DIN 16742 precision compliance</strong>, stabilizing critical dimensions to ±0.02mm for multi-cavity fluid-containment appliance parts. 
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">±0.02MM_LIMIT</span>
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">DIN_16742_SOP</span>
+          </div>
+        </div>
+
+        <div class="bg-[#0B1221] p-8 md:p-12 group transition-all duration-500 hover:bg-white/[0.01]">
+          <span class="text-xs font-mono text-[#F97316] block mb-6">// METRIC_03</span>
+          <h3 class="text-xl font-black uppercase italic tracking-tight mb-4">Mitutoyo CMM & AOI Inspection</h3>
+          <p class="text-[#94A3B8] text-sm font-light leading-relaxed mb-6">
+            Defect interception at the machine face. Secondary operations deploy 100% Automated Optical Inspection (AOI) partnered with multi-axis Mitutoyo CMM dimensional verification data logs. 
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">MITUTOYO_CMM</span>
+            <span class="px-2 py-0.5 text-[8px] font-bold border border-white/10 text-white/40 font-mono">100%_AOI_FLOW</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,8rem)] py-16 relative z-10 border-t border-white/5">
+      <h2 class="text-2xl font-black uppercase italic tracking-tight mb-8">Engineering Document Transparency</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        
+        <a href="#" class="border border-white/10 p-6 rounded hover:border-[#F97316] transition-all flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-white/30 block mb-2">METROLOGY_SAMPLE // PDF</span>
+            <h4 class="text-white font-bold group-hover:text-[#F97316] transition-colors">FAI (First Article Inspection) Report</h4>
+          </div>
+          <span class="text-[#F97316] font-mono text-[10px] mt-6 tracking-widest uppercase font-bold">Download Spec Sample ➔</span>
+        </a>
+
+        <a href="#" class="border border-white/10 p-6 rounded hover:border-[#F97316] transition-all flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-white/30 block mb-2">STATISTICAL_QC // PDF</span>
+            <h4 class="text-white font-bold group-hover:text-[#F97316] transition-colors">CPK Process Capability Data Sheet</h4>
+          </div>
+          <span class="text-[#F97316] font-mono text-[10px] mt-6 tracking-widest uppercase font-bold">Download Spec Sample ➔</span>
+        </a>
+
+        <a href="#" class="border border-white/10 p-6 rounded hover:border-[#F97316] transition-all flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-white/30 block mb-2">COMPLIANCE_MTR // PDF</span>
+            <h4 class="text-white font-bold group-hover:text-[#F97316] transition-colors">Material Mill Test Cert & RoHS Tracker</h4>
+          </div>
+          <span class="text-[#F97316] font-mono text-[10px] mt-6 tracking-widest uppercase font-bold">Download Spec Sample ➔</span>
+        </a>
+
+      </div>
+    </section>
+
+    <section class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,8rem)] py-16 mb-16 relative z-10 border-t border-white/5">
+      <div class="bg-gradient-to-r from-[#F97316]/10 to-transparent p-8 rounded-r-xl border-l-4 border-[#F97316]">
+        <span class="text-xs font-mono text-[#F97316] block mb-2">SUPPLY_CHAIN_CONTINUITY_PROTOCOL</span>
+        <h3 class="text-2xl font-black uppercase italic tracking-tight mb-4 text-white">Active Ocean Freight Risk Mitigation</h3>
+        <p class="text-white/70 text-sm leading-relaxed max-w-4xl">
+          We deeply integrate our South China production directly with major logistics corridors, primarily operating through the <strong class="text-white">Port of Yantian (Shenzhen)</strong>. Unlike digital brokers who hide transit realities, NEXMOLD deploys active forwarder data checking. In the event of confirmed container ship vessel delays, our risk-mitigation protocol automatically secondary-routes capacity via rapid bridge tooling reserves or selective air-freight diversions to eliminate inventory shock for our North American partners. 
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <Footer lang={lang} />
+</MainLayout>

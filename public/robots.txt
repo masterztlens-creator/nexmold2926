@@ -1,0 +1,19 @@
+# NEXMOLD Global Search Engine & AI Crawler Directives
+User-agent: *
+Allow: /
+
+# GEO & AI Search Indexing Optimization
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap Location
+Sitemap: https://nexmold.pages.dev/sitemap.xml

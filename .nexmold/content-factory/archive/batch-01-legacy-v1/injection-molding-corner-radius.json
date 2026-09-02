@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-corner-radius",
+  "targetSlug": "injection-molding-corner-radius",
+  "sourceArticleSlug": "plastic-corner-radii",
+  "slug": "injection-molding-corner-radius",
+  "lineage": {
+    "pageId": "v714:injection-molding-corner-radius",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-corner-radius/",
+    "evidenceIds": [
+      "knowledge:plastic-corner-radii"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-corner-radius"
+    ],
+    "sourceArtifactHash": "e13cc3a22a14a3d049c2c0b08b5dce9449859ac86b6605da6a03c041793a2fe9"
+  },
+  "sourceArtifactHash": "e13cc3a22a14a3d049c2c0b08b5dce9449859ac86b6605da6a03c041793a2fe9",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-corner-radius",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-corner-radius/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-corner-radius",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:plastic-corner-radii",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#plastic-corner-radii",
+            "contentHash": "plastic-corner-radii:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-corner-radius",
+            "claimKey": "batch01.injection-molding-corner-radius"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "e13cc3a22a14a3d049c2c0b08b5dce9449859ac86b6605da6a03c041793a2fe9"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

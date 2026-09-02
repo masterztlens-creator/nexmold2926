@@ -1,0 +1,121 @@
+---
+/**
+ * GlobalPresence.astro - 媲美 RapidDirect 的顶级简洁版 (引用本地 world-map.svg)
+ * 1. 结构：完全依靠 public/images/world-map.svg 作为纯灰阶透明背景
+ * 2. 排版：绝不折行，高对比大字号工业数据
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    title: "YOUR TRUSTED INJECTION MOLDING PARTNER IN CHINA",
+    subtitle: "High-yield automated production with seamless global ocean & air DDP logistics to US & EU.",
+    m1_val: "99.2%+",
+    m1_label: "Mass Production Yield",
+    m2_val: "3 - 15 Days",
+    m2_label: "Rapid T1 Tooling Sampling",
+    m3_val: "50+",
+    m3_label: "Precision Injection Fleet",
+    m4_val: "DDP Freight",
+    m4_label: "Direct Door Delivery (US/EU)"
+  },
+  de: {
+    title: "IHR ZUVERLÄSSIGER SPRITZGUSS-PARTNER IN CHINA",
+    subtitle: "Automatisierte Fertigung mit nahtloser DDP-Logistik nach Nordamerika und Europa.",
+    m1_val: "99,2%+",
+    m1_label: "Serienproduktions-Ausbeute",
+    m2_val: "3 - 15 Tage",
+    m2_label: "Schnelle T1-Bemusterung",
+    m3_val: "50+",
+    m3_label: "Präzisions-Spritzgussmaschinen",
+    m4_val: "DDP-Logistik",
+    m4_label: "Direktlieferung (USA/EU)"
+  },
+  fr: {
+    title: "VOTRE PARTENAIRE DE MOULAGE PAR INJECTION EN CHINE",
+    subtitle: "Production automatisée à haut rendement avec logistique DDP directe vers l'UE et les USA.",
+    m1_val: "99,2%+",
+    m1_label: "Taux de Rendement",
+    m2_val: "3 - 15 Jours",
+    m2_label: "Échantillonnage T1 Rapide",
+    m3_val: "50+",
+    m3_label: "Parc d'Injection de Précision",
+    m4_val: "Logistique DDP",
+    m4_label: "Livraison Directe Porte-à-Porte"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="bg-white py-24 border-b border-[#0F2B5B]/15 relative overflow-hidden select-none">
+  
+  <!-- 🗺️ 本地高精世界地图背景 (透明度 12%，极具高级感) -->
+  <div 
+    class="absolute inset-0 w-full h-full bg-[url('/images/world-map.svg')] bg-center bg-no-repeat bg-contain opacity-12 pointer-events-none"
+  ></div>
+
+  <div class="max-w-[1300px] mx-auto px-6 relative z-10">
+    
+    <!-- 🎯 1. 居中主标题 -->
+    <div class="max-w-3xl mx-auto text-center mb-16">
+      <h2 class="text-2xl sm:text-3xl font-[1000] tracking-tight text-[#0F2B5B] uppercase italic mb-3">
+        {t.title}
+      </h2>
+      <p class="text-xs sm:text-sm text-[#0F2B5B]/75 font-sans font-medium leading-relaxed max-w-xl mx-auto">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- 📊 2. 4 列高对比数据 (whitespace-nowrap 锁定单行，绝不折行错位) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 items-center border-t border-[#0F2B5B]/10 pt-12 text-center">
+      
+      <!-- 数据 1 -->
+      <div class="flex flex-col items-center">
+        <span class="font-sans text-3xl sm:text-4xl lg:text-5xl font-[1000] text-[#EA580C] tracking-tight whitespace-nowrap mb-2 leading-none">
+          {t.m1_val}
+        </span>
+        <span class="font-mono text-[10px] sm:text-[11px] font-extrabold text-[#0F2B5B] uppercase tracking-wider whitespace-nowrap">
+          {t.m1_label}
+        </span>
+      </div>
+
+      <!-- 数据 2 -->
+      <div class="flex flex-col items-center">
+        <span class="font-sans text-3xl sm:text-4xl lg:text-5xl font-[1000] text-[#0F2B5B] tracking-tight whitespace-nowrap mb-2 leading-none">
+          {t.m2_val}
+        </span>
+        <span class="font-mono text-[10px] sm:text-[11px] font-extrabold text-[#0F2B5B] uppercase tracking-wider whitespace-nowrap">
+          {t.m2_label}
+        </span>
+      </div>
+
+      <!-- 数据 3 -->
+      <div class="flex flex-col items-center">
+        <span class="font-sans text-3xl sm:text-4xl lg:text-5xl font-[1000] text-[#0F2B5B] tracking-tight whitespace-nowrap mb-2 leading-none">
+          {t.m3_val}
+        </span>
+        <span class="font-mono text-[10px] sm:text-[11px] font-extrabold text-[#0F2B5B] uppercase tracking-wider whitespace-nowrap">
+          {t.m3_label}
+        </span>
+      </div>
+
+      <!-- 数据 4 -->
+      <div class="flex flex-col items-center">
+        <span class="font-sans text-3xl sm:text-4xl lg:text-5xl font-[1000] text-[#EA580C] tracking-tight whitespace-nowrap mb-2 leading-none">
+          {t.m4_val}
+        </span>
+        <span class="font-mono text-[10px] sm:text-[11px] font-extrabold text-[#0F2B5B] uppercase tracking-wider whitespace-nowrap">
+          {t.m4_label}
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+</section>

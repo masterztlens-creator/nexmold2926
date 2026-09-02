@@ -1,0 +1,414 @@
+---
+/**
+ * TrustAndRFQ.astro - 第八屏：终极 RFQ 询盘底座 (暗光悬浮控制台 - 极致醒目版)
+ * 1. 背景：深蓝暗光工程图纸底座 (#081735) + 极细 3D 网格 + 居中橙光烘托
+ * 2. 主体：纯白悬浮高对比控制台卡片 + 巨幅 3D CAD 拖拽磁吸框
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "NEXDESK™ DIGITAL PORTAL // 24H DFM & QUOTE",
+    title: "READY TO START YOUR PROJECT?",
+    subtitle: "Upload your 3D CAD files (.STEP, .IGES, .X_T) for an instant, confidential DFM engineering review and direct-factory quotation.",
+    
+    tag1: "🔒 100% STRICT NDA ENCRYPTED",
+    tag2: "📐 ISO 2768-m ZEISS CMM CONTROL",
+    tag3: "⚡ 24-HOUR DFM DISPATCH",
+
+    form_title: "3D CAD UPLOAD & RFQ CONSOLE",
+    f_name: "FULL NAME *",
+    f_email: "WORK EMAIL *",
+    f_company: "COMPANY NAME",
+    f_material: "PREFERRED RESIN / MATERIAL",
+    f_quantity: "ESTIMATED QUANTITY",
+    f_upload_title: "DRAG & DROP 3D CAD FILE HERE, OR CLICK TO BROWSE",
+    f_upload_sub: "Strictly encrypted. Supports .STEP, .STP, .IGES, .X_T, .SLDPRT, .ZIP (Max 10MB)",
+    f_btn: "SUBMIT CAD FOR FREE DFM REVIEW →",
+    f_submitting: "SENDING CAD & RFQ TO INBOX...",
+    f_success_title: "✓ CAD & RFQ SUBMITTED SUCCESSFULLY!",
+    f_success_desc: "Thank you! Our engineering team has safely received your 3D CAD file. We will review your DFM and send a formal quotation within 24 hours.",
+    f_security: "🔒 256-Bit Military Grade Encryption • ISO 27001 & NDA Compliant"
+  },
+  de: {
+    badge: "NEXDESK™ DIGITAL PORTAL // 24H DFM & ANGEBOT",
+    title: "BEREIT FÜR IHR PROJEKT?",
+    subtitle: "Laden Sie Ihre 3D-CAD-Dateien (.STEP, .IGES, .X_T) für eine vertrauliche DFM-Prüfung und ein Angebot hoch.",
+    
+    tag1: "🔒 100% STRICKTE NDA VERSCHLÜSSELT",
+    tag2: "📐 ISO 2768-m ZEISS CMM KONTROLLE",
+    tag3: "⚡ 24-STUNDEN DFM ANTWORT",
+
+    form_title: "3D-CAD-UPLOAD & ANGEBOTS-KONSOLE",
+    f_name: "VOLLSTÄNDIGER NAME *",
+    f_email: "GESCHÄFTLICHE E-MAIL *",
+    f_company: "FIRMENNAME",
+    f_material: "BEVORZUGTER KUNSTSTOFF",
+    f_quantity: "GESCHÄTZTE STÜCKZAHL",
+    f_upload_title: "3D-CAD-DATEI HIERHER ZIEHEN ODER DURCHSUCHEN",
+    f_upload_sub: "Streng verschlüsselt. Unterstützt .STEP, .STP, .IGES, .X_T, .SLDPRT, .ZIP",
+    f_btn: "CAD FÜR KOSTENLOSES DFM EINREICHEN →",
+    f_submitting: "WIRD GESENDET...",
+    f_success_title: "✓ CAD & ANFRAGE ERFOLGREICH OVERMITTELT!",
+    f_success_desc: "Vielen Dank! Unser Ingenieurteam hat Ihre CAD-Datei erhalten. Wir senden Ihnen innerhalb von 24 Stunden ein Angebot.",
+    f_security: "🔒 256-Bit-Verschlüsselung • ISO 27001 & NDA-konform"
+  },
+  fr: {
+    badge: "PORTAIL NUMÉRIQUE NEXDESK™ // DFM ET DEVIS EN 24H",
+    title: "PRÊT À DÉMARRER VOTRE PROJET ?",
+    subtitle: "Téléchargez vos fichiers CAD 3D (.STEP, .IGES, .X_T) pour une étude DFM confidentielle et un devis direct usine.",
+    
+    tag1: "🔒 NDA 100% STRICT CHIFFRÉ",
+    tag2: "📐 CONTRÔLE CMM ZEISS ISO 2768-m",
+    tag3: "⚡ RÉPONSE DFM EN 24 HEURES",
+
+    form_title: "CONSOLE DE DÉPÔT CAD 3D & DEVIS",
+    f_name: "NOM COMPLET *",
+    f_email: "E-MAIL PROFESSIONNEL *",
+    f_company: "NOM DE L'ENTREPRISE",
+    f_material: "MATÉRIAU SOUHAITÉ",
+    f_quantity: "QUANTITÉ ESTIMÉE",
+    f_upload_title: "GLISSER-DÉPOSER LE FICHIER CAD 3D ICI, OU PARCOURIR",
+    f_upload_sub: "Strictement chiffré. Formats .STEP, .STP, .IGES, .X_T, .SLDPRT, .ZIP",
+    f_btn: "ENVOYER CAD POUR ÉTUDE DFM GRATUITE →",
+    f_submitting: "ENVOI EN COURS...",
+    f_success_title: "✓ CAD ET DEMANDE ENVOYÉS AVEC SUCCÈS !",
+    f_success_desc: "Merci ! Notre équipe a bien reçu votre fichier CAD 3D. Nous vous enverrons un devis sous 24 heures.",
+    f_security: "🔒 Chiffrement 256 bits • Conforme ISO 27001 & NDA"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<!-- 💡 深蓝暗光工程底座 (#081735) -->
+<section class="bg-[#081735] text-white py-28 relative overflow-hidden select-none" id="rfq">
+  
+  <!-- 📐 背景 1：高对比 CAD 极细蓝色网格 -->
+  <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e3a8a25_1px,transparent_1px),linear-gradient(to_bottom,#1e3a8a25_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+
+  <!-- 🌟 背景 2：中央工业橙与荧光蓝强效聚光晕 (Focused Spotlight) -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-[#0F2B5B] via-[#EA580C]/15 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
+
+  <div class="max-w-[1100px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    
+    <!-- 🎯 1. 居中大标题区 -->
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 bg-[#EA580C]/10 border border-[#EA580C]/30 px-3.5 py-1 rounded-full mb-4 backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-pulse"></span>
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.2em]">
+          {t.badge}
+        </span>
+      </div>
+
+      <h2 class="text-[clamp(2.4rem,4.2vw,3.6rem)] font-[1000] tracking-tight uppercase italic leading-tight mb-4 text-white drop-shadow-md">
+        {t.title}
+      </h2>
+
+      <p class="text-white/70 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl mx-auto font-sans mb-8">
+        {t.subtitle}
+      </p>
+
+      <!-- 顶端 3 大极细技术标尺 -->
+      <div class="inline-flex flex-wrap items-center justify-center gap-4 sm:gap-8 border border-white/10 bg-white/5 backdrop-blur-md px-8 py-3 rounded-full shadow-2xl">
+        <span class="font-mono text-[11px] font-bold text-white/90 tracking-wider flex items-center gap-1.5">
+          {t.tag1}
+        </span>
+        <span class="text-white/20 hidden sm:inline">•</span>
+        <span class="font-mono text-[11px] font-bold text-white/90 tracking-wider flex items-center gap-1.5">
+          {t.tag2}
+        </span>
+        <span class="text-white/20 hidden sm:inline">•</span>
+        <span class="font-mono text-[11px] font-bold text-[#EA580C] tracking-wider flex items-center gap-1.5">
+          {t.tag3}
+        </span>
+      </div>
+    </div>
+
+    <!-- 📝 2. 悬浮极纯白高光控制台卡片 -->
+    <div class="bg-white text-[#0F2B5B] border-2 border-white/20 rounded-xs p-8 sm:p-14 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] relative">
+      
+      <!-- 控制台顶部 Status Bar -->
+      <div class="flex items-center justify-between mb-8 pb-5 border-b-2 border-[#0F2B5B]/10">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 bg-[#EA580C] rounded-xs"></span>
+          <h3 class="text-base sm:text-xl font-[1000] uppercase italic tracking-tight text-[#0F2B5B]">
+            {t.form_title}
+          </h3>
+        </div>
+        <span class="font-mono text-[10px] font-black text-[#EA580C] bg-[#EA580C]/10 px-3 py-1.5 rounded-xs uppercase tracking-widest border border-[#EA580C]/20">
+          SYSTEM ACTIVE
+        </span>
+      </div>
+
+      <!-- 成功发送提示卡片 (默认隐藏) -->
+      <div id="form-success-msg" class="hidden bg-[#EA580C]/10 border-2 border-[#EA580C] p-8 rounded-xs text-center my-6">
+        <h4 class="font-black text-[#EA580C] text-xl uppercase italic mb-2">
+          {t.f_success_title}
+        </h4>
+        <p class="text-[#0F2B5B] text-xs sm:text-sm font-sans leading-relaxed max-w-md mx-auto font-medium">
+          {t.f_success_desc}
+        </p>
+      </div>
+
+      <!-- 表单主体 -->
+      <form id="rfq-form" class="space-y-6">
+        
+        <!-- 姓名与邮箱 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+              {t.f_name}
+            </label>
+            <input 
+              type="text" 
+              name="from_name" 
+              required 
+              placeholder="e.g. Alex Wright"
+              class="w-full bg-[#0F2B5B]/[0.03] border-2 border-[#0F2B5B]/20 rounded-xs px-4 py-3.5 text-xs font-sans font-medium text-[#0F2B5B] focus:border-[#EA580C] focus:bg-white focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          <div>
+            <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+              {t.f_email}
+            </label>
+            <input 
+              type="email" 
+              name="reply_to" 
+              required 
+              placeholder="alex@company.com"
+              class="w-full bg-[#0F2B5B]/[0.03] border-2 border-[#0F2B5B]/20 rounded-xs px-4 py-3.5 text-xs font-sans font-medium text-[#0F2B5B] focus:border-[#EA580C] focus:bg-white focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+        </div>
+
+        <!-- 公司与材料选择 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+              {t.f_company}
+            </label>
+            <input 
+              type="text" 
+              name="company" 
+              placeholder="e.g. NexDynamics Inc."
+              class="w-full bg-[#0F2B5B]/[0.03] border-2 border-[#0F2B5B]/20 rounded-xs px-4 py-3.5 text-xs font-sans font-medium text-[#0F2B5B] focus:border-[#EA580C] focus:bg-white focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          <div>
+            <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+              {t.f_material}
+            </label>
+            <input 
+              type="text" 
+              name="material" 
+              placeholder="e.g. ABS, PC, PA66+30%GF, PEEK"
+              class="w-full bg-[#0F2B5B]/[0.03] border-2 border-[#0F2B5B]/20 rounded-xs px-4 py-3.5 text-xs font-sans font-medium text-[#0F2B5B] focus:border-[#EA580C] focus:bg-white focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+        </div>
+
+        <!-- 估算数量 -->
+        <div>
+          <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+            {t.f_quantity}
+          </label>
+          <input 
+            type="text" 
+            name="quantity" 
+            placeholder="e.g. 500 pcs (Prototype) or 50,000 pcs (Mass Production)"
+            class="w-full bg-[#0F2B5B]/[0.03] border-2 border-[#0F2B5B]/20 rounded-xs px-4 py-3.5 text-xs font-sans font-medium text-[#0F2B5B] focus:border-[#EA580C] focus:bg-white focus:outline-none transition-all shadow-inner"
+          />
+        </div>
+
+        <!-- 📁 巨幅 3D CAD 文件拖拽“磁吸”框 -->
+        <div>
+          <label class="block font-mono text-[11px] font-black uppercase text-[#0F2B5B] mb-2 tracking-wide">
+            ATTACH 3D CAD FILE (STEP, IGES, X_T)
+          </label>
+          
+          <label 
+            id="drop-zone"
+            class="border-3 border-dashed border-[#0F2B5B]/25 hover:border-[#EA580C] rounded-xs p-10 text-center cursor-pointer bg-[#0F2B5B]/[0.015] hover:bg-[#EA580C]/[0.02] transition-all block relative group shadow-inner"
+          >
+            <input 
+              type="file" 
+              id="cad-file-input" 
+              accept=".step,.stp,.iges,.igs,.x_t,.sldprt,.zip,.rar" 
+              class="hidden" 
+            />
+
+            <!-- 动态上传图标 -->
+            <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-[#0F2B5B]/5 group-hover:bg-[#EA580C] flex items-center justify-center transition-all duration-300">
+              <svg class="w-7 h-7 text-[#0F2B5B] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+
+            <p class="font-mono text-xs sm:text-sm font-black text-[#0F2B5B] uppercase tracking-wide" id="file-title">
+              {t.f_upload_title}
+            </p>
+
+            <p class="font-sans text-[11px] text-[#0F2B5B]/60 mt-1.5 font-medium" id="file-sub">
+              {t.f_upload_sub}
+            </p>
+          </label>
+        </div>
+
+        <!-- 高亮橙色提交按钮 -->
+        <div class="pt-4">
+          <button 
+            type="submit"
+            id="submit-btn"
+            class="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-sm font-black py-4 rounded-xs uppercase tracking-widest transition-all shadow-lg shadow-[#EA580C]/30 hover:shadow-xl hover:shadow-[#EA580C]/40 cursor-pointer active:scale-[0.99]"
+          >
+            {t.f_btn}
+          </button>
+          
+          <p class="text-center font-mono text-[10px] text-[#0F2B5B]/50 mt-3 font-bold">
+            {t.f_security}
+          </p>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- 引入 EmailJS SDK -->
+<script is:inline src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<script>
+  declare const emailjs: any;
+
+  function initRFQForm() {
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init("YOUR_PUBLIC_KEY");
+    }
+
+    const form = document.getElementById('rfq-form') as HTMLFormElement;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    const successMsg = document.getElementById('form-success-msg');
+    const fileInput = document.getElementById('cad-file-input') as HTMLInputElement;
+    const dropZone = document.getElementById('drop-zone');
+    const fileTitle = document.getElementById('file-title');
+    const fileSub = document.getElementById('file-sub');
+
+    if (!form || !fileInput || !dropZone || !fileTitle || !fileSub) return;
+
+    let selectedFile: File | null = null;
+
+    const updateFileDisplay = (files: FileList | null) => {
+      if (files && files.length > 0) {
+        selectedFile = files[0];
+        const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+        fileTitle.textContent = `SELECTED: ${selectedFile.name}`;
+        fileTitle.style.color = '#EA580C';
+        fileSub.textContent = `File Size: ${fileSizeMB} MB • Ready for encrypted submission`;
+        dropZone.style.borderColor = '#EA580C';
+        dropZone.style.backgroundColor = 'rgba(234, 88, 12, 0.05)';
+      }
+    };
+
+    fileInput.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      updateFileDisplay(target.files);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#EA580C';
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (eventName === 'dragleave') {
+          dropZone.style.borderColor = '';
+        }
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e: DragEvent) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files.length > 0) {
+        fileInput.files = dt.files;
+        updateFileDisplay(dt.files);
+      }
+    }, false);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.textContent = 'SENDING CAD & RFQ TO INBOX...';
+      submitBtn.style.opacity = '0.7';
+
+      try {
+        let attachmentBase64 = '';
+        
+        if (selectedFile) {
+          attachmentBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(selectedFile!);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+          });
+        }
+
+        const templateParams = {
+          from_name: (form.querySelector('[name="from_name"]') as HTMLInputElement).value,
+          reply_to: (form.querySelector('[name="reply_to"]') as HTMLInputElement).value,
+          company: (form.querySelector('[name="company"]') as HTMLInputElement).value,
+          material: (form.querySelector('[name="material"]') as HTMLInputElement).value,
+          quantity: (form.querySelector('[name="quantity"]') as HTMLInputElement).value,
+          file_name: selectedFile ? selectedFile.name : 'No file attached',
+          content: attachmentBase64
+        };
+
+        await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+
+        form.reset();
+        form.classList.add('hidden');
+        if (successMsg) successMsg.classList.remove('hidden');
+
+      } catch (error) {
+        console.error('EmailJS Error:', error);
+        alert('Submission error. Please send your CAD file directly to our quote email.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        submitBtn.style.opacity = '1';
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initRFQForm);
+  document.addEventListener('astro:after-swap', initRFQForm);
+</script>
+
+<!-- 💬 全局挂载 Crisp 在线客服 SDK -->
+<script is:inline>
+  window.$crisp = [];
+  window.CRISP_WEBSITE_ID = "YOUR_CRISP_WEBSITE_ID";
+  (function() {
+    var d = document;
+    var s = d.createElement("script");
+    s.src = "https://client.crisp.chat/l.js";
+    s.async = 1;
+    d.getElementsByTagName("head")[0].appendChild(s);
+  })();
+</script>

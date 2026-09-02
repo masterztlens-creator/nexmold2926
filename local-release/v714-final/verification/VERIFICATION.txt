@@ -1,0 +1,33 @@
+V7.14 DOWNSTREAM AUDIT VERIFICATION
+
+Baseline: nexmold(1).zip uploaded to the project library on 2026-09-01.
+
+Audited:
+- src/pages/industries/v714/index.astro
+- src/pages/industries/v714/[slug].astro
+- src/regional/v714-runtime-publication-gate.ts
+- src/regional/publication-gate.ts
+- src/regional/epistemic-firewall.ts
+- src/regional/types.ts
+
+Findings fixed:
+1. index.astro pointed at batch-01-v2 while the production factory writes batch-01-v3.
+2. index.astro used a separate weaker publication-artifact validator instead of the canonical runtime gate.
+3. Runtime firewall validation expected reasonCodes on a successful firewall result. The actual V714FirewallPass is { ok: true, checkedClaims, checkedEvidence }.
+4. Report slug and targetSlug checks were coupled with AND logic; they are now independent fail-closed checks.
+5. Persisted Article Contract identity/lineage is now validated against the artifact before Astro projection is authorized.
+
+Verification results:
+- scripts/v714-article-factory.mjs: node --check PASS.
+- Runtime gate: 20/20 real batch-01-v3 artifacts PASS.
+- Negative firewall-shape test: PASS (blocked).
+- Negative targetSlug mismatch test: PASS (blocked).
+- Negative Article Contract lineage tamper test: PASS (blocked).
+- Existing [slug].astro already re-runs runRuntimePublicationGate during getStaticPaths and page projection; no direct page-source change was necessary.
+
+Environment limitation:
+The uploaded source ZIP contains package-lock.json but no installed node_modules. npm ci did not finish in the isolated audit environment, so a full Astro check/build could not be completed there. The final local validation commands remain:
+  npx astro check
+  npm run build
+
+Do not change the Publication Gate to force approval. The fix aligns the consumer with the actual V7.14 contracts and keeps fail-closed behavior.

@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-weld-lines-causes-solutions",
+  "targetSlug": "injection-molding-weld-lines-causes-solutions",
+  "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+  "sourceArticleSlug": "weld-lines-knit-lines",
+  "sourceArticle": {
+    "slug": "weld-lines-knit-lines",
+    "title": "Weld Lines and Knit Lines in Injection Molding"
+  },
+  "sourceArtifactHash": "c0c6686e7872378d09e25120434f3687bc70877edae45a695ba24c61d12dc905",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-weld-lines-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-weld-lines-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-weld-lines-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:weld-lines-knit-lines",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#weld-lines-knit-lines",
+            "contentHash": "ffbd5eb43989a9c456887c25d19230d2c9ec58f25b64d3ee712646c476217a8b"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-weld-lines-causes-solutions",
+            "claimKey": "v714.whitepaper.injection-molding-weld-lines-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "c0c6686e7872378d09e25120434f3687bc70877edae45a695ba24c61d12dc905"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding weld lines: flow front physics, strength, appearance and prevention",
+      "injection molding weld lines design guide",
+      "injection molding weld lines DFM",
+      "injection molding weld lines best practices",
+      "injection molding weld lines design rules",
+      "injection molding weld lines engineering guide",
+      "injection molding weld lines causes",
+      "injection molding weld lines solutions",
+      "injection molding weld lines strength",
+      "injection molding weld lines appearance",
+      "injection molding weld lines prevention",
+      "injection molding weld lines moldflow",
+      "injection molding weld lines venting",
+      "injection molding weld lines flow-front temperature",
+      "flow-front temperature in injection molding weld lines",
+      "injection molding weld lines gate location",
+      "gate location in injection molding weld lines",
+      "injection molding weld lines flow path",
+      "flow path in injection molding weld lines",
+      "venting in injection molding weld lines",
+      "injection molding weld lines injection speed",
+      "injection speed in injection molding weld lines",
+      "injection molding weld lines mold temperature",
+      "mold temperature in injection molding weld lines",
+      "injection molding weld lines material chemistry",
+      "material chemistry in injection molding weld lines",
+      "injection molding weld lines fiber orientation",
+      "fiber orientation in injection molding weld lines",
+      "injection molding weld lines reduced weld strength",
+      "how to prevent reduced weld strength in injection molding weld lines",
+      "injection molding weld lines visible weld lines",
+      "how to prevent visible weld lines in injection molding weld lines",
+      "injection molding weld lines burn marks",
+      "how to prevent burn marks in injection molding weld lines",
+      "injection molding weld lines short shots",
+      "how to prevent short shots in injection molding weld lines",
+      "injection molding weld lines surface defects",
+      "how to prevent surface defects in injection molding weld lines"
+    ],
+    "relatedTopics": [
+      "injection-molding-gate-location",
+      "injection-molding-parting-line-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

@@ -1,0 +1,198 @@
+---
+/**
+ * LeadModal.astro - 钛白高奢 B2B 智能工程询盘弹窗 (完全修复版)
+ * 1. 彻底修复：补充 CAD 文件上传控件，修正高奢纯白背景 (#FFFFFF)
+ * 2. 体验升级：移除 5 秒流氓打扰弹窗，改为买家主动点击唤醒 / 离开页面 (Exit Intent) 唤醒
+ * 3. 智能捕获：自动识别长尾落地页 Material 与 Industry 属性
+ */
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    title: "Request Expert 24H DFM & Quote",
+    subtitle: "Upload your CAD files (.step, .stp, .igs). Our tooling engineers will execute a manual evaluation within 24 hours.",
+    submit: "Submit Engineering Requirements →",
+    placeholder_msg: "Please describe specific tolerance requirements, surface finishes, or target annual volume estimations...",
+    target_label: "Target Context:"
+  },
+  de: {
+    title: "Experten-DFM & Angebot anfordern",
+    subtitle: "Laden Sie Ihre CAD-Dateien (.step, .stp, .igs) hoch. Unsere Werkzeugtechniker führen innerhalb von 24 Stunden eine Auswertung durch.",
+    submit: "Technische Anforderungen einreichen →",
+    placeholder_msg: "Bitte beschreiben Sie spezifische Toleranzanforderungen, Oberflächenausführungen oder geschätzte Jahresmengen...",
+    target_label: "Ziel-Kontext:"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<div 
+  id="lead-modal-container" 
+  class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#0F2B5B]/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 select-none"
+  aria-hidden="true"
+>
+  <div 
+    id="lead-modal-box" 
+    class="relative w-full max-w-2xl bg-white text-[#0F2B5B] border-t-4 border-[#EA580C] p-6 sm:p-8 rounded-2xl shadow-2xl transform scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto"
+  >
+    
+    <!-- 关闭按钮 -->
+    <button 
+      id="lead-modal-close" 
+      class="absolute top-4 right-4 text-[#0F2B5B]/50 hover:text-[#EA580C] transition-colors p-2 font-mono text-xs uppercase tracking-widest bg-transparent border-none cursor-pointer"
+      aria-label="Close Modal"
+    >
+      Close ✕
+    </button>
+
+    <div class="mb-6">
+      <div class="font-mono text-[#EA580C] text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+        DIRECT ENGINEERING EVALUATION
+      </div>
+      
+      <h3 class="text-xl sm:text-2xl font-[1000] font-sans text-[#0F2B5B] uppercase italic tracking-tight">
+        {t.title}
+      </h3>
+      
+      <div id="modal-context-badge" class="mt-2 hidden text-xs font-mono text-[#EA580C] bg-[#EA580C]/10 px-3 py-1 rounded-xs border border-[#EA580C]/20 max-w-fit">
+        {t.target_label} <span id="ctx-material" class="font-black underline"></span> for <span id="ctx-industry" class="font-black underline"></span>
+      </div>
+
+      <p class="text-[#0F2B5B]/70 text-xs sm:text-sm mt-2 leading-relaxed font-sans font-bold">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <form id="lead-form" action="https://api.web3forms.com/submit" method="POST" enctype="multipart/form-data" class="space-y-4 font-mono">
+      
+      <!-- ⚠️ 请在此处替换为您真实注册申请的 Web3Forms Access Key -->
+      <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_KEY_HERE" />
+      
+      <input type="hidden" id="hidden-material" name="captured_material" value="General" />
+      <input type="hidden" id="hidden-industry" name="captured_industry" value="General" />
+      <input type="hidden" name="subject" id="form-subject" value="New NEXMOLD RFQ Sourcing Inquiry" />
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[10px] font-black uppercase text-[#0F2B5B]/70 tracking-wider mb-1">Full Name *</label>
+          <input type="text" name="name" required placeholder="John Doe" class="w-full bg-[#FAFAFA] border border-[#0F2B5B]/20 rounded-md px-3 py-2.5 text-xs text-[#0F2B5B] placeholder:text-[#0F2B5B]/30 focus:border-[#EA580C] focus:outline-none transition-colors" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-black uppercase text-[#0F2B5B]/70 tracking-wider mb-1">Work Email *</label>
+          <input type="email" name="email" required placeholder="john@company.com" class="w-full bg-[#FAFAFA] border border-[#0F2B5B]/20 rounded-md px-3 py-2.5 text-xs text-[#0F2B5B] placeholder:text-[#0F2B5B]/30 focus:border-[#EA580C] focus:outline-none transition-colors" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-black uppercase text-[#0F2B5B]/70 tracking-wider mb-1">Company Name & Target Market</label>
+        <input type="text" name="company" placeholder="e.g. Bosch / Automotive OEM (US/EU)" class="w-full bg-[#FAFAFA] border border-[#0F2B5B]/20 rounded-md px-3 py-2.5 text-xs text-[#0F2B5B] placeholder:text-[#0F2B5B]/30 focus:border-[#EA580C] focus:outline-none transition-colors" />
+      </div>
+
+      <!-- 补齐缺失的 3D CAD 图纸文件上传框 -->
+      <div>
+        <label class="block text-[10px] font-black uppercase text-[#EA580C] tracking-wider mb-1">Attach 3D CAD File (.STEP, .STP, .IGS, .ZIP)</label>
+        <input type="file" name="attachment" accept=".step,.stp,.igs,.x_t,.prt,.sldprt,.zip" class="w-full bg-[#FAFAFA] border border-[#0F2B5B]/20 rounded-md px-3 py-2 text-xs text-[#0F2B5B] file:mr-4 file:py-1 file:px-3 file:rounded-xs file:border-0 file:text-xs file:font-mono file:font-black file:bg-[#0F2B5B] file:text-white hover:file:bg-[#EA580C] file:transition-colors cursor-pointer" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-black uppercase text-[#0F2B5B]/70 tracking-wider mb-1">Engineering Requirements</label>
+        <textarea name="message" rows="3" placeholder={t.placeholder_msg} class="w-full bg-[#FAFAFA] border border-[#0F2B5B]/20 rounded-md px-3 py-2.5 text-xs text-[#0F2B5B] placeholder:text-[#0F2B5B]/30 focus:border-[#EA580C] focus:outline-none transition-colors resize-none font-sans font-bold"></textarea>
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full bg-[#EA580C] hover:bg-[#d94e05] text-white text-xs font-black tracking-widest uppercase py-4 rounded-full transition-all duration-300 shadow-lg cursor-pointer border border-white/20"
+      >
+        {t.submit}
+      </button>
+
+      <div class="text-center text-[10px] text-[#0F2B5B]/50 font-bold pt-1">
+        🔒 Strict Bilateral NDA Enforced. Your Intellectual Property is 100% Secure.
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  function setupLeadModal() {
+    const container = document.getElementById('lead-modal-container');
+    const box = document.getElementById('lead-modal-box');
+    const closeBtn = document.getElementById('lead-modal-close');
+    
+    const badge = document.getElementById('modal-context-badge');
+    const ctxMat = document.getElementById('ctx-material');
+    const ctxInd = document.getElementById('ctx-industry');
+    const hidMat = document.getElementById('hidden-material') as HTMLInputElement;
+    const hidInd = document.getElementById('hidden-industry') as HTMLInputElement;
+    const formSubject = document.getElementById('form-subject') as HTMLInputElement;
+
+    if (!container || !box || !closeBtn) return;
+
+    const captureContext = () => {
+      const path = window.location.pathname;
+      const segments = path.split('/').filter(Boolean);
+
+      if (segments.length === 2) {
+        const materialRaw = segments[0];
+        const industryRaw = segments[1];
+
+        const materialFormatted = materialRaw.toUpperCase();
+        const industryFormatted = industryRaw.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+        if (ctxMat) ctxMat.textContent = materialFormatted;
+        if (ctxInd) ctxInd.textContent = industryFormatted;
+        if (badge) badge.classList.remove('hidden');
+
+        if (hidMat) hidMat.value = materialFormatted;
+        if (hidInd) hidInd.value = industryFormatted;
+        if (formSubject) formSubject.value = `NEXMOLD RFQ [${materialFormatted} // ${industryFormatted}]`;
+      } else {
+        if (badge) badge.classList.add('hidden');
+        if (hidMat) hidMat.value = "General / Multi-Material";
+        if (hidInd) hidInd.value = "General Industrial";
+        if (formSubject) formSubject.value = "New General NEXMOLD RFQ Sourcing Inquiry";
+      }
+    };
+
+    const openModal = () => {
+      captureContext(); 
+      container.classList.remove('opacity-0', 'pointer-events-none');
+      container.classList.add('opacity-100', 'pointer-events-auto');
+      box.classList.remove('scale-95', 'opacity-0');
+      box.classList.add('scale-100', 'opacity-100');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+      container.classList.remove('opacity-100', 'pointer-events-auto');
+      container.classList.add('opacity-0', 'pointer-events-none');
+      box.classList.remove('scale-100', 'opacity-100');
+      box.classList.add('scale-95', 'opacity-0');
+      document.body.style.overflow = '';
+      
+      sessionStorage.setItem('nexmold_modal_dismissed', 'true');
+    };
+
+    (window as any).NEXMOLD_OPEN_LEAD_MODAL = openModal;
+
+    document.removeEventListener('open-lead-modal', openModal);
+    document.addEventListener('open-lead-modal', openModal);
+
+    closeBtn.onclick = closeModal;
+    container.onclick = (e) => {
+      if (e.target === container) closeModal();
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', setupLeadModal);
+  document.addEventListener('astro:page-load', setupLeadModal);
+  document.addEventListener('astro:after-swap', setupLeadModal);
+</script>

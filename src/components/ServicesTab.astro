@@ -1,0 +1,388 @@
+﻿---
+/**
+ * ServicesTab.astro - GKP 鏁版嵁椹卞姩 & 0 婕忔礊缁堟瀬绋冲畾鐗?
+ * 绾补涓夎壊瑙勮寖锛氱函鐧?(#FFFFFF) + 宸ヤ笟娣辫摑 (#0F2B5B) + 宸ヤ笟姗?(#EA580C)
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+// 鈿★笍 瀹屾暣澶氳瑷€瀛楀吀 (鏀寔 EN / DE / FR锛屽吋椤?GKP 椤剁骇楂樹环涔板璇?
+const i18n = {
+  en: {
+    sectionTag: "CAPABILITIES OVERVIEW",
+    sectionTitle: "Our Manufacturing Services",
+    auditedTag: "ISO 2768-M AUDITED",
+    dfmTag: "[3D CAD DFM READY]",
+    services: [
+      {
+        id: "custom-injection-molding",
+        tabTitle: "Custom Injection Molding",
+        heading: "Custom Plastic Injection Molding Services",
+        description: "High-yield, automated plastic injection molding for production volumes from 1,000 to 1,000,000+ parts. Operating Haitian 90T-1200T automated press fleet for precision components.",
+        bullets: [
+          "Instant 24-Hour Automated DFM & Moldflow Analysis",
+          "Engineering Resins: ABS, PC, PA66+30%GF, PEEK, POM, TPU",
+          "Strict DIN 16742 & ISO 2768-m dimensional inspection logs"
+        ],
+        ctaText: "Explore Custom Molding",
+        tag: "90T-1200T FLEET",
+        image: "/images/services/injection.webp",
+        imageAlt: "Precision Plastic Injection Molded Housing Component"
+      },
+      {
+        id: "quick-turn-tooling",
+        tabTitle: "Quick-Turn Tooling & Prototypes",
+        heading: "Quick-Turn Tooling & Fast T1 Samples",
+        description: "Accelerate time-to-market with aluminum or ASSAB S136/NAK80 steel molds delivered in 7 to 14 days for rapid functional prototyping and pilot runs.",
+        bullets: [
+          "Fast T1 samples delivered in 7-14 days via Air Express",
+          "Precision steel cores for 100,000+ guaranteed shots",
+          "Seamless bridge to multi-cavity high-volume production"
+        ],
+        ctaText: "Request Quick Tooling Quote",
+        tag: "7-14 DAYS FAST T1",
+        image: "/images/services/rapid-tooling.webp",
+        imageAlt: "Precision Steel Mold Cavity and Core"
+      },
+      {
+        id: "insert-overmolding",
+        tabTitle: "2K, Overmolding & Inserts",
+        heading: "Insert Molding & Multi-Material Overmolding",
+        description: "Combine rigid plastics with soft-touch elastomeric TPE/TPU materials or embed metallic threaded inserts for high-strength industrial components.",
+        bullets: [
+          "Superior multi-material bonding strength with zero delamination",
+          "Automated brass & steel insert positioning via robotic loading",
+          "Dual-shot 2K molding for ergonomic handles & sealed enclosures"
+        ],
+        ctaText: "Explore Insert & Overmolding",
+        tag: "INSERT & 2K MOLDING",
+        image: "/images/services/overmolding.webp",
+        imageAlt: "2K Overmolded Dual-Material Enclosure"
+      },
+      {
+        id: "low-volume-manufacturing",
+        tabTitle: "Low-Volume Manufacturing",
+        heading: "Low-Volume Plastic Production (Bridge Manufacturing)",
+        description: "Flexible, low-volume plastic production from 100 to 10,000+ parts. Ideal for Amazon sellers, hardware startups, and market testing without high upfront MOQ.",
+        bullets: [
+          "No strict MOQ 鈥?On-demand bridge production runs",
+          "Lower upfront tooling capital with rapid aluminum & P20 molds",
+          "Full ISO 2768-m quality control & First Article Inspection (FAI)"
+        ],
+        ctaText: "Start Low-Volume Run",
+        tag: "NO STRICT MOQ",
+        image: "/images/services/cnc.webp",
+        imageAlt: "Low-Volume Plastic Production Setup"
+      }
+    ]
+  },
+  de: {
+    sectionTag: "F脛HIGKEITEN-脺BERSICHT",
+    sectionTitle: "Unsere Fertigungsleistungen",
+    auditedTag: "ISO 2768-M GEPR脺FT",
+    dfmTag: "[3D CAD DFM BEREIT]",
+    services: [
+      {
+        id: "custom-injection-molding",
+        tabTitle: "Kundenspezifischer Spritzguss",
+        heading: "Kundenspezifischer Kunststoffspritzguss",
+        description: "Automatisiere Kunststoffspritzguss f眉r Serienvolumen von 1.000 bis 眉ber 1.000.000 Teile. Betrieb mit Haitian 90T-1200T Automatik-Pressenpark.",
+        bullets: [
+          "Sofortige 24-Stunden DFM- & Moldflow-Analyse",
+          "Technische Kunststoffe: ABS, PC, PA66+30%GF, PEEK, POM, TPU",
+          "Strenge DIN 16742 & ISO 2768-m Pr眉fprotokolle"
+        ],
+        ctaText: "Spritzguss erkunden",
+        tag: "90T-1200T MASCHINENPARK",
+        image: "/images/services/injection.webp",
+        imageAlt: "Pr盲zisions-Spritzguss-Geh盲usebauteil"
+      },
+      {
+        id: "quick-turn-tooling",
+        tabTitle: "Schneller Formenbau & Prototypen",
+        heading: "Schneller Werkzeugbau & T1 Bemusterung",
+        description: "Beschleunigen Sie die Markteinf眉hrung mit Aluminium- oder S136/NAK80-Stahlformen, geliefert in 7 bis 14 Tagen f眉r schnelle Funktionspr眉fungen.",
+        bullets: [
+          "Schnelle T1-Muster per Luftfracht in 7-14 Tagen",
+          "Pr盲zisions-Stahlkerne f眉r 100.000+ garantierte Sch眉sse",
+          "Nahtloser 脺bergang zur Serienfertigung"
+        ],
+        ctaText: "Werkzeugbau-Angebot anfordern",
+        tag: "7-14 TAGE T1 BEMUSTERUNG",
+        image: "/images/services/rapid-tooling.webp",
+        imageAlt: "Pr盲zisions-Stahlform Kavit盲t und Kern"
+      },
+      {
+        id: "insert-overmolding",
+        tabTitle: "2K, Zweikomponenten & Einlegeguss",
+        heading: "Einlegeguss & Mehrkomponenten-Spritzguss",
+        description: "Kombinieren Sie Hartkunststoffe mit weichen TPE/TPU-Materialien oder betten Sie Gewindeeins盲tze aus Metall f眉r hochfeste Bauteile ein.",
+        bullets: [
+          "Hervorragende Haftfestigkeit ohne Delaminationsrisiko",
+          "Automatische Einlegung von Messing- & Stahleins盲tzen",
+          "2K-Mehrkomponentenspritzguss f眉r ergonomische Griffe"
+        ],
+        ctaText: "Zweikomponenten-Guss erkunden",
+        tag: "EINLEGEGUSS & 2K",
+        image: "/images/services/overmolding.webp",
+        imageAlt: "2K Mehrkomponenten-Geh盲use"
+      },
+      {
+        id: "low-volume-manufacturing",
+        tabTitle: "Kleinserienfertigung",
+        heading: "Kunststoff-Kleinserienfertigung (Br眉ckenproduktion)",
+        description: "Flexible Kleinserienfertigung von 100 bis 10.000+ Teilen. Ideal f眉r Amazon-Verk盲ufer und Hardware-Startups ohne hohe Mindestbestellmenge.",
+        bullets: [
+          "Keine strenge Mindestbestellmenge (MOQ)",
+          "Geringeres Startkapital durch Schnellspritzgusswerkzeuge",
+          "Vollst盲ndige ISO 2768-m Qualit盲tskontrolle & FAI"
+        ],
+        ctaText: "Kleinserie starten",
+        tag: "KEIN STRENGES MOQ",
+        image: "/images/services/cnc.webp",
+        imageAlt: "Kunststoff-Kleinserienfertigung"
+      }
+    ]
+  },
+  fr: {
+    sectionTag: "APER脟U DES CAPACIT脡S",
+    sectionTitle: "Nos Services de Fabrication",
+    auditedTag: "AUDIT脡 ISO 2768-M",
+    dfmTag: "[PR脢T POUR DFM CAD 3D]",
+    services: [
+      {
+        id: "custom-injection-molding",
+        tabTitle: "Moulage par Injection Sur Mesure",
+        heading: "Services de Moulage par Injection Plastique",
+        description: "Moulage automatis茅 pour volumes de 1 000 脿 plus de 1 000 000 de pi猫ces. Exploitation d'un parc de presses Haitian de 90T 脿 1200T.",
+        bullets: [
+          "Analyse DFM & Moldflow automatis茅e sous 24h",
+          "R茅sines techniques: ABS, PC, PA66+30%GF, PEEK, POM, TPU",
+          "Rapports d'inspection stricts selon DIN 16742 & ISO 2768-m"
+        ],
+        ctaText: "Explorer le Moulage Sur Mesure",
+        tag: "PARC DE 90T 脌 1200T",
+        image: "/images/services/injection.webp",
+        imageAlt: "Composant de bo卯tier moul茅 par injection de pr茅cision"
+      },
+      {
+        id: "quick-turn-tooling",
+        tabTitle: "Outillage Rapide & Prototypes",
+        heading: "Outillage Rapide & 脡chantillons T1",
+        description: "Acc茅l茅rez la mise sur le march茅 avec des moules en aluminium ou acier S136/NAK80 livr茅s en 7 脿 14 jours pour prototypes fonctionnels.",
+        bullets: [
+          "脡chantillons T1 express livr茅s en 7 脿 14 jours",
+          "Empreintes en acier garanti pour 100 000+ injections",
+          "Transition fluide vers la production en grande s茅rie"
+        ],
+        ctaText: "Demander un Devis d'Outillage",
+        tag: "脡CHANTILLONS T1 EN 7-14 JOURS",
+        image: "/images/services/rapid-tooling.webp",
+        imageAlt: "Empreinte et noyau de moule en acier de pr茅cision"
+      },
+      {
+        id: "insert-overmolding",
+        tabTitle: "Moulage 2K, Surmoulage & Inserts",
+        heading: "Moulage avec Inserts & Surmoulage Multimat茅riaux",
+        description: "Associez plastiques rigides et 茅lastom猫res TPE/TPU ou int茅grez des inserts m茅talliques filet茅s pour pi猫ces industrielles haute r茅sistance.",
+        bullets: [
+          "Adh茅rence multimat茅riaux sup茅rieure sans risque de d茅laminage",
+          "Chargement robotis茅 automatique des inserts en laiton et acier",
+          "Moulage 2K bi-injection pour poign茅es ergonomiques et bo卯tiers"
+        ],
+        ctaText: "Explorer le Surmoulage",
+        tag: "INSERTS & MOULAGE 2K",
+        image: "/images/services/overmolding.webp",
+        imageAlt: "Bo卯tier bi-mati猫re surmoul茅 2K"
+      },
+      {
+        id: "low-volume-manufacturing",
+        tabTitle: "Production en Petites S茅ries",
+        heading: "Production Plastique en Petites S茅ries",
+        description: "Fabrication flexible de 100 脿 plus de 10 000 pi猫ces. Id茅al pour vendeurs Amazon et startups sans contrainte de quantit茅 minimale.",
+        bullets: [
+          "Aucune quantit茅 minimale stricte (Sans MOQ)",
+          "R茅duction de l'investissement initial avec moules rapides",
+          "Contr么le qualit茅 ISO 2768-m complet et rapport FAI"
+        ],
+        ctaText: "Lancer la Petite S茅rie",
+        tag: "SANS MOQ STRICT",
+        image: "/images/services/cnc.webp",
+        imageAlt: "Production de pi猫ces plastiques en petites s茅ries"
+      }
+    ]
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="w-full bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative select-none" id="manufacturing-services">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)]">
+    
+    <!-- 鏍囬鍖?-->
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-[0.25em] block mb-2">
+        {t.sectionTag}
+      </span>
+      <h2 class="text-[clamp(2rem,3.5vw,2.8rem)] font-[1000] tracking-tight uppercase italic leading-none text-[#0F2B5B]">
+        {t.sectionTitle}
+      </h2>
+      <div class="w-12 h-[3px] bg-[#EA580C] mx-auto mt-4"></div>
+    </div>
+
+    <!-- 馃帥锔?Tab 鍒囨崲鎺у埗瀵艰埅鏉?-->
+    <div class="border-b border-[#0F2B5B]/15 mb-12 overflow-x-auto scrollbar-none">
+      <div class="flex items-center justify-center min-w-max mx-auto gap-2 sm:gap-8 font-mono text-xs sm:text-sm font-bold">
+        {t.services.map((item, index) => (
+          <button
+            class={`tab-btn py-4 px-3 sm:px-5 border-b-2 transition-all duration-300 cursor-pointer whitespace-nowrap ${
+              index === 0
+                ? "border-[#EA580C] text-[#EA580C] font-black"
+                : "border-transparent text-[#0F2B5B]/60 hover:text-[#0F2B5B] hover:border-[#0F2B5B]/30"
+            }`}
+            data-target={item.id}
+          >
+            {item.tabTitle}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- 馃摝 Tab 鍐呭灞曠ず鍗＄墖鍖哄煙 -->
+    <div class="relative min-h-[420px]">
+      {t.services.map((service, index) => (
+        <div
+          id={service.id}
+          class={`tab-content transition-all duration-500 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center ${
+            index === 0 ? "block opacity-100" : "hidden opacity-0"
+          }`}
+        >
+          <!-- 宸︿晶鏂囧瓧 & 鍒楄〃 -->
+          <div class="lg:col-span-7 flex flex-col justify-between">
+            <div>
+              <div class="inline-block bg-[#0F2B5B] text-white text-[10px] font-mono font-black px-2.5 py-1 rounded-xs uppercase tracking-widest mb-3">
+                {service.tag}
+              </div>
+              <h3 class="text-2xl sm:text-3xl font-black uppercase italic text-[#0F2B5B] mb-4">
+                {service.heading}
+              </h3>
+              <p class="text-[#0F2B5B]/80 text-sm leading-relaxed mb-6 font-sans font-bold">
+                {service.description}
+              </p>
+
+              <!-- Check Points -->
+              <ul class="space-y-3 mb-8 font-mono text-xs sm:text-sm font-bold text-[#0F2B5B]">
+                {service.bullets.map(bullet => (
+                  <li class="flex items-start gap-3">
+                    <span class="text-[#EA580C] font-black text-base leading-none">✓</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- 鈿★笍 鐩存帴瑙﹀彂 CAD 涓婁紶寮圭獥锛岃浆鍖栭棴鐜?-->
+            <div>
+              <button
+                onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('cad_upload')"
+                class="inline-block bg-[#0F2B5B] hover:bg-[#EA580C] text-white text-xs font-mono font-black tracking-widest uppercase px-8 py-3.5 rounded-xs transition-colors duration-300 shadow-md cursor-pointer"
+              >
+                {service.ctaText} →
+              </button>
+            </div>
+          </div>
+
+          <!-- 鍙充晶锛氱湡瀹炰骇鍝?妯″叿楂樼簿鍥剧墖灞曠ず妗?-->
+          <div class="lg:col-span-5">
+            <div class="w-full h-80 bg-white border-2 border-[#0F2B5B]/15 rounded-sm p-2 flex flex-col items-center justify-center relative group hover:border-[#EA580C] transition-all duration-300 shadow-lg overflow-hidden">
+              
+              <!-- 椤堕儴 CMM 鏍囩 -->
+              <div class="absolute top-3 right-3 bg-[#0F2B5B] text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-xs z-10 shadow-sm">
+                {t.auditedTag}
+              </div>
+
+              <!-- 楂樼簿鍥剧墖瀹瑰櫒 -->
+              <div class="w-full h-full relative overflow-hidden rounded-xs bg-[#0F2B5B]/5">
+                <img 
+                  src={service.image} 
+                  alt={service.imageAlt}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  loading="lazy"
+                  decoding="async"
+                />
+                
+                <!-- 搴曢儴閬僵鎻愮ず -->
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0F2B5B]/90 via-[#0F2B5B]/40 to-transparent p-4 flex items-end justify-between">
+                  <span class="font-mono text-[10px] text-white font-bold tracking-wider uppercase truncate">
+                    {service.imageAlt}
+                  </span>
+                  <span class="font-mono text-[9px] text-[#EA580C] font-black uppercase whitespace-nowrap pl-2">
+                    {t.dfmTag}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+<!-- 鈿★笍 闃查槻闃查噸浜嬩欢缁戝畾閫昏緫 -->
+<script>
+  function initTabLogic() {
+    const section = document.getElementById('manufacturing-services');
+    if (!section) return;
+
+    const tabBtns = section.querySelectorAll('.tab-btn');
+    const tabContents = section.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+      // 鍏嬮殕鑺傜偣娓呯悊鏃т簨浠剁洃鍚紝闃叉 View Transitions 鍦烘櫙涓嬮噸澶嶇粦瀹?
+      const newBtn = btn.cloneNode(true) as HTMLElement;
+      btn.parentNode?.replaceChild(newBtn, btn);
+
+      newBtn.addEventListener('click', () => {
+        const targetId = (newBtn as HTMLElement).getAttribute('data-target');
+        if (!targetId) return;
+
+        section.querySelectorAll<HTMLElement>('.tab-btn').forEach(b => {
+          b.classList.remove('border-[#EA580C]', 'text-[#EA580C]', 'font-black');
+          b.classList.add('border-transparent', 'text-[#0F2B5B]/60');
+        });
+
+        newBtn.classList.add('border-[#EA580C]', 'text-[#EA580C]', 'font-black');
+        newBtn.classList.remove('border-transparent', 'text-[#0F2B5B]/60');
+
+        tabContents.forEach(content => {
+          content.classList.add('hidden', 'opacity-0');
+          content.classList.remove('block', 'opacity-100');
+        });
+
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) {
+          targetContent.classList.remove('hidden');
+          setTimeout(() => {
+            targetContent.classList.add('block', 'opacity-100');
+            targetContent.classList.remove('opacity-0');
+          }, 10);
+        }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initTabLogic);
+  document.addEventListener('astro:after-swap', initTabLogic);
+</script>
+
+
+

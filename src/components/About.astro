@@ -1,0 +1,172 @@
+---
+/**
+ * About.astro - 第三屏：阿里巴巴实力工厂风格 (China Factory Direct)
+ * 1. 顶部：居中大标题 + 工厂实力标识
+ * 2. 左侧：真实工厂车间视频 (/videos/nexmold-factory-tour.mp4)
+ * 3. 右侧：硬核厂房参数 + 4 大工厂实力数据 + 验证标识
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "DIRECT CHINA MANUFACTURER // VERIFIED FACILITY",
+    title: "10,000+ m² Custom Injection Molding & Mold Making Factory",
+    subtitle: "Direct source factory eliminating trading middleman markups. Full in-house capacity from 3D DFM design to high-volume injection molding.",
+    p1: "NEXMOLD operates a 10,000+ square-meter modern manufacturing facility equipped with 30+ automated Haitian servo injection presses (90T to 1200T) and an in-house precision CNC moldmaking toolroom.",
+    p2: "We specialize in OEM/ODM plastic parts for home appliances, automotive components, and power tools. Certified under ISO 9001:2015 and strictly adhering to ISO 2768-m standards for 99.2%+ yield.",
+    learn_more: "VIEW FACTORY AUDIT & CERTIFICATES →",
+    stat1_num: "10,000 m²",
+    stat1_label: "PRODUCTION FACILITY AREA",
+    stat2_num: "30+ SETS",
+    stat2_label: "HAITIAN PRESSES (90T-1200T)",
+    stat3_num: "3 - 15 DAYS",
+    stat3_label: "FAST T1 MOLD SAMPLE TURNAROUND",
+    stat4_num: "99.2%+",
+    stat4_label: "MASS PRODUCTION YIELD RATE"
+  },
+  de: {
+    badge: "DIREKTER CHINESISCHER HERSTELLER // GEPRÜFTER BETRIEB",
+    title: "10.000+ m² Spritzguss- & Werkzeugbau-Fabrik",
+    subtitle: "Direkte Quellfabrik ohne Zwischenhändleraufschläge. Vollständige Inhouse-Kapazität vom 3D-DFM bis zur Serienfertigung.",
+    p1: "NEXMOLD betreibt eine über 10.000 Quadratmeter große moderne Fertigungsstätte, die mit über 30 automatisierten Haitian-Spritzgießmaschinen (90T bis 1200T) und einem hauseigenen Präzisions-Werkzeugbau ausgestattet ist.",
+    p2: "Wir sind auf OEM/ODM-Kunststoffteile für Haushaltsgeräte, Automobilkomponenten und Elektrowerkzeuge spezialisiert. Zertifiziert nach ISO 9001:2015 und unter Einhaltung von ISO 2768-m.",
+    learn_more: "WERKS-AUDIT & ZERTIFIKATE ANSEHEN →",
+    stat1_num: "10.000 m²",
+    stat1_label: "FABRIK-PRODUKTIONSFLÄCHE",
+    stat2_num: "30+ ANLAGEN",
+    stat2_label: "HAITIAN PRESSEN (90T-1200T)",
+    stat3_num: "3 - 15 TAGE",
+    stat3_label: "SCHNELLE T1-MUSTERLIEFERUNG",
+    stat4_num: "99.2%+",
+    stat4_label: "SERIENFERTIGUNGS-AUSBEUTE"
+  },
+  fr: {
+    badge: "FABRICANT DIRECT CHINOIS // USINE VÉRIFIÉE",
+    title: "Usine de Moulage et Outillage de Plus de 10 000 m²",
+    subtitle: "Usine source directe éliminant les intermédiaires. Capacité interne complète, du DFM 3D à la production en série.",
+    p1: "NEXMOLD exploite un site de production moderne de plus de 10 000 m² équipé de plus de 30 presses automatisées Haitian (90T à 1200T) et d'un atelier d'outillage CNC de précision.",
+    p2: "Nous sommes spécialisés dans les pièces plastiques OEM/ODM pour l'électroménager, l'automobile et l'outillage. Certifié ISO 9001:2015 et respectant strictement la norme ISO 2768-m.",
+    learn_more: "VOIR L'AUDIT D'USINE ET CERTIFICATS →",
+    stat1_num: "10 000 m²",
+    stat1_label: "SURFACE DE PRODUCTION",
+    stat2_num: "30+ MACHINES",
+    stat2_label: "PRESSES HAITIAN (90T-1200T)",
+    stat3_num: "3 - 15 JOURS",
+    stat3_label: "DELAI D'OUTILLAGE T1 RAPIDE",
+    stat4_num: "99.2%+",
+    stat4_label: "RENDEMENT DE PRODUCTION"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative select-none" id="about">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)]">
+    
+    <!-- 🎯 1. 居中大标题与阿里风格工厂验厂 Badge -->
+    <div class="max-w-4xl mx-auto text-center mb-16">
+      <div class="inline-flex items-center gap-2 mb-3 bg-[#0F2B5B]/5 px-3 py-1 rounded-xs border border-[#0F2B5B]/10">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-pulse"></span>
+        <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-wider">
+          {t.badge}
+        </span>
+      </div>
+      <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-tight mb-3 text-[#0F2B5B]">
+        {t.title}
+      </h2>
+      <p class="text-[#0F2B5B]/75 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl mx-auto font-sans">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- 2. 主体区：左视频 + 右硬核工厂数据 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- 左侧：工厂车间实景视频 -->
+      <div class="lg:col-span-5">
+        <div class="bg-[#0F2B5B]/5 border-2 border-[#0F2B5B]/15 p-2 rounded-xs overflow-hidden shadow-xs relative">
+          
+          <div class="relative w-full aspect-[4/3] bg-[#0F2B5B]/10 rounded-xs overflow-hidden">
+            <!-- 📹 工厂实拍视频 -->
+            <video 
+              class="w-full h-full object-cover rounded-xs"
+              poster="/images/services/factory-tour-cover.jpg"
+              autoplay 
+              loop 
+              muted 
+              playsinline
+            >
+              <source src="/videos/nexmold-factory-tour.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+
+            <!-- 阿里/实力商家风：左上角 Live 验厂标签 -->
+            <div class="absolute top-3 left-3 bg-[#0F2B5B]/90 backdrop-blur-xs text-white font-mono text-[9.5px] font-bold px-2.5 py-1 rounded-xs border border-white/20 flex items-center gap-1.5 z-10">
+              <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-pulse"></span>
+              <span>FACTORY_DIRECT // DONGGUAN, CHINA</span>
+            </div>
+
+            <!-- 阿里风：右下角 ISO 验厂水印 -->
+            <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white/90 font-mono text-[8.5px] px-2 py-0.5 rounded-xs border border-white/10">
+              ISO 9001:2015 VERIFIED
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 右侧：阿里式工厂实力硬核数据与介绍 -->
+      <div class="lg:col-span-7 flex flex-col justify-center">
+
+        <!-- 2 段直白粗暴的中国制造工厂简介 -->
+        <div class="space-y-3 text-[#0F2B5B]/85 text-xs sm:text-sm leading-relaxed font-sans mb-8">
+          <p class="font-semibold text-[#0F2B5B]">{t.p1}</p>
+          <p>{t.p2}</p>
+        </div>
+
+        <!-- ⚡️ 阿里巴巴式 4 大核心实力看板 (数据硬核化) -->
+        <div class="grid grid-cols-2 gap-6 pt-6 border-t border-[#0F2B5B]/15 mb-8">
+          <div class="bg-[#0F2B5B]/[0.02] p-3 border-l-2 border-[#EA580C]">
+            <div class="text-[#EA580C] font-mono text-2xl sm:text-3xl font-[1000] tracking-tight">{t.stat1_num}</div>
+            <div class="text-[#0F2B5B]/60 font-mono text-[10px] font-bold uppercase tracking-wider mt-1">{t.stat1_label}</div>
+          </div>
+
+          <div class="bg-[#0F2B5B]/[0.02] p-3 border-l-2 border-[#0F2B5B]">
+            <div class="text-[#0F2B5B] font-mono text-2xl sm:text-3xl font-[1000] tracking-tight">{t.stat2_num}</div>
+            <div class="text-[#0F2B5B]/60 font-mono text-[10px] font-bold uppercase tracking-wider mt-1">{t.stat2_label}</div>
+          </div>
+
+          <div class="bg-[#0F2B5B]/[0.02] p-3 border-l-2 border-[#0F2B5B]">
+            <div class="text-[#0F2B5B] font-mono text-2xl sm:text-3xl font-[1000] tracking-tight">{t.stat3_num}</div>
+            <div class="text-[#0F2B5B]/60 font-mono text-[10px] font-bold uppercase tracking-wider mt-1">{t.stat3_label}</div>
+          </div>
+
+          <div class="bg-[#0F2B5B]/[0.02] p-3 border-l-2 border-[#EA580C]">
+            <div class="text-[#EA580C] font-mono text-2xl sm:text-3xl font-[1000] tracking-tight">{t.stat4_num}</div>
+            <div class="text-[#0F2B5B]/60 font-mono text-[10px] font-bold uppercase tracking-wider mt-1">{t.stat4_label}</div>
+          </div>
+        </div>
+
+        <!-- 阿里风验厂报告跳转按钮 -->
+        <div>
+          <a 
+            href="/about" 
+            class="inline-flex items-center gap-2 bg-[#0F2B5B] hover:bg-[#EA580C] text-white font-mono font-bold text-xs uppercase tracking-wider px-8 py-4 rounded-xs transition-colors duration-300 shadow-sm group"
+          >
+            <span>{t.learn_more}</span>
+            <span class="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>

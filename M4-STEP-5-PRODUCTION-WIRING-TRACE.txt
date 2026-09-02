@@ -1,0 +1,994 @@
+﻿=======================================================
+M4 STEP 5 — PRODUCTION WIRING TRACE
+Generated: 2026-08-31 17:26:48
+=======================================================
+
+=======================================================
+1. PRODUCER CALLERS
+=======================================================
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:80: ["producer", "produceV714Article"],
+E:\nexmold\src\regional\article-producer.ts:1485: export function produceV714WhitePaperV2(
+E:\nexmold\src\regional\article-producer.ts:2150: *   produceV714Article(
+E:\nexmold\src\regional\article-producer.ts:2162: export function produceV714Article(
+E:\nexmold\src\regional\article-producer.ts:2191: produceV714WhitePaperV2({
+
+=======================================================
+2. WHITE PAPER BUILDER CALLERS
+=======================================================
+E:\nexmold\scripts\v714-article-factory.mjs:49: buildWhitePaperV2,
+E:\nexmold\scripts\v714-article-factory.mjs:749: buildWhitePaperV2(
+E:\nexmold\src\regional\white-paper-content-v2.ts:1472: export function buildWhitePaperV2(
+
+=======================================================
+3. REGIONAL ARTIFACT CREATION / CONSUMPTION
+=======================================================
+E:\nexmold\.nexmold\releases\20260830T043251Z-8196-2eff736f\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T054911Z-1848-d8157b55\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T065718Z-12132-3fec5aca\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T094744Z-16284-6ec60742\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\manifest.json:117: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:514: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:78: ["types", "RegionalPublishArtifact"],
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:86: ["compiler", "createRegionalPublishArtifact"],
+E:\nexmold\scripts\v714-article-factory.mjs:18: * RegionalPublishArtifact
+E:\nexmold\scripts\v714-core-gate.mjs:94: lower.includes("regionalpublishartifact") ||
+E:\nexmold\scripts\v714-regional-gate.mjs:10: *   -> RegionalPublishArtifact -> Publication Gate -> Projection
+E:\nexmold\scripts\v714-regional-gate.mjs:123: assert(positive.result?.artifact !== null, 'positive path has no RegionalPublishArtifact');
+E:\nexmold\scripts\v714-regional-gate.mjs:131: assert(Object.isFrozen(artifact), 'RegionalPublishArtifact must be immutable');
+E:\nexmold\src\regional\article-contract.ts:6: * RegionalPublishArtifact
+E:\nexmold\src\regional\article-contract.ts:23: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-contract.ts:27: readonly pageId: RegionalPublishArtifact["pageId"];
+E:\nexmold\src\regional\article-contract.ts:28: readonly locale: RegionalPublishArtifact["locale"];
+E:\nexmold\src\regional\article-contract.ts:29: readonly region: RegionalPublishArtifact["region"];
+E:\nexmold\src\regional\article-contract.ts:31: readonly canonicalUrl: RegionalPublishArtifact["canonicalUrl"];
+E:\nexmold\src\regional\article-contract.ts:42: readonly articleId: RegionalPublishArtifact["pageId"];
+E:\nexmold\src\regional\article-contract.ts:70: readonly sourceArtifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\article-producer.ts:9: * Convert an AUTHORIZED RegionalPublishArtifact plus an
+E:\nexmold\src\regional\article-producer.ts:33: * RegionalPublishArtifact
+E:\nexmold\src\regional\article-producer.ts:49: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:157: readonly canonicalUrl: RegionalPublishArtifact["canonicalUrl"];
+E:\nexmold\src\regional\article-producer.ts:158: readonly sourceArtifactHash: RegionalPublishArtifact["pageContentHash"];
+E:\nexmold\src\regional\article-producer.ts:220: RegionalPublishArtifact["pageContentHash"];
+E:\nexmold\src\regional\article-producer.ts:233: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\article-producer.ts:314: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:578: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:588: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:1473: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:2163: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-renderer.ts:17: * RegionalPublishArtifact
+E:\nexmold\src\regional\eligibility.ts:17: * - create RegionalPublishArtifact;
+E:\nexmold\src\regional\engineering-knowledge-compiler.ts:32: * 4. This compiler DOES NOT bypass RegionalPublishArtifact.
+E:\nexmold\src\regional\Producer.ts:32: *   This module does NOT create a RegionalPublishArtifact.
+E:\nexmold\src\regional\publication-gate.ts:3: RegionalPublishArtifact,
+E:\nexmold\src\regional\publication-gate.ts:13: readonly artifact: RegionalPublishArtifact | null;
+E:\nexmold\src\regional\publication-gate.ts:18: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\publication-gate.ts:33: * The gate does not manufacture a RegionalPublishArtifact.
+E:\nexmold\src\regional\regionalCompiler.ts:31: createRegionalPublishArtifact,
+E:\nexmold\src\regional\regionalCompiler.ts:34: } from "./regionalPublishArtifact.ts";
+E:\nexmold\src\regional\regionalCompiler.ts:134: const artifact = createRegionalPublishArtifact({
+E:\nexmold\src\regional\regionalPublishArtifact.ts:18: RegionalPublishArtifact,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:23: regionalPublishArtifactBrand,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:92: export function createRegionalPublishArtifact(
+E:\nexmold\src\regional\regionalPublishArtifact.ts:94: ): RegionalPublishArtifact {
+E:\nexmold\src\regional\regionalPublishArtifact.ts:107: const artifact: RegionalPublishArtifact = Object.freeze({
+E:\nexmold\src\regional\regionalPublishArtifact.ts:108: [regionalPublishArtifactBrand]: 'RegionalPublishArtifact' as const,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:122: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:137: _region: RegionalPublishArtifact['region'],
+E:\nexmold\src\regional\types.ts:122: export const regionalPublishArtifactBrand: unique symbol = Symbol("RegionalPublishArtifact");
+E:\nexmold\src\regional\types.ts:124: export interface RegionalPublishArtifact {
+E:\nexmold\src\regional\types.ts:125: readonly [regionalPublishArtifactBrand]: "RegionalPublishArtifact";
+E:\nexmold\src\regional\types.ts:141: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\types.ts:174: readonly artifact: RegionalPublishArtifact | null;
+E:\nexmold\tests\adversarial\run-harness.mjs:31: ['artifact-factory-present', fs.existsSync(path.join(root, 'src/regional/regionalPublishArtifact.ts'))],
+E:\nexmold\tests\contracts\v714-contracts.mjs:171: String(symbol).includes("RegionalPublishArtifact"),
+E:\nexmold\tests\contracts\v714-contracts.mjs:178: "RegionalPublishArtifact",
+E:\nexmold\build-orchestrator.mjs:527: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+
+=======================================================
+4. REGIONAL COMPILER CALLERS
+=======================================================
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:21: compiler: path.join(ROOT, "src", "regional", "regionalCompiler.ts"),
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:84: ["compiler", "evaluateRegionalEligibility"],
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:86: ["compiler", "createRegionalPublishArtifact"],
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:88: ["compiler", "projectRegionalRoute"],
+E:\nexmold\scripts\v714-regional-gate.mjs:109: importRegional(root, 'regionalCompiler.ts'),
+E:\nexmold\scripts\v714-regional-gate.mjs:113: assert(typeof compilerMod.compileRegionalPage === 'function', 'compileRegionalPage export missing');
+E:\nexmold\scripts\v714-regional-gate.mjs:171: const directBlocked = compilerMod.compileRegionalPage(unbound);
+E:\nexmold\src\regional\engineering-knowledge-compiler.ts:32: * 4. This compiler DOES NOT bypass RegionalPublishArtifact.
+E:\nexmold\src\regional\Producer.ts:17: *   compileRegionalPage()
+E:\nexmold\src\regional\Producer.ts:40: compileRegionalPage,
+E:\nexmold\src\regional\Producer.ts:41: type V714RegionalCompilerInput,
+E:\nexmold\src\regional\Producer.ts:42: } from "./regionalCompiler.ts";
+E:\nexmold\src\regional\Producer.ts:47: RegionalCompileResult,
+E:\nexmold\src\regional\Producer.ts:70: readonly compileInput: RegionalCompileInput;
+E:\nexmold\src\regional\Producer.ts:89: * RegionalCompileResult because the compiler has not evaluated
+E:\nexmold\src\regional\Producer.ts:100: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\Producer.ts:364: * completely to compileRegionalPage().
+E:\nexmold\src\regional\Producer.ts:409: const compilerInput: V714RegionalCompilerInput = {
+E:\nexmold\src\regional\Producer.ts:419: compileRegionalPage(
+E:\nexmold\src\regional\Producer.ts:442: * RegionalCompileResult.
+E:\nexmold\src\regional\regionalCompiler.ts:43: RegionalCompileResult,
+E:\nexmold\src\regional\regionalCompiler.ts:46: export interface V714RegionalCompilerInput {
+E:\nexmold\src\regional\regionalCompiler.ts:47: readonly compileInput: RegionalCompileInput;
+E:\nexmold\src\regional\regionalCompiler.ts:57: export interface V714RegionalCompilerBlocked {
+E:\nexmold\src\regional\regionalCompiler.ts:59: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\regionalCompiler.ts:63: export interface V714RegionalCompilerPublished {
+E:\nexmold\src\regional\regionalCompiler.ts:65: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\regionalCompiler.ts:68: export type V714RegionalCompilerResult =
+E:\nexmold\src\regional\regionalCompiler.ts:69: | V714RegionalCompilerPublished
+E:\nexmold\src\regional\regionalCompiler.ts:70: | V714RegionalCompilerBlocked;
+E:\nexmold\src\regional\regionalCompiler.ts:72: export function compileRegionalPage(
+E:\nexmold\src\regional\regionalCompiler.ts:73: input: V714RegionalCompilerInput,
+E:\nexmold\src\regional\regionalCompiler.ts:74: ): V714RegionalCompilerResult {
+E:\nexmold\src\regional\releasePreflight.ts:2: import type { RegionalCompileResult } from './types.ts';
+E:\nexmold\src\regional\releasePreflight.ts:9: export function runRegionalReleasePreflight(result: RegionalCompileResult): RegionalReleasePreflightResult {
+E:\nexmold\src\regional\types.ts:172: export interface RegionalCompileResult {
+E:\nexmold\tests\contracts\v714-contracts.mjs:22: compileRegionalPage,
+E:\nexmold\tests\contracts\v714-contracts.mjs:23: } from "../../src/regional/regionalCompiler.ts";
+E:\nexmold\tests\contracts\v714-contracts.mjs:142: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:158: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:188: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:207: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:223: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:239: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:258: const result = compileRegionalPage({
+E:\nexmold\tests\contracts\v714-contracts.mjs:273: const result = compileRegionalPage(
+E:\nexmold\tests\contracts\v714-contracts.mjs:298: const result = compileRegionalPage(
+
+=======================================================
+5. PUBLICATION GATE REFERENCES
+=======================================================
+E:\nexmold\.nexmold\content-factory\batch-01-keyword-manifest.json:10: "v714PublicationGateRequired": true
+E:\nexmold\.nexmold\releases\20260830T043251Z-8196-2eff736f\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T054911Z-1848-d8157b55\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T065718Z-12132-3fec5aca\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260830T094744Z-16284-6ec60742\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\manifest.json:112: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\manifest.json:117: "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:514: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+E:\nexmold\.nexmold\v714\bl02-evidence-claim-audit.json:21: "publicationGate": false
+E:\nexmold\scripts\bl02-evidence-claim-audit.mjs:1933: publicationGate:
+E:\nexmold\scripts\generate-batch-01.mjs:277: v714PublicationGateRequired: true
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:54: console.log(`  V7.14 gate       : ${manifest.policy.v714PublicationGateRequired}`);
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:87: ["compiler", "runPublicationGate"],
+E:\nexmold\scripts\v714-core-gate.mjs:137: ["Publication Gate", "src/regional/publication-gate.ts"],
+E:\nexmold\src\regional\publication-gate.ts:10: export interface V714PublicationGateInput {
+E:\nexmold\src\regional\publication-gate.ts:16: export interface V714PublicationGatePass {
+E:\nexmold\src\regional\publication-gate.ts:21: export interface V714PublicationGateBlock {
+E:\nexmold\src\regional\publication-gate.ts:26: export type V714PublicationGateResult =
+E:\nexmold\src\regional\publication-gate.ts:27: | V714PublicationGatePass
+E:\nexmold\src\regional\publication-gate.ts:28: | V714PublicationGateBlock;
+E:\nexmold\src\regional\publication-gate.ts:37: export function runPublicationGate(
+E:\nexmold\src\regional\publication-gate.ts:38: input: V714PublicationGateInput,
+E:\nexmold\src\regional\publication-gate.ts:39: ): V714PublicationGateResult {
+E:\nexmold\src\regional\regionalCompiler.ts:37: runPublicationGate,
+E:\nexmold\src\regional\regionalCompiler.ts:38: } from "./publication-gate.ts";
+E:\nexmold\src\regional\regionalCompiler.ts:147: const publication = runPublicationGate({
+E:\nexmold\tests\contracts\v714-contracts.mjs:26: runPublicationGate,
+E:\nexmold\tests\contracts\v714-contracts.mjs:27: } from "../../src/regional/publication-gate.ts";
+E:\nexmold\tests\contracts\v714-contracts.mjs:321: test("publication-gate-blocks-without-artifact", () => {
+E:\nexmold\tests\contracts\v714-contracts.mjs:326: const publication = runPublicationGate({
+E:\nexmold\build-orchestrator.mjs:527: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+
+=======================================================
+6. RELEASE PREFLIGHT REFERENCES
+=======================================================
+E:\nexmold\.nexmold\releases\20260829T103629Z-26668-f55bb604\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T103629Z-26668-f55bb604\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T104443Z-21932-0d04aa48\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T104443Z-21932-0d04aa48\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T105050Z-17444-f7aa36ad\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T105050Z-17444-f7aa36ad\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T110942Z-11368-d6aaf568\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T110942Z-11368-d6aaf568\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T111321Z-12160-9f30f0f1\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T111321Z-12160-9f30f0f1\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T112606Z-9044-3cfc6926\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T112606Z-9044-3cfc6926\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T112823Z-11876-fa9b0bd6\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T112823Z-11876-fa9b0bd6\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T113426Z-20284-09ce9ed2\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T113426Z-20284-09ce9ed2\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T113733Z-12136-9de11b64\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T113733Z-12136-9de11b64\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T113859Z-27132-2605cd64\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T113859Z-27132-2605cd64\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T114053Z-12168-1488e05c\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T114053Z-12168-1488e05c\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T114940Z-2572-1be85de1\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T114940Z-2572-1be85de1\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T120454Z-19036-ab3b41c7\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T120454Z-19036-ab3b41c7\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T121143Z-7512-9266d99b\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T121143Z-7512-9266d99b\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T121544Z-17228-38936288\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T121544Z-17228-38936288\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T130214Z-22872-92cebc09\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T130214Z-22872-92cebc09\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T140629Z-27444-b9bdffd9\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T140629Z-27444-b9bdffd9\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T140957Z-8220-bde9b23b\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T140957Z-8220-bde9b23b\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260829T141147Z-27828-494f03ab\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260829T141147Z-27828-494f03ab\manifest.json:53: "detail": "Canonical scripts/release-preflight.mjs passed."
+E:\nexmold\.nexmold\releases\20260830T030048Z-27360-916cb75b\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260830T030729Z-26296-ff594fc4\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260830T031911Z-20692-b565fcb7\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260830T033233Z-9792-d8a7b3b7\manifest.json:20: "releasePreflight": "scripts\\release-preflight.mjs",
+E:\nexmold\.nexmold\releases\20260830T043251Z-8196-2eff736f\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260830T054911Z-1848-d8157b55\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260830T065718Z-12132-3fec5aca\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260830T094744Z-16284-6ec60742\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\manifest.json:116: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\manifest.json:121: "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:81: releasePreflight: resolve(ROOT, 'scripts', 'release-preflight.mjs'),
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:491: await runExportedGate(GATES.releasePreflight, 'runReleasePreflight', 'RELEASE_PREFLIGHT');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:518: releasePreflight: 'scripts/release-preflight.mjs#runReleasePreflight',
+E:\nexmold\.nexmold\v714-final-20260830T031424Z\verification.json:10: "releasePreflight":  "PASS"
+E:\nexmold\scripts\release-preflight.mjs:8: *   runReleasePreflight(context)
+E:\nexmold\scripts\release-preflight.mjs:15: export function runReleasePreflight(context = {}) {
+E:\nexmold\scripts\release-preflight.mjs:40: gate: 'release-preflight',
+E:\nexmold\scripts\release-preflight.mjs:66: const result = runReleasePreflight(process.cwd());
+E:\nexmold\scripts\release-preflight.mjs:71: schema: 'nexmold.v7.14.release-preflight.v1',
+E:\nexmold\scripts\v714-regional-gate.mjs:108: importRegional(root, 'releasePreflight.ts'),
+E:\nexmold\scripts\v714-regional-gate.mjs:114: assert(typeof preflightMod.runRegionalReleasePreflight === 'function', 'runRegionalReleasePreflight export missing');
+E:\nexmold\scripts\v714-regional-gate.mjs:144: const preflight = preflightMod.runRegionalReleasePreflight(positive.result);
+E:\nexmold\src\regional\engineering-knowledge-compiler.ts:3140: * Useful for release-preflight / adversarial tests.
+E:\nexmold\src\regional\releasePreflight.ts:4: export interface RegionalReleasePreflightResult {
+E:\nexmold\src\regional\releasePreflight.ts:9: export function runRegionalReleasePreflight(result: RegionalCompileResult): RegionalReleasePreflightResult {
+E:\nexmold\tests\adversarial\run-harness.mjs:10: import { runReleasePreflight } from '../../scripts/release-preflight.mjs';
+E:\nexmold\tests\adversarial\run-harness.mjs:27: expectPass('release-preflight', () => runReleasePreflight(root));
+E:\nexmold\tests\adversarial\run-harness.mjs:32: ['regional-preflight-present', fs.existsSync(path.join(root, 'src/regional/releasePreflight.ts'))],
+E:\nexmold\build-orchestrator.mjs:84: releasePreflight: resolve(ROOT, 'scripts', 'release-preflight.mjs'),
+E:\nexmold\build-orchestrator.mjs:504: await runExportedGate(GATES.releasePreflight, 'runReleasePreflight', 'RELEASE_PREFLIGHT');
+E:\nexmold\build-orchestrator.mjs:531: releasePreflight: 'scripts/release-preflight.mjs#runReleasePreflight',
+E:\nexmold\package.json:14: "v714:preflight": "node scripts/release-preflight.mjs",
+
+=======================================================
+7. BUILD ORCHESTRATOR REFERENCES
+=======================================================
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:81: releasePreflight: resolve(ROOT, 'scripts', 'release-preflight.mjs'),
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:491: await runExportedGate(GATES.releasePreflight, 'runReleasePreflight', 'RELEASE_PREFLIGHT');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:514: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:518: releasePreflight: 'scripts/release-preflight.mjs#runReleasePreflight',
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:19: producer: path.join(ROOT, "src", "regional", "article-producer.ts"),
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:21: compiler: path.join(ROOT, "src", "regional", "regionalCompiler.ts"),
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:78: ["types", "RegionalPublishArtifact"],
+E:\nexmold\scripts\inspect-batch-01-wiring.mjs:86: ["compiler", "createRegionalPublishArtifact"],
+E:\nexmold\scripts\release-preflight.mjs:8: *   runReleasePreflight(context)
+E:\nexmold\scripts\release-preflight.mjs:15: export function runReleasePreflight(context = {}) {
+E:\nexmold\scripts\release-preflight.mjs:66: const result = runReleasePreflight(process.cwd());
+E:\nexmold\scripts\v714-article-factory.mjs:18: * RegionalPublishArtifact
+E:\nexmold\scripts\v714-core-gate.mjs:94: lower.includes("regionalpublishartifact") ||
+E:\nexmold\scripts\v714-core-gate.mjs:137: ["Publication Gate", "src/regional/publication-gate.ts"],
+E:\nexmold\scripts\v714-regional-gate.mjs:10: *   -> RegionalPublishArtifact -> Publication Gate -> Projection
+E:\nexmold\scripts\v714-regional-gate.mjs:108: importRegional(root, 'releasePreflight.ts'),
+E:\nexmold\scripts\v714-regional-gate.mjs:109: importRegional(root, 'regionalCompiler.ts'),
+E:\nexmold\scripts\v714-regional-gate.mjs:114: assert(typeof preflightMod.runRegionalReleasePreflight === 'function', 'runRegionalReleasePreflight export missing');
+E:\nexmold\scripts\v714-regional-gate.mjs:123: assert(positive.result?.artifact !== null, 'positive path has no RegionalPublishArtifact');
+E:\nexmold\scripts\v714-regional-gate.mjs:131: assert(Object.isFrozen(artifact), 'RegionalPublishArtifact must be immutable');
+E:\nexmold\scripts\v714-regional-gate.mjs:144: const preflight = preflightMod.runRegionalReleasePreflight(positive.result);
+E:\nexmold\src\regional\article-contract.ts:6: * RegionalPublishArtifact
+E:\nexmold\src\regional\article-contract.ts:23: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-contract.ts:27: readonly pageId: RegionalPublishArtifact["pageId"];
+E:\nexmold\src\regional\article-contract.ts:28: readonly locale: RegionalPublishArtifact["locale"];
+E:\nexmold\src\regional\article-contract.ts:29: readonly region: RegionalPublishArtifact["region"];
+E:\nexmold\src\regional\article-contract.ts:31: readonly canonicalUrl: RegionalPublishArtifact["canonicalUrl"];
+E:\nexmold\src\regional\article-contract.ts:42: readonly articleId: RegionalPublishArtifact["pageId"];
+E:\nexmold\src\regional\article-contract.ts:70: readonly sourceArtifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\article-producer.ts:9: * Convert an AUTHORIZED RegionalPublishArtifact plus an
+E:\nexmold\src\regional\article-producer.ts:33: * RegionalPublishArtifact
+E:\nexmold\src\regional\article-producer.ts:49: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:157: readonly canonicalUrl: RegionalPublishArtifact["canonicalUrl"];
+E:\nexmold\src\regional\article-producer.ts:158: readonly sourceArtifactHash: RegionalPublishArtifact["pageContentHash"];
+E:\nexmold\src\regional\article-producer.ts:220: RegionalPublishArtifact["pageContentHash"];
+E:\nexmold\src\regional\article-producer.ts:233: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\article-producer.ts:314: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:578: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:588: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:1473: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-producer.ts:2163: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\article-renderer.ts:17: * RegionalPublishArtifact
+E:\nexmold\src\regional\eligibility.ts:17: * - create RegionalPublishArtifact;
+E:\nexmold\src\regional\engineering-knowledge-compiler.ts:32: * 4. This compiler DOES NOT bypass RegionalPublishArtifact.
+E:\nexmold\src\regional\Producer.ts:32: *   This module does NOT create a RegionalPublishArtifact.
+E:\nexmold\src\regional\Producer.ts:41: type V714RegionalCompilerInput,
+E:\nexmold\src\regional\Producer.ts:42: } from "./regionalCompiler.ts";
+E:\nexmold\src\regional\Producer.ts:47: RegionalCompileResult,
+E:\nexmold\src\regional\Producer.ts:89: * RegionalCompileResult because the compiler has not evaluated
+E:\nexmold\src\regional\Producer.ts:100: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\Producer.ts:409: const compilerInput: V714RegionalCompilerInput = {
+E:\nexmold\src\regional\Producer.ts:442: * RegionalCompileResult.
+E:\nexmold\src\regional\Producer.ts:457: * Keeping the alias makes future build-orchestrator wiring
+E:\nexmold\src\regional\publication-gate.ts:3: RegionalPublishArtifact,
+E:\nexmold\src\regional\publication-gate.ts:13: readonly artifact: RegionalPublishArtifact | null;
+E:\nexmold\src\regional\publication-gate.ts:18: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\publication-gate.ts:33: * The gate does not manufacture a RegionalPublishArtifact.
+E:\nexmold\src\regional\regionalCompiler.ts:31: createRegionalPublishArtifact,
+E:\nexmold\src\regional\regionalCompiler.ts:34: } from "./regionalPublishArtifact.ts";
+E:\nexmold\src\regional\regionalCompiler.ts:38: } from "./publication-gate.ts";
+E:\nexmold\src\regional\regionalCompiler.ts:43: RegionalCompileResult,
+E:\nexmold\src\regional\regionalCompiler.ts:46: export interface V714RegionalCompilerInput {
+E:\nexmold\src\regional\regionalCompiler.ts:57: export interface V714RegionalCompilerBlocked {
+E:\nexmold\src\regional\regionalCompiler.ts:59: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\regionalCompiler.ts:63: export interface V714RegionalCompilerPublished {
+E:\nexmold\src\regional\regionalCompiler.ts:65: readonly result: RegionalCompileResult;
+E:\nexmold\src\regional\regionalCompiler.ts:68: export type V714RegionalCompilerResult =
+E:\nexmold\src\regional\regionalCompiler.ts:69: | V714RegionalCompilerPublished
+E:\nexmold\src\regional\regionalCompiler.ts:70: | V714RegionalCompilerBlocked;
+E:\nexmold\src\regional\regionalCompiler.ts:73: input: V714RegionalCompilerInput,
+E:\nexmold\src\regional\regionalCompiler.ts:74: ): V714RegionalCompilerResult {
+E:\nexmold\src\regional\regionalCompiler.ts:134: const artifact = createRegionalPublishArtifact({
+E:\nexmold\src\regional\regionalPublishArtifact.ts:18: RegionalPublishArtifact,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:23: regionalPublishArtifactBrand,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:92: export function createRegionalPublishArtifact(
+E:\nexmold\src\regional\regionalPublishArtifact.ts:94: ): RegionalPublishArtifact {
+E:\nexmold\src\regional\regionalPublishArtifact.ts:107: const artifact: RegionalPublishArtifact = Object.freeze({
+E:\nexmold\src\regional\regionalPublishArtifact.ts:108: [regionalPublishArtifactBrand]: 'RegionalPublishArtifact' as const,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:122: artifact: RegionalPublishArtifact,
+E:\nexmold\src\regional\regionalPublishArtifact.ts:137: _region: RegionalPublishArtifact['region'],
+E:\nexmold\src\regional\releasePreflight.ts:2: import type { RegionalCompileResult } from './types.ts';
+E:\nexmold\src\regional\releasePreflight.ts:4: export interface RegionalReleasePreflightResult {
+E:\nexmold\src\regional\releasePreflight.ts:9: export function runRegionalReleasePreflight(result: RegionalCompileResult): RegionalReleasePreflightResult {
+E:\nexmold\src\regional\types.ts:122: export const regionalPublishArtifactBrand: unique symbol = Symbol("RegionalPublishArtifact");
+E:\nexmold\src\regional\types.ts:124: export interface RegionalPublishArtifact {
+E:\nexmold\src\regional\types.ts:125: readonly [regionalPublishArtifactBrand]: "RegionalPublishArtifact";
+E:\nexmold\src\regional\types.ts:141: readonly artifact: RegionalPublishArtifact;
+E:\nexmold\src\regional\types.ts:172: export interface RegionalCompileResult {
+E:\nexmold\src\regional\types.ts:174: readonly artifact: RegionalPublishArtifact | null;
+E:\nexmold\tests\adversarial\run-harness.mjs:10: import { runReleasePreflight } from '../../scripts/release-preflight.mjs';
+E:\nexmold\tests\adversarial\run-harness.mjs:27: expectPass('release-preflight', () => runReleasePreflight(root));
+E:\nexmold\tests\adversarial\run-harness.mjs:31: ['artifact-factory-present', fs.existsSync(path.join(root, 'src/regional/regionalPublishArtifact.ts'))],
+E:\nexmold\tests\adversarial\run-harness.mjs:32: ['regional-preflight-present', fs.existsSync(path.join(root, 'src/regional/releasePreflight.ts'))],
+E:\nexmold\tests\adversarial\run-harness.mjs:34: ['orchestrator-wires-runtime', /runtime-gate\.mjs/.test(fs.readFileSync(path.join(root, 'build-orchestrator.mjs'), 'utf8'))],
+E:\nexmold\tests\adversarial\run-harness.mjs:35: ['orchestrator-wires-route-gate', /route-conflict-check\.mjs/.test(fs.readFileSync(path.join(root, 'build-orchestrator.mjs'), 'utf8'))],
+E:\nexmold\tests\contracts\v714-contracts.mjs:23: } from "../../src/regional/regionalCompiler.ts";
+E:\nexmold\tests\contracts\v714-contracts.mjs:27: } from "../../src/regional/publication-gate.ts";
+E:\nexmold\tests\contracts\v714-contracts.mjs:171: String(symbol).includes("RegionalPublishArtifact"),
+E:\nexmold\tests\contracts\v714-contracts.mjs:178: "RegionalPublishArtifact",
+E:\nexmold\tests\contracts\v714-contracts.mjs:321: test("publication-gate-blocks-without-artifact", () => {
+E:\nexmold\build-orchestrator.mjs:84: releasePreflight: resolve(ROOT, 'scripts', 'release-preflight.mjs'),
+E:\nexmold\build-orchestrator.mjs:504: await runExportedGate(GATES.releasePreflight, 'runReleasePreflight', 'RELEASE_PREFLIGHT');
+E:\nexmold\build-orchestrator.mjs:527: canonicalChain: 'Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection',
+E:\nexmold\build-orchestrator.mjs:531: releasePreflight: 'scripts/release-preflight.mjs#runReleasePreflight',
+
+=======================================================
+8. PACKAGE.JSON SCRIPTS
+=======================================================
+{
+  "name": "nexmold-v2",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "v714:adversarial": "node tests/adversarial/run-harness.mjs",
+    "v714:preflight": "node scripts/release-preflight.mjs",
+    "v714:build": "node build-orchestrator.mjs",
+    "v714:secure": "npm run v714:contracts && npm run v714:adversarial && npm run v714:regional && npm run v714:build",
+    "v714:contracts": "node --experimental-strip-types tests/contracts/v714-contracts.mjs",
+    "verify:secure": "npm run v714:secure",
+    "release:preflight": "npm run v714:preflight",
+    "v714:regional": "node scripts/v714-regional-gate.mjs"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.1.1",
+    "@astrojs/node": "^10.1.4",
+    "@astrojs/sitemap": "^3.7.3",
+    "aos": "^2.3.4",
+    "astro": "^6.1.9",
+    "marked": "^18.0.11"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@astrojs/tailwind": "^6.0.2",
+    "@types/three": "^0.185.1",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "three": "^0.185.1",
+    "typescript": "^6.0.3"
+  }
+}
+
+=======================================================
+9. PUBLICATION / FILE WRITE SINKS
+=======================================================
+E:\nexmold\.nexmold\content-factory\new-article\injection-molding-ejection-system-design.json:21: "markdown": ".nexmold\\content-factory\\new-article\\injection-molding-ejection-system-design.md",
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:23: appendFileSync,
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:25: mkdirSync,
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:30: writeFileSync,
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:97: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, `${line}\n`, 'utf8');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:127: mkdirSync(dirname(filePath), { recursive: true });
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:129: writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:131: writeFileSync(filePath, readFileSync(temp));
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:192: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:197: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:424: mkdirSync(RELEASE_DIR, { recursive: true });
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:425: writeFileSync(BUILD_LOG, '', 'utf8');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:468: mkdirSync(RELEASE_DIR, { recursive: true });
+E:\nexmold\scripts\bl02-evidence-claim-audit.mjs:46: mkdirSync,
+E:\nexmold\scripts\bl02-evidence-claim-audit.mjs:48: writeFileSync,
+E:\nexmold\scripts\bl02-evidence-claim-audit.mjs:2197: mkdirSync(
+E:\nexmold\scripts\bl02-evidence-claim-audit.mjs:2209: writeFileSync(
+E:\nexmold\scripts\generate-batch-01.mjs:9: fs.mkdirSync(OUT_DIR, { recursive: true });
+E:\nexmold\scripts\generate-batch-01.mjs:294: fs.writeFileSync(
+E:\nexmold\scripts\route-conflict-check.mjs:73: ".md",
+E:\nexmold\scripts\route-conflict-check.mjs:74: ".mdx",
+E:\nexmold\scripts\v714-article-factory.mjs:81: fs.mkdirSync(
+E:\nexmold\scripts\v714-article-factory.mjs:777: `${targetSlug}.md`,
+E:\nexmold\scripts\v714-article-factory.mjs:813: fs.writeFileSync(
+E:\nexmold\scripts\v714-article-factory.mjs:819: fs.writeFileSync(
+E:\nexmold\scripts\v714-article-factory.mjs:935: fs.writeFileSync(
+E:\nexmold\scripts\v714-batch01-source-resolution.mjs:261: fs.writeFileSync(
+E:\nexmold\scripts\v714-new-article-pilot.mjs:200: fs.mkdirSync(OUT_DIR, {
+E:\nexmold\scripts\v714-new-article-pilot.mjs:281: `${SLUG}.md`,
+E:\nexmold\scripts\v714-new-article-pilot.mjs:299: fs.writeFileSync(
+E:\nexmold\scripts\v714-new-article-pilot.mjs:361: fs.writeFileSync(
+E:\nexmold\src\pages\industries\v714\index.astro:144: file.endsWith(".md") &&
+E:\nexmold\src\pages\industries\v714\index.astro:145: file !== "production-report.md",
+E:\nexmold\src\pages\industries\v714\index.astro:168: file.replace(/\.md$/, ""),
+E:\nexmold\src\pages\industries\v714\[slug].astro:769: file.endsWith(".md") &&
+E:\nexmold\src\pages\industries\v714\[slug].astro:770: file !== "production-report.md",
+E:\nexmold\src\pages\industries\v714\[slug].astro:776: file.replace(/\.md$/, "");
+E:\nexmold\build-orchestrator.mjs:23: appendFileSync,
+E:\nexmold\build-orchestrator.mjs:25: mkdirSync,
+E:\nexmold\build-orchestrator.mjs:30: writeFileSync,
+E:\nexmold\build-orchestrator.mjs:100: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, `${line}\n`, 'utf8');
+E:\nexmold\build-orchestrator.mjs:130: mkdirSync(dirname(filePath), { recursive: true });
+E:\nexmold\build-orchestrator.mjs:132: writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+E:\nexmold\build-orchestrator.mjs:134: writeFileSync(filePath, readFileSync(temp));
+E:\nexmold\build-orchestrator.mjs:195: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
+E:\nexmold\build-orchestrator.mjs:200: if (existsSync(RELEASE_DIR)) appendFileSync(BUILD_LOG, text, 'utf8');
+E:\nexmold\build-orchestrator.mjs:427: mkdirSync(RELEASE_DIR, { recursive: true });
+E:\nexmold\build-orchestrator.mjs:428: writeFileSync(BUILD_LOG, '', 'utf8');
+E:\nexmold\build-orchestrator.mjs:481: mkdirSync(RELEASE_DIR, { recursive: true });
+
+=======================================================
+10. V714 PAGE INPUT / CONTENT SCAN
+=======================================================
+E:\nexmold\.nexmold\content-factory\batch-01\abs-injection-molding-design-guide.json:6: "route": "/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\abs-injection-molding-design-guide.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\conformal-cooling-injection-mold.json:6: "route": "/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\content-factory\batch-01\conformal-cooling-injection-mold.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-boss-design.json:6: "route": "/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-boss-design.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-cavity-balance-guide.json:6: "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-cavity-balance-guide.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-corner-radius.json:6: "route": "/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-corner-radius.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-cycle-time-optimization-guide.json:6: "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-cycle-time-optimization-guide.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-gate-location.json:6: "route": "/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-gate-location.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-parting-line-design.json:6: "route": "/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-parting-line-design.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-rib-design.json:6: "route": "/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-rib-design.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-sink-marks-causes-solutions.json:6: "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-sink-marks-causes-solutions.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-undercuts-guide.json:6: "route": "/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-undercuts-guide.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-wall-thickness-design.json:6: "route": "/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-wall-thickness-design.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-warpage-causes-solutions.json:6: "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-warpage-causes-solutions.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-weld-lines-causes-solutions.json:6: "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\injection-molding-weld-lines-causes-solutions.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\pc-injection-molding-design-guide.json:6: "route": "/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\pc-injection-molding-design-guide.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:10: "routePrefix": "/industries/v714/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:34: "route": "/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:47: "route": "/industries/v714/injection-molding-draft-angle/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:60: "route": "/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:73: "route": "/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:86: "route": "/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:99: "route": "/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:112: "route": "/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:125: "route": "/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:138: "route": "/industries/v714/injection-mold-venting-design/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:151: "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:164: "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:177: "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:190: "route": "/industries/v714/injection-mold-steel-selection-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:203: "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:216: "route": "/industries/v714/hot-runner-vs-cold-runner-injection-mold/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:229: "route": "/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:242: "route": "/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:255: "route": "/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:268: "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\production-report.json:281: "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\content-factory\batch-01\s136-vs-nak80-mold-steel.json:6: "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\content-factory\batch-01\s136-vs-nak80-mold-steel.json:17: "canonicalUrl": "https://www.nexmold.com/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\releases\20260829T103629Z-26668-f55bb604\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T103629Z-26668-f55bb604\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T104443Z-21932-0d04aa48\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T104443Z-21932-0d04aa48\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T105050Z-17444-f7aa36ad\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T105050Z-17444-f7aa36ad\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T110942Z-11368-d6aaf568\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T110942Z-11368-d6aaf568\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T111321Z-12160-9f30f0f1\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T111321Z-12160-9f30f0f1\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T112606Z-9044-3cfc6926\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T112606Z-9044-3cfc6926\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T112823Z-11876-fa9b0bd6\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T112823Z-11876-fa9b0bd6\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T113426Z-20284-09ce9ed2\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T113426Z-20284-09ce9ed2\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T113733Z-12136-9de11b64\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T113733Z-12136-9de11b64\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T113859Z-27132-2605cd64\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T113859Z-27132-2605cd64\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T114053Z-12168-1488e05c\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T114053Z-12168-1488e05c\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T114940Z-2572-1be85de1\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T114940Z-2572-1be85de1\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T120454Z-19036-ab3b41c7\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T120454Z-19036-ab3b41c7\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T121143Z-7512-9266d99b\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T121143Z-7512-9266d99b\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T121544Z-17228-38936288\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T121544Z-17228-38936288\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T130214Z-22872-92cebc09\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T130214Z-22872-92cebc09\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T140629Z-27444-b9bdffd9\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T140629Z-27444-b9bdffd9\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T140957Z-8220-bde9b23b\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T140957Z-8220-bde9b23b\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260829T141147Z-27828-494f03ab\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260829T141147Z-27828-494f03ab\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T030048Z-27360-916cb75b\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T030048Z-27360-916cb75b\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T030729Z-26296-ff594fc4\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T030729Z-26296-ff594fc4\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T031911Z-20692-b565fcb7\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T031911Z-20692-b565fcb7\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T033233Z-9792-d8a7b3b7\manifest.json:26: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T033233Z-9792-d8a7b3b7\manifest.json:106: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T043251Z-8196-2eff736f\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T043251Z-8196-2eff736f\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T054911Z-1848-d8157b55\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T054911Z-1848-d8157b55\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T065718Z-12132-3fec5aca\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T065718Z-12132-3fec5aca\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260830T094744Z-16284-6ec60742\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260830T094744Z-16284-6ec60742\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:74: "path": "industries/v714/abs-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:75: "route": "/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:80: "path": "industries/v714/conformal-cooling-injection-mold/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:81: "route": "/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:86: "path": "industries/v714/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:87: "route": "/industries/v714/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:92: "path": "industries/v714/injection-molding-boss-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:93: "route": "/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:98: "path": "industries/v714/injection-molding-cavity-balance-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:99: "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:104: "path": "industries/v714/injection-molding-corner-radius/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:105: "route": "/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:110: "path": "industries/v714/injection-molding-cycle-time-optimization-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:111: "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:116: "path": "industries/v714/injection-molding-gate-location/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:117: "route": "/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:122: "path": "industries/v714/injection-molding-parting-line-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:123: "route": "/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:128: "path": "industries/v714/injection-molding-rib-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:129: "route": "/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:134: "path": "industries/v714/injection-molding-sink-marks-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:135: "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:140: "path": "industries/v714/injection-molding-undercuts-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:141: "route": "/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:146: "path": "industries/v714/injection-molding-wall-thickness-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:147: "route": "/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:152: "path": "industries/v714/injection-molding-warpage-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:153: "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:158: "path": "industries/v714/injection-molding-weld-lines-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:159: "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:164: "path": "industries/v714/pc-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:165: "route": "/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:170: "path": "industries/v714/s136-vs-nak80-mold-steel/index.html",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\html-manifest.json:171: "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260831T022235Z-1512-569f9718\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:74: "path": "industries/v714/abs-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:75: "route": "/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:80: "path": "industries/v714/conformal-cooling-injection-mold/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:81: "route": "/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:86: "path": "industries/v714/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:87: "route": "/industries/v714/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:92: "path": "industries/v714/injection-molding-boss-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:93: "route": "/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:98: "path": "industries/v714/injection-molding-cavity-balance-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:99: "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:104: "path": "industries/v714/injection-molding-corner-radius/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:105: "route": "/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:110: "path": "industries/v714/injection-molding-cycle-time-optimization-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:111: "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:116: "path": "industries/v714/injection-molding-gate-location/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:117: "route": "/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:122: "path": "industries/v714/injection-molding-parting-line-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:123: "route": "/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:128: "path": "industries/v714/injection-molding-rib-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:129: "route": "/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:134: "path": "industries/v714/injection-molding-sink-marks-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:135: "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:140: "path": "industries/v714/injection-molding-undercuts-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:141: "route": "/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:146: "path": "industries/v714/injection-molding-wall-thickness-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:147: "route": "/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:152: "path": "industries/v714/injection-molding-warpage-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:153: "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:158: "path": "industries/v714/injection-molding-weld-lines-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:159: "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:164: "path": "industries/v714/pc-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:165: "route": "/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:170: "path": "industries/v714/s136-vs-nak80-mold-steel/index.html",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\html-manifest.json:171: "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260831T053655Z-33344-612628c6\manifest.json:78: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:74: "path": "industries/v714/abs-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:75: "route": "/industries/v714/abs-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:80: "path": "industries/v714/conformal-cooling-injection-mold/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:81: "route": "/industries/v714/conformal-cooling-injection-mold/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:86: "path": "industries/v714/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:87: "route": "/industries/v714/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:92: "path": "industries/v714/injection-molding-boss-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:93: "route": "/industries/v714/injection-molding-boss-design/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:98: "path": "industries/v714/injection-molding-cavity-balance-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:99: "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:104: "path": "industries/v714/injection-molding-corner-radius/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:105: "route": "/industries/v714/injection-molding-corner-radius/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:110: "path": "industries/v714/injection-molding-cycle-time-optimization-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:111: "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:116: "path": "industries/v714/injection-molding-gate-location/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:117: "route": "/industries/v714/injection-molding-gate-location/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:122: "path": "industries/v714/injection-molding-parting-line-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:123: "route": "/industries/v714/injection-molding-parting-line-design/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:128: "path": "industries/v714/injection-molding-rib-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:129: "route": "/industries/v714/injection-molding-rib-design/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:134: "path": "industries/v714/injection-molding-sink-marks-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:135: "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:140: "path": "industries/v714/injection-molding-undercuts-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:141: "route": "/industries/v714/injection-molding-undercuts-guide/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:146: "path": "industries/v714/injection-molding-wall-thickness-design/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:147: "route": "/industries/v714/injection-molding-wall-thickness-design/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:152: "path": "industries/v714/injection-molding-warpage-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:153: "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:158: "path": "industries/v714/injection-molding-weld-lines-causes-solutions/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:159: "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:164: "path": "industries/v714/pc-injection-molding-design-guide/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:165: "route": "/industries/v714/pc-injection-molding-design-guide/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:170: "path": "industries/v714/s136-vs-nak80-mold-steel/index.html",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\html-manifest.json:171: "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\manifest.json:18: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\releases\20260831T054956Z-20600-2f0bf571\manifest.json:83: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:6: *   1. Global kill-switch / structural precheck
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:27: readdirSync,
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:146: for (const entry of readdirSync(dir, { withFileTypes: true })) {
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:314: skip('GLOBAL_HTML_SET_EQUALITY', 'No expected HTML manifest configured. Current set is recorded but equality is not asserted.');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:318: fail('GLOBAL_HTML_SET_EQUALITY', `Expected manifest not found: ${EXPECTED_HTML_MANIFEST}`);
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:325: fail('GLOBAL_HTML_SET_EQUALITY', `Cannot parse expected manifest: ${error instanceof Error ? error.message : String(error)}`);
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:334: 'GLOBAL_HTML_SET_EQUALITY',
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:338: pass('GLOBAL_HTML_SET_EQUALITY', `Route set matches expected manifest (${currentRoutes.length} routes).`);
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:433: fail('GLOBAL_KILL_SWITCH', 'Release blocked by NEXMOLD_KILL_SWITCH=true.');
+E:\nexmold\.nexmold\releases\source-patches\build-orchestrator.before-v714-factory.20260831-134551.mjs:435: pass('GLOBAL_KILL_SWITCH', 'OFF');
+E:\nexmold\.nexmold\release-state.json:11: "label": "GLOBAL_KILL_SWITCH",
+E:\nexmold\.nexmold\release-state.json:76: "label": "GLOBAL_HTML_SET_EQUALITY",
+E:\nexmold\scripts\discover-bl01-evidence.mjs:29: for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+E:\nexmold\scripts\generate-batch-01.mjs:199: for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+E:\nexmold\scripts\route-conflict-check.mjs:136: const entries = fs.readdirSync(directory, {
+E:\nexmold\scripts\v714-article-factory.mjs:31: * 4. Public route is /industries/v714/<slug>/
+E:\nexmold\scripts\v714-article-factory.mjs:149: `https://www.nexmold.com/industries/v714/${article.slug}/`,
+E:\nexmold\scripts\v714-article-factory.mjs:243: `- [${topic}](/industries/v714/${topic}/)`,
+E:\nexmold\scripts\v714-article-factory.mjs:389: "/industries/v714/",
+E:\nexmold\scripts\v714-article-factory.mjs:441: `/industries/v714/${targetSlug}/`,
+E:\nexmold\scripts\v714-article-factory.mjs:639: `https://www.nexmold.com/industries/v714/${targetSlug}/`;
+E:\nexmold\scripts\v714-article-factory.mjs:835: `/industries/v714/${targetSlug}/`,
+E:\nexmold\scripts\v714-article-factory.mjs:1001: `Public route             : /industries/v714/<slug>/`,
+E:\nexmold\scripts\v714-core-gate.mjs:73: for (const entry of fs.readdirSync(dir, {
+E:\nexmold\src\components\EcosystemFooter.astro:16: badge: "24/7 GLOBAL ENGINEERING DESK",
+E:\nexmold\src\components\EcosystemFooter.astro:26: badge: "24/7 GLOBALE INGENIEUR-ZENTRALE",
+E:\nexmold\src\components\EcosystemFooter.astro:135: OFFICIAL DESK & GLOBAL HOURS
+E:\nexmold\src\components\Footer.astro:20: desc: "NEXMOLD: Delivering uncompromising operational efficiency in injection molding. Bridging high-yield manufacturing capabilities with global industrial partners.",
+E:\nexmold\src\components\Footer.astro:23: nav_3: "Global Operations",
+E:\nexmold\src\components\Footer.astro:26: aria_logo: "NEXMOLD Precision Systems - Global Headquarters",
+E:\nexmold\src\components\Footer.astro:35: desc: "NEXMOLD: Kompromisslose betriebliche Effizienz im Spritzguss. Verbindung von Hochleistungs-Fertigungskapazitäten mit globalen Industriepartnern.",
+E:\nexmold\src\components\Footer.astro:38: nav_3: "Globaler Betrieb",
+E:\nexmold\src\components\Footer.astro:53: nav_3: "Opérations Globales",
+E:\nexmold\src\components\GeoWelcomeBar.astro:17: global: "GLOBAL PROTOCOL ACTIVE"
+E:\nexmold\src\components\GeoWelcomeBar.astro:31: data-label-global={labels.global}
+E:\nexmold\src\components\GeoWelcomeBar.astro:72: let msg = "Optimized DFM routing active for Global industrial partners.";
+E:\nexmold\src\components\GeoWelcomeBar.astro:88: tag = data.labelGlobal;
+E:\nexmold\src\components\GeoWelcomeBar.astro:89: msg = "Multi-material molding analysis active for Global nodes.";
+E:\nexmold\src\components\GlobalPresence.astro:3: * GlobalPresence.astro - 媲美 RapidDirect 的顶级简洁版 (引用本地 world-map.svg)
+E:\nexmold\src\components\GlobalPresence.astro:17: subtitle: "High-yield automated production with seamless global ocean & air DDP logistics to US & EU.",
+E:\nexmold\src\components\Header.astro:95: "name": "NEXMOLD Global Navigation",
+E:\nexmold\src\components\Hero.astro:51: proof_label: "GLOBAL OEM & SUPPLY CHAIN PARTNERS:",
+E:\nexmold\src\components\Hero.astro:340: <style is:global>
+E:\nexmold\src\components\Industries.astro:14: const { lang = 'en', location = "Global" } = Astro.props;
+E:\nexmold\src\components\Industries.astro:24: { id: "03", name: "Electronics", keywords: "Consumer Tech", desc: "Complex overmolding, high-gloss finishes, and aesthetic components for global electronics.", img: "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800", aria: "High-precision plastic housing for consumer electronics" },
+E:\nexmold\src\components\IndustriesAndProcess.astro:18: ind_subtitle: "Precision structural and aesthetic plastic components custom-engineered for demanding global industries.",
+E:\nexmold\src\components\IndustriesAndProcess.astro:20: proc_subtitle: "From CAD design upload to global DDP ocean freight delivery. Engineered for high-turnover production predictability.",
+E:\nexmold\src\components\IndustriesAndProcess.astro:30: ind_subtitle: "Präzise Struktur- und Gehäuseteile für anspruchsvolle globale Industriebranchen.",
+E:\nexmold\src\components\IndustriesNav.astro:17: badge: "GLOBAL PRIMARY SECTORS",
+E:\nexmold\src\components\IndustriesNav.astro:19: subtitle: "Precision injection molded components for global industries",
+E:\nexmold\src\components\IndustriesNav.astro:23: badge: "GLOBALE PRIMÄRBRANCHEN",
+E:\nexmold\src\components\IndustriesNav.astro:25: subtitle: "Präzisions-Spritzgusskomponenten für globale Branchen",
+E:\nexmold\src\components\IndustriesNav.astro:247: <style is:global>
+E:\nexmold\src\components\IndustriesNav.astro:270: "name": "Global Primary Injection Molding Sectors",
+E:\nexmold\src\components\LogoBanner.astro:16: en: { label: "Innovative Companies & Global OEMs We Support" },
+E:\nexmold\src\components\LogoBanner.astro:17: de: { label: "Unternehmen & Globale OEMs, Die Wir Unterstützen" },
+E:\nexmold\src\components\MaterialsMatrix.astro:15: const { lang = 'en', location = "Global Market" } = Astro.props;
+E:\nexmold\src\components\MaterialsMatrix.astro:465: finish_desc: "Surface specifications compliant with global SPI, VDI 3400, and Mold-Tech laser standards.",
+E:\nexmold\src\components\MaterialsMatrix.astro:475: finish_desc: "Oberflächenspezifikationen konform mit globalen SPI-, VDI 3400- und Mold-Tech-Laserstandards.",
+E:\nexmold\src\components\OrderToDelivery.astro:249: <style is:global>
+E:\nexmold\src\components\Process.astro:15: const { lang = 'en', location = "Global" } = Astro.props;
+E:\nexmold\src\components\Process.astro:28: { no: "04", title: "Global Logistics", detail: "Direct container freight routing from Port of Yantian with active forwarder tracking and strategic dynamic rerouting fallback protocols.", status: "SHIPPING" }
+E:\nexmold\src\components\Process.astro:41: { no: "04", title: "Globale Logistik", detail: "Direktes Container-Routing vom Hafen Yantian mit aktivem Spediteur-Tracking und strategischen Protokollen für Ausweichrouten.", status: "VERSAND" }
+E:\nexmold\src\components\Process.astro:54: { no: "04", title: "Logistique Globale", detail: "Acheminement direct des conteneurs depuis le port de Yantian avec suivi actif du transitaire et protocoles de déroutement dynamique.", status: "EXPÉDITION" }
+E:\nexmold\src\components\RFQ.astro:12: const { lang = 'en', location = "Global Market" } = Astro.props;
+E:\nexmold\src\components\SocialProof.astro:17: badge: "GLOBAL MANUFACTURING NETWORK & CAPABILITY",
+E:\nexmold\src\components\SocialProof.astro:39: badge: "GLOBALE FERTIGUNGSNETZWERK",
+E:\nexmold\src\components\SocialProof.astro:55: feature_2_title: "Globale Seefracht-Anbindung",
+E:\nexmold\src\components\TrustBar.astro:17: badge: "GLOBAL LOGISTICS & FACTORY FOOTPRINT",
+E:\nexmold\src\components\TrustBar.astro:36: badge: "GLOBALE LOGISTIK & FABRIK-PRÄSENZ",
+E:\nexmold\src\components\TrustSignals.astro:29: const { lang = 'en', location = "Global" } = Astro.props;
+E:\nexmold\src\components\TrustSignals.astro:33: tag: "Global Compliance",
+E:\nexmold\src\components\TrustSignals.astro:45: tag: "Globale Compliance",
+E:\nexmold\src\components\TrustSignals.astro:57: tag: "Conformité Globale",
+E:\nexmold\src\data\industryData.json:6826: "top-tier-global-injection-mold": {
+E:\nexmold\src\data\industryData.json:6827: "name": "Top-tier global injection molder frequently outsourcing complex two-shot (2K) molds to Chinese toolmakers to optimize overall North American production costs. (Evco Plastics Supply Chain)",
+E:\nexmold\src\data\industryData.json:6853: "id": "industry:medical-large-industrial-parts:subsystem:top-tier-global-injection-mold",
+E:\nexmold\src\data\industryData.json:6855: "label": "Top-tier global injection molder frequently outsourcing complex two-shot (2K) molds to Chinese toolmakers to optimize overall North American production costs. (Evco Plastics Supply Chain)",
+E:\nexmold\src\data\industryData.json:6857: "top tier global injection mold",
+E:\nexmold\src\data\industryData.json:7066: "global-packaging-giant-with-bi": {
+E:\nexmold\src\data\industryData.json:7067: "name": "Global packaging giant with billions of units of demand for bottle caps, pump heads, and precision container closures. Core competency is high-speed mold cycling. (Berry Global Supply Chain)",
+E:\nexmold\src\data\industryData.json:7094: "id": "industry:packaging-healthcare:subsystem:global-packaging-giant-with-bi",
+E:\nexmold\src\data\industryData.json:7096: "label": "Global packaging giant with billions of units of demand for bottle caps, pump heads, and precision container closures. Core competency is high-speed mold cycling. (Berry Global Supply Chain)",
+E:\nexmold\src\data\industryData.json:7098: "global packaging giant with bi",
+E:\nexmold\src\data\industryData.json:13448: "global-semiconductor-equipment": {
+E:\nexmold\src\data\industryData.json:13449: "name": "Global semiconductor equipment giant requiring wafer handling robots, specialty plastic bushings (PEEK/Vespel), and high-purity chemical distribution modules. (Applied Materials (AMAT) Supply Chain)",
+E:\nexmold\src\data\industryData.json:13476: "id": "industry:semiconductor-display-manufacturing-equipment:subsystem:global-semiconductor-equipment",
+E:\nexmold\src\data\industryData.json:13478: "label": "Global semiconductor equipment giant requiring wafer handling robots, specialty plastic bushings (PEEK/Vespel), and high-purity chemical distribution modules. (Applied Materials (AMAT) Supply Chain)",
+E:\nexmold\src\data\industryData.json:13480: "global semiconductor equipment",
+E:\nexmold\src\data\industryData.json:17582: "name": "Specialty PEEK/Teflon fluid connectors and precision manifolds. A top-tier global micro-fluidics molding client with exceptionally high-value, high-premium parts. (IDEX Health & Science Supply Chain)",
+E:\nexmold\src\data\industryData.json:17610: "label": "Specialty PEEK/Teflon fluid connectors and precision manifolds. A top-tier global micro-fluidics molding client with exceptionally high-value, high-premium parts. (IDEX Health & Science Supply Chain)",
+E:\nexmold\src\data\industryData.json:19389: "global-leader-in-laboratory-ba": {
+E:\nexmold\src\data\industryData.json:19390: "name": "Global leader in laboratory balances and pipettes, demanding injection molded parts with extremely uniform wall thickness, ultra-low tolerances, and specialty transparent chemically resistant plastics. (Mettler Toledo (Lab) Supply Chain)",
+E:\nexmold\src\data\industryData.json:19416: "id": "industry:precision-analytical-instruments:subsystem:global-leader-in-laboratory-ba",
+E:\nexmold\src\data\industryData.json:19418: "label": "Global leader in laboratory balances and pipettes, demanding injection molded parts with extremely uniform wall thickness, ultra-low tolerances, and specialty transparent chemically resistant plastics. (Mettler Toledo (Lab) Supply Chain)",
+E:\nexmold\src\data\industryData.json:19420: "global leader in laboratory ba",
+E:\nexmold\src\data\industryData.json:24982: "name": "Electric toothbrush handle housings, wireless charging bases, and brush head frames requiring high-volume ultrasonic welding, two-shot waterproof molding—a global benchmark in medical/personal care injection. (Philips Sonicare Supply Chain)",
+E:\nexmold\src\data\industryData.json:25011: "label": "Electric toothbrush handle housings, wireless charging bases, and brush head frames requiring high-volume ultrasonic welding, two-shot waterproof molding—a global benchmark in medical/personal care injection. (Philips Sonicare Supply Chain)",
+E:\nexmold\src\data\industryData.json:25334: "global-leader-in-modular-plast": {
+E:\nexmold\src\data\industryData.json:25335: "name": "Global leader in modular plastic conveyor belting, procuring massive quantities of POM and PP injection molded chain links with multi-cavity molds and extreme lifespan requirements. (Intralox Supply Chain)",
+E:\nexmold\src\data\industryData.json:25361: "id": "industry:material-handling-conveyor-systems:subsystem:global-leader-in-modular-plast",
+E:\nexmold\src\data\industryData.json:25363: "label": "Global leader in modular plastic conveyor belting, procuring massive quantities of POM and PP injection molded chain links with multi-cavity molds and extreme lifespan requirements. (Intralox Supply Chain)",
+E:\nexmold\src\data\industryData.json:25365: "global leader in modular plast",
+E:\nexmold\src\data\industryData.json:27673: "global-fluid-motion-control": {
+E:\nexmold\src\data\industryData.json:27674: "industryTitle": "Global Fluid & Motion Control",
+E:\nexmold\src\data\industryData.json:27676: "name": "Global Fluid & Motion Control Custom Manufacturing Solutions",
+E:\nexmold\src\data\industryData.json:27677: "app": "Advanced applications in Global Fluid & Motion Control",
+E:\nexmold\src\data\industryData.json:27700: "id": "industry:global-fluid-motion-control",
+E:\nexmold\src\data\industryData.json:27702: "label": "Global Fluid & Motion Control",
+E:\nexmold\src\data\industryData.json:27704: "Global Fluid & Motion Control",
+E:\nexmold\src\data\industryData.json:27705: "global fluid motion control",
+E:\nexmold\src\data\industryData.json:27706: "Advanced applications in Global Fluid & Motion Control"
+E:\nexmold\src\data\industryData.json:27713: "app": "Global Fluid & Motion Control",
+E:\nexmold\src\data\industryData.json:27736: "id": "industry:global-fluid-motion-control:subsystem:plastic-quick-couplings-for-in",
+E:\nexmold\src\data\industryData.json:27741: "Global Fluid & Motion Control"
+E:\nexmold\src\data\industryData.json:27748: "industrySlug": "global-fluid-motion-control",
+E:\nexmold\src\data\industryData.json:27782: "rootRoute": "/industries/global-fluid-motion-control/",
+E:\nexmold\src\data\industryData.json:27783: "subsystemRoutes": "/industries/global-fluid-motion-control/<subsystem>/",
+E:\nexmold\src\data\industryData.json:27946: "as-a-global-laboratory-channel": {
+E:\nexmold\src\data\industryData.json:27947: "name": "As a global laboratory channel leader, they require massive private-label OEM injection molding for plastic storage bins, racks, and sample collection buckets. (VWR (Avantor) Supply Chain)",
+E:\nexmold\src\data\industryData.json:27971: "id": "industry:laboratory-equipment-distribution:subsystem:as-a-global-laboratory-channel",
+E:\nexmold\src\data\industryData.json:27973: "label": "As a global laboratory channel leader, they require massive private-label OEM injection molding for plastic storage bins, racks, and sample collection buckets. (VWR (Avantor) Supply Chain)",
+E:\nexmold\src\data\industryData.json:27975: "as a global laboratory channel",
+E:\nexmold\src\data\industryData.json:29843: "name": "Plastic chains, sprockets, and water management components. A major player alongside Intralox in the global industrial chain and conveyor market. (Rexnord Supply Chain)",
+E:\nexmold\src\data\industryData.json:29871: "label": "Plastic chains, sprockets, and water management components. A major player alongside Intralox in the global industrial chain and conveyor market. (Rexnord Supply Chain)",
+E:\nexmold\src\data\industryData.json:31394: "globally-most-successful-tool": {
+E:\nexmold\src\data\industryData.json:31395: "name": "Globally most successful tool storage system. Iconic heavy-duty cases, red/black two-color overmolded handles, and aluminum reinforced frames exemplify the combination of injection molding and CNC machining. (Milwaukee (Storage Div) Supply Chain)",
+E:\nexmold\src\data\industryData.json:31422: "id": "industry:packout-tool-storage-systems:subsystem:globally-most-successful-tool",
+E:\nexmold\src\data\industryData.json:31424: "label": "Globally most successful tool storage system. Iconic heavy-duty cases, red/black two-color overmolded handles, and aluminum reinforced frames exemplify the combination of injection molding and CNC machining. (Milwaukee (Storage Div) Supply Chain)",
+E:\nexmold\src\data\industryData.json:31426: "globally most successful tool",
+E:\nexmold\src\data\industryData.json:39310: "global-water-treatment-fluid-control": {
+E:\nexmold\src\data\industryData.json:39311: "industryTitle": "Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\industryData.json:39313: "name": "Global Water Treatment & Fluid Control Custom Manufacturing Solutions",
+E:\nexmold\src\data\industryData.json:39314: "app": "Advanced applications in Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\industryData.json:39337: "id": "industry:global-water-treatment-fluid-control",
+E:\nexmold\src\data\industryData.json:39339: "label": "Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\industryData.json:39341: "Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\industryData.json:39342: "global water treatment fluid control",
+E:\nexmold\src\data\industryData.json:39343: "Advanced applications in Global Water Treatment & Fluid Control"
+E:\nexmold\src\data\industryData.json:39350: "app": "Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\industryData.json:39373: "id": "industry:global-water-treatment-fluid-control:subsystem:backflow-preventers-plastic-p",
+E:\nexmold\src\data\industryData.json:39378: "Global Water Treatment & Fluid Control"
+E:\nexmold\src\data\industryData.json:39385: "industrySlug": "global-water-treatment-fluid-control",
+E:\nexmold\src\data\industryData.json:39419: "rootRoute": "/industries/global-water-treatment-fluid-control/",
+E:\nexmold\src\data\industryData.json:39420: "subsystemRoutes": "/industries/global-water-treatment-fluid-control/<subsystem>/",
+E:\nexmold\src\data\industryData.json:40887: "name": "Hotel RFID reader housings and energy-saving switches requiring high-volume production with consistent color fastness even after years of sunlight exposure. (Assa Abloy Global Solutions Supply Chain)",
+E:\nexmold\src\data\industryData.json:40915: "label": "Hotel RFID reader housings and energy-saving switches requiring high-volume production with consistent color fastness even after years of sunlight exposure. (Assa Abloy Global Solutions Supply Chain)",
+E:\nexmold\src\data\industryData.json:52574: "globally-massive-mesh-router-s": {
+E:\nexmold\src\data\industryData.json:52575: "name": "Globally massive Mesh router shipments requiring high-volume white high-gloss ABS injection molding, CNC heat sinks, and multi-color LED indicator components. (Eero (Amazon) Supply Chain)",
+E:\nexmold\src\data\industryData.json:52599: "id": "industry:smart-whole-home-wifi-routers:subsystem:globally-massive-mesh-router-s",
+E:\nexmold\src\data\industryData.json:52601: "label": "Globally massive Mesh router shipments requiring high-volume white high-gloss ABS injection molding, CNC heat sinks, and multi-color LED indicator components. (Eero (Amazon) Supply Chain)",
+E:\nexmold\src\data\industryData.json:52603: "globally massive mesh router s",
+E:\nexmold\src\data\industryData.json:63565: "globally-acclaimed-mechanical": {
+E:\nexmold\src\data\industryData.json:63566: "name": "Globally acclaimed mechanical display with thousands of precision injection molded \"flap\" components and high-reliability stepper motor plastic brackets. (Vestaboard Supply Chain)",
+E:\nexmold\src\data\industryData.json:63590: "id": "industry:smart-mechanical-display-hardware:subsystem:globally-acclaimed-mechanical",
+E:\nexmold\src\data\industryData.json:63592: "label": "Globally acclaimed mechanical display with thousands of precision injection molded \"flap\" components and high-reliability stepper motor plastic brackets. (Vestaboard Supply Chain)",
+E:\nexmold\src\data\industryData.json:63594: "globally acclaimed mechanical",
+E:\nexmold\src\data\industryData.json:66602: "global tracking network rugged metal polymer assemblies"
+E:\nexmold\src\data\industryData.json:66616: "globally-deployed-satellite-tr": {
+E:\nexmold\src\data\industryData.json:66617: "name": "Globally deployed satellite tracking camera arrays requiring optical baffles, weatherproof housings, and high-precision CNC tracking gantry bases. (Slingshot Aerospace Supply Chain)",
+E:\nexmold\src\data\industryData.json:66640: "global tracking network rugged metal polymer assemblies"
+E:\nexmold\src\data\industryData.json:66644: "id": "industry:space-situational-awareness-hardware:subsystem:globally-deployed-satellite-tr",
+E:\nexmold\src\data\industryData.json:66646: "label": "Globally deployed satellite tracking camera arrays requiring optical baffles, weatherproof housings, and high-precision CNC tracking gantry bases. (Slingshot Aerospace Supply Chain)",
+E:\nexmold\src\data\industryData.json:66648: "globally deployed satellite tr",
+E:\nexmold\src\data\industryData.json:66679: "global tracking network rugged metal polymer assemblies"
+E:\nexmold\src\data\industryData.json:71506: "global-leader-in-surgical-robo": {
+E:\nexmold\src\data\industryData.json:71507: "name": "Global leader in surgical robotics (da Vinci). Demands extreme precision in injection molding for robotic arm end-effectors, sterile single-use plastic sheaths, and precision sensor assemblies. (Intuitive Surgical Supply Chain)",
+E:\nexmold\src\data\industryData.json:71533: "id": "industry:surgical-robotics:subsystem:global-leader-in-surgical-robo",
+E:\nexmold\src\data\industryData.json:71535: "label": "Global leader in surgical robotics (da Vinci). Demands extreme precision in injection molding for robotic arm end-effectors, sterile single-use plastic sheaths, and precision sensor assemblies. (Intuitive Surgical Supply Chain)",
+E:\nexmold\src\data\industryData.json:71537: "global leader in surgical robo",
+E:\nexmold\src\data\industryData.json:74561: "global-drone-logistics-leader": {
+E:\nexmold\src\data\industryData.json:74562: "name": "Global drone logistics leader. Takeoff/landing docks and drone compartments requiring large volumes of lightweight, high-weatherability outdoor injection molded components. (Zipline Supply Chain)",
+E:\nexmold\src\data\industryData.json:74589: "id": "industry:drone-logistics-delivery:subsystem:global-drone-logistics-leader",
+E:\nexmold\src\data\industryData.json:74591: "label": "Global drone logistics leader. Takeoff/landing docks and drone compartments requiring large volumes of lightweight, high-weatherability outdoor injection molded components. (Zipline Supply Chain)",
+E:\nexmold\src\data\industryData.json:74593: "global drone logistics leader",
+E:\nexmold\src\data\knowledge.ts:5410: // Article > Category > Global fallback.
+E:\nexmold\src\data\knowledgeGraphResolver.ts:4: * No mutable global article cache: indexes are isolated by article-array identity.
+E:\nexmold\src\data\navigationData.ts:264: title: 'Global Logistics',
+E:\nexmold\src\data\raw_clients_396.json:1084: "description": "Top-tier global injection molder frequently outsourcing complex two-shot (2K) molds to Chinese toolmakers to optimize overall North American production costs.",
+E:\nexmold\src\data\raw_clients_396.json:1129: "company": "Berry Global",
+E:\nexmold\src\data\raw_clients_396.json:1131: "description": "Global packaging giant with billions of units of demand for bottle caps, pump heads, and precision container closures. Core competency is high-speed mold cycling.",
+E:\nexmold\src\data\raw_clients_396.json:2366: "description": "Global semiconductor equipment giant requiring wafer handling robots, specialty plastic bushings (PEEK/Vespel), and high-purity chemical distribution modules.",
+E:\nexmold\src\data\raw_clients_396.json:3172: "description": "Specialty PEEK/Teflon fluid connectors and precision manifolds. A top-tier global micro-fluidics molding client with exceptionally high-value, high-premium parts.",
+E:\nexmold\src\data\raw_clients_396.json:3517: "description": "Global leader in laboratory balances and pipettes, demanding injection molded parts with extremely uniform wall thickness, ultra-low tolerances, and specialty transparent chemically resistant plastics.",
+E:\nexmold\src\data\raw_clients_396.json:4621: "description": "Electric toothbrush handle housings, wireless charging bases, and brush head frames requiring high-volume ultrasonic welding, two-shot waterproof molding—a global benchmark in medical/personal care injection.",
+E:\nexmold\src\data\raw_clients_396.json:4690: "description": "Global leader in modular plastic conveyor belting, procuring massive quantities of POM and PP injection molded chain links with multi-cavity molds and extreme lifespan requirements.",
+E:\nexmold\src\data\raw_clients_396.json:5149: "industry": "Global Fluid & Motion Control",
+E:\nexmold\src\data\raw_clients_396.json:5196: "description": "As a global laboratory channel leader, they require massive private-label OEM injection molding for plastic storage bins, racks, and sample collection buckets.",
+E:\nexmold\src\data\raw_clients_396.json:5565: "description": "Plastic chains, sprockets, and water management components. A major player alongside Intralox in the global industrial chain and conveyor market.",
+E:\nexmold\src\data\raw_clients_396.json:5864: "description": "Globally most successful tool storage system. Iconic heavy-duty cases, red/black two-color overmolded handles, and aluminum reinforced frames exemplify the combination of injection molding and CNC machining.",
+E:\nexmold\src\data\raw_clients_396.json:7450: "industry": "Global Water Treatment & Fluid Control",
+E:\nexmold\src\data\raw_clients_396.json:7748: "company": "Assa Abloy Global Solutions",
+E:\nexmold\src\data\raw_clients_396.json:10074: "description": "Globally massive Mesh router shipments requiring high-volume white high-gloss ABS injection molding, CNC heat sinks, and multi-color LED indicator components.",
+E:\nexmold\src\data\raw_clients_396.json:12282: "description": "Globally acclaimed mechanical display with thousands of precision injection molded \"flap\" components and high-reliability stepper motor plastic brackets.",
+E:\nexmold\src\data\raw_clients_396.json:12880: "description": "Globally deployed satellite tracking camera arrays requiring optical baffles, weatherproof housings, and high-precision CNC tracking gantry bases.",
+E:\nexmold\src\data\raw_clients_396.json:12896: "global tracking network rugged metal polymer assemblies"
+E:\nexmold\src\data\raw_clients_396.json:13825: "description": "Global leader in surgical robotics (da Vinci). Demands extreme precision in injection molding for robotic arm end-effectors, sterile single-use plastic sheaths, and precision sensor assemblies.",
+E:\nexmold\src\data\raw_clients_396.json:14423: "description": "Global drone logistics leader. Takeoff/landing docks and drone compartments requiring large volumes of lightweight, high-weatherability outdoor injection molded components.",
+E:\nexmold\src\data\semanticPageScore.ts:3: * Pure scoring only. No URL/canonical decisions and no global mutable state.
+E:\nexmold\src\layouts\MainLayout.astro:49: <style is:global>
+E:\nexmold\src\layouts\MainLayout.astro:108: 🚢 Global Ocean Express: Direct FCL/LCL DDP Freight to {location}
+E:\nexmold\src\layouts\MainLayout.astro:123: declare global {
+E:\nexmold\src\pages\free-dfm-analysis\index.astro:256: GLOBAL & RESET (Scoped to this file to prevent leaks)
+E:\nexmold\src\pages\free-dfm-analysis\index.astro:258: :global(*) {
+E:\nexmold\src\pages\free-dfm-analysis\index.astro:261: :global(html) {
+E:\nexmold\src\pages\free-dfm-analysis\index.astro:264: :global(body) {
+E:\nexmold\src\pages\industries\v714\index.astro:133: * /industries/v714/[slug]/
+E:\nexmold\src\pages\industries\v714\index.astro:141: .readdirSync(FACTORY_DIR)
+E:\nexmold\src\pages\industries\v714\index.astro:145: file !== "production-report.md",
+E:\nexmold\src\pages\industries\v714\index.astro:392: "https://www.nexmold.com/industries/v714/";
+E:\nexmold\src\pages\industries\v714\index.astro:685: href={`/industries/v714/${article.slug}/`}
+E:\nexmold\src\pages\industries\v714\index.astro:727: href={`/industries/v714/${article.slug}/`}
+E:\nexmold\src\pages\industries\v714\index.astro:783: href={`/industries/v714/${article.slug}/`}
+E:\nexmold\src\pages\industries\v714\index.astro:801: href={`/industries/v714/${article.slug}/`}
+E:\nexmold\src\pages\industries\v714\[slug].astro:14: *   /industries/v714/[slug]/
+E:\nexmold\src\pages\industries\v714\[slug].astro:766: .readdirSync(factoryDir)
+E:\nexmold\src\pages\industries\v714\[slug].astro:770: file !== "production-report.md",
+E:\nexmold\src\pages\industries\v714\[slug].astro:887: `https://www.nexmold.com/industries/v714/${slug}/`,
+E:\nexmold\src\pages\industries\v714\[slug].astro:1188: href="/industries/v714/"
+E:\nexmold\src\pages\industries\v714\[slug].astro:1534: .wp-content :global(h2) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1544: .wp-content :global(h3) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1553: .wp-content :global(h4) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1560: .wp-content :global(p) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1564: .wp-content :global(strong) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1569: .wp-content :global(em) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1573: .wp-content :global(a) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1580: .wp-content :global(a:hover) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1584: .wp-content :global(ul),
+E:\nexmold\src\pages\industries\v714\[slug].astro:1585: .wp-content :global(ol) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1590: .wp-content :global(li) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1595: .wp-content :global(blockquote) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1603: .wp-content :global(hr) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1609: .wp-content :global(code) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1742: .wp-faq-answer :global(p) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1895: .wp-content :global(h2) {
+E:\nexmold\src\pages\industries\v714\[slug].astro:1900: .wp-content :global(h3) {
+E:\nexmold\src\pages\industries\index.astro:14: const pageDescription = "Explore NxMold's ISO 9001:2015 certified plastic injection molding and rapid precision tooling matrix across 12 global industrial sectors, engineered in Dongguan, China.";
+E:\nexmold\src\pages\industries\index.astro:242: "areaServed": ["United States", "Europe", "Global"],
+E:\nexmold\src\pages\industries\index.astro:467: Global Industry <br />
+E:\nexmold\src\pages\industries\index.astro:471: Direct-factory custom plastic injection molding and rapid precision tooling solutions engineered for global industry leaders. Built with extreme tolerance control and massive capacity in Dongguan, China.
+E:\nexmold\src\pages\industries\index.astro:478: <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Global Verticals</span>
+E:\nexmold\src\pages\industries\index.astro:557: <span class="text-[11px] font-extrabold text-white uppercase tracking-widest">Global Supply Chain</span>
+E:\nexmold\src\pages\industries\index.astro:805: Strict adherence to DIN 16742 standards. Every production batch undergoes multi-axis geometric coordinates testing via Zeiss CMM equipment prior to global dispatch.
+E:\nexmold\src\pages\industries\index.astro:1096: <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-400 to-amber-200">Global Engineers.</span>
+E:\nexmold\src\pages\knowledge-hub\index.astro:480: :global(html) {
+E:\nexmold\src\pages\knowledge-hub\index.astro:1432: :global(html) { scroll-behavior: auto; }
+E:\nexmold\src\pages\resources\faq.astro:139: <!-- 板块 3: 出口与物流 (Global Shipping & DDP) -->
+E:\nexmold\src\pages\services\custom-injection-molding.astro:114: "areaServed": "Global",
+E:\nexmold\src\pages\services\index.astro:88: badge: "GLOBAL LOGISTICS",
+E:\nexmold\src\pages\services\index.astro:523: Select from a vast inventory of thermoplastics, including ABS, Polycarbonate (PC), PA66+GF, POM, PEEK, and elastomeric TPE/TPU for overmolding. We source certified resins from global suppliers like SABIC, BASF, and DuPont.
+E:\nexmold\src\pages\services\index.astro:827: declare global {
+E:\nexmold\src\pages\services\index.astro:862: function initGlobalModal() {
+E:\nexmold\src\pages\services\index.astro:887: initGlobalModal();
+E:\nexmold\src\pages\services\index.astro:890: initGlobalModal();
+E:\nexmold\src\pages\services\[slug].astro:483: <style is:global>
+E:\nexmold\src\pages\[lang]\index.astro:4: * 👑 NEXMOLD 国际化多语言动态网关 (EN / DE / FR Global Localization Gateway)
+E:\nexmold\src\pages\[lang]\index.astro:60: <a href="/" class="hover:text-[#EA580C] transition-colors">Global Home</a>
+E:\nexmold\src\pages\about.astro:190: Global Supply Chain & Turnkey DDP Export Logistics
+E:\nexmold\src\pages\index.astro:14: * 11. 屏 11：GlobalPresence (全球交付与工厂实力指标)
+E:\nexmold\src\pages\index.astro:38: import GlobalPresence from '../components/GlobalPresence.astro'; // 🌐 屏 11：全球交付与工厂实力指标
+E:\nexmold\src\pages\index.astro:195: <!-- 🌐 11. 第十一屏：GlobalPresence (全球交付与工厂实力指标) -->
+E:\nexmold\src\pages\index.astro:196: <GlobalPresence lang={lang} />
+E:\nexmold\src\pages\index.astro:247: <style is:global>
+E:\nexmold\src\regional\article-producer.ts:1885: `- ${topic.title} — ${topic.relationship} — /industries/v714/${topic.slug}/`,
+E:\nexmold\src\regional\white-paper-content-v2.ts:22: *   /industries/v714/[slug]/
+E:\nexmold\build-orchestrator.mjs:6: *   1. Global kill-switch / structural precheck
+E:\nexmold\build-orchestrator.mjs:27: readdirSync,
+E:\nexmold\build-orchestrator.mjs:67: const SMOKE_ROUTES = (process.env.NEXMOLD_SMOKE_ROUTES ?? '/,/404.html,/sitemap.xml,/services/custom-injection-molding,/knowledge-hub/,/industries/v714/')
+E:\nexmold\build-orchestrator.mjs:149: for (const entry of readdirSync(dir, { withFileTypes: true })) {
+E:\nexmold\build-orchestrator.mjs:317: skip('GLOBAL_HTML_SET_EQUALITY', 'No expected HTML manifest configured. Current set is recorded but equality is not asserted.');
+E:\nexmold\build-orchestrator.mjs:321: fail('GLOBAL_HTML_SET_EQUALITY', `Expected manifest not found: ${EXPECTED_HTML_MANIFEST}`);
+E:\nexmold\build-orchestrator.mjs:328: fail('GLOBAL_HTML_SET_EQUALITY', `Cannot parse expected manifest: ${error instanceof Error ? error.message : String(error)}`);
+E:\nexmold\build-orchestrator.mjs:337: 'GLOBAL_HTML_SET_EQUALITY',
+E:\nexmold\build-orchestrator.mjs:341: pass('GLOBAL_HTML_SET_EQUALITY', `Route set matches expected manifest (${currentRoutes.length} routes).`);
+E:\nexmold\build-orchestrator.mjs:436: fail('GLOBAL_KILL_SWITCH', 'Release blocked by NEXMOLD_KILL_SWITCH=true.');
+E:\nexmold\build-orchestrator.mjs:438: pass('GLOBAL_KILL_SWITCH', 'OFF');
+E:\nexmold\package-lock.json:71: "readdirp": "^4.0.1"
+E:\nexmold\package-lock.json:80: "node_modules/@astrojs/check/node_modules/readdirp": {
+E:\nexmold\package-lock.json:82: "resolved": "https://registry.npmmirror.com/readdirp/-/readdirp-4.1.2.tgz",
+E:\nexmold\package-lock.json:137: "tinyglobby": "^0.2.17"
+E:\nexmold\package-lock.json:234: "tinyglobby": "^0.2.15",
+E:\nexmold\package-lock.json:2960: "tinyglobby": "^0.2.15",
+E:\nexmold\package-lock.json:3210: "glob-parent": "~5.1.2",
+E:\nexmold\package-lock.json:3212: "is-glob": "~4.0.1",
+E:\nexmold\package-lock.json:3214: "readdirp": "~3.6.0"
+E:\nexmold\package-lock.json:3226: "node_modules/chokidar/node_modules/glob-parent": {
+E:\nexmold\package-lock.json:3228: "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz",
+E:\nexmold\package-lock.json:3233: "is-glob": "^4.0.1"
+E:\nexmold\package-lock.json:3819: "node_modules/fast-glob": {
+E:\nexmold\package-lock.json:3821: "resolved": "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.3.tgz",
+E:\nexmold\package-lock.json:3828: "glob-parent": "^5.1.2",
+E:\nexmold\package-lock.json:3836: "node_modules/fast-glob/node_modules/glob-parent": {
+E:\nexmold\package-lock.json:3838: "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz",
+E:\nexmold\package-lock.json:3843: "is-glob": "^4.0.1"
+E:\nexmold\package-lock.json:4030: "node_modules/glob-parent": {
+E:\nexmold\package-lock.json:4032: "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-6.0.2.tgz",
+E:\nexmold\package-lock.json:4037: "is-glob": "^4.0.3"
+E:\nexmold\package-lock.json:4351: "node_modules/is-extglob": {
+E:\nexmold\package-lock.json:4353: "resolved": "https://registry.npmjs.org/is-extglob/-/is-extglob-2.1.1.tgz",
+E:\nexmold\package-lock.json:4371: "node_modules/is-glob": {
+E:\nexmold\package-lock.json:4373: "resolved": "https://registry.npmjs.org/is-glob/-/is-glob-4.0.3.tgz",
+E:\nexmold\package-lock.json:4378: "is-extglob": "^2.1.1"
+E:\nexmold\package-lock.json:6315: "node_modules/readdirp": {
+E:\nexmold\package-lock.json:6317: "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-3.6.0.tgz",
+E:\nexmold\package-lock.json:6328: "node_modules/readdirp/node_modules/picomatch": {
+E:\nexmold\package-lock.json:6976: "tinyglobby": "^0.2.11",
+E:\nexmold\package-lock.json:7059: "fast-glob": "^3.3.2",
+E:\nexmold\package-lock.json:7060: "glob-parent": "^6.0.2",
+E:\nexmold\package-lock.json:7061: "is-glob": "^4.0.3",
+E:\nexmold\package-lock.json:7139: "node_modules/tinyglobby": {
+E:\nexmold\package-lock.json:7141: "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+E:\nexmold\package-lock.json:7559: "readdirp": "^5.0.0"
+E:\nexmold\package-lock.json:7568: "node_modules/unstorage/node_modules/readdirp": {
+E:\nexmold\package-lock.json:7570: "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-5.0.0.tgz",
+E:\nexmold\package-lock.json:7672: "tinyglobby": "^0.2.15"
+
+=======================================================
+TRACE COMPLETE — NO PROJECT FILES MODIFIED
+TRACE FILE:
+E:\nexmold\M4-STEP-5-PRODUCTION-WIRING-TRACE.txt
+=======================================================

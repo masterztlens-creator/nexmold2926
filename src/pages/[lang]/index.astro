@@ -1,0 +1,127 @@
+---
+/**
+ * src/pages/[lang]/index.astro
+ * 👑 NEXMOLD 国际化多语言动态网关 (EN / DE / FR Global Localization Gateway)
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'de' } },
+    { params: { lang: 'fr' } },
+  ];
+}
+
+const { lang } = Astro.params;
+
+// 显式限定 lang 类型以匹配组件 Props 约束
+type SupportedLang = 'de' | 'fr' | 'en';
+const currentLang: SupportedLang = (lang === 'fr' ? 'fr' : 'de');
+
+const localizedMeta: Record<SupportedLang, { title: string; desc: string; heroTitle: string; heroSub: string; cta: string }> = {
+  en: {
+    title: "Precision Injection Molding & Rapid Tooling | NEXMOLD",
+    desc: "High-precision plastic injection molding and rapid steel tooling.",
+    heroTitle: "Digital Manufacturing & Precision Molding",
+    heroSub: "S136 steel molds and direct DDP delivery.",
+    cta: "Request Quote"
+  },
+  de: {
+    title: "Präzisions-Spritzguss & Schneller Formenbau | NEXMOLD",
+    desc: "Hochpräziser Kunststoff-Spritzguss, Rapid Tooling mit S136-Stahl und Zeiss CMM-Qualitätsprüfung aus Dongguan, China.",
+    heroTitle: "Digitale Fertigung & Präzisions-Spritzguss",
+    heroSub: "S136-Stahlformen, 90T–1200T Haitian-Spritzgießmaschinen und direkte DDP-Lieferung nach Europa.",
+    cta: "Kostenloses Angebot anfordern"
+  },
+  fr: {
+    title: "Moulage par Injection de Précision & Outillage Rapide | NEXMOLD",
+    desc: "Moulage par injection plastique de haute précision, outillage S136 et métrologie Zeiss CMM pour l’industrie européenne.",
+    heroTitle: "Fabrication Numérique & Injection Plastique",
+    heroSub: "Moules en acier S136, presses Haitian de 90T à 1200T et livraison DDP directe en Europe.",
+    cta: "Demander un Devis Rapide"
+  }
+};
+
+const meta = localizedMeta[currentLang];
+---
+
+<MainLayout title={meta.title} description={meta.desc} lang={currentLang} location="Europe">
+  <Header lang={currentLang} />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 语种标识 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Global Home</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black uppercase">Region: {currentLang}</span>
+      </nav>
+
+      <!-- 英雄区 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-16">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          LOCALIZED_GATEWAY // EUROPEAN_MARKET_SUPPORT
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          {meta.heroTitle}
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl mb-8">
+          {meta.heroSub}
+        </p>
+
+        <button id="lang-hero-rfq" type="button" class="bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 px-8 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+          {meta.cta} →
+        </button>
+      </section>
+
+      <!-- 核心矩阵跳转卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs text-[#0F2B5B]">
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">01 // PRODUCTS</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">High-Performance Resins</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80 mb-4">Explore PEEK, Optical PC, POM Acetal, and Ultem PEI engineered for stringent European industrial standards.</p>
+          <a href={currentLang === 'de' ? '/de/products' : '/fr/products'} class="font-mono text-[#EA580C] font-black hover:underline uppercase">Explore Products →</a>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">02 // CAPABILITIES</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Zeiss Metrology & S136 Steel</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80 mb-4">7-14 day rapid T1 tooling accompanied by full Zeiss CMM 3D metrology inspection reports.</p>
+          <a href="/quality/zeiss-cmm-inspection" class="font-mono text-[#EA580C] font-black hover:underline uppercase">Inspect Quality →</a>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">03 // RESOURCES</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Interactive Calculators</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80 mb-4">Calculate resin shrinkage, press tonnage, and mold tooling costs instantly in your local currency format.</p>
+          <a href="/resources/calculators/shrinkage-calculator" class="font-mono text-[#EA580C] font-black hover:underline uppercase">Open Calculators →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang={currentLang} />
+  <EcosystemFooter lang={currentLang} />
+</MainLayout>
+
+<script>
+  function setupLangEvents() {
+    const btn = document.getElementById('lang-hero-rfq');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupLangEvents);
+</script>

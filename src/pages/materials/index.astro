@@ -1,0 +1,1611 @@
+---
+import '../../styles/global.css';
+
+/**
+ * src/pages/materials/index.astro
+ * NEXMOLD 全球工程塑料知识图谱与选型聚合页 (180+ Polymer Material Hub)
+ * 工业旗舰究极闭环版：暗夜钛金美学 + 智能模具钢材映射 + 3D 视差倾斜 + 完美响应式分页
+ */
+
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import rawResinsData from '../../data/resins.json';
+
+export type SupportedLang = 'en' | 'de' | 'fr';
+
+interface Props {
+  lang?: SupportedLang;
+}
+
+const { lang = 'en' } = Astro.props as Props;
+const prefix = lang === 'en' ? '' : `/${lang}`;
+const pageUrl = `https://nxmold.com${prefix}/materials`;
+
+interface HeroSpecs {
+  badge: string;
+  h1Main: string;
+  h1Accent: string;
+  h1Sub: string;
+  lead: string;
+  searchPlaceholder: string;
+  searchBtn: string;
+  hotChips: string[];
+  ctaPrimary: string;
+  ctaSubtext: string;
+  ctaSecondary: string;
+  hudProbe1Title: string;
+  hudProbe1Val: string;
+  hudProbe2Title: string;
+  hudProbe2Val: string;
+  hudProbe3Title: string;
+  hudProbe3Val: string;
+}
+
+const heroSpecsMap: Record<SupportedLang, HeroSpecs> = {
+  en: {
+    badge: 'DIRECT FACTORY TOOLROOM • 12H DFM REPORT • ISO 9001:2015 CERTIFIED',
+    h1Main: 'Precision Tooling &',
+    h1Accent: 'Custom Injection Molding',
+    h1Sub: '180+ Qualified Polymers. Zero Spec Guesswork. Micro-Tolerances Down to ±0.010mm.',
+    lead: 'Direct technical engineering from Dongguan toolroom to European & North American OEMs. From rapid bridge prototype tooling to Class 101 high-cavitation production molds—zero middleman markups with 100% virgin polymer lot traceability.',
+    searchPlaceholder: 'Search 180+ resins, shrink rates, or flammability (e.g. PEEK, PA66-GF30, UL94)...',
+    searchBtn: 'Filter Resins',
+    hotChips: ['PEEK-CF30', 'PA66-GF30', 'HIPS (Water Tank)', 'PC/ABS FR', 'Tritan Clear'],
+    ctaPrimary: 'Upload CAD for 24h DFM & Quote',
+    ctaSubtext: '🔒 Strict NDA Guarantee • Avg. Response: 3.8 Hours',
+    ctaSecondary: 'Order Sample Box',
+    hudProbe1Title: 'Zeiss CMM Probe #04',
+    hudProbe1Val: 'Draft 1.50° Verified (±0.005mm)',
+    hudProbe2Title: 'Moldflow CAE',
+    hudProbe2Val: 'Fill Time: 0.48s (Zero Sink)',
+    hudProbe3Title: 'Optical Inspection',
+    hudProbe3Val: 'SPI-A1 Mirror Polish Pass',
+  },
+  de: {
+    badge: 'DIREKTER WERKZEUGBAU • 12H DFM-BERICHT • ISO 9001:2015',
+    h1Main: 'Präzisions-Formenbau &',
+    h1Accent: 'Kundenspezifischer Spritzguss',
+    h1Sub: '180+ qualifizierte Polymere. Mikrotoleranzen bis zu ±0,010 mm.',
+    lead: 'Direkte Kommunikation mit dem Werkzeugbau in Dongguan für europäische und nordamerikanische OEMs. Vom Prototypenwerkzeug bis zur Klasse-101-Produktionsform – ohne Zwischenhändler mit 100% Chargenrückverfolgbarkeit.',
+    searchPlaceholder: '180+ Kunststoffe, Schwund oder Brandklasse suchen (z.B. PEEK, PA66)...',
+    searchBtn: 'Filtern',
+    hotChips: ['PEEK-CF30', 'PA66-GF30', 'HIPS (Wassertank)', 'PC/ABS FR', 'Tritan'],
+    ctaPrimary: 'CAD für 24h-DFM & Angebot',
+    ctaSubtext: '🔒 100% NDA-Garantie • Durchschn. Antwortzeit: 3,8 Std.',
+    ctaSecondary: 'Musterbox anfordern',
+    hudProbe1Title: 'Zeiss KMG-Taster #04',
+    hudProbe1Val: 'Entformung 1,50° (±0,005mm)',
+    hudProbe2Title: 'Moldflow CAE',
+    hudProbe2Val: 'Füllzeit: 0,48s (Kein Einfall)',
+    hudProbe3Title: 'Optische Prüfung',
+    hudProbe3Val: 'SPI-A1 Hochglanzpolitur',
+  },
+  fr: {
+    badge: 'INGÉNIERIE DIRECTE EN USINE • DFM EN 12H • ISO 9001:2015',
+    h1Main: 'Outillage de Précision &',
+    h1Accent: 'Moulage par Injection Sur Mesure',
+    h1Sub: '180+ Polymères Qualifiés. Tolérances jusqu’à ±0,010 mm.',
+    lead: 'Ingénierie directe depuis l’atelier de Dongguan pour les donneurs d’ordres occidentaux. Du moule prototype rapide aux outillages de production Classe 101 – zéro marge intermédiaire avec traçabilité matière 100% vierge.',
+    searchPlaceholder: 'Rechercher 180+ résines, retrait ou feu (ex. PEEK, PA66-GF30)...',
+    searchBtn: 'Filtrer',
+    hotChips: ['PEEK-CF30', 'PA66-GF30', 'HIPS (Réservoir)', 'PC/ABS FR', 'Tritan'],
+    ctaPrimary: 'Déposer CAO pour DFM 24h',
+    ctaSubtext: '🔒 Accord NDA 100% Garanti • Réponse moyenne: 3.8h',
+    ctaSecondary: 'Commander Échantillons',
+    hudProbe1Title: 'Sonde Zeiss CMM #04',
+    hudProbe1Val: 'Dépouille 1,50° (±0,005mm)',
+    hudProbe2Title: 'Front CAE Moldflow',
+    hudProbe2Val: 'Remplissage: 0,48s',
+    hudProbe3Title: 'Contrôle Optique',
+    hudProbe3Val: 'Polissage Miroir SPI-A1',
+  }
+};
+
+const ht = heroSpecsMap[lang] || heroSpecsMap.en;
+
+interface CommercialGrade {
+  mfg: string;
+  grade: string;
+  feature: string;
+}
+
+interface ResinFamily {
+  id: string;
+  name: string;
+  code: string;
+  category: 'commodity' | 'engineering' | 'high-performance' | 'elastomers';
+  categoryLabel: string;
+  temp: string;
+  tensile: string;
+  shrinkage: string;
+  shrinkageFlow?: string;
+  shrinkageCross?: string;
+  density?: string;
+  cert: string;
+  desc: string;
+  industries?: string[];
+  applications?: string[];
+  slug: string;
+  grades: CommercialGrade[];
+}
+
+const resinFamilies = (rawResinsData as ResinFamily[]) || [];
+
+// 👑 智能模具钢材映射函数（打通材料性能与模具加工工艺的逻辑链条）
+const getToolingSteel = (code: string, feature: string) => {
+  if (code.includes('GF') || code.includes('CF') || feature.includes('Glass') || feature.includes('Carbon') || feature.includes('Abrasive')) {
+    return 'SKD11 / 1.2379 (High Wear-Resistance)';
+  }
+  if (code.includes('PC') || code.includes('PMMA') || code.includes('Tritan') || feature.includes('Transparent')) {
+    return 'S136 / NAK80 (SPI-A1 Mirror Polish)';
+  }
+  if (code.includes('PEEK') || code.includes('PPS') || code.includes('PEI') || code.includes('PPA')) {
+    return 'H13 Vacuum Hardened (HRC 50-54)';
+  }
+  return 'P20 / 718H Pre-Hardened Steel';
+};
+
+const flattenedResins = resinFamilies.flatMap((family) =>
+  family.grades.map((grade) => ({
+    ...grade,
+    familyId: family.id,
+    familyName: family.name,
+    familyCode: family.code,
+    category: family.category,
+    categoryLabel: family.categoryLabel,
+    temp: family.temp,
+    tensile: family.tensile,
+    shrinkage: family.shrinkage,
+    shrinkageFlow: family.shrinkageFlow || family.shrinkage.split('-')[0]?.trim() || '0.4%',
+    shrinkageCross: family.shrinkageCross || family.shrinkage.split('-')[1]?.trim() || '0.7%',
+    density: family.density || '1.15 g/cm³',
+    cert: family.cert,
+    desc: family.desc,
+    toolingSteel: getToolingSteel(family.code, grade.feature),
+    industries: family.industries || ['appliances', 'automotive', 'electronics', 'industrial', 'new-energy', 'medical', 'aerospace'],
+    applications: family.applications || ['Precision Structural Parts', 'OEM Assemblies'],
+    slug: `${grade.mfg}-${grade.grade}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  }))
+);
+
+const initialDisplayGrades = flattenedResins.slice(0, 8);
+
+const metalReplacementData = [
+  { plastic: 'PA66-GF30 / PPA-GF50', metal: 'Die-Cast Aluminum (A380)', weightSaving: '40% - 50%', tensileComp: '175 MPa vs. 310 MPa', costAdvantage: '35% (Zero Post-CNC Machining)', keyBenefit: 'Integrated snap-fits, zero galvanic corrosion, high mechanical damping' },
+  { plastic: 'PEEK-CF30', metal: 'Titanium (Ti-6Al-4V)', weightSaving: '65%', tensileComp: '220 MPa vs. 890 MPa', costAdvantage: '50% (High Cavitation Speed)', keyBenefit: 'X-ray radiolucent, MRI compatible, self-lubricating sliding wear' },
+  { plastic: 'POM (Delrin 100P)', metal: 'Brass / Bronze (C36000)', weightSaving: '80%', tensileComp: '75 MPa vs. 380 MPa', costAdvantage: '60% (Zero Lead Leaching)', keyBenefit: 'Silent gear meshing, self-lubricating, NSF potable water certified' },
+  { plastic: 'PPS-GF40', metal: 'Stainless Steel (304/316)', weightSaving: '70%', tensileComp: '165 MPa vs. 505 MPa', costAdvantage: '45% (Complex Internal Flow Channels)', keyBenefit: 'Zero corrosion in hot glycol/acid fuels up to 200°C' }
+];
+
+const faqs = [
+  {
+    q: 'How does NEXMOLD compensate for resin shrinkage during precision injection mold building?',
+    a: 'We calculate isotropic and anisotropic shrink rates using Moldflow CAE simulation prior to CNC tooling. For amorphous resins (ABS, PC), shrinkage is uniform (0.4%-0.7%). For semi-crystalline or fiber-filled polymers (POM, PP, PA66-GF30), we apply directional shrinkage factors (parallel vs. perpendicular to the gate flow) to ensure parts conform to DIN 16742 Group 1 / ISO 20457 tolerances.'
+  },
+  {
+    q: 'What quality certifications and material lot traceability documents are provided?',
+    a: 'Every production batch is accompanied by a Certificate of Conformance (CoC), material technical datasheets (TDS), and original resin manufacturer lot inspection reports (e.g. Sabic, DuPont, BASF, Covestro). We maintain a 100% Virgin Polymer Policy with zero unauthorized regrind.'
+  },
+  {
+    q: 'Which plastic materials are recommended for metal replacement in automotive brackets?',
+    a: 'PA66-GF30, PPA-GF45, and PPS-GF40 are primary choices. PA66-GF30 provides 175 MPa tensile strength and high stiffness up to 180°C, reducing weight by 45% compared to die-cast aluminum while eliminating secondary CNC deburring and drilling processes.'
+  },
+  {
+    q: 'Can NEXMOLD mold transparent resins with optical SPI-A1 polish without haze or sink marks?',
+    a: 'Yes. For optical parts molded from PC, PMMA, GPPS, and Tritan copolyester, we utilize hardened S136 / NAK80 mirror-finish mold cavity inserts (polished to Ra 0.012 µm). We implement decoupled scientific molding and conformal cooling to prevent thermal sink marks and optical distortion.'
+  },
+  {
+    q: 'What is the minimum Shore hardness for two-shot (2K) and insert overmolding?',
+    a: 'We process TPE/TPU elastomers ranging from Shore 30A (ultra-soft touch seals) to Shore 95A (wear-resistant bumpers). We select specific resin grades that generate covalent chemical bonding to rigid substrates (PP, ABS, PC, PA66) without requiring primer coatings.'
+  },
+  {
+    q: 'How are hygroscopic resins dried prior to molding to prevent hydrolytic degradation?',
+    a: 'Engineered resins such as PA66, PBT, PEEK, and PEI are processed using desiccant dehumidifying dryers to achieve a dew point below -40°C. Moisture levels are verified using Karl Fischer moisture analyzers prior to barrel charging to ensure zero splay, silver streaking, or loss of mechanical impact.'
+  }
+];
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nxmold.com/#organization",
+      "name": "NEXMOLD Precision Manufacturing Co., Ltd.",
+      "alternateName": "NxMold",
+      "url": "https://nxmold.com",
+      "logo": "https://nxmold.com/logo.png",
+      "description": "Direct precision mold design and custom plastic injection molding factory in Dongguan, specializing in tight-tolerance engineering tooling and 180+ polymer resins.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dongguan",
+        "addressRegion": "Guangdong",
+        "addressCountry": "CN"
+      }
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": `${pageUrl}#webpage`,
+      "url": pageUrl,
+      "name": "NEXMOLD Polymer Materials & Engineering Resins Hub (180+ Resins)",
+      "description": "Comprehensive engineering database of 180+ qualified injection molding plastics with physical properties, shrink rates, tensile strength, and international certifications.",
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": `https://nxmold.com${prefix}/` },
+          { "@type": "ListItem", "position": 2, "name": "Materials Hub", "item": pageUrl }
+        ]
+      }
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${pageUrl}#itemlist`,
+      "name": "Qualified Commercial Thermoplastic Injection Molding Resins",
+      "numberOfItems": flattenedResins.length,
+      "itemListElement": flattenedResins.map((r, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": `${r.mfg} ${r.grade} (${r.familyCode})`,
+        "description": `${r.feature} - Tensile: ${r.tensile}, Shrinkage: ${r.shrinkage}. Base Family: ${r.familyName}.`,
+        "url": `https://nxmold.com${prefix}/materials/${r.slug}`
+      }))
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": f.a
+        }
+      }))
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang={lang} class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engineering Materials & Resin Hub (180+ Resins) | NEXMOLD</title>
+  <meta name="description" content="Explore 180+ qualified injection molding polymers: Commodity, Engineering, High-Performance (PEEK, ULTEM, PPS), and Elastomers. Complete physical datasheet matrix with shrink rates, DIN 16742 tolerances, and certifications." />
+  <link rel="canonical" href={pageUrl} />
+  <link rel="alternate" hreflang="en" href="https://nxmold.com/materials" />
+  <link rel="alternate" hreflang="de" href="https://nxmold.com/de/materials" />
+  <link rel="alternate" hreflang="fr" href="https://nxmold.com/fr/materials" />
+  <link rel="alternate" hreflang="x-default" href="https://nxmold.com/materials" />
+
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  
+  <style>
+    @keyframes pulseGlow {
+      0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+      70% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 0 16px rgba(234, 88, 12, 0); }
+      100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+    }
+    .industrial-pulse { animation: pulseGlow 2.5s infinite; }
+
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(1000%); }
+    }
+    .scanline-effect::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(to right, transparent, rgba(234, 88, 12, 0.8), transparent);
+      animation: scanline 4s linear infinite;
+      pointer-events: none;
+    }
+
+    /* 👑 顶级工业奢华钛金暗夜卡片：多层深度发光 + 动态光斑质感 */
+    .obsidian-card {
+      background: linear-gradient(165deg, rgba(14, 21, 37, 0.96) 0%, rgba(5, 8, 15, 0.99) 100%);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 0 35px 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .obsidian-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(234, 88, 12, 0.08) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .obsidian-card:hover::before { opacity: 1; }
+    .obsidian-card:hover {
+      border-color: rgba(234, 88, 12, 0.95);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9), 0 0 45px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(234, 88, 12, 0.7);
+      transform: translateY(-8px);
+    }
+
+    .glass-hud {
+      background: linear-gradient(135deg, rgba(10, 16, 28, 0.95) 0%, rgba(16, 32, 64, 0.99) 100%);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(234, 88, 12, 0.5);
+      box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.9);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .table-fix-container { width: 100%; overflow-x: auto; }
+    
+    .shrink-badge-flow {
+      background: rgba(234, 88, 12, 0.22);
+      color: #FFEDD5;
+      border: 1px solid rgba(234, 88, 12, 0.5);
+    }
+    .shrink-badge-cross {
+      background: rgba(56, 189, 248, 0.18);
+      color: #E0F2FE;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+    }
+    #compare-modal {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+
+<body class="bg-[#030508] text-slate-100 font-sans antialiased selection:bg-[#EA580C] selection:text-white flex flex-col min-h-screen">
+
+  <Header lang={lang} />
+
+  <!-- 👑 2. 极致视觉冲击力 HERO 区域（旗舰暗夜钛金舱，自带激光扫描线） -->
+  <section class="relative min-h-[92vh] flex items-center justify-center pt-28 pb-24 overflow-hidden bg-[#030508] text-white scanline-effect">
+    
+    <!-- 精密工程底纹与重工业光影 -->
+    <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      <img 
+        src="/images/materials/nexmold-precision-injection-molding-dfm-cad-inspection-dongguan.webp" 
+        alt="NEXMOLD polymer materials inspection and precision injection molding" 
+        class="w-full h-full object-cover opacity-[0.14] mix-blend-luminosity filter contrast-200 scale-105"
+      />
+      <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:56px_56px]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(234,88,12,0.28)_0%,rgba(3,5,8,0.92)_70%,#010204_100%)]"></div>
+      
+      <!-- 四角精密定位准星 -->
+      <div class="absolute top-8 left-8 w-6 h-6 border-t-2 border-l-2 border-[#EA580C]"></div>
+      <div class="absolute top-8 right-8 w-6 h-6 border-t-2 border-r-2 border-[#EA580C]"></div>
+      <div class="absolute bottom-8 left-8 w-6 h-6 border-b-2 border-l-2 border-[#EA580C]"></div>
+      <div class="absolute bottom-8 right-8 w-6 h-6 border-b-2 border-r-2 border-[#EA580C]"></div>
+    </div>
+
+    <!-- 左侧 HUD 测量舱指示器 -->
+    <div class="absolute top-[22%] left-[6%] hidden 2xl:block z-10 glass-hud px-6 py-4 rounded-2xl text-left font-mono transform -rotate-1 hover:scale-105 transition-transform duration-500 cursor-default border-l-4 border-emerald-400">
+      <div class="flex items-center gap-2.5 mb-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 industrial-pulse"></span>
+        <span class="text-[10px] text-emerald-400 tracking-[0.25em] font-black uppercase">{ht.hudProbe1Title}</span>
+      </div>
+      <div class="text-sm text-white font-black tracking-wide">{ht.hudProbe1Val}</div>
+      <div class="text-[9px] text-slate-400 mt-1 font-mono">STATUS: OPTICAL CMM CALIBRATED</div>
+      <div class="absolute -right-20 top-1/2 w-20 h-[2px] bg-emerald-400/40"></div>
+    </div>
+
+    <!-- 右侧 CAE 模拟舱指示器 -->
+    <div class="absolute top-[26%] right-[6%] hidden 2xl:block z-10 glass-hud px-6 py-4 rounded-2xl text-left font-mono transform rotate-1 hover:scale-105 transition-transform duration-500 cursor-default border-l-4 border-[#EA580C]">
+      <div class="flex items-center gap-2.5 mb-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] industrial-pulse"></span>
+        <span class="text-[10px] text-orange-400 tracking-[0.25em] font-black uppercase">{ht.hudProbe2Title}</span>
+      </div>
+      <div class="text-sm text-white font-black tracking-wide">{ht.hudProbe2Val}</div>
+      <div class="w-full h-1.5 bg-slate-800 mt-2.5 rounded-full overflow-hidden">
+        <div class="h-full w-[92%] bg-gradient-to-r from-emerald-400 via-cyan-400 to-[#EA580C]"></div>
+      </div>
+      <div class="absolute -left-20 top-1/2 w-20 h-[2px] bg-[#EA580C]/40"></div>
+    </div>
+
+    <div class="relative z-20 w-full max-w-5xl mx-auto px-4 sm:px-6 text-center mt-4">
+      
+      <!-- 厂房认证 Badge -->
+      <div class="inline-flex items-center justify-center gap-2.5 px-4 py-2 rounded-full border border-white/15 bg-white/5 backdrop-blur-md shadow-2xl mb-8">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EA580C] opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#EA580C]"></span>
+        </span>
+        <span class="font-mono text-[10px] sm:text-xs font-bold text-slate-200 uppercase tracking-[0.2em]">{ht.badge}</span>
+      </div>
+
+      <!-- 核心大标题：极具视觉冲击力的双色重工业排版 -->
+      <h1 class="text-4xl sm:text-6xl lg:text-[76px] font-[1000] tracking-tighter uppercase text-white leading-[1.02] mx-auto drop-shadow-2xl" itemprop="name">
+        {ht.h1Main} <br class="hidden sm:inline" />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#EA580C] via-orange-500 to-amber-400 drop-shadow-[0_0_50px_rgba(234,88,12,0.8)]">{ht.h1Accent}</span>
+      </h1>
+
+      <p class="mt-6 text-lg sm:text-xl font-bold text-slate-300 tracking-tight max-w-2xl mx-auto font-mono">
+        {ht.h1Sub}
+      </p>
+
+      <p class="mt-4 text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed" itemprop="description">
+        {ht.lead}
+      </p>
+
+      <!-- 顶配搜索框：精密命令行风格 -->
+      <div class="w-full max-w-2xl mx-auto mt-10 relative">
+        <div class="relative flex items-center bg-slate-900/95 border-2 border-slate-700 hover:border-[#EA580C] focus-within:border-[#EA580C] focus-within:ring-4 focus-within:ring-[#EA580C]/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300 backdrop-blur-xl">
+          
+          <div class="pl-5 flex items-center pointer-events-none text-orange-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          
+          <input 
+            type="text" 
+            id="hero-resin-search" 
+            placeholder={ht.searchPlaceholder}
+            class="w-full pl-3 pr-4 py-4 sm:py-5 bg-transparent text-sm font-mono text-white placeholder-slate-500 focus:outline-none"
+            autocomplete="off"
+          />
+          
+          <div class="hidden md:flex items-center gap-1.5 pr-4 pointer-events-none text-slate-400">
+            <kbd class="px-2 py-1 text-[10px] font-mono font-bold bg-slate-800 border border-slate-700 rounded text-slate-300">Ctrl</kbd>
+            <kbd class="px-2 py-1 text-[10px] font-mono font-bold bg-slate-800 border border-slate-700 rounded text-slate-300">K</kbd>
+          </div>
+          
+          <div class="h-8 w-px bg-slate-800 hidden sm:block"></div>
+
+          <div class="pr-2 pl-2">
+            <button 
+              id="hero-search-jump-btn"
+              class="px-5 sm:px-7 py-3 bg-[#EA580C] hover:bg-orange-600 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer shadow-[0_0_25px_rgba(234,88,12,0.6)] whitespace-nowrap"
+            >
+              {ht.searchBtn}
+            </button>
+          </div>
+        </div>
+
+        <!-- 热门趋势标签 -->
+        <div class="flex items-center justify-center gap-2 mt-5 flex-wrap text-[11px] font-mono text-slate-400">
+          <span class="font-bold text-slate-500 hidden sm:inline">TRENDING:</span>
+          {ht.hotChips.map((chip) => (
+            <button 
+              class="hero-chip-btn px-3.5 py-1.5 bg-slate-900/90 hover:bg-[#EA580C] hover:text-white border border-slate-800 hover:border-[#EA580C] rounded-full transition-all cursor-pointer shadow-sm"
+              data-chip={chip.split(' ')[0]}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <!-- 行动呼吁按钮组 -->
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+        <a 
+          href="#rfq" 
+          class="relative inline-flex items-center justify-center px-8 py-4 bg-[#EA580C] text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-[0_10px_30px_-5px_rgba(234,88,12,0.7)] hover:bg-orange-600 hover:shadow-[0_15px_35px_-5px_rgba(234,88,12,0.9)] hover:-translate-y-0.5 transition-all group overflow-hidden border border-orange-400/30"
+        >
+          <span class="relative z-10">{ht.ctaPrimary}</span>
+          <svg class="relative z-10 w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+          <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+        </a>
+        
+        <a 
+          href="#sample-kit" 
+          class="inline-flex items-center justify-center px-7 py-4 bg-slate-900/80 border-2 border-slate-700 hover:border-[#EA580C] text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg transition-all backdrop-blur-md"
+        >
+          {ht.ctaSecondary}
+        </a>
+      </div>
+      <div class="mt-3 font-mono text-[10px] text-slate-400 text-center">
+        {ht.ctaSubtext}
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 👑 3. 行业应用向导过滤 (暗夜钛金质感栏) -->
+  <section class="py-6 bg-[#070A12] border-b border-slate-800">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-[#EA580C] bg-[#EA580C]/15 px-2.5 py-1 rounded border border-[#EA580C]/30">Industry Preset</span>
+          <span class="text-xs font-bold text-slate-300">Filter by OEM Application Domain:</span>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 lg:pb-0" id="industry-preset-group">
+          <button class="industry-tag-btn active px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-[#EA580C] bg-[#EA580C] text-white transition-all cursor-pointer shrink-0 shadow-md" data-industry="all">
+            All Sectors
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="automotive">
+            Automotive & EV
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="new-energy">
+            New Energy & Storage
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="medical">
+            Medical & Healthcare
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="appliances">
+            Home Appliances
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="industrial">
+            Industrial Automation
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="electronics">
+            Electronics & Telecom
+          </button>
+          <button class="industry-tag-btn px-3.5 py-1.5 text-[11px] font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] hover:text-white transition-all cursor-pointer shrink-0" data-industry="aerospace">
+            Aerospace & Defense
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 4. 粘性控制栏 (Dark Sticky Control Bar) -->
+  <div class="sticky top-0 z-40 bg-[#030508]/95 backdrop-blur-md border-b border-slate-800 shadow-xl py-3.5">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 lg:pb-0" id="category-filter-group">
+          <button class="filter-tab-btn active px-3.5 py-1.5 text-xs font-mono font-bold uppercase rounded-xl border border-[#EA580C] bg-[#EA580C] text-white cursor-pointer transition-all shrink-0 shadow-md" data-filter="all">
+            All Resins (<span id="count-all">{flattenedResins.length}</span>)
+          </button>
+          <button class="filter-tab-btn px-3.5 py-1.5 text-xs font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] cursor-pointer transition-all shrink-0" data-filter="commodity">
+            Commodity
+          </button>
+          <button class="filter-tab-btn px-3.5 py-1.5 text-xs font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] cursor-pointer transition-all shrink-0" data-filter="engineering">
+            Engineering
+          </button>
+          <button class="filter-tab-btn px-3.5 py-1.5 text-xs font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] cursor-pointer transition-all shrink-0" data-filter="high-performance">
+            High-Performance
+          </button>
+          <button class="filter-tab-btn px-3.5 py-1.5 text-xs font-mono font-bold uppercase rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-[#EA580C] cursor-pointer transition-all shrink-0" data-filter="elastomers">
+            Elastomers / 2K
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0">
+          <div class="flex items-center gap-1 bg-slate-900 p-1 border border-slate-800 rounded-xl text-xs font-mono">
+            <button id="unit-metric-btn" class="px-2.5 py-1 font-bold rounded-lg bg-slate-800 text-white shadow-sm cursor-pointer">Metric (°C/MPa)</button>
+            <button id="unit-imperial-btn" class="px-2.5 py-1 font-bold rounded-lg text-slate-400 hover:text-white cursor-pointer">Imperial (°F/psi)</button>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-1 bg-slate-900 p-1 border border-slate-800 rounded-xl text-xs font-mono">
+            <button id="view-grid-btn" class="px-2.5 py-1 font-bold rounded-lg bg-slate-800 text-white shadow-sm cursor-pointer">Grid</button>
+            <button id="view-table-btn" class="px-2.5 py-1 font-bold rounded-lg text-slate-400 hover:text-white cursor-pointer">Table</button>
+          </div>
+
+          <button id="reset-all-filters-btn" class="px-2.5 py-1.5 text-xs font-mono font-bold text-slate-400 hover:text-[#EA580C] underline cursor-pointer">
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 👑 5. 动态材料数据库矩阵 (桌面端 4 列布局 + 智能模具钢材映射标签) -->
+  <main id="materials-database" class="py-12 bg-[#030508] flex-1">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      
+      <div class="mb-8 max-w-md">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="resin-search-input" 
+            placeholder="Search by commercial grade, code, resin family or brand..."
+            class="w-full pl-10 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/30 shadow-xl transition-all"
+            autocomplete="off"
+          />
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- 网格视图 (暗夜钛金旗舰卡片：4列排布) -->
+      <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+        {initialDisplayGrades.map((resin) => (
+          <article 
+            class="resin-card group obsidian-card rounded-2xl overflow-hidden flex flex-col justify-between relative"
+            data-category={resin.category}
+            data-industries={resin.industries.join(' ')}
+            data-search={`${resin.mfg} ${resin.grade} ${resin.feature} ${resin.familyCode} ${resin.familyName} ${resin.applications.join(' ')}`.toLowerCase()}
+            data-temp-c={resin.temp}
+            data-tensile-mpa={resin.tensile}
+          >
+            <div class="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-xs px-2.5 py-1 rounded-md border border-slate-700 shadow-3xs">
+              <input type="checkbox" class="compare-checkbox w-3.5 h-3.5 accent-[#EA580C] cursor-pointer" data-slug={resin.slug} data-grade={`${resin.mfg} ${resin.grade}`} />
+              <span class="text-[9px] font-mono text-slate-300 uppercase font-bold tracking-wider">Compare</span>
+            </div>
+            <div>
+              <div class="p-5 pb-3.5 border-b border-slate-800 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-orange-950/30">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="px-2 py-0.5 bg-[#EA580C] text-white text-[9px] font-black tracking-widest rounded-xs uppercase">{resin.mfg}</span>
+                  <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">{resin.categoryLabel}</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-black text-white group-hover:text-orange-400 transition-colors leading-tight truncate pr-16" title={resin.grade}>{resin.grade}</h2>
+                <div class="text-[10px] font-mono text-emerald-400 font-bold mt-1.5 line-clamp-1 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">✓ {resin.feature}</div>
+              </div>
+              <div class="p-5">
+                <div class="flex flex-col gap-0.5 mb-3.5 p-3 bg-slate-900/90 rounded-xl border border-slate-800 font-mono">
+                  <span class="text-[8.5px] text-slate-400 uppercase font-bold">Base Polymer Family</span>
+                  <span class="text-xs font-bold text-orange-300 truncate">{resin.familyCode} ({resin.familyName})</span>
+                </div>
+                <div class="space-y-2.5 text-[11px] font-mono">
+                  <div class="flex justify-between items-center text-slate-300"><span class="text-slate-400 font-medium">Continuous Temp:</span><span class="font-bold text-white val-temp">{resin.temp}</span></div>
+                  <div class="flex justify-between items-center text-slate-300"><span class="text-slate-400 font-medium">Tensile Strength:</span><span class="font-bold text-white val-tensile">{resin.tensile}</span></div>
+                  <div class="flex justify-between items-center text-slate-300 pt-2 border-t border-slate-800">
+                    <span class="text-slate-400 font-medium">Shrink (Flow / X):</span>
+                    <div class="flex items-center gap-1 font-bold text-[10px]">
+                      <span class="px-1.5 py-0.5 rounded shrink-badge-flow" title="Parallel to Flow">{resin.shrinkageFlow} (Flow)</span>
+                      <span class="px-1.5 py-0.5 rounded shrink-badge-cross" title="Transverse to Flow">{resin.shrinkageCross} (X)</span>
+                    </div>
+                  </div>
+                  <!-- 👑 模具加工钢材智能映射：直接建立材料与注塑厂房工装的逻辑链条 -->
+                  <div class="flex justify-between items-center text-slate-300 pt-1.5 border-t border-slate-800/80">
+                    <span class="text-slate-400 font-medium text-[10px]">Tooling Steel:</span>
+                    <span class="font-bold text-orange-300 truncate max-w-[145px]" title={resin.toolingSteel}>{resin.toolingSteel}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-300 pt-1">
+                    <span class="text-slate-400 font-medium">Standard / Cert:</span>
+                    <span class="font-bold text-slate-200 truncate max-w-[130px]">{resin.cert}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="p-3.5 bg-slate-900/60 border-t border-slate-800 mt-auto flex items-center gap-2">
+              <a href={`${prefix}/materials/${resin.slug}`} class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[10px] font-mono font-bold uppercase rounded-xl transition-all shadow-3xs">Datasheet</a>
+              <button class="quote-spec-btn flex-1 py-2 bg-[#EA580C] hover:bg-orange-600 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-md" data-resin={`${resin.mfg} ${resin.grade}`}>Quote this Grade</button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <!-- 表格数据视图 (已修复溢出遮挡，完美自适应) -->
+      <div id="materials-table-wrapper" class="hidden table-fix-container border border-slate-800 rounded-2xl shadow-xl bg-slate-900/90 mt-4 backdrop-blur-md">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-950 border-b border-slate-800 font-mono text-[10px] uppercase tracking-widest text-slate-300">
+              <th class="py-4 px-5">Manufacturer</th>
+              <th class="py-4 px-5 text-orange-400">Commercial Grade</th>
+              <th class="py-4 px-5">Key Feature</th>
+              <th class="py-4 px-5">Base Polymer Family</th>
+              <th class="py-4 px-5">Tooling Steel Match</th>
+              <th class="py-4 px-5">Temp Rating</th>
+              <th class="py-4 px-5">Tensile Str.</th>
+              <th class="py-4 px-5">Shrink (Flow / X)</th>
+              <th class="py-4 px-5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="materials-table-body" class="divide-y divide-slate-800 font-mono text-slate-300"></tbody>
+        </table>
+      </div>
+
+      <!-- 👑 终端自适应分页控制栏 -->
+      <div class="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4" id="pagination-container"></div>
+
+      <!-- 无结果提示 -->
+      <div id="no-search-results" class="hidden py-24 text-center border-2 border-dashed border-slate-800 bg-slate-900/50 rounded-2xl mt-6 shadow-xl">
+        <p class="text-xl font-[1000] text-white">No matching commercial grades found.</p>
+        <p class="text-sm text-slate-400 mt-2">Need a custom masterbatch, ESD compound, or carbon-fiber formulation?</p>
+        <a href="#rfq" class="inline-block mt-6 px-8 py-3.5 bg-[#EA580C] text-white text-xs font-bold tracking-widest uppercase rounded-xl hover:bg-orange-600 shadow-lg transition-all">
+          Consult Polymer Engineer Directly
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 👑 6. 牌号对比吸底悬浮条 -->
+  <div id="compare-sticky-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 hidden bg-slate-900 text-white px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-6 font-mono text-xs border border-orange-500/40 backdrop-blur-xl">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] animate-ping"></span>
+      <span id="compare-count" class="font-bold text-orange-400">0 selected</span> for technical comparison
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="trigger-compare-modal" class="px-5 py-2 bg-[#EA580C] hover:bg-orange-600 text-white font-bold uppercase rounded-full transition-colors cursor-pointer shadow-md">
+        Compare Matrix &rarr;
+      </button>
+      <button id="clear-compare-btn" class="text-slate-400 hover:text-white text-[10px] underline cursor-pointer">
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- 👑 7. 顶尖对撞弹窗面板 -->
+  <div id="compare-modal-backdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden transition-opacity"></div>
+  <div id="compare-modal" class="fixed inset-x-4 top-8 bottom-8 max-w-6xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl z-50 hidden flex flex-col overflow-hidden border border-slate-700 transform scale-95 opacity-0 transition-all duration-300">
+    <div class="px-8 py-5 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#EA580C] animate-pulse"></div>
+        <div>
+          <span class="text-[9px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold">Engineering Matrix Evaluation</span>
+          <h3 class="text-lg sm:text-xl font-[1000] uppercase tracking-tight text-white mt-0.5">Commercial Grade Technical Comparison</h3>
+        </div>
+      </div>
+      <button id="close-compare-modal" class="p-2 text-slate-400 hover:text-white text-sm font-mono font-bold uppercase rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+        Close [ESC]
+      </button>
+    </div>
+    <div class="p-6 sm:p-8 overflow-y-auto flex-1 bg-slate-950">
+      <div id="compare-table-container" class="overflow-x-auto bg-slate-900 border border-slate-800 rounded-xl shadow-sm text-slate-200"></div>
+    </div>
+    <div class="px-8 py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+      <span class="text-slate-400 text-[11px]">✓ Multi-grade comparison calibrated against ISO 20457 / DIN 16742 standards.</span>
+      <div class="flex items-center gap-3">
+        <button id="modal-clear-btn" class="px-4 py-2 text-slate-400 hover:text-red-400 font-bold uppercase transition-colors cursor-pointer">
+          Clear Selection
+        </button>
+        <a href="#rfq" id="compare-to-rfq-btn" class="px-7 py-3 bg-[#EA580C] hover:bg-orange-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-2">
+          <span>Request Quote for Selected Grades</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 👑 8. MOFU: 金属替代量化对撞表 -->
+  <section class="py-16 bg-[#030508] border-y border-slate-800">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold block mb-1">
+            Value Engineering Matrix
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-[1000] tracking-tight uppercase text-white">
+            Metal-to-Plastic Lightweighting Comparison
+          </h2>
+        </div>
+        <p class="text-xs text-slate-400 max-w-xl leading-relaxed">
+          Replace die-cast aluminum, machined brass, and stamped stainless steel with reinforced polymers to eliminate secondary CNC deburring, reduce assembly weight by up to 65%, and eliminate galvanic corrosion.
+        </p>
+      </div>
+      <div class="table-fix-container border border-slate-800 rounded-2xl bg-slate-900/80 shadow-xl">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-950 border-b border-slate-800 font-mono text-[11px] uppercase tracking-wider text-slate-300">
+              <th class="py-4 px-5">Engineering Polymer Solution</th>
+              <th class="py-4 px-5">Target Metal Replacement</th>
+              <th class="py-4 px-5 text-orange-400">Weight Reduction</th>
+              <th class="py-4 px-5">Tensile Comp (Polymer vs Metal)</th>
+              <th class="py-4 px-5">Cost / Process Saving</th>
+              <th class="py-4 px-5">Key Functional Superiority</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300 font-mono">
+            {metalReplacementData.map((item) => (
+              <tr class="hover:bg-slate-800/50 transition-colors">
+                <td class="py-4 px-5 font-bold text-white">{item.plastic}</td>
+                <td class="py-4 px-5 font-medium text-slate-300">{item.metal}</td>
+                <td class="py-4 px-5 font-bold text-orange-400">{item.weightSaving}</td>
+                <td class="py-4 px-5 text-slate-400">{item.tensileComp}</td>
+                <td class="py-4 px-5 font-medium text-emerald-400">{item.costAdvantage}</td>
+                <td class="py-4 px-5 text-slate-400 font-sans text-xs">{item.keyBenefit}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 9. MOFU: 表面纹理矩阵与二次加工 -->
+  <section class="py-16 bg-[#070A12] border-b border-slate-800">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold block mb-1">
+            Molding Feasibility Standards
+          </span>
+          <h3 class="text-xl font-[1000] uppercase text-white mb-3">SPI & VDI 3400 Surface Texture Matrix</h3>
+          <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+            Surface roughness directly dictates minimal draft angle requirements. High-polish optical surfaces demand zero undercuts, while heavy EDM spark textures require draft angles up to 5.0°.
+          </p>
+          <div class="space-y-2.5 font-mono text-xs">
+            <div class="p-3.5 border border-slate-800 bg-slate-900/80 flex justify-between items-center rounded-xl shadow-3xs">
+              <div>
+                <span class="font-bold text-white">SPI A-1 / A-2 (Diamond Mirror Buff)</span>
+                <span class="text-slate-400 block text-[10px] mt-0.5">Ra 0.012 - 0.05 µm (Optical Polish on S136 for PC, PMMA, Tritan)</span>
+              </div>
+              <span class="px-2.5 py-1 bg-slate-800 border border-slate-700 font-bold text-slate-300 text-[10px] rounded">Draft: 0.5° - 1.0°</span>
+            </div>
+            <div class="p-3.5 border border-slate-800 bg-slate-900/80 flex justify-between items-center rounded-xl shadow-3xs">
+              <div>
+                <span class="font-bold text-white">SPI B-1 / B-2 (Fine Paper Finish)</span>
+                <span class="text-slate-400 block text-[10px] mt-0.5">Ra 0.05 - 0.2 µm (Semi-Gloss, Machining marks removed for ABS, POM)</span>
+              </div>
+              <span class="px-2.5 py-1 bg-slate-800 border border-slate-700 font-bold text-slate-300 text-[10px] rounded">Draft: 1.0° - 1.5°</span>
+            </div>
+            <div class="p-3.5 border border-slate-800 bg-slate-900/80 flex justify-between items-center rounded-xl shadow-3xs">
+              <div>
+                <span class="font-bold text-white">SPI C-1 / C-2 (Stone Grit Texture)</span>
+                <span class="text-slate-400 block text-[10px] mt-0.5">Ra 0.35 - 0.8 µm (Matte Industrial for PP, PA66)</span>
+              </div>
+              <span class="px-2.5 py-1 bg-slate-800 border border-slate-700 font-bold text-slate-300 text-[10px] rounded">Draft: 1.5° - 2.0°</span>
+            </div>
+            <div class="p-3.5 border border-[#EA580C]/40 bg-orange-950/30 flex justify-between items-center rounded-xl shadow-3xs">
+              <div>
+                <span class="font-bold text-orange-400">VDI 3400 Scale 24 - 36 (EDM Spark)</span>
+                <span class="text-slate-300 block text-[10px] mt-0.5">Ra 1.6 - 6.3 µm (Heavy Grip Texture for Industrial Housing)</span>
+              </div>
+              <span class="px-2.5 py-1 bg-slate-900 border border-[#EA580C]/40 font-bold text-orange-400 text-[10px] rounded shadow-sm">Draft: 2.5° - 5.0°</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-slate-900/90 p-6 border border-slate-800 rounded-2xl shadow-xl backdrop-blur-md">
+          <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-orange-400 font-bold block mb-1">
+            Turnkey Assembly
+          </span>
+          <h3 class="text-xl font-[1000] uppercase text-white mb-3">Secondary Processing Compatibility</h3>
+          <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+            In-house post-molding operations calibrated to base polymer molecular structure to ensure joint strength and permanent cosmetic finish.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 font-mono text-xs">
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="font-bold text-white block mb-1">Ultrasonic Welding</span>
+              <p class="text-[11px] text-slate-400 leading-tight">Excellent on HIPS & ABS. PP/POM requires energy directors and shear joint design.</p>
+            </div>
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="font-bold text-white block mb-1">Brass Heat Staking</span>
+              <p class="text-[11px] text-slate-400 leading-tight">M2-M8 threaded inserts thermal-set with controlled wall thickness to prevent hoop burst.</p>
+            </div>
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="font-bold text-white block mb-1">Laser & Pad Printing</span>
+              <p class="text-[11px] text-slate-400 leading-tight">High contrast laser etching on PEEK and PA66. Corona plasma treatment for PP/PE.</p>
+            </div>
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <span class="font-bold text-white block mb-1">2K Overmold Bonding</span>
+              <p class="text-[11px] text-slate-400 leading-tight">Covalent chemical fusion between TPE/TPU and rigid PP/ABS/PC substrates without glue.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 10. BOFU: 一线原料供应链墙 -->
+  <section class="py-16 bg-[#030508] border-b border-slate-800">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 text-center">
+      <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold block mb-1">
+        Authenticity & Traceability
+      </span>
+      <h2 class="text-2xl sm:text-3xl font-[1000] tracking-tight uppercase text-white mb-3">
+        Tier-1 Authorized Resin Supply Chain
+      </h2>
+      <p class="text-xs text-slate-400 max-w-2xl mx-auto mb-8">
+        Every production batch is shipped with original manufacturer Certificate of Analysis (COA), RoHS/REACH compliance declarations, and UL Yellow Card documentation.
+      </p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center justify-center mb-8">
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">SABIC</div>
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">BASF</div>
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">COVESTRO</div>
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">DUPONT</div>
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">CELANESE</div>
+        <div class="p-4 border border-slate-800 bg-slate-900 shadow-sm font-mono font-bold text-sm text-white rounded-xl">VICTREX</div>
+      </div>
+      <div class="flex flex-wrap justify-center items-center gap-6 font-mono text-[11px] text-slate-300">
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ISO 9001:2015 Plant</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 100% Virgin Resins (Zero Regrind)</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Lot Traceability & CoC</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Zeiss CMM Metrology Verified</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 11. BOFU: 免费材料样品盒索取通道 -->
+  <section id="sample-kit" class="py-16 bg-[#010204] text-white border-b border-slate-800">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold block mb-1">
+            Zero-Cost Engineering Validation
+          </span>
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-[1000] tracking-tight uppercase text-white mb-3">
+            Request NEXMOLD Calibrated Polymer Sample Box
+          </h2>
+          <p class="text-slate-400 text-xs sm:text-sm mb-6 leading-relaxed">
+            Evaluate SPI A-1 to C-2 surface texture grades, material stiffness, optical clarity, and living hinges hands-on before committing to steel tooling fabrication.
+          </p>
+          <ul class="space-y-2.5 font-mono text-xs text-slate-300">
+            <li class="flex items-center gap-2.5">
+              <span class="w-4 h-4 bg-[#EA580C] text-white flex items-center justify-center font-bold text-[10px] rounded-sm">✓</span>
+              12 Molded Step Plaques (SPI A-1 to C-2, VDI 24/30 textures)
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="w-4 h-4 bg-[#EA580C] text-white flex items-center justify-center font-bold text-[10px] rounded-sm">✓</span>
+              Reinforced Engineering Strips (PA66-GF30, PEEK-CF, PC/ABS, POM)
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="w-4 h-4 bg-[#EA580C] text-white flex items-center justify-center font-bold text-[10px] rounded-sm">✓</span>
+              Free Express Delivery via DHL / FedEx to Verified Engineering Offices
+            </li>
+          </ul>
+        </div>
+        <div class="bg-slate-900 text-slate-100 p-6 sm:p-8 rounded-2xl border-2 border-[#EA580C]/50 shadow-2xl backdrop-blur-xl">
+          <h3 class="text-base font-[1000] uppercase text-white mb-1">Claim Engineering Sample Box</h3>
+          <p class="text-xs text-slate-400 mb-5">Dispatched within 48 hours with Certificate of Conformance.</p>
+          <form class="space-y-3 text-xs font-mono" onsubmit="event.preventDefault(); alert('Sample kit request received. An engineer will verify shipping address within 2 hours.');">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Work Email *</label>
+                <input type="email" required placeholder="engineer@oem-company.com" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-[#EA580C] font-sans text-white" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Company Name *</label>
+                <input type="text" required placeholder="OEM Ltd." class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-[#EA580C] font-sans text-white" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Shipping Address (Country, City, Zip) *</label>
+              <input type="text" required placeholder="e.g. 100 Industrial Pkwy, Chicago, IL 60601, USA" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-[#EA580C] font-sans text-white" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Target Application</label>
+                <input type="text" placeholder="e.g. Water Tank" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-[#EA580C] font-sans text-white" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Primary Resin of Interest</label>
+                <input type="text" placeholder="e.g. PEEK / PA66-GF30" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-[#EA580C] font-sans text-white" />
+              </div>
+            </div>
+            <button type="submit" class="w-full py-3.5 bg-[#EA580C] hover:bg-orange-600 text-white font-bold text-xs tracking-wider uppercase transition-colors rounded-xl shadow-md cursor-pointer mt-2">
+              Dispatch Sample Plaque Kit &rarr;
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 12. GEO 技术 FAQ 问答库 -->
+  <section id="faq" class="py-16 bg-[#030508] border-b border-slate-800">
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#EA580C] font-bold block mb-1">
+          Technical Knowledge Base
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-[1000] tracking-tight uppercase text-white">
+          Polymer Engineering FAQ
+        </h2>
+        <p class="text-xs text-slate-400 mt-2">
+          Engineering guidelines on mold shrinkage, desiccant drying, moisture degradation, and metal replacement.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {faqs.map((faq, index) => (
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <button 
+              class="faq-toggle-btn w-full p-4 text-left font-bold text-sm text-white hover:text-orange-400 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+              aria-expanded="false"
+              aria-controls={`faq-answer-${index}`}
+            >
+              <span class="flex items-start gap-2">
+                <span class="text-[#EA580C] font-mono">Q:</span>
+                <span>{faq.q}</span>
+              </span>
+              <svg class="w-4 h-4 transform transition-transform text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id={`faq-answer-${index}`} class="faq-answer hidden px-4 pb-4 pt-1 text-xs text-slate-400 leading-relaxed border-t border-slate-800">
+              <p class="pl-4 border-l-2 border-[#EA580C]/40">{faq.a}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 👑 13. BOFU: 24h 工程师 DFM & CAD RFQ 网关 -->
+  <section id="rfq" class="py-16 bg-[#0E1525]">
+    <div class="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-slate-900 border border-slate-800 p-8 sm:p-12 rounded-2xl shadow-2xl backdrop-blur-xl">
+        <div class="border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#EA580C] block mb-1">
+              Direct Engineering Review
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-[1000] tracking-tight uppercase text-white">
+              Upload 3D CAD for 24h DFM & Quote
+            </h2>
+          </div>
+          <div class="font-mono text-xs text-slate-300 bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-500/30 flex items-center gap-2">
+            <span class="text-emerald-400 font-bold text-sm">✓ NDA Protected</span>
+            <span>Strict IP Confidentiality</span>
+          </div>
+        </div>
+        <form class="space-y-4" onsubmit="event.preventDefault(); alert('CAD file received. An engineering DFM analysis and tooling quotation will be generated within 24 hours.');">
+          <div class="border-2 border-dashed border-slate-700 hover:border-[#EA580C] p-8 text-center bg-slate-950 transition-colors cursor-pointer rounded-2xl" id="cad-dropzone">
+            <svg class="mx-auto h-10 w-10 text-slate-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="text-sm text-slate-200 font-bold mb-1">
+              Drag & Drop 3D CAD File here, or <span class="text-[#EA580C] underline">browse files</span>
+            </div>
+            <p class="font-mono text-[11px] text-slate-400">Accepted formats: .STEP, .STP, .IGES, .X_T, .SLDPRT (Up to 100MB)</p>
+            <input type="file" id="cad-file-input" class="hidden" accept=".step,.stp,.iges,.igs,.x_t,.sldprt" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block font-mono text-[11px] font-bold text-slate-300 uppercase mb-1">Selected Resin *</label>
+              <input type="text" id="rfq-resin-input" placeholder="e.g. DuPont Zytel 70G33L" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-white focus:outline-none focus:border-[#EA580C]" required />
+            </div>
+            <div>
+              <label class="block font-mono text-[11px] font-bold text-slate-300 uppercase mb-1">Annual Volume *</label>
+              <select class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-white focus:outline-none focus:border-[#EA580C]">
+                <option>Prototype (100 - 1,000 pcs)</option>
+                <option>Low Volume (1,000 - 10,000 pcs)</option>
+                <option>Mass Production (10,000 - 100,000+)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-mono text-[11px] font-bold text-slate-300 uppercase mb-1">Tooling Class</label>
+              <select class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-white focus:outline-none focus:border-[#EA580C]">
+                <option>Class 101 (1M+ Shots, Hardened Steel)</option>
+                <option>Class 102 (500k Shots, Pre-hardened 718H)</option>
+                <option>Rapid Tooling (Bridge Al 7075 / P20)</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-mono text-[11px] font-bold text-slate-300 uppercase mb-1">Work Email *</label>
+              <input type="email" required placeholder="engineer@oem-company.com" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#EA580C]" />
+            </div>
+            <div>
+              <label class="block font-mono text-[11px] font-bold text-slate-300 uppercase mb-1">Incoterms / Delivery</label>
+              <select class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-white focus:outline-none focus:border-[#EA580C]">
+                <option>DDP (Delivered Duty Paid - Direct to Dock)</option>
+                <option>FOB (Shenzhen / Hong Kong Port)</option>
+                <option>CIF / Air Express</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full mt-4 py-4 bg-[#EA580C] hover:bg-orange-600 text-white font-bold text-sm uppercase tracking-[0.16em] rounded-xl shadow-lg transition-all active:scale-[0.98] cursor-pointer">
+            Generate 24h Engineering DFM & Quotation &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <Footer lang={lang} />
+
+  <!-- 数据内联注入 -->
+  <script is:inline define:vars={{ flattenedResins, prefix }}>
+    window.__NEXMOLD_RESINS__ = flattenedResins;
+    window.__NEXMOLD_PREFIX__ = prefix;
+  </script>
+
+  <!-- 👑 客户端交互脚本 (桌面端每页 8 个，完美 4 列 × 2 行布局) -->
+  <script>
+    function setupMaterialsPage() {
+      const allGrades = (window as any).__NEXMOLD_RESINS__ || [];
+      const prefix = (window as any).__NEXMOLD_PREFIX__ || '';
+      
+      const searchInput = document.getElementById('resin-search-input') as HTMLInputElement | null;
+      const heroSearchInput = document.getElementById('hero-resin-search') as HTMLInputElement | null;
+      const heroJumpBtn = document.getElementById('hero-search-jump-btn');
+      const chipBtns = document.querySelectorAll('.hero-chip-btn');
+      const categoryBtns = document.querySelectorAll('.filter-tab-btn');
+      const industryBtns = document.querySelectorAll('.industry-tag-btn');
+      const resetBtn = document.getElementById('reset-all-filters-btn');
+      
+      const grid = document.getElementById('materials-grid');
+      const tableBody = document.getElementById('materials-table-body');
+      const tableWrapper = document.getElementById('materials-table-wrapper');
+      const noResults = document.getElementById('no-search-results');
+      const countAll = document.getElementById('count-all');
+      const paginationContainer = document.getElementById('pagination-container');
+      
+      let currentCategory = 'all';
+      let currentIndustry = 'all';
+      let currentQuery = '';
+      let isImperial = false;
+      let selectedCompareGrades: string[] = [];
+
+      // 👑 终端自适应分页设置：手机端每页 4 个，平板端每页 6 个，桌面端每页 8 个（完美 4 列 × 2 行）
+      const getPageSize = () => {
+        if (window.innerWidth < 768) return 4;
+        if (window.innerWidth < 1280) return 6;
+        return 8; // 桌面端每页 8 个：4列 × 2行，大气且极具呼吸感
+      };
+
+      let currentPage = 1;
+      let activeFilteredGrades = allGrades;
+
+      const compareBar = document.getElementById('compare-sticky-bar');
+      const compareCount = document.getElementById('compare-count');
+      const clearCompareBtn = document.getElementById('clear-compare-btn');
+      const modalClearBtn = document.getElementById('modal-clear-btn');
+      const triggerCompareModal = document.getElementById('trigger-compare-modal');
+      const compareModal = document.getElementById('compare-modal');
+      const compareModalBackdrop = document.getElementById('compare-modal-backdrop');
+      const closeCompareModal = document.getElementById('close-compare-modal');
+      const compareTableContainer = document.getElementById('compare-table-container');
+      const compareToRfqBtn = document.getElementById('compare-to-rfq-btn');
+
+      const updateCompareBar = () => {
+        if (!compareBar || !compareCount) return;
+        if (selectedCompareGrades.length > 0) {
+          compareBar.classList.remove('hidden');
+          compareCount.textContent = `${selectedCompareGrades.length} selected`;
+        } else {
+          compareBar.classList.add('hidden');
+          closeCompare();
+        }
+      };
+
+      const bindCompareEvents = () => {
+        document.querySelectorAll('.compare-checkbox').forEach((chk) => {
+          chk.addEventListener('change', (e) => {
+            const gradeName = (e.target as HTMLInputElement).getAttribute('data-grade') || '';
+            if ((e.target as HTMLInputElement).checked) {
+              if (selectedCompareGrades.length >= 3) {
+                alert('You can compare a maximum of 3 commercial grades simultaneously.');
+                (e.target as HTMLInputElement).checked = false;
+                return;
+              }
+              if (!selectedCompareGrades.includes(gradeName)) selectedCompareGrades.push(gradeName);
+            } else {
+              selectedCompareGrades = selectedCompareGrades.filter(g => g !== gradeName);
+            }
+            updateCompareBar();
+          });
+        });
+      };
+
+      const handleClearAll = () => {
+        selectedCompareGrades = [];
+        document.querySelectorAll('.compare-checkbox').forEach((chk) => { (chk as HTMLInputElement).checked = false; });
+        updateCompareBar();
+        closeCompare();
+      };
+
+      clearCompareBtn?.addEventListener('click', handleClearAll);
+      modalClearBtn?.addEventListener('click', handleClearAll);
+
+      const openCompareModal = () => {
+        if (!compareModal || !compareModalBackdrop || !compareTableContainer) return;
+        const matchingResins = allGrades.filter((r: any) => selectedCompareGrades.includes(`${r.mfg} ${r.grade}`));
+        if (matchingResins.length === 0) {
+          alert('Please select at least one commercial grade to compare.');
+          return;
+        }
+
+        let tableHtml = `
+          <table class="w-full text-left border-collapse text-xs font-mono">
+            <thead>
+              <tr class="bg-slate-950 border-b border-slate-800 text-white">
+                <th class="py-3.5 px-5 uppercase font-bold w-1/4">Technical Metric</th>
+                ${matchingResins.map((r: any) => `
+                  <th class="py-3.5 px-5 font-black">
+                    <span class="text-[10px] text-slate-400 block">${r.mfg}</span>
+                    <span class="text-sm text-orange-400">${r.grade}</span>
+                  </th>
+                `).join('')}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-200">
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Polymer Family</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-bold text-white">${r.familyCode} (${r.familyName})</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Category</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 uppercase font-semibold text-slate-300">${r.categoryLabel}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Continuous Temp</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-bold text-white text-sm">${r.temp}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Tensile Strength</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-bold text-white text-sm">${r.tensile}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Anisotropic Shrinkage</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-bold text-orange-400">Flow: ${r.shrinkageFlow}<br/>X-flow: ${r.shrinkageCross}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Tooling Steel Match</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-bold text-orange-300">${r.toolingSteel}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Compliance & Cert</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 text-slate-300">${r.cert}</td>`).join('')}
+              </tr>
+              <tr>
+                <td class="py-3 px-5 font-bold text-slate-400 bg-slate-950/60">Key Advantage</td>
+                ${matchingResins.map((r: any) => `<td class="py-3 px-5 font-sans text-xs text-emerald-400 font-bold bg-emerald-950/40">✓ ${r.feature}</td>`).join('')}
+              </tr>
+            </tbody>
+          </table>
+        `;
+        compareTableContainer.innerHTML = tableHtml;
+        compareModal.classList.remove('hidden');
+        compareModalBackdrop.classList.remove('hidden');
+        setTimeout(() => {
+          compareModal.classList.remove('scale-95', 'opacity-0');
+          compareModal.classList.add('scale-100', 'opacity-100');
+        }, 10);
+      };
+
+      const closeCompare = () => {
+        if (!compareModal || !compareModalBackdrop) return;
+        compareModal.classList.remove('scale-100', 'opacity-100');
+        compareModal.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+          compareModal.classList.add('hidden');
+          compareModalBackdrop.classList.add('hidden');
+        }, 200);
+      };
+
+      triggerCompareModal?.addEventListener('click', openCompareModal);
+      closeCompareModal?.addEventListener('click', closeCompare);
+      compareModalBackdrop?.addEventListener('click', closeCompare);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeCompare();
+      });
+
+      compareToRfqBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeCompare();
+        const rfqInput = document.getElementById('rfq-resin-input') as HTMLInputElement | null;
+        if (rfqInput) rfqInput.value = selectedCompareGrades.join(' vs. ');
+        document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      const applyUnitsToDOM = () => {
+        document.querySelectorAll('.val-temp').forEach((el) => {
+          const raw = el.closest('[data-temp-c]')?.getAttribute('data-temp-c') || '';
+          if (!isImperial) {
+            el.textContent = raw;
+          } else {
+            el.textContent = raw.replace(/(\d+)°C/g, (_, c) => `${Math.round(Number(c) * 1.8 + 32)}°F`);
+          }
+        });
+        document.querySelectorAll('.val-tensile').forEach((el) => {
+          const raw = el.closest('[data-tensile-mpa]')?.getAttribute('data-tensile-mpa') || '';
+          if (!isImperial) {
+            el.textContent = raw;
+          } else {
+            el.textContent = raw.replace(/(\d+)\s*-\s*(\d+)\s*MPa/g, (_, a, b) => `${Math.round(Number(a) * 0.145)}k-${Math.round(Number(b) * 0.145)}k psi`);
+          }
+        });
+      };
+
+      const createCardHtml = (r: any) => `
+        <article class="resin-card group obsidian-card rounded-2xl overflow-hidden flex flex-col justify-between relative" data-temp-c="${r.temp}" data-tensile-mpa="${r.tensile}">
+          <div class="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-xs px-2.5 py-1 rounded-md border border-slate-700 shadow-3xs">
+            <input type="checkbox" class="compare-checkbox w-3.5 h-3.5 accent-[#EA580C] cursor-pointer" data-slug="${r.slug}" data-grade="${r.mfg} ${r.grade}" ${selectedCompareGrades.includes(`${r.mfg} ${r.grade}`) ? 'checked' : ''} />
+            <span class="text-[9px] font-mono text-slate-300 uppercase font-bold tracking-wider">Compare</span>
+          </div>
+          <div>
+            <div class="p-5 pb-3.5 border-b border-slate-800 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-orange-950/30">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-0.5 bg-[#EA580C] text-white text-[9px] font-black tracking-widest rounded-xs uppercase">${r.mfg}</span>
+                <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">${r.categoryLabel}</span>
+              </div>
+              <h2 class="text-base sm:text-lg font-black text-white group-hover:text-orange-400 transition-colors leading-tight truncate pr-16" title="${r.grade}">${r.grade}</h2>
+              <div class="text-[10px] font-mono text-emerald-400 font-bold mt-1.5 line-clamp-1 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">✓ ${r.feature}</div>
+            </div>
+            <div class="p-5">
+              <div class="flex flex-col gap-0.5 mb-3.5 p-3 bg-slate-900/90 rounded-xl border border-slate-800 font-mono">
+                <span class="text-[8.5px] text-slate-400 uppercase font-bold">Base Polymer Family</span>
+                <span class="text-xs font-bold text-orange-300 truncate">${r.familyCode} (${r.familyName})</span>
+              </div>
+              <div class="space-y-2.5 text-[11px] font-mono">
+                <div class="flex justify-between items-center text-slate-300"><span class="text-slate-400 font-medium">Continuous Temp:</span><span class="font-bold text-white val-temp">${r.temp}</span></div>
+                <div class="flex justify-between items-center text-slate-300"><span class="text-slate-400 font-medium">Tensile Strength:</span><span class="font-bold text-white val-tensile">${r.tensile}</span></div>
+                <div class="flex justify-between items-center text-slate-300 pt-2 border-t border-slate-800">
+                  <span class="text-slate-400 font-medium">Shrink (Flow / X):</span>
+                  <div class="flex items-center gap-1 font-bold text-[10px]">
+                    <span class="px-1.5 py-0.5 rounded shrink-badge-flow" title="Parallel to Flow">${r.shrinkageFlow} (Flow)</span>
+                    <span class="px-1.5 py-0.5 rounded shrink-badge-cross" title="Transverse to Flow">${r.shrinkageCross} (X)</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center text-slate-300 pt-1.5 border-t border-slate-800/80">
+                  <span class="text-slate-400 font-medium text-[10px]">Tooling Steel:</span>
+                  <span class="font-bold text-orange-300 truncate max-w-[145px]" title="${r.toolingSteel}">${r.toolingSteel}</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300 pt-1">
+                  <span class="text-slate-400 font-medium">Standard / Cert:</span>
+                  <span class="font-bold text-slate-200 truncate max-w-[130px]">${r.cert}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-3.5 bg-slate-900/60 border-t border-slate-800 mt-auto flex items-center gap-2">
+            <a href="${prefix}/materials/${r.slug}" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[10px] font-mono font-bold uppercase rounded-xl transition-all shadow-3xs">Datasheet</a>
+            <button class="quote-spec-btn flex-1 py-2 bg-[#EA580C] hover:bg-orange-600 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-md" data-resin="${r.mfg} ${r.grade}">Quote this Grade</button>
+          </div>
+        </article>
+      `;
+
+      const createTableRowHtml = (r: any) => `
+        <tr class="hover:bg-slate-800/50 transition-colors" data-temp-c="${r.temp}" data-tensile-mpa="${r.tensile}">
+          <td class="py-3.5 px-5 font-bold text-slate-300">${r.mfg}</td>
+          <td class="py-3.5 px-5 font-black text-white text-sm">${r.grade}</td>
+          <td class="py-3.5 px-5 font-medium text-emerald-400">${r.feature}</td>
+          <td class="py-3.5 px-5"><span class="bg-slate-950 px-2 py-1 rounded text-[10px] font-bold border border-slate-800 text-orange-300">${r.familyCode}</span></td>
+          <td class="py-3.5 px-5 text-orange-300 font-bold">${r.toolingSteel}</td>
+          <td class="py-3.5 px-5 val-temp text-white">${r.temp}</td>
+          <td class="py-3.5 px-5 val-tensile text-white">${r.tensile}</td>
+          <td class="py-3.5 px-5 text-orange-400 font-bold">${r.shrinkageFlow} / ${r.shrinkageCross}</td>
+          <td class="py-3.5 px-5 text-right">
+            <button class="quote-spec-btn px-3 py-1.5 bg-[#EA580C] hover:bg-orange-600 text-white text-[9px] font-black uppercase rounded-lg transition-all cursor-pointer shadow-sm" data-resin="${r.mfg} ${r.grade}">Select</button>
+          </td>
+        </tr>
+      `;
+
+      const bindQuoteEvents = () => {
+        document.querySelectorAll('.quote-spec-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const resin = (btn as HTMLElement).getAttribute('data-resin') || '';
+            const rfqResinInput = document.getElementById('rfq-resin-input') as HTMLInputElement | null;
+            if (rfqResinInput) rfqResinInput.value = resin;
+            document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+      };
+
+      // 👑 终端自适应分页控件渲染器（带滚动回顶部功能）
+      const renderPaginationControls = (totalItems: number) => {
+        if (!paginationContainer) return;
+        const pageSize = getPageSize();
+        const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+        if (totalPages <= 1) {
+          paginationContainer.innerHTML = `<div class="text-xs text-slate-400 font-mono w-full text-center sm:text-left">Showing all <span class="font-bold text-white">${totalItems}</span> qualified commercial grades</div>`;
+          return;
+        }
+
+        const startItem = (currentPage - 1) * pageSize + 1;
+        const endItem = Math.min(currentPage * pageSize, totalItems);
+
+        paginationContainer.innerHTML = `
+          <div class="text-xs text-slate-400 font-mono text-center sm:text-left">
+            Showing <span class="font-bold text-white">${startItem}</span> - <span class="font-bold text-white">${endItem}</span> of <span class="font-bold text-white">${totalItems}</span> grades
+          </div>
+          <div class="flex items-center justify-center gap-2 font-mono w-full sm:w-auto">
+            <button id="prev-page-btn" class="px-4 py-2 bg-slate-900 border border-slate-700 hover:border-[#EA580C] text-slate-200 font-bold text-xs uppercase rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm" ${currentPage === 1 ? 'disabled' : ''}>
+              &larr; Prev
+            </button>
+            <span class="px-3.5 py-2 bg-slate-900 border border-slate-800 text-white font-bold text-xs rounded-xl shadow-3xs whitespace-nowrap">
+              Page ${currentPage} / ${totalPages}
+            </span>
+            <button id="next-page-btn" class="px-4 py-2 bg-slate-900 border border-slate-700 hover:border-[#EA580C] text-slate-200 font-bold text-xs uppercase rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm" ${currentPage === totalPages ? 'disabled' : ''}>
+              Next &rarr;
+            </button>
+          </div>
+        `;
+
+        document.getElementById('prev-page-btn')?.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderData(activeFilteredGrades);
+            document.getElementById('materials-database')?.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+
+        document.getElementById('next-page-btn')?.addEventListener('click', () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderData(activeFilteredGrades);
+            document.getElementById('materials-database')?.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      };
+
+      const renderData = (items: any[]) => {
+        if (!grid || !tableBody) return;
+        activeFilteredGrades = items;
+        const pageSize = getPageSize();
+
+        const totalPages = Math.ceil(items.length / pageSize) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const paginatedItems = items.slice(startIndex, startIndex + pageSize);
+
+        // 👑 严格限制当页切片渲染
+        grid.innerHTML = paginatedItems.map(createCardHtml).join('');
+        tableBody.innerHTML = paginatedItems.map(createTableRowHtml).join('');
+        
+        if (countAll) countAll.textContent = String(items.length);
+        if (noResults) noResults.style.display = items.length === 0 ? 'block' : 'none';
+        
+        renderPaginationControls(items.length);
+
+        applyUnitsToDOM();
+        bindQuoteEvents();
+        bindCompareEvents();
+      };
+
+      const applyFilters = () => {
+        currentPage = 1;
+        const queryTokens = currentQuery.split(' ').filter(Boolean);
+        const filtered = allGrades.filter((r: any) => {
+          const matchCat = currentCategory === 'all' || r.category === currentCategory;
+          const matchInd = currentIndustry === 'all' || (r.industries && r.industries.includes(currentIndustry));
+          const searchCorpus = `${r.mfg} ${r.grade} ${r.familyCode} ${r.familyName} ${r.feature} ${r.applications?.join(' ')}`.toLowerCase();
+          const matchQuery = queryTokens.length === 0 || queryTokens.every(token => searchCorpus.includes(token));
+          return matchCat && matchInd && matchQuery;
+        });
+
+        renderData(filtered);
+      };
+
+      let debounceTimer: ReturnType<typeof setTimeout>;
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            currentQuery = (e.target as HTMLInputElement).value.toLowerCase().trim();
+            applyFilters();
+          }, 150);
+        });
+      }
+
+      const executeSearch = (query: string) => {
+        if (searchInput) searchInput.value = query;
+        if (heroSearchInput) heroSearchInput.value = query;
+        currentQuery = query.toLowerCase().trim();
+        applyFilters();
+        document.getElementById('materials-database')?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      if (heroJumpBtn && heroSearchInput) {
+        heroJumpBtn.addEventListener('click', () => executeSearch(heroSearchInput.value.trim()));
+        heroSearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') executeSearch(heroSearchInput.value.trim());
+        });
+      }
+
+      chipBtns.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const val = chip.getAttribute('data-chip') || '';
+          executeSearch(val);
+        });
+      });
+
+      categoryBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          categoryBtns.forEach(b => {
+            b.classList.remove('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+            b.classList.add('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          });
+          btn.classList.add('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+          btn.classList.remove('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          currentCategory = btn.getAttribute('data-filter') || 'all';
+          applyFilters();
+        });
+      });
+
+      industryBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          industryBtns.forEach(b => {
+            b.classList.remove('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+            b.classList.add('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          });
+          btn.classList.add('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+          btn.classList.remove('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          currentIndustry = btn.getAttribute('data-industry') || 'all';
+          applyFilters();
+        });
+      });
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          currentCategory = 'all';
+          currentIndustry = 'all';
+          currentQuery = '';
+          currentPage = 1;
+          if (searchInput) searchInput.value = '';
+          if (heroSearchInput) heroSearchInput.value = '';
+          
+          industryBtns.forEach(b => {
+            b.classList.remove('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+            b.classList.add('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          });
+          const allIndBtn = document.querySelector('[data-industry="all"]');
+          if (allIndBtn) {
+            allIndBtn.classList.add('bg-[#EA580C]', 'text-white', 'border-[#EA580C]');
+            allIndBtn.classList.remove('bg-slate-900', 'text-slate-300', 'border-slate-700');
+          }
+
+          renderData(allGrades);
+        });
+      }
+
+      const viewGridBtn = document.getElementById('view-grid-btn');
+      const viewTableBtn = document.getElementById('view-table-btn');
+
+      if (viewGridBtn && viewTableBtn && grid && tableWrapper) {
+        viewGridBtn.addEventListener('click', () => {
+          grid.classList.remove('hidden');
+          tableWrapper.classList.add('hidden');
+          viewGridBtn.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+          viewGridBtn.classList.remove('text-slate-400');
+          viewTableBtn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+          viewTableBtn.classList.add('text-slate-400');
+        });
+
+        viewTableBtn.addEventListener('click', () => {
+          grid.classList.add('hidden');
+          tableWrapper.classList.remove('hidden');
+          viewTableBtn.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+          viewTableBtn.classList.remove('text-slate-400');
+          viewGridBtn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+          viewGridBtn.classList.add('text-slate-400');
+        });
+      }
+
+      const unitMetricBtn = document.getElementById('unit-metric-btn');
+      const unitImperialBtn = document.getElementById('unit-imperial-btn');
+
+      if (unitMetricBtn && unitImperialBtn) {
+        unitMetricBtn.addEventListener('click', () => {
+          isImperial = false;
+          unitMetricBtn.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+          unitMetricBtn.classList.remove('text-slate-400');
+          unitImperialBtn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+          unitImperialBtn.classList.add('text-slate-400');
+          applyUnitsToDOM();
+        });
+
+        unitImperialBtn.addEventListener('click', () => {
+          isImperial = true;
+          unitImperialBtn.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+          unitImperialBtn.classList.remove('text-slate-400');
+          unitMetricBtn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+          unitMetricBtn.classList.add('text-slate-400');
+          applyUnitsToDOM();
+        });
+      }
+
+      // FAQ 手风琴
+      document.querySelectorAll('.faq-toggle-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const answer = btn.nextElementSibling as HTMLElement | null;
+          const svg = btn.querySelector('svg');
+          const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+          btn.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+          if (answer) answer.classList.toggle('hidden', isExpanded);
+          if (svg) svg.classList.toggle('rotate-180', !isExpanded);
+        });
+      });
+
+      // 监听屏幕尺寸变化自适应重绘分页
+      let resizeTimer: ReturnType<typeof setTimeout>;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          renderData(activeFilteredGrades);
+        }, 200);
+      });
+
+      // 初始化首屏渲染
+      renderData(allGrades);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupMaterialsPage);
+    } else {
+      setupMaterialsPage();
+    }
+    document.addEventListener('astro:page-load', setupMaterialsPage);
+  </script>
+
+</body>
+</html>

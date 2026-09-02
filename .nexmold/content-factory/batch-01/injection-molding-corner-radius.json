@@ -1,0 +1,97 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-corner-radius",
+  "targetSlug": "injection-molding-corner-radius",
+  "route": "/industries/v714/injection-molding-corner-radius/",
+  "sourceArticleSlug": "plastic-corner-radii",
+  "sourceArticle": {
+    "slug": "plastic-corner-radii",
+    "title": "Plastic Corner Radii and Fillets for Injection Molding"
+  },
+  "sourceArtifactHash": "11b9fb9a7d7b2ed015c116259bb7f12e838a3cf4fa0dfef9cc3c9a7d47135ad1",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-corner-radius",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-corner-radius/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-corner-radius",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:plastic-corner-radii",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#plastic-corner-radii",
+            "contentHash": "1a78a9d8b25a9472f8ca7fbd3d63df09b24295ef299921e7195bb031e11574e3"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-corner-radius",
+            "claimKey": "v714.whitepaper.injection-molding-corner-radius"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "11b9fb9a7d7b2ed015c116259bb7f12e838a3cf4fa0dfef9cc3c9a7d47135ad1"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding corner radius design: stress, flow, cooling and tooling",
+      "injection molded corner radius design guide",
+      "injection molded corner radius DFM",
+      "injection molded corner radius best practices",
+      "injection molded corner radius design rules",
+      "injection molded corner radius engineering guide",
+      "injection molded corner radius internal radius",
+      "injection molded corner radius external radius",
+      "injection molded corner radius stress concentration",
+      "injection molded corner radius plastic part design",
+      "injection molded corner radius mold machining",
+      "internal radius in injection molded corner radius",
+      "external radius in injection molded corner radius",
+      "injection molded corner radius wall thickness",
+      "wall thickness in injection molded corner radius",
+      "injection molded corner radius material modulus",
+      "material modulus in injection molded corner radius",
+      "injection molded corner radius flow direction",
+      "flow direction in injection molded corner radius",
+      "injection molded corner radius tooling method",
+      "tooling method in injection molded corner radius",
+      "injection molded corner radius surface finish",
+      "surface finish in injection molded corner radius",
+      "how to prevent stress concentration in injection molded corner radius",
+      "injection molded corner radius cracking",
+      "how to prevent cracking in injection molded corner radius",
+      "injection molded corner radius flow hesitation",
+      "how to prevent flow hesitation in injection molded corner radius",
+      "injection molded corner radius weld-line weakness",
+      "how to prevent weld-line weakness in injection molded corner radius",
+      "injection molded corner radius sink",
+      "how to prevent sink in injection molded corner radius",
+      "injection molded corner radius tooling difficulty",
+      "how to prevent tooling difficulty in injection molded corner radius"
+    ],
+    "relatedTopics": [
+      "injection-molding-wall-thickness-design",
+      "injection-molding-parting-line-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

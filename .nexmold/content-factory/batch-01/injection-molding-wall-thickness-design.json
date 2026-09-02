@@ -1,0 +1,111 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-wall-thickness-design",
+  "targetSlug": "injection-molding-wall-thickness-design",
+  "route": "/industries/v714/injection-molding-wall-thickness-design/",
+  "sourceArticleSlug": "plastic-wall-thickness-design",
+  "sourceArticle": {
+    "slug": "plastic-wall-thickness-design",
+    "title": "Plastic Wall Thickness Design: DFM Guidelines"
+  },
+  "sourceArtifactHash": "2eb703df685ec602cb6b147eb6c19dc78f9cbfb744c785cadf19c11e0bb9790d",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-wall-thickness-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-wall-thickness-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-wall-thickness-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:plastic-wall-thickness-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#plastic-wall-thickness-design",
+            "contentHash": "ca0299f7fba951778ecb4a22d052ab9c37db4f09beadd9dd7b7fe939339960f2"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-wall-thickness-design",
+            "claimKey": "v714.whitepaper.injection-molding-wall-thickness-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "2eb703df685ec602cb6b147eb6c19dc78f9cbfb744c785cadf19c11e0bb9790d"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding wall thickness design: an engineering white paper",
+      "injection molded part wall thickness design guide",
+      "injection molded part wall thickness DFM",
+      "injection molded part wall thickness best practices",
+      "injection molded part wall thickness design rules",
+      "injection molded part wall thickness engineering guide",
+      "injection molded part wall thickness design guidelines",
+      "injection molded part wall thickness DFM rules",
+      "injection molded part wall thickness recommended thickness",
+      "injection molded part wall thickness sink mark prevention",
+      "injection molded part wall thickness warpage prevention",
+      "injection molded part wall thickness plastic part design",
+      "injection molded part wall thickness ABS",
+      "injection molded part wall thickness PC",
+      "injection molded part wall thickness glass-filled nylon",
+      "injection molded part wall thickness PP",
+      "injection molded part wall thickness nominal wall thickness",
+      "nominal wall thickness in injection molded part wall thickness",
+      "injection molded part wall thickness wall-to-wall transitions",
+      "wall-to-wall transitions in injection molded part wall thickness",
+      "injection molded part wall thickness material viscosity",
+      "material viscosity in injection molded part wall thickness",
+      "injection molded part wall thickness flow length",
+      "flow length in injection molded part wall thickness",
+      "injection molded part wall thickness cooling time",
+      "cooling time in injection molded part wall thickness",
+      "injection molded part wall thickness packing pressure",
+      "packing pressure in injection molded part wall thickness",
+      "injection molded part wall thickness fiber orientation",
+      "fiber orientation in injection molded part wall thickness",
+      "injection molded part wall thickness mold temperature",
+      "mold temperature in injection molded part wall thickness",
+      "injection molded part wall thickness sink marks",
+      "how to prevent sink marks in injection molded part wall thickness",
+      "injection molded part wall thickness voids",
+      "how to prevent voids in injection molded part wall thickness",
+      "injection molded part wall thickness warpage",
+      "how to prevent warpage in injection molded part wall thickness",
+      "injection molded part wall thickness short shots",
+      "how to prevent short shots in injection molded part wall thickness",
+      "injection molded part wall thickness hesitation",
+      "how to prevent hesitation in injection molded part wall thickness",
+      "injection molded part wall thickness inconsistent filling",
+      "how to prevent inconsistent filling in injection molded part wall thickness",
+      "injection molded part wall thickness excessive cycle time",
+      "how to prevent excessive cycle time in injection molded part wall thickness"
+    ],
+    "relatedTopics": [
+      "injection-molding-rib-design",
+      "injection-molding-sink-marks-causes-solutions",
+      "injection-molding-warpage-causes-solutions",
+      "injection-molding-gate-location"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

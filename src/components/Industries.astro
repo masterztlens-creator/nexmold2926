@@ -1,0 +1,132 @@
+---
+/**
+ * Industries.astro - 终极流体自适应重构版
+ * 1. 标题与字体：全面接入 clamp() 函数，确保在 1024px (Nest Hub) 等中屏设备上比例完美。
+ * 2. 布局优化：应用流体内边距，确保卡片内容在中屏下不拥挤。
+ * 3. 性能：保留 AOS 动画与 CSS 遮罩特效。
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en', location = "Global" } = Astro.props;
+
+const i18n = {
+  en: {
+    tag: "Market Deployment",
+    title_1: "Industry",
+    title_2: "Focus",
+    industries: [
+      { id: "01", name: "Automotive", keywords: "Tier-1 TS16949", desc: `Precision tooling and Tier-1 component manufacturing for ${location} automotive leaders.`, img: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200", aria: "Precision injection molding for Automotive Tier-1 supply chain" },
+      { id: "02", name: "Medical", keywords: "ISO 13485", desc: `Certified class 100k cleanroom molding for ${location} healthcare device manufacturers.`, img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200", aria: "Medical grade plastic molding in ISO certified cleanroom" },
+      { id: "03", name: "Electronics", keywords: "Consumer Tech", desc: "Complex overmolding, high-gloss finishes, and aesthetic components for global electronics.", img: "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800", aria: "High-precision plastic housing for consumer electronics" },
+      { id: "04", name: "Industrial", keywords: "Engineering", desc: `High-performance polymers and structural parts engineered for extreme ${location} environments.`, img: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1200", aria: "Industrial engineering components and high-performance polymer molding" }
+    ]
+  },
+  de: {
+    tag: "Markteinsatz",
+    title_1: "Branchen",
+    title_2: "Fokus",
+    industries: [
+      { id: "01", name: "Automobil", keywords: "Tier-1 TS16949", desc: `Präzisionswerkzeuge und Komponentenfertigung für Automobilhersteller in ${location}.`, img: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200", aria: "Präzisionsspritzguss für die Automobilindustrie" },
+      { id: "02", name: "Medizin", keywords: "ISO 13485", desc: `Zertifizierter Reinraumspritzguss (Klasse 100k) für den Sektor Medizintechnik in ${location}.`, img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200", aria: "Medizinischer Spritzguss im Reinraum nach ISO 13485" },
+      { id: "03", name: "Elektronik", keywords: "Tech", desc: "Komplexes Overmolding und Hochglanzoberflächen für moderne Elektronikgehäuse.", img: "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800", aria: "Hochpräzise Kunststoffgehäuse für Unterhaltungselektronik" },
+      { id: "04", name: "Industrie", keywords: "Maschinenbau", desc: `Hochleistungspolymere für extreme ${location} Bedingungen im Maschinenbau.`, img: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1200", aria: "Industrielle Fertigung von Strukturteilen aus Hochleistungskunststoffen" }
+    ]
+  },
+  fr: {
+    tag: "Déploiement Marché",
+    title_1: "Secteurs",
+    title_2: "Clés",
+    industries: [
+      { id: "01", name: "Automobile", keywords: "Tier-1 TS16949", desc: `Outillage de précision pour les leaders du secteur automobile à ${location}.`, img: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200", aria: "Moulage par injection de précision pour le secteur automobile" },
+      { id: "02", name: "Médical", keywords: "ISO 13485", desc: `Moulage en salle blanche certifiée classe 100k pour les dispositifs médicaux à ${location}.`, img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200", aria: "Moulage plastique médical en salle blanche certifiée" },
+      { id: "03", name: "Électronique", keywords: "Tech", desc: "Surmoulage complexe et finitions haute brillance pour l'électronique de pointe.", img: "https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800", aria: "Boîtiers plastiques de précision pour l'électronique" },
+      { id: "04", name: "Industrie", keywords: "Ingénierie", desc: `Polymères haute performance et pièces structurelles pour les environnements à ${location}.`, img: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1200", aria: "Composants d'ingénierie industrielle et moulage haute performance" }
+    ]
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="relative bg-[#0B1221] py-[clamp(4rem,10vw,12rem)] overflow-hidden" id="industries" aria-labelledby="industries-title">
+  
+  <div class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,8rem)] relative z-10">
+    
+    <div class="mb-[clamp(4rem,8vw,6rem)] flex flex-col lg:flex-row lg:items-end justify-between gap-8" data-aos="fade-right">
+      <div class="max-w-2xl">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="w-8 h-8 border border-[#F97316]/30 flex items-center justify-center">
+            <div class="w-1 h-1 bg-[#F97316]"></div>
+          </div>
+          <span class="text-[#F97316] font-bold uppercase tracking-[0.4em] text-[10px]">{t.tag}</span>
+        </div>
+        <h2 id="industries-title" class="text-[clamp(3.5rem,8vw,8rem)] font-black text-white uppercase italic tracking-tighter leading-none">
+          {t.title_1} <span class="text-white/10">{t.title_2}</span>
+        </h2>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-6 lg:gap-8">
+      {t.industries.map((item, index) => (
+        <div 
+          class="industry-card group relative w-full h-[clamp(320px,40vh,450px)] overflow-hidden bg-[#161F30] border border-white/5 transition-all duration-700 hover:border-[#F97316]/40"
+          data-aos="fade-up"
+          data-aos-delay={index * 100}
+          role="region"
+          aria-label={item.aria}
+        >
+          <div 
+            class="absolute inset-0 z-0 bg-cover bg-center grayscale opacity-20 group-hover:opacity-40 group-hover:scale-105 transition-all duration-1000"
+            style={`background-image: url('${item.img}');`}
+            role="img"
+            aria-label={item.aria}
+          >
+            <div class="absolute inset-0 bg-[#0B1221]/60"></div>
+          </div>
+
+          <div class="relative z-10 h-full flex flex-col justify-center px-[clamp(2rem,6vw,6rem)]">
+            <div class="flex items-center gap-4 mb-6">
+              <span class="font-mono text-[#F97316] text-xs font-bold">{item.id}</span>
+              <div class="h-px w-8 bg-white/10 group-hover:w-16 group-hover:bg-[#F97316] transition-all duration-500"></div>
+              <span class="font-mono text-white/20 text-[9px] uppercase tracking-widest">{item.keywords}</span>
+            </div>
+            
+            <h3 class="text-[clamp(2rem,6vw,4.5rem)] font-[900] text-white uppercase italic tracking-tighter mb-6 group-hover:translate-x-3 transition-transform duration-500">
+              {item.name}
+            </h3>
+            
+            <p class="text-[#94A3B8] text-[clamp(0.875rem,1.2vw,1.125rem)] font-light max-w-2xl leading-relaxed lg:translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-700">
+              {item.desc}
+            </p>
+          </div>
+
+          <div class="absolute bottom-0 left-0 w-0 h-[2px] bg-[#F97316] group-hover:w-full transition-all duration-1000"></div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .industry-card {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* 针对平板/中屏触屏优化 */
+  @media (max-width: 1024px) {
+    .industry-card p {
+      opacity: 0.8 !important;
+      transform: none !important;
+    }
+    .industry-card {
+        height: auto !important;
+        padding-top: clamp(3rem,8vw,5rem);
+        padding-bottom: clamp(3rem,8vw,5rem);
+    }
+  }
+</style>

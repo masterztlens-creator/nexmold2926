@@ -1,0 +1,11 @@
+﻿{
+    "verifiedAt":  "2026-08-30T03:14:24.3627743Z",
+    "publicArtifactCount":  0,
+    "publicationBoundary":  "CLOSED",
+    "adversarial":  "10/10 PASS",
+    "htmlCount":  132,
+    "status":  "V7.14-READY",
+    "coreGate":  "PASS",
+    "schema":  "nexmold.v7.14.final-verification.v1",
+    "releasePreflight":  "PASS"
+}

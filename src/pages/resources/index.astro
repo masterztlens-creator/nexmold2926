@@ -1,0 +1,221 @@
+---
+/**
+ * src/pages/resources/index.astro
+ * 👑 NEXMOLD Resources & Knowledge Center 顶级 Hub 聚合页 (GEO & AI Search 流量核心)
+ * 1. 架构定位：收录 Design Guides, Cost Calculators, DFM Case Studies & FAQ Knowledge Hub
+ * 2. 视觉规范：100% 钛白高奢风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO/SEO：内嵌 FAQPage & CollectionPage Schema，专为 Perplexity / ChatGPT 提供权威引用源
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const title = "Manufacturing Knowledge Center & Cost Calculators | NEXMOLD";
+const description = "NEXMOLD Manufacturing Knowledge Platform: Free DFM injection molding design guides, plastic shrinkage calculators, mold cost drivers, and 800+ indexed FAQs.";
+
+// 1. DFM & 设计指南大盘
+const designGuides = [
+  { name: "Injection Molding Wall Thickness Guidelines", desc: "Recommended wall thickness standards across ABS, PC, PEEK, and PA66+GF to eliminate sink marks and internal voids.", href: "/resources/guides/wall-thickness", tag: "DFM GUIDE" },
+  { name: "Draft Angle & Part Ejection Best Practices", desc: "Optimal draft angle calculations per SPI finish class (0.5° to 3°+) to prevent cavity dragging and surface scuffing.", href: "/resources/guides/draft-angles", tag: "EJECTION" },
+  { name: "Ribs, Bosses & Structural Gusset Design", desc: "Proportional rules for reinforcement ribs (40%-60% of nominal wall) to maintain structural rigidity without warpage.", href: "/resources/guides/rib-design", tag: "STRUCTURAL" },
+  { name: "Gate Types & Placement Optimization", desc: "Analysis of submarine, edge, diaphragm, and hot runner valve gates for minimal knit-line visibility.", href: "/resources/guides/gate-locations", tag: "MOLDFLOW" }
+];
+
+// 2. 计算器与工程工具大盘 (GEO 杀手锏)
+const engineeringCalculators = [
+  { name: "Resin Shrinkage Rate & Mold Dimension Calculator", desc: "Interactive tool to calculate cavity enlargement factors based on volumetric thermal shrinkage across 200+ resins.", href: "/resources/calculators/shrinkage-calculator", tag: "INTERACTIVE TOOL" },
+  { name: "Injection Mold Cost Variables Breakdown", desc: "Parametric estimation framework evaluating cavity count, steel grade (S136 vs H13), hot runner, and T1 lead times.", href: "/resources/calculators/cost-guide", tag: "COST ENGINE" },
+  { name: "Clamping Force & Tonnage Estimator", desc: "Calculate required press clamping tonnage (Haitian 90T-1200T) based on projected surface area and cavity pressure.", href: "/resources/calculators/clamping-force", tag: "PRESS FLEET" }
+];
+
+// 3. 真实制造案例大盘
+const caseStudies = [
+  { name: "Zero-Outgassing PEEK Medical Fluidic Manifolds", desc: "How NEXMOLD achieved ISO 2768-m precision and USP Class VI compliance for a microfluidic diagnostic cartridge.", href: "/resources/case-studies/peek-medical-manifold", tag: "MEDICAL CASE" },
+  { name: "2K Overmolded Automotive Charging Plug Seal", desc: "Dual-shot PC + TPE overmolding with IP68 waterproof sealing for North American EV infrastructure.", href: "/resources/case-studies/2k-ev-connector", tag: "EV AUTOMOTIVE" }
+];
+
+// 4. 800+ FAQ 核心示例
+const topFaqs = [
+  { q: "What is the typical T1 sample lead time for fast tooling molds?", a: "For rapid prototype tooling (S136/NAK80 steel), NEXMOLD delivers T1 molded samples within 3 to 15 calendar days depending on geometric complexity." },
+  { q: "How does NEXMOLD guarantee dimensional tolerances under ISO 2768-m?", a: "Every production batch undergoes 3D metrology scanning utilizing multi-axis Zeiss CMM equipment alongside First Article Inspection (FAI) reports." }
+];
+
+// GEO FAQ JSON-LD 结构化数据
+const resourcesSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "name": title,
+      "description": description,
+      "url": "https://nexmold.com/resources"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": topFaqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.q,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.a
+        }
+      }))
+    }
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Resources & Knowledge Center</span>
+      </nav>
+
+      <!-- 顶层 Banner -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-16">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          GEO_ENGINE_ROOT // MANUFACTURING_KNOWLEDGE_PLATFORM
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Manufacturing Knowledge<br/>
+          <span class="text-[#EA580C]">& Engineering Resources</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          The ultimate digital manufacturing knowledge platform. Access free injection molding DFM design guides, parametric resin shrinkage calculators, real-world tooling case studies, and structured technical FAQs.
+        </p>
+      </section>
+
+      <div class="space-y-16">
+        
+        <!-- 模块 1: 计算器与工程工具 (GEO 流量收割机) -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">ENGINEERING_TOOLS_01</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Calculators & Cost Engines</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#EA580C]/10 text-[#EA580C] px-3 py-1.5 rounded">
+              INTERACTIVE GEO UTILITIES
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {engineeringCalculators.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#EA580C] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">Launch Interactive Tool →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 2: DFM 设计指南大盘 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">DESIGN_GUIDES_02</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">DFM & Injection Molding Guides</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              ENGINEERING WHITEPAPERS
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {designGuides.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">Read Full DFM Whitepaper →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 3: 案例与 FAQ (AI 摘录与 PAA 抢占) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          <!-- 案例研究 (5 栏) -->
+          <div class="lg:col-span-5 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-1">CASE_STUDIES_03</span>
+              <h2 class="text-2xl font-[1000] font-sans uppercase italic text-[#0F2B5B] mb-6">Real Manufacturing Audits</h2>
+              
+              <div class="space-y-4">
+                {caseStudies.map(cs => (
+                  <a href={cs.href} class="block p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl hover:border-[#EA580C] transition-colors group">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white px-2 py-0.5 rounded-xs font-mono font-black uppercase">{cs.tag}</span>
+                    <h4 class="font-bold text-sm text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mt-2 mb-1">{cs.name}</h4>
+                    <p class="text-xs text-[#0F2B5B]/70 leading-relaxed">{cs.desc}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <a href="/resources/case-studies" class="mt-6 font-mono text-xs font-black text-[#EA580C] uppercase tracking-wider hover:underline block">
+              View All Tooling Case Studies →
+            </a>
+          </div>
+
+          <!-- FAQ 知识库 (7 栏) -->
+          <div class="lg:col-span-7 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg">
+            <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-1">FAQ_KNOWLEDGE_HUB_04</span>
+            <h2 class="text-2xl font-[1000] font-sans uppercase italic text-[#0F2B5B] mb-6">Structured Manufacturing FAQs</h2>
+
+            <div class="space-y-4">
+              {topFaqs.map(faq => (
+                <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+                  <h4 class="font-mono font-extrabold text-xs text-[#0F2B5B] mb-2 flex items-start gap-2">
+                    <span class="text-[#EA580C]">Q:</span>
+                    <span>{faq.q}</span>
+                  </h4>
+                  <p class="text-xs text-[#0F2B5B]/80 font-sans leading-relaxed pl-5">
+                    {faq.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-[#0F2B5B]/10 flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-[#0F2B5B]/60">INDEXED QUESTIONS: 800+</span>
+              <a href="/resources/faq" class="font-mono text-xs font-black text-[#EA580C] uppercase tracking-wider hover:underline">
+                Access Full FAQ Knowledge Base →
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<!-- GEO FAQ & Collection Schema 注入 -->
+<script type="application/ld+json" set:html={JSON.stringify(resourcesSchema)} />

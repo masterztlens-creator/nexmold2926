@@ -1,0 +1,1625 @@
+﻿---
+import '../../styles/global.css';
+
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+
+const hubs = [
+  {
+    number: "01",
+    title: "Calculators & Tools",
+    kicker: "INTENT 鈫?CALCULATE",
+    description:
+      "Engineering calculators and practical tools for injection molding, tooling, cycle time, clamp tonnage, shrinkage and cost.",
+    href: "/knowledge-hub/calculators-tools/",
+    action: "Calculate",
+    metric: "Fast engineering decisions"
+  },
+  {
+    number: "02",
+    title: "DFM & Tolerances",
+    kicker: "INTENT 鈫?DESIGN",
+    description:
+      "Design for manufacturability guidance covering wall thickness, draft, ribs, bosses, undercuts, tolerances and parting lines.",
+    href: "/knowledge-hub/dfm-tolerances/",
+    action: "Design Better",
+    metric: "Reduce tooling risk"
+  },
+  {
+    number: "03",
+    title: "Tooling & Metallurgy",
+    kicker: "INTENT 鈫?TOOLING",
+    description:
+      "Mold steel, tooling architecture, heat treatment, polishing, EDM, hot runners, cooling and mold maintenance.",
+    href: "/knowledge-hub/tooling-metallurgy/",
+    action: "Engineer the Mold",
+    metric: "Build the right tool"
+  },
+  {
+    number: "04",
+    title: "Defects & Solutions",
+    kicker: "INTENT 鈫?DIAGNOSE",
+    description:
+      "Diagnose warpage, sink marks, flash, short shots, weld lines, burns, silver streaks and other molding defects.",
+    href: "/knowledge-hub/defects-solutions/",
+    action: "Solve Problems",
+    metric: "Find root causes"
+  },
+  {
+    number: "05",
+    title: "Materials",
+    kicker: "INTENT 鈫?SELECT",
+    description:
+      "Plastic material guides covering ABS, PC, PP, PA, POM, PEEK, TPE, TPU and engineering polymers.",
+    href: "/knowledge-hub/materials/",
+    action: "Select Materials",
+    metric: "Match material to application"
+  }
+];
+
+const paths = [
+  {
+    label: "I have a CAD file",
+    title: "Check manufacturability",
+    description: "Get engineering feedback before tooling starts.",
+    href: "/free-dfm-analysis/",
+    cta: "Get Free DFM Analysis"
+  },
+  {
+    label: "I have a molding problem",
+    title: "Diagnose the defect",
+    description: "Trace symptoms to likely process, material and tooling causes.",
+    href: "/knowledge-hub/defects-solutions/",
+    cta: "Diagnose a Defect"
+  },
+  {
+    label: "I need a cost decision",
+    title: "Calculate the variables",
+    description: "Use engineering calculators before requesting a quote.",
+    href: "/knowledge-hub/calculators-tools/",
+    cta: "Open Calculators"
+  }
+];
+
+const siteUrl = "https://www.nexmold.com";
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Injection Molding Engineering Knowledge Hub | NEXMOLD</title>
+
+  <meta
+    name="description"
+    content="NEXMOLD Engineering Knowledge Hub covering injection molding DFM, tolerances, tooling, mold steel, materials, defects, calculators and manufacturing engineering resources."
+  />
+
+  <link rel="canonical" href={`${siteUrl}/knowledge-hub/`} />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "NEXMOLD Injection Molding Engineering Knowledge Hub",
+    url: `${siteUrl}/knowledge-hub/`,
+    description:
+      "Engineering resources for plastic injection molding, mold design, tooling, materials, DFM, tolerances and manufacturing.",
+    publisher: {
+      "@type": "Organization",
+      name: "NEXMOLD",
+      url: siteUrl
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: hubs.map((hub, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: hub.title,
+        url: `${siteUrl}${hub.href}`
+      }))
+    }
+  })} />
+</head>
+
+<body>
+  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+
+  <Header />
+
+  <main>
+    <!-- HERO: awareness 鈫?exploration -->
+    <section class="hub-hero">
+      <div class="hero-noise"></div>
+      <div class="hero-grid">
+        <div class="hero-copy reveal">
+          <span class="eyebrow"><i></i> NEXMOLD ENGINEERING KNOWLEDGE HUB</span>
+
+          <h1>
+            Injection Molding
+            <strong>Engineering Knowledge</strong>
+          </h1>
+
+          <p class="hero-lead">
+            Technical resources for plastic injection molding, mold design, tooling,
+            materials, DFM, tolerances, defects and production engineering.
+          </p>
+
+          <div class="hero-proof">
+            <span><b>01</b> DESIGN</span>
+            <span><b>02</b> TOOLING</span>
+            <span><b>03</b> PRODUCTION</span>
+            <span><b>04</b> QUALITY</span>
+          </div>
+
+          <div class="actions">
+            <a href="/free-dfm-analysis/" class="primary magnetic" data-funnel="hero-dfm">
+              Get Free DFM Analysis <span>鈫?/span>
+            </a>
+            <a href="#knowledge" class="secondary" data-funnel="hero-explore">
+              Explore Knowledge Base <span>鈫?/span>
+            </a>
+          </div>
+
+          <p class="microcopy">
+            No obligation 路 Engineering-first review 路 Designed for real manufacturing decisions
+          </p>
+        </div>
+
+        <div class="technical-graphic reveal reveal-delay">
+          <div class="scanline"></div>
+          <div class="graphic-inner">
+            <div class="graphic-header">
+              <span>ENGINEERING SYSTEM</span>
+              <b>NX-01 / LIVE</b>
+            </div>
+
+            <div class="orbit orbit-a"></div>
+            <div class="orbit orbit-b"></div>
+            <div class="orbit orbit-c"></div>
+
+            <div class="graphic-circle">
+              <div class="pulse-ring"></div>
+              <div class="circle-center">NEX<br />MOLD</div>
+            </div>
+
+            <div class="connector connector-1"></div>
+            <div class="connector connector-2"></div>
+            <div class="connector connector-3"></div>
+            <div class="connector connector-4"></div>
+
+            <div class="graphic-node node-1"><small>01</small> DFM</div>
+            <div class="graphic-node node-2"><small>02</small> TOOLS</div>
+            <div class="graphic-node node-3"><small>03</small> MATERIAL</div>
+            <div class="graphic-node node-4"><small>04</small> QUALITY</div>
+
+            <div class="data-card data-a">
+              <span>DESIGN RISK</span>
+              <b>SCAN READY</b>
+            </div>
+            <div class="data-card data-b">
+              <span>KNOWLEDGE</span>
+              <b>CONNECTED</b>
+            </div>
+
+            <div class="graphic-footer">
+              <span>PRECISION TOOLING / INJECTION MOLDING</span>
+              <span>SYS. ONLINE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-scroll">
+        <span>SCROLL TO EXPLORE</span><i></i>
+      </div>
+    </section>
+
+    <!-- INTENT ROUTER: visitors self-select their buying/problem intent -->
+    <section class="intent-router">
+      <div class="container">
+        <div class="section-heading reveal">
+          <div>
+            <span>START WITH YOUR INTENT</span>
+            <h2>What are you trying to solve?</h2>
+          </div>
+          <p>
+            The fastest path is not more content. It is the right engineering decision,
+            followed by the right next action.
+          </p>
+        </div>
+
+        <div class="path-grid">
+          {paths.map((path, index) => (
+            <a href={path.href} class="path-card reveal" data-funnel={`intent-${index + 1}`}>
+              <span class="path-index">0{index + 1}</span>
+              <div class="path-label">{path.label}</div>
+              <h3>{path.title}</h3>
+              <p>{path.description}</p>
+              <strong>{path.cta} <em>→</em></strong>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- KNOWLEDGE CLUSTERS: SEO/GEO topical authority layer -->
+    <section id="knowledge" class="knowledge">
+      <div class="container">
+        <div class="section-heading reveal">
+          <div>
+            <span>KNOWLEDGE ARCHITECTURE</span>
+            <h2>Explore the engineering platform</h2>
+          </div>
+          <p>
+            Every topic is structured as a connected engineering knowledge cluster 鈥?            from design decisions to tooling, production and quality.
+          </p>
+        </div>
+
+        <div class="hub-grid">
+          {hubs.map((hub) => (
+            <a href={hub.href} class="hub-card reveal" data-funnel={`hub-${hub.number}`}>
+              <div class="hub-top">
+                <span>{hub.number}</span>
+                <b>→</b>
+              </div>
+
+              <div class="hub-content">
+                <div class="hub-kicker">{hub.kicker}</div>
+                <h2>{hub.title}</h2>
+                <p>{hub.description}</p>
+                <div class="hub-bottom">
+                  <strong>{hub.action}<em>→</em></strong>
+                  <small>{hub.metric}</small>
+                </div>
+              </div>
+              <div class="card-line"></div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS: converts education into a commercial journey -->
+    <section class="conversion-process">
+      <div class="container">
+        <div class="process-head reveal">
+          <span>FROM SEARCH TO SOURCING</span>
+          <h2>Learn → Validate → Engineer → Manufacture</h2>
+          <p>
+            Knowledge should remove uncertainty, not become a dead end. Each stage
+            gives the visitor a logical next step toward a manufacturing conversation.
+          </p>
+        </div>
+
+        <div class="process-line">
+          <div class="process-step reveal">
+            <span>01</span>
+            <b>DISCOVER</b>
+            <p>Find the answer to a technical question.</p>
+          </div>
+          <div class="process-step reveal">
+            <span>02</span>
+            <b>VALIDATE</b>
+            <p>Use a calculator, tolerance guide or diagnostic.</p>
+          </div>
+          <div class="process-step reveal">
+            <span>03</span>
+            <b>ENGINEER</b>
+            <p>Send the CAD and discuss DFM or tooling risk.</p>
+          </div>
+          <div class="process-step reveal">
+            <span>04</span>
+            <b>MANUFACTURE</b>
+            <p>Move from engineering approval to tooling and molding.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS / TRUST: reinforces authority without inventing claims -->
+    <section class="authority">
+      <div class="container authority-grid">
+        <div class="authority-copy reveal">
+          <span>ENGINEERING-FIRST PLATFORM</span>
+          <h2>Built to answer the question behind the search.</h2>
+          <p>
+            Instead of isolated blog posts, the hub connects technical education,
+            practical tools, diagnosis and engineering support into one continuous journey.
+          </p>
+        </div>
+
+        <div class="authority-stats">
+          <div class="stat reveal">
+            <strong data-count="5">0</strong>
+            <span>Core engineering clusters</span>
+          </div>
+          <div class="stat reveal">
+            <strong data-count="4">0</strong>
+            <span>Decision stages</span>
+          </div>
+          <div class="stat reveal">
+            <strong data-count="1">0</strong>
+            <span>Direct engineering path</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIMARY COMMERCIAL CTA -->
+    <section class="dfm-cta">
+      <div class="container">
+        <div class="dfm-inner reveal">
+          <div class="cta-grid">
+            <div>
+              <span>ENGINEERING SUPPORT</span>
+              <h2>
+                Have a CAD file?
+                <br />
+                <mark>Let's review it.</mark>
+              </h2>
+              <p>
+                Get engineering feedback on manufacturability, tooling risks,
+                draft, wall thickness, parting line, gates, undercuts and potential
+                molding defects.
+              </p>
+            </div>
+
+            <div class="cta-side">
+              <div class="cta-orbit" aria-hidden="true">
+                <span>DFM</span>
+              </div>
+              <a href="/free-dfm-analysis/" data-funnel="final-dfm">
+                Upload CAD <span>鈫?/span>
+              </a>
+              <small>TURN KNOWLEDGE INTO AN ENGINEERING DECISION</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Persistent conversion rail: keeps the commercial action available while browsing -->
+  <aside class="conversion-rail" aria-label="Engineering support">
+    <span>NEED ENGINEERING HELP?</span>
+    <a href="/free-dfm-analysis/" data-funnel="sticky-dfm">Free DFM Analysis 鈫?/a>
+  </aside>
+
+  <Footer />
+
+  <script>
+    const progressBar = document.getElementById("progress-bar");
+
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const value = max > 0 ? (window.scrollY / max) * 100 : 0;
+      if (progressBar) progressBar.style.width = `${value}%`;
+    };
+
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+    const counters = document.querySelectorAll("[data-count]");
+    const counterObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = Number((entry.target as HTMLElement).dataset.count || 0);
+          const duration = 900;
+          const start = performance.now();
+
+          const tick = (now: number) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            (entry.target as HTMLElement).textContent = Math.round(target * eased).toString();
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+
+          requestAnimationFrame(tick);
+          counterObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.8 }
+    );
+
+    counters.forEach((counter) => counterObserver.observe(counter));
+
+    // Lightweight interaction tracking. If GA4/other analytics is installed,
+    // these events become useful funnel checkpoints without requiring a dependency.
+    document.querySelectorAll<HTMLElement>("[data-funnel]").forEach((link) => {
+      link.addEventListener("click", () => {
+        const eventName = link.dataset.funnel;
+        window.dispatchEvent(
+          new CustomEvent("nexmold:funnel", { detail: { event: eventName } })
+        );
+
+        if (typeof (window as Window & { gtag?: (...args: any[]) => void }).gtag === "function") {
+          (window as Window & { gtag?: (...args: any[]) => void }).gtag?.("event", "knowledge_funnel_click", {
+            funnel_stage: eventName,
+            page_type: "knowledge_hub"
+          });
+        }
+      });
+    });
+
+    // Small magnetic CTA effect on desktop only.
+    document.querySelectorAll<HTMLElement>(".magnetic").forEach((button) => {
+      button.addEventListener("mousemove", (event: MouseEvent) => {
+        if (window.innerWidth < 900) return;
+        const rect = button.getBoundingClientRect();
+        const x = (event.clientX - rect.left - rect.width / 2) * 0.08;
+        const y = (event.clientY - rect.top - rect.height / 2) * 0.08;
+        button.style.transform = `translate(${x}px, ${y}px)`;
+      });
+
+      button.addEventListener("mouseleave", () => {
+        button.style.transform = "";
+      });
+    });
+  </script>
+</body>
+</html>
+
+<style>
+  :global(html) {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    color: #10284f;
+    background: #fff;
+    font-family: Inter, Arial, sans-serif;
+    overflow-x: hidden;
+  }
+
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .progress {
+    position: fixed;
+    z-index: 9999;
+    inset: 0 0 auto;
+    height: 3px;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  #progress-bar {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: #f45116;
+    box-shadow: 0 0 14px rgba(244, 81, 22, .6);
+  }
+
+  .container,
+  .hero-grid {
+    width: min(1240px, calc(100% - 48px));
+    margin-inline: auto;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity .8s cubic-bezier(.2,.8,.2,1),
+      transform .8s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .reveal-delay {
+    transition-delay: .14s;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* HERO */
+  .hub-hero {
+    position: relative;
+    min-height: 760px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 82% 46%, rgba(244,81,22,.08), transparent 30%),
+      linear-gradient(135deg, #f4f7fa 0%, #fff 58%, #eef3f8 100%);
+    border-bottom: 1px solid #e1e6ec;
+  }
+
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    opacity: .4;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(16,40,79,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,40,79,.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to bottom, black, transparent);
+  }
+
+  .hero-grid {
+    position: relative;
+    z-index: 2;
+    min-height: 720px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .eyebrow,
+  .section-heading > div > span,
+  .process-head > span,
+  .authority-copy > span,
+  .dfm-inner > div > span {
+    color: #f45116;
+    font-size: 10px;
+    letter-spacing: .17em;
+    font-weight: 900;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .eyebrow i {
+    width: 7px;
+    height: 7px;
+    background: #f45116;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(244,81,22,.5);
+    animation: ping 2s infinite;
+  }
+
+  h1 {
+    max-width: 720px;
+    margin: 24px 0;
+    font-size: clamp(48px, 6vw, 78px);
+    line-height: .94;
+    letter-spacing: -.055em;
+  }
+
+  h1 strong {
+    display: block;
+    color: #f45116;
+    font-weight: 800;
+  }
+
+  .hero-lead {
+    max-width: 650px;
+    color: #63738a;
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  .hero-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 25px;
+    color: #718198;
+    font-size: 9px;
+    letter-spacing: .12em;
+    font-weight: 800;
+  }
+
+  .hero-proof b {
+    color: #10284f;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .actions a {
+    min-height: 52px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+  }
+
+  .primary {
+    color: white;
+    background: #f45116;
+    box-shadow: 0 12px 30px rgba(244,81,22,.2);
+  }
+
+  .primary:hover {
+    box-shadow: 0 18px 40px rgba(244,81,22,.3);
+  }
+
+  .secondary {
+    color: #10284f;
+    border: 1px solid #ccd4df;
+    background: rgba(255,255,255,.7);
+  }
+
+  .secondary:hover {
+    border-color: #10284f;
+  }
+
+  .microcopy {
+    margin-top: 13px;
+    color: #8b98a9;
+    font-size: 10px;
+    letter-spacing: .02em;
+  }
+
+  /* TECHNICAL HERO GRAPHIC */
+  .technical-graphic {
+    min-height: 500px;
+    padding: 18px;
+    background: #10284f;
+    box-shadow: 30px 35px 90px rgba(16,40,79,.18);
+    transform: perspective(1000px) rotateY(-2deg);
+  }
+
+  .graphic-inner {
+    min-height: 464px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.15);
+    background:
+      linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .graphic-inner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 48%, rgba(244,81,22,.07) 50%, transparent 52%);
+    background-size: 100% 12px;
+    animation: scan 6s linear infinite;
+    pointer-events: none;
+  }
+
+  .scanline {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    top: -10%;
+    height: 2px;
+    background: #f45116;
+    box-shadow: 0 0 20px #f45116;
+    opacity: .55;
+    animation: scanline 5s linear infinite;
+  }
+
+  .graphic-header,
+  .graphic-footer {
+    position: absolute;
+    z-index: 4;
+    left: 25px;
+    right: 25px;
+    display: flex;
+    justify-content: space-between;
+    color: #8ea0ba;
+    font-size: 8px;
+    letter-spacing: .16em;
+  }
+
+  .graphic-header { top: 24px; }
+  .graphic-footer { bottom: 22px; }
+
+  .graphic-header b {
+    color: #f45116;
+  }
+
+  .graphic-circle {
+    width: 260px;
+    height: 260px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 45px rgba(255,255,255,.025),
+      0 0 0 90px rgba(255,255,255,.015);
+    animation: rotate 24s linear infinite;
+  }
+
+  .circle-center {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f45116;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.1;
+    letter-spacing: .1em;
+    font-weight: 900;
+    box-shadow: 0 0 0 12px rgba(244,81,22,.08), 0 0 40px rgba(244,81,22,.25);
+    animation: counter-rotate 24s linear infinite, breathe 3s ease-in-out infinite;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    inset: 50%;
+    width: 105px;
+    height: 105px;
+    margin: -52px;
+    border: 1px solid #f45116;
+    border-radius: 50%;
+    animation: pulse 2.4s infinite;
+  }
+
+  .orbit {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 50%;
+    border: 1px dashed rgba(255,255,255,.12);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .orbit-a { width: 330px; height: 330px; animation: rotate 18s linear infinite; }
+  .orbit-b { width: 410px; height: 410px; animation: rotate-reverse 28s linear infinite; }
+  .orbit-c { width: 500px; height: 500px; animation: rotate 40s linear infinite; }
+
+  .graphic-node {
+    position: absolute;
+    z-index: 5;
+    padding: 11px 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,.25);
+    color: white;
+    background: rgba(23,55,98,.9);
+    backdrop-filter: blur(8px);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    box-shadow: 0 12px 30px rgba(0,0,0,.14);
+    transition: transform .3s ease, border-color .3s ease;
+  }
+
+  .graphic-node:hover {
+    transform: translateY(-5px) scale(1.03);
+    border-color: #f45116;
+  }
+
+  .graphic-node small {
+    color: #f45116;
+  }
+
+  .node-1 { top: 120px; left: 25px; }
+  .node-2 { top: 120px; right: 25px; }
+  .node-3 { bottom: 110px; left: 25px; }
+  .node-4 { bottom: 110px; right: 25px; }
+
+  .connector {
+    position: absolute;
+    z-index: 2;
+    height: 1px;
+    width: 100px;
+    background: linear-gradient(90deg, rgba(244,81,22,0), rgba(244,81,22,.7));
+    transform-origin: left center;
+  }
+
+  .connector-1 { left: 90px; top: 145px; transform: rotate(18deg); }
+  .connector-2 { right: 90px; top: 145px; transform: rotate(162deg); }
+  .connector-3 { left: 90px; bottom: 145px; transform: rotate(-18deg); }
+  .connector-4 { right: 90px; bottom: 145px; transform: rotate(198deg); }
+
+  .data-card {
+    position: absolute;
+    z-index: 5;
+    min-width: 125px;
+    padding: 9px 11px;
+    border-left: 2px solid #f45116;
+    background: rgba(8,25,50,.7);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 7px;
+    letter-spacing: .12em;
+  }
+
+  .data-card span {
+    display: block;
+    color: #7f91a9;
+    margin-bottom: 4px;
+  }
+
+  .data-a { left: 35px; bottom: 30px; }
+  .data-b { right: 35px; top: 62px; }
+
+  /* INTENT ROUTER */
+  .intent-router {
+    padding: 105px 0 70px;
+    background: #fff;
+  }
+
+  .section-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 70px;
+    align-items: end;
+    margin-bottom: 45px;
+  }
+
+  .section-heading h2 {
+    margin: 15px 0 0;
+    font-size: 42px;
+    letter-spacing: -.04em;
+  }
+
+  .section-heading p {
+    max-width: 440px;
+    color: #6c7a8e;
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .path-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .path-card {
+    position: relative;
+    min-height: 270px;
+    padding: 28px;
+    color: #10284f;
+    background: #f5f7fa;
+    border: 1px solid #e4e9ef;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform .35s ease, background .35s ease, color .35s ease, box-shadow .35s ease;
+  }
+
+  .path-card::after {
+    content: "→";
+    position: absolute;
+    right: 22px;
+    bottom: 18px;
+    color: #f45116;
+    font-size: 34px;
+    opacity: .18;
+    transform: translateX(-8px);
+    transition: .35s ease;
+  }
+
+  .path-card:hover {
+    transform: translateY(-8px);
+    color: white;
+    background: #10284f;
+    box-shadow: 0 24px 60px rgba(16,40,79,.16);
+  }
+
+  .path-card:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .path-index {
+    color: #f45116;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .path-label {
+    margin-top: 28px;
+    color: #7c8999;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .path-card h3 {
+    margin: 10px 0;
+    font-size: 24px;
+    letter-spacing: -.025em;
+  }
+
+  .path-card p {
+    max-width: 320px;
+    color: #6c7a8e;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .path-card:hover p {
+    color: #b7c3d2;
+  }
+
+  .path-card strong {
+    display: inline-block;
+    margin-top: 12px;
+    color: #f45116;
+    font-size: 9px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .path-card em {
+    margin-left: 10px;
+    font-style: normal;
+    font-size: 15px;
+  }
+
+  /* KNOWLEDGE */
+  .knowledge {
+    padding: 70px 0 115px;
+    background: #f8fafc;
+  }
+
+  .hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: #dbe1e8;
+    border: 1px solid #dbe1e8;
+  }
+
+  .hub-card {
+    min-height: 310px;
+    position: relative;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    color: #10284f;
+    text-decoration: none;
+    overflow: hidden;
+    transition: background .45s ease, color .45s ease;
+  }
+
+  .hub-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .hub-card::before {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: #f45116;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .45s ease;
+  }
+
+  .hub-card:hover {
+    background: #10284f;
+    color: white;
+  }
+
+  .hub-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .hub-top {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hub-top span,
+  .hub-top b {
+    color: #f45116;
+  }
+
+  .hub-top span {
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .hub-top b {
+    font-size: 20px;
+    transition: transform .3s ease;
+  }
+
+  .hub-card:hover .hub-top b {
+    transform: translate(5px, -5px);
+  }
+
+  .hub-content {
+    margin-top: auto;
+  }
+
+  .hub-kicker {
+    margin-bottom: 10px;
+    color: #8b98a9;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .13em;
+  }
+
+  .hub-card:hover .hub-kicker {
+    color: #9eacc0;
+  }
+
+  .hub-content h2 {
+    margin: 0 0 14px;
+    font-size: 27px;
+    letter-spacing: -.025em;
+  }
+
+  .hub-content p {
+    max-width: 600px;
+    margin: 0 0 25px;
+    color: #6d7c91;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .hub-card:hover p {
+    color: #b2bfce;
+  }
+
+  .hub-bottom {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .hub-bottom strong {
+    color: #f45116;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .hub-bottom em {
+    margin-left: 15px;
+    font-style: normal;
+    font-size: 15px;
+  }
+
+  .hub-bottom small {
+    color: #91a0b3;
+    font-size: 9px;
+    letter-spacing: .04em;
+  }
+
+  /* PROCESS */
+  .conversion-process {
+    padding: 120px 0;
+    background: #10284f;
+    color: white;
+    overflow: hidden;
+  }
+
+  .process-head {
+    max-width: 760px;
+  }
+
+  .process-head h2 {
+    margin: 15px 0;
+    font-size: clamp(38px, 5vw, 60px);
+    line-height: 1;
+    letter-spacing: -.05em;
+  }
+
+  .process-head p {
+    max-width: 650px;
+    color: #aebbd0;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .process-line {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 75px;
+    border-top: 1px solid rgba(255,255,255,.16);
+  }
+
+  .process-step {
+    position: relative;
+    padding: 32px 28px 0 0;
+  }
+
+  .process-step::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -5px;
+    width: 9px;
+    height: 9px;
+    background: #f45116;
+    border-radius: 50%;
+    box-shadow: 0 0 0 8px rgba(244,81,22,.08);
+  }
+
+  .process-step span {
+    display: block;
+    margin-bottom: 22px;
+    color: #f45116;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .process-step b {
+    font-size: 11px;
+    letter-spacing: .12em;
+  }
+
+  .process-step p {
+    max-width: 230px;
+    color: #91a0b5;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  /* AUTHORITY */
+  .authority {
+    padding: 110px 0;
+    background: #fff;
+  }
+
+  .authority-grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 90px;
+    align-items: center;
+  }
+
+  .authority-copy h2 {
+    max-width: 650px;
+    margin: 16px 0;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -.045em;
+  }
+
+  .authority-copy p {
+    max-width: 650px;
+    color: #68778c;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .authority-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-left: 1px solid #dce2e9;
+  }
+
+  .stat {
+    padding: 22px 30px;
+    border-bottom: 1px solid #dce2e9;
+  }
+
+  .stat:last-child {
+    border-bottom: 0;
+  }
+
+  .stat strong {
+    display: inline-block;
+    min-width: 60px;
+    color: #f45116;
+    font-size: 42px;
+    letter-spacing: -.04em;
+  }
+
+  .stat span {
+    color: #65748a;
+    font-size: 11px;
+    letter-spacing: .05em;
+  }
+
+  /* CTA */
+  .dfm-cta {
+    padding: 0 0 100px;
+  }
+
+  .dfm-inner {
+    padding: 65px;
+    background:
+      radial-gradient(circle at 78% 50%, rgba(244,81,22,.16), transparent 24%),
+      #10284f;
+    color: white;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .dfm-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255,255,255,.08);
+    pointer-events: none;
+  }
+
+  .cta-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr .45fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .dfm-inner h2 {
+    margin: 18px 0;
+    font-size: 45px;
+    line-height: 1;
+    letter-spacing: -.04em;
+  }
+
+  .dfm-inner h2 mark {
+    color: #f45116;
+    background: transparent;
+  }
+
+  .dfm-inner p {
+    max-width: 650px;
+    margin: 0;
+    color: #aebbd0;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  .cta-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 17px;
+  }
+
+  .cta-orbit {
+    width: 115px;
+    height: 115px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 50%;
+    color: #f45116;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    animation: rotate 12s linear infinite;
+  }
+
+  .cta-side a {
+    min-width: 190px;
+    padding: 18px 25px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    background: #f45116;
+    color: white;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    box-shadow: 0 15px 35px rgba(244,81,22,.22);
+  }
+
+  .cta-side small {
+    color: #7f91a9;
+    font-size: 7px;
+    letter-spacing: .13em;
+    text-align: center;
+  }
+
+  /* STICKY CONVERSION RAIL */
+  .conversion-rail {
+    position: fixed;
+    z-index: 900;
+    right: 18px;
+    bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 9px 10px 9px 15px;
+    background: rgba(16,40,79,.94);
+    color: white;
+    box-shadow: 0 15px 40px rgba(16,40,79,.24);
+    backdrop-filter: blur(10px);
+    transform: translateY(120%);
+    animation: rail-in .8s 1.4s forwards;
+  }
+
+  .conversion-rail span {
+    color: #aebbd0;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .1em;
+  }
+
+  .conversion-rail a {
+    padding: 10px 13px;
+    background: #f45116;
+    color: white;
+    text-decoration: none;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* KEYFRAMES */
+  @keyframes ping {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(244,81,22,.5); }
+    50% { box-shadow: 0 0 0 7px rgba(244,81,22,0); }
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(.7); opacity: .8; }
+    70%, 100% { transform: scale(1.7); opacity: 0; }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  @keyframes rotate {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  @keyframes rotate-reverse {
+    to { transform: translate(-50%, -50%) rotate(-360deg); }
+  }
+
+  @keyframes counter-rotate {
+    to { transform: rotate(-360deg); }
+  }
+
+  @keyframes scan {
+    from { transform: translateY(-10%); }
+    to { transform: translateY(10%); }
+  }
+
+  @keyframes scanline {
+    0% { top: -5%; }
+    100% { top: 105%; }
+  }
+
+  @keyframes rail-in {
+    to { transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) { scroll-behavior: auto; }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 45px;
+      padding: 75px 0 100px;
+    }
+
+    .technical-graphic {
+      max-width: 720px;
+      width: 100%;
+      margin-inline: auto;
+    }
+
+    .path-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .authority-grid {
+      grid-template-columns: 1fr;
+      gap: 55px;
+    }
+
+    .cta-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cta-side {
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 850px) {
+    .container,
+    .hero-grid {
+      width: calc(100% - 32px);
+    }
+
+    .section-heading {
+      display: block;
+    }
+
+    .section-heading p {
+      margin-top: 22px;
+    }
+
+    .hub-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hub-card:last-child {
+      grid-column: auto;
+    }
+
+    .process-line {
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      border-top: 0;
+    }
+
+    .process-step {
+      padding-top: 25px;
+      border-top: 1px solid rgba(255,255,255,.16);
+    }
+
+    .dfm-inner {
+      padding: 45px 30px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hub-hero {
+      min-height: auto;
+    }
+
+    .hero-grid {
+      min-height: auto;
+      padding: 65px 0 85px;
+    }
+
+    h1 {
+      font-size: 48px;
+    }
+
+    .hero-lead {
+      font-size: 16px;
+    }
+
+    .hero-proof {
+      gap: 9px 15px;
+    }
+
+    .actions {
+      flex-direction: column;
+    }
+
+    .actions a {
+      justify-content: space-between;
+    }
+
+    .technical-graphic {
+      min-height: 360px;
+      padding: 10px;
+      transform: none;
+    }
+
+    .graphic-inner {
+      min-height: 340px;
+    }
+
+    .graphic-circle {
+      width: 190px;
+      height: 190px;
+    }
+
+    .orbit-a { width: 240px; height: 240px; }
+    .orbit-b { width: 300px; height: 300px; }
+    .orbit-c { width: 370px; height: 370px; }
+
+    .node-1,
+    .node-2 {
+      top: 85px;
+    }
+
+    .node-3,
+    .node-4 {
+      bottom: 75px;
+    }
+
+    .node-1,
+    .node-3 { left: 12px; }
+
+    .node-2,
+    .node-4 { right: 12px; }
+
+    .data-card {
+      display: none;
+    }
+
+    .section-heading h2 {
+      font-size: 34px;
+    }
+
+    .knowledge,
+    .intent-router,
+    .authority {
+      padding: 80px 0;
+    }
+
+    .conversion-process {
+      padding: 85px 0;
+    }
+
+    .process-line {
+      grid-template-columns: 1fr;
+      margin-top: 50px;
+    }
+
+    .dfm-inner h2 {
+      font-size: 38px;
+    }
+
+    .conversion-rail {
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      justify-content: space-between;
+    }
+
+    .conversion-rail span {
+      display: none;
+    }
+  }
+</style>
+
+
+

@@ -1,0 +1,313 @@
+[
+  {
+    "id": "hips-water-tank-grade",
+    "slug": "hips-water-tank-grade",
+    "name": "HIPS (High Impact Polystyrene) Water Tank Grade",
+    "chemical_family": "Styrenics",
+    "category": "Commodity Plastics",
+    "l1_class": "Polystyrenes (HIPS)",
+    "l2_variants": [
+      "Standard High Impact",
+      "High Flow Appliance Grade",
+      "Food Contact Water Tank Grade",
+      "UL94 V-0 Flame Retardant HIPS"
+    ],
+    "key_applications": [
+      "Water Storage Tanks",
+      "Refrigerator Liners",
+      "Home Appliance Housings",
+      "Printer Frames",
+      "Disposable Containers"
+    ],
+    "properties": {
+      "density": "1.04 - 1.06 g/cm³",
+      "shrinkage_rate": "0.4% - 0.7%",
+      "tensile_strength": "20 - 35 MPa",
+      "hdt": "75 - 90 °C"
+    },
+    "tags": ["Food Grade", "Water Tank", "High Impact", "Low Cost", "FDA Compliant"],
+    "dfm_notes": "Excellent dimensional stability and ease of processing. Ideal for large thin-wall water containers and home appliance enclosures."
+  },
+  {
+    "id": "gpps-general-purpose",
+    "slug": "gpps-transparent",
+    "name": "GPPS (General Purpose Polystyrene)",
+    "chemical_family": "Styrenics",
+    "category": "Commodity Plastics",
+    "l1_class": "Polystyrenes (GPPS)",
+    "l2_variants": ["High Flow Grade", "Heat Resistant Grade", "Optical Packaging Grade"],
+    "key_applications": ["Food Packaging", "CD/DVD Cases", "Disposable Cups", "Medical Test Tubes"],
+    "properties": {
+      "density": "1.04 - 1.05 g/cm³",
+      "shrinkage_rate": "0.3% - 0.6%",
+      "tensile_strength": "35 - 55 MPa",
+      "hdt": "70 - 85 °C"
+    },
+    "tags": ["Transparent", "Rigid", "Food Grade", "Low Cost"],
+    "dfm_notes": "High transparency and stiffness, but brittle. Susceptible to stress cracking if internal stress is not released."
+  },
+  {
+    "id": "abs-injection-molding",
+    "slug": "abs-injection-molding",
+    "name": "ABS (Acrylonitrile Butadiene Styrene)",
+    "chemical_family": "Styrenics",
+    "category": "Engineering Plastics",
+    "l1_class": "ABS & Styrenic Alloys",
+    "l2_variants": [
+      "Standard High Flow ABS",
+      "FR-ABS (UL94 V-0)",
+      "Electroplating Grade ABS",
+      "MABS (Transparent ABS)",
+      "High Heat ABS"
+    ],
+    "key_applications": ["Automotive Interior Trim", "Consumer Electronics Enclosures", "Power Tool Housings", "Sanitary Fittings"],
+    "properties": {
+      "density": "1.03 - 1.07 g/cm³",
+      "shrinkage_rate": "0.4% - 0.7%",
+      "tensile_strength": "40 - 50 MPa",
+      "hdt": "85 - 100 °C"
+    },
+    "tags": ["High Impact", "Platable", "UL94 V-0", "Easy Processing"],
+    "dfm_notes": "Balanced mechanical properties. Excellent surface finish for painting, electroplating, and ultrasonic welding."
+  },
+  {
+    "id": "pp-homopolymer-copolymer",
+    "slug": "pp-homopolymer-copolymer",
+    "name": "PP (Polypropylene - PPH / PPC / PPR)",
+    "chemical_family": "Polyolefins",
+    "category": "Commodity Plastics",
+    "l1_class": "Polypropylenes",
+    "l2_variants": [
+      "PPH (Homopolymer PP)",
+      "PPC (Block Copolymer PP)",
+      "PPR (Random Copolymer PP)",
+      "Talc-Filled PP (10%-40%)",
+      "GF-PP (Glass Fiber Reinforced)"
+    ],
+    "key_applications": ["Automotive Bumpers", "Food Containers", "Medical Syringes", "Battery Cases", "Washing Machine Tubs"],
+    "properties": {
+      "density": "0.89 - 0.91 g/cm³",
+      "shrinkage_rate": "1.2% - 2.5%",
+      "tensile_strength": "25 - 40 MPa",
+      "hdt": "80 - 110 °C"
+    },
+    "tags": ["Chemical Resistant", "Low Density", "Autoclavable", "Food Grade", "Talc Filled"],
+    "dfm_notes": "High shrinkage rate requires careful wall thickness design to avoid sink marks and differential warpage."
+  },
+  {
+    "id": "hdpe-ldpe",
+    "slug": "hdpe-ldpe",
+    "name": "PE (HDPE & LDPE Polyethylene)",
+    "chemical_family": "Polyolefins",
+    "category": "Commodity Plastics",
+    "l1_class": "Polyethylenes",
+    "l2_variants": ["HDPE High Rigidity", "LDPE Flexible Grade", "LLDPE Toughness Grade", "UHMWPE Injection Modified"],
+    "key_applications": ["Bottle Caps", "Crates & Pallets", "Chemical Containers", "Flexible Seals", "Pipe Fittings"],
+    "properties": {
+      "density": "0.91 - 0.96 g/cm³",
+      "shrinkage_rate": "1.5% - 3.0%",
+      "tensile_strength": "15 - 30 MPa",
+      "hdt": "45 - 80 °C"
+    },
+    "tags": ["Chemical Resistant", "High Toughness", "Flexible", "Food Contact"],
+    "dfm_notes": "High wall-thickness sensitivity and high shrinkage. Excellent chemical resistance and low-temperature impact."
+  },
+  {
+    "id": "pa66-gf30",
+    "slug": "pa66-gf30",
+    "name": "PA66 GF30 (30% Glass Fiber Reinforced Nylon 66)",
+    "chemical_family": "Polyamides",
+    "category": "Engineering Plastics",
+    "l1_class": "Nylons (Aliphatic)",
+    "l2_variants": ["Heat Stabilized PA66 GF30", "Hydrolysis Resistant PA66 GF30", "High Flow PA66 GF30"],
+    "key_applications": ["Engine Covers", "Structural Brackets", "Power Tool Housings", "Automotive Intake Manifolds"],
+    "properties": {
+      "density": "1.35 - 1.40 g/cm³",
+      "shrinkage_rate": "0.3% - 0.8%",
+      "tensile_strength": "160 - 190 MPa",
+      "hdt": "240 - 250 °C"
+    },
+    "tags": ["Metal Replacement", "Glass Filled", "High Rigidity", "Heat Resistant"],
+    "dfm_notes": "High moisture absorption before processing. Fiber orientation must be considered to prevent part warpage."
+  },
+  {
+    "id": "polycarbonate-pc",
+    "slug": "polycarbonate-pc",
+    "name": "PC (Polycarbonate)",
+    "chemical_family": "Polycarbonates",
+    "category": "Engineering Plastics",
+    "l1_class": "Polycarbonates",
+    "l2_variants": [
+      "Standard Optical PC",
+      "GF-PC (Glass Filled 10%-30%)",
+      "FR-PC (Non-Halogen Flame Retardant V-0)",
+      "High-Heat PC (Apec Grade)",
+      "Medical Grade PC (ISO 10993)"
+    ],
+    "key_applications": ["LED Light Pipes", "Automotive Headlight Lenses", "Medical Housings", "Safety Goggles"],
+    "properties": {
+      "density": "1.18 - 1.22 g/cm³",
+      "shrinkage_rate": "0.5% - 0.7%",
+      "tensile_strength": "60 - 75 MPa",
+      "hdt": "130 - 145 °C"
+    },
+    "tags": ["Optical Clear", "High Impact", "UL94 V-0", "Medical Grade"],
+    "dfm_notes": "Requires strict drying (0.02% moisture limit) to prevent hydrolytic degradation during processing."
+  },
+  {
+    "id": "pom-delrin-acetal",
+    "slug": "pom-delrin-acetal",
+    "name": "POM / Delrin (Acetal / Polyoxymethylene)",
+    "chemical_family": "Polyacetal",
+    "category": "Engineering Plastics",
+    "l1_class": "Polyoxymethylene (POM)",
+    "l2_variants": [
+      "POM-H (Homopolymer Delrin)",
+      "POM-C (Copolymer Acetal)",
+      "PTFE-Filled Low Friction POM",
+      "GF-POM (Glass Reinforced)",
+      "Low-VOC Automotive POM"
+    ],
+    "key_applications": ["Precision Gears", "Bearings & Bushings", "Zipper Teeth", "Conveyor Links", "Valve Components"],
+    "properties": {
+      "density": "1.41 - 1.43 g/cm³",
+      "shrinkage_rate": "1.8% - 2.5%",
+      "tensile_strength": "65 - 75 MPa",
+      "hdt": "110 - 160 °C"
+    },
+    "tags": ["Self-Lubricating", "Wear Resistant", "High Precision", "Low Friction"],
+    "dfm_notes": "Excellent fatigue resistance and dimensional stability. Avoid overheating to prevent formaldehyde gas release."
+  },
+  {
+    "id": "peek-cf-peek",
+    "slug": "peek-cf-peek",
+    "name": "PEEK (Polyetheretherketone) & CF-PEEK",
+    "chemical_family": "PAEK Family",
+    "category": "High-Performance Plastics",
+    "l1_class": "Polyaryletherketones (PAEK)",
+    "l2_variants": [
+      "Unfilled PEEK",
+      "GF30 PEEK (30% Glass Filled)",
+      "CF30 PEEK (30% Carbon Fiber Filled)",
+      "Medical Implant Grade PEEK",
+      "Bearing Grade PEEK (PTFE/CF/Graphite)"
+    ],
+    "key_applications": ["Aerospace Seals", "Semiconductor Wafer Carriers", "Spinal Implants", "High-Pressure Oil Seals"],
+    "properties": {
+      "density": "1.30 - 1.45 g/cm³",
+      "shrinkage_rate": "1.0% - 1.5%",
+      "tensile_strength": "100 - 230 MPa",
+      "hdt": "160 - 315 °C"
+    },
+    "tags": ["Super Engineering", "Autoclavable", "USP Class VI", "Carbon Fiber", "Extreme Heat"],
+    "dfm_notes": "Requires high mold temperatures (160°C - 200°C) and specialized barrel heaters to maintain crystallinity."
+  },
+  {
+    "id": "pei-ultem",
+    "slug": "pei-ultem",
+    "name": "PEI (Polyetherimide / Ultem)",
+    "chemical_family": "Polyimides",
+    "category": "High-Performance Plastics",
+    "l1_class": "Polytherimides",
+    "l2_variants": ["Unfilled PEI (Ultem 1000)", "GF20/GF30 PEI (Ultem 2200/2300)", "High-Heat PEI (Ultem 5000)"],
+    "key_applications": ["Aircraft Interior Components", "Medical Sterilization Trays", "Under-the-Hood Automotive Sensors", "RF Connectors"],
+    "properties": {
+      "density": "1.27 - 1.51 g/cm³",
+      "shrinkage_rate": "0.5% - 0.7%",
+      "tensile_strength": "105 - 165 MPa",
+      "hdt": "200 - 215 °C"
+    },
+    "tags": ["Inherently Flame Retardant", "High Heat", "Aerospace Grade", "UL94 5VA"],
+    "dfm_notes": "Inherently flame retardant (UL94 V-0 & 5VA) with very low smoke emission. High melt viscosity requires high pressure."
+  },
+  {
+    "id": "pps-gf40",
+    "slug": "pps-gf40",
+    "name": "PPS (Polyphenylene Sulfide) GF40",
+    "chemical_family": "Polythioethers",
+    "category": "High-Performance Plastics",
+    "l1_class": "Polyphenylene Sulfide",
+    "l2_variants": ["Linear PPS GF40", "Cross-Linked PPS GF40", "Glass/Mineral Filled PPS"],
+    "key_applications": ["Automotive Water Pump Impellers", "Chemical Valves", "EV Busbar Covers", "Heater Housings"],
+    "properties": {
+      "density": "1.60 - 1.70 g/cm³",
+      "shrinkage_rate": "0.2% - 0.5%",
+      "tensile_strength": "130 - 170 MPa",
+      "hdt": "260 - 270 °C"
+    },
+    "tags": ["Chemical Immune", "High Heat", "Zero Solvents", "Metal Replacement"],
+    "dfm_notes": "Insoluble in all known solvents below 200°C. High mold temperatures (130°C-150°C) required to reach full crystallinity."
+  },
+  {
+    "id": "ppsu-psu-sulfone",
+    "slug": "ppsu-psu-sulfone",
+    "name": "Sulfone Polymers (PPSU & PSU)",
+    "chemical_family": "Sulfone Polymers",
+    "category": "High-Performance Plastics",
+    "l1_class": "Polysulfones",
+    "l2_variants": ["PSU (Polysulfone)", "PPSU (Polyphenylsulfone / Radel R)", "PESU (Polyethersulfone)"],
+    "key_applications": ["Surgical Instrument Handles", "Dental Cassettes", "Plumbing Fittings", "Baby Bottles"],
+    "properties": {
+      "density": "1.24 - 1.30 g/cm³",
+      "shrinkage_rate": "0.6% - 0.8%",
+      "tensile_strength": "70 - 85 MPa",
+      "hdt": "175 - 205 °C"
+    },
+    "tags": ["Repeated Steam Autoclave", "Medical Grade", "High Impact", "BPA-Free"],
+    "dfm_notes": "PPSU withstands over 1,000 cycles of steam sterilization without significant property loss."
+  },
+  {
+    "id": "liquid-silicone-lsr",
+    "slug": "liquid-silicone-lsr",
+    "name": "LSR (Liquid Silicone Rubber)",
+    "chemical_family": "Silicones",
+    "category": "Elastomers & Silicones",
+    "l1_class": "Liquid Silicones",
+    "l2_variants": ["Medical Grade LSR", "Self-Bonding LSR (2K)", "Optical Clear LSR", "Food Contact LSR"],
+    "key_applications": ["Medical Seals & Diaphragms", "Baby Nipple Teats", "Waterproof Connector Gaskets", "LED Optical Lenses"],
+    "properties": {
+      "density": "1.10 - 1.15 g/cm³",
+      "shrinkage_rate": "2.0% - 3.5%",
+      "tensile_strength": "8 - 12 MPa",
+      "hdt": "N/A (Cured Rubber)"
+    },
+    "tags": ["Biocompatible", "Extreme Cold/Heat", "LSR Injection", "USP Class VI"],
+    "dfm_notes": "Liquid injection molding with cold runner systems and heated mold cavities (170°C-200°C) for fast vulcanization."
+  },
+  {
+    "id": "tpe-tpu-elastomers",
+    "slug": "tpe-tpu-elastomers",
+    "name": "TPE & TPU (Thermoplastic Elastomers)",
+    "chemical_family": "Elastomers",
+    "category": "Elastomers & Silicones",
+    "l1_class": "Thermoplastic Elastomers",
+    "l2_variants": ["TPS (SEBS Based TPE)", "Polyester TPU", "Polyether TPU", "TPV (Santoprene)"],
+    "key_applications": ["Soft-Touch Overmolded Grips", "Cable Strain Reliefs", "Shoe Soles", "Dust Boots"],
+    "properties": {
+      "density": "0.90 - 1.25 g/cm³",
+      "shrinkage_rate": "1.0% - 2.0%",
+      "tensile_strength": "10 - 45 MPa",
+      "hdt": "N/A (Soft Material)"
+    },
+    "tags": ["Soft Touch", "Overmolding", "Abrasion Resistant", "Flexible"],
+    "dfm_notes": "Excellent adhesion to rigid substrates (ABS, PC, PA, PP) during two-shot (2K) or insert overmolding."
+  },
+  {
+    "id": "pc-abs-alloy",
+    "slug": "pc-abs-alloy",
+    "name": "PC/ABS Alloy (Polycarbonate / ABS Blend)",
+    "chemical_family": "Polymer Alloys",
+    "category": "Polymer Alloys",
+    "l1_class": "Polycarbonates / ABS",
+    "l2_variants": ["Standard PC/ABS", "FR PC/ABS (Non-Halogen V-0)", "Automotive Interior PC/ABS", "Electroplating PC/ABS"],
+    "key_applications": ["Automotive Dashboard Panels", "Laptop Enclosures", "Medical Device Covers", "Power Tool Frames"],
+    "properties": {
+      "density": "1.10 - 1.18 g/cm³",
+      "shrinkage_rate": "0.4% - 0.6%",
+      "tensile_strength": "50 - 65 MPa",
+      "hdt": "100 - 125 °C"
+    },
+    "tags": ["High Impact", "Low Warpage", "UL94 V-0", "Structural Alloy"],
+    "dfm_notes": "Combines the heat resistance and impact strength of PC with the easy processing of ABS."
+  }
+]

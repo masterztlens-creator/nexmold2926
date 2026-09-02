@@ -1,0 +1,100 @@
+---
+/**
+ * QuickRFQ.astro - 移动端专属悬浮 RFQ 极速按钮
+ * 1. 色彩统一：100% 采用 NEXMOLD 标准亮橙 (#EA580C) + 工业深蓝 (#0F2B5B)
+ * 2. 交互体验：自带呼吸灯动效，滑到 #rfq 表单区时自动智能隐藏
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n = {
+  en: { 
+    label: "GET QUOTE", 
+    aria: "Fast track to Request for Quote form" 
+  },
+  de: { 
+    label: "ANGEBOT", 
+    aria: "Schnellanfrage für Angebot öffnen" 
+  },
+  fr: { 
+    label: "DEVIS", 
+    aria: "Accès rapide au formulaire de devis" 
+  }
+};
+
+const t = (i18n as any)[lang] || i18n.en;
+---
+
+<div class="fixed bottom-6 right-6 z-[999] lg:hidden transition-all duration-500 ease-in-out" id="quick-rfq-container">
+  <!-- 呼吸灯光晕 -->
+  <div class="absolute inset-0 bg-[#EA580C] rounded-full blur-xl opacity-40 animate-pulse-slow" aria-hidden="true"></div>
+  
+  <a 
+    href="#rfq" 
+    class="relative flex flex-col items-center justify-center w-16 h-16 bg-[#EA580C] active:bg-[#d94e05] rounded-full shadow-2xl border-2 border-white/30 active:scale-90 transition-all duration-300"
+    aria-label={t.aria}
+  >
+    <svg class="w-6 h-6 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+    </svg>
+    <span class="text-[9px] font-[1000] text-white tracking-tighter leading-none uppercase font-sans">
+      {t.label}
+    </span>
+  </a>
+</div>
+
+<style>
+  /* 慢速呼吸灯动画 */
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.35); opacity: 0.6; }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+
+  /* 入场动画 */
+  #quick-rfq-container {
+    animation: slide-up 0.8s cubic-bezier(0.2, 1, 0.3, 1) backwards;
+    animation-delay: 1.2s;
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(80px) scale(0.5); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* 隐藏状态：到达 #rfq 区域后自动消失 */
+  .quick-rfq-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(20px) scale(0.8);
+  }
+</style>
+
+<script>
+  function setupQuickRFQ() {
+    const rfqSection = document.querySelector('#rfq');
+    const quickBtn = document.getElementById('quick-rfq-container');
+    if (!rfqSection || !quickBtn) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          quickBtn.classList.add('quick-rfq-hidden');
+        } else {
+          quickBtn.classList.remove('quick-rfq-hidden');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(rfqSection);
+  }
+
+  setupQuickRFQ();
+  document.addEventListener('astro:after-swap', setupQuickRFQ);
+</script>

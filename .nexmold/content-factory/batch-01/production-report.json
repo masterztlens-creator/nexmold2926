@@ -1,0 +1,290 @@
+{
+  "schema": "nexmold.v7.14.white-paper-factory-report.v2",
+  "batch": "BATCH-01",
+  "generatedAt": "2026-09-01T03:05:18.499Z",
+  "policy": {
+    "producerVersion": "v714-article-producer",
+    "modifyExistingContent": false,
+    "overwriteExistingOutput": false,
+    "publishAutomatically": false,
+    "routePrefix": "/industries/v714/",
+    "compilerRequired": true,
+    "semanticCollisionReviewRequired": true,
+    "sourceContentCopy": false
+  },
+  "summary": {
+    "candidates": 20,
+    "sourceResolved": 16,
+    "sourceMissing": 0,
+    "blockedByCollision": 4,
+    "topicUnsupported": 0,
+    "producerBlocked": 16,
+    "publishedArtifacts": 16,
+    "whitePapersProduced": 0,
+    "markdownRendered": 0,
+    "existingOutputsValid": 0,
+    "productionFailures": 16
+  },
+  "results": [
+    {
+      "id": "BL01",
+      "keyword": "injection molding wall thickness design",
+      "slug": "injection-molding-wall-thickness-design",
+      "targetSlug": "injection-molding-wall-thickness-design",
+      "sourceArticleSlug": "plastic-wall-thickness-design",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-wall-thickness-design/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL02",
+      "keyword": "injection molding draft angle",
+      "slug": "injection-molding-draft-angle",
+      "targetSlug": "injection-molding-draft-angle",
+      "sourceArticleSlug": null,
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-draft-angle/",
+      "status": "BLOCKED_BY_MANIFEST",
+      "reasonCodes": [
+        "BATCH01_REVIEW_SEMANTIC_COLLISION"
+      ]
+    },
+    {
+      "id": "BL03",
+      "keyword": "injection molding rib design",
+      "slug": "injection-molding-rib-design",
+      "targetSlug": "injection-molding-rib-design",
+      "sourceArticleSlug": "rib-boss-gusset-design",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-rib-design/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL04",
+      "keyword": "injection molding boss design",
+      "slug": "injection-molding-boss-design",
+      "targetSlug": "injection-molding-boss-design",
+      "sourceArticleSlug": "rib-boss-gusset-design",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-boss-design/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL05",
+      "keyword": "injection molding corner radius",
+      "slug": "injection-molding-corner-radius",
+      "targetSlug": "injection-molding-corner-radius",
+      "sourceArticleSlug": "plastic-corner-radii",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-corner-radius/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL06",
+      "keyword": "injection molding undercuts",
+      "slug": "injection-molding-undercuts-guide",
+      "targetSlug": "injection-molding-undercuts-guide",
+      "sourceArticleSlug": "injection-molding-undercuts",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-undercuts-guide/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL07",
+      "keyword": "injection molding parting line design",
+      "slug": "injection-molding-parting-line-design",
+      "targetSlug": "injection-molding-parting-line-design",
+      "sourceArticleSlug": "parting-line-design",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-parting-line-design/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL08",
+      "keyword": "injection molding gate location",
+      "slug": "injection-molding-gate-location",
+      "targetSlug": "injection-molding-gate-location",
+      "sourceArticleSlug": "gate-location-best-practices",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-gate-location/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL09",
+      "keyword": "injection mold venting design",
+      "slug": "injection-mold-venting-design",
+      "targetSlug": "injection-mold-venting-design",
+      "sourceArticleSlug": null,
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-mold-venting-design/",
+      "status": "BLOCKED_BY_MANIFEST",
+      "reasonCodes": [
+        "BATCH01_REVIEW_SEMANTIC_COLLISION"
+      ]
+    },
+    {
+      "id": "BL10",
+      "keyword": "injection molding sink marks causes solutions",
+      "slug": "injection-molding-sink-marks-causes-solutions",
+      "targetSlug": "injection-molding-sink-marks-causes-solutions",
+      "sourceArticleSlug": "sink-marks-causes-solutions",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-sink-marks-causes-solutions/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL11",
+      "keyword": "injection molding warpage causes solutions",
+      "slug": "injection-molding-warpage-causes-solutions",
+      "targetSlug": "injection-molding-warpage-causes-solutions",
+      "sourceArticleSlug": "injection-molding-warpage",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL12",
+      "keyword": "injection molding weld lines causes solutions",
+      "slug": "injection-molding-weld-lines-causes-solutions",
+      "targetSlug": "injection-molding-weld-lines-causes-solutions",
+      "sourceArticleSlug": "weld-lines-knit-lines",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-weld-lines-causes-solutions/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL13",
+      "keyword": "injection mold steel selection",
+      "slug": "injection-mold-steel-selection-guide",
+      "targetSlug": "injection-mold-steel-selection-guide",
+      "sourceArticleSlug": null,
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-mold-steel-selection-guide/",
+      "status": "BLOCKED_BY_MANIFEST",
+      "reasonCodes": [
+        "BATCH01_REVIEW_SEMANTIC_COLLISION"
+      ]
+    },
+    {
+      "id": "BL14",
+      "keyword": "S136 vs NAK80 mold steel",
+      "slug": "s136-vs-nak80-mold-steel",
+      "targetSlug": "s136-vs-nak80-mold-steel",
+      "sourceArticleSlug": "s136-vs-nak80-vs-718h",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL15",
+      "keyword": "hot runner vs cold runner injection mold",
+      "slug": "hot-runner-vs-cold-runner-injection-mold",
+      "targetSlug": "hot-runner-vs-cold-runner-injection-mold",
+      "sourceArticleSlug": null,
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/hot-runner-vs-cold-runner-injection-mold/",
+      "status": "BLOCKED_BY_MANIFEST",
+      "reasonCodes": [
+        "BATCH01_REVIEW_SEMANTIC_COLLISION"
+      ]
+    },
+    {
+      "id": "BL16",
+      "keyword": "conformal cooling injection mold",
+      "slug": "conformal-cooling-injection-mold",
+      "targetSlug": "conformal-cooling-injection-mold",
+      "sourceArticleSlug": "conformal-cooling",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/conformal-cooling-injection-mold/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL17",
+      "keyword": "ABS injection molding design guide",
+      "slug": "abs-injection-molding-design-guide",
+      "targetSlug": "abs-injection-molding-design-guide",
+      "sourceArticleSlug": "abs-injection-molding",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/abs-injection-molding-design-guide/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL18",
+      "keyword": "PC injection molding design guide",
+      "slug": "pc-injection-molding-design-guide",
+      "targetSlug": "pc-injection-molding-design-guide",
+      "sourceArticleSlug": "pc-injection-molding",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/pc-injection-molding-design-guide/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL19",
+      "keyword": "injection molding cycle time optimization",
+      "slug": "injection-molding-cycle-time-optimization-guide",
+      "targetSlug": "injection-molding-cycle-time-optimization-guide",
+      "sourceArticleSlug": "injection-molding-cycle-optimization",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    },
+    {
+      "id": "BL20",
+      "keyword": "injection molding cavity balance",
+      "slug": "injection-molding-cavity-balance-guide",
+      "targetSlug": "injection-molding-cavity-balance-guide",
+      "sourceArticleSlug": "multi-cavity-mold-cavity-balance",
+      "producerVersion": "v714-article-producer",
+      "route": "/industries/v714/injection-molding-cavity-balance-guide/",
+      "status": "OUTPUT_INTEGRITY_BLOCKED",
+      "reasonCodes": [
+        "V714_EXISTING_OUTPUT_MARKDOWN_IDENTITY_MISMATCH"
+      ]
+    }
+  ]
+}

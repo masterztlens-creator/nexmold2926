@@ -1,0 +1,544 @@
+---
+import '../../styles/global.css';
+
+/**
+ * src/pages/services/custom-injection-molding.astro
+ * NEXMOLD Pillar Page: Custom Plastic Injection Molding Services
+ * 架构：Hero (CAD 询价) -> 核心工程指标 -> 模具与工法机理 -> DFM设计准则 -> 树脂兼容库 -> 质检与公差 -> FAQ -> 底部CTA
+ */
+
+import Header from '../../components/Header.astro';
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const pageTitle = "Custom Plastic Injection Molding Services | Dongguan Factory | NEXMOLD";
+const pageDescription = "Factory-direct custom plastic injection molding in Dongguan. Automated Haitian press fleet (90T-1200T), ISO 2768-m tolerances, 180+ engineering resins, and 24h DFM review.";
+const canonicalUrl = "https://nxmold.com/services/custom-injection-molding";
+
+// 📊 核心工程能力矩阵
+const engineeringHighlights = [
+  { label: "Clamping Force Fleet", val: "90T - 1200T", sub: "Haitian Servo & All-Electric" },
+  { label: "Standard Tolerance", val: "±0.001 mm / DIN 16742", sub: "ISO 2768-m Precision" },
+  { label: "Lead Time (T1)", val: "7 - 14 Days", sub: "Rapid Prototype to Bridge" },
+  { label: "Resin Inventory", val: "180+ Thermoplastics", sub: "SABIC, BASF, DuPont Certified" }
+];
+
+// 🧪 典型兼容树脂与应用场景
+const resinFamilies = [
+  {
+    name: "Engineering Thermoplastics",
+    resins: "PC, ABS, PC/ABS Blend, PA66 (+GF30), POM (Delrin), PBT",
+    properties: "High mechanical strength, thermal endurance, impact resistance, tight dimensional stability.",
+    typicalParts: "Automotive housings, structural brackets, internal gears, high-voltage electrical connectors."
+  },
+  {
+    name: "High-Performance Polymers",
+    resins: "PEEK, PEI (Ultem), PPS (+GF40), PPSU, LCP",
+    properties: "Extreme temperature continuous use (up to 260°C), superior chemical inertness, flame retardancy.",
+    typicalParts: "Medical sterilizable instruments, aerospace manifolds, chemical fluid valves."
+  },
+  {
+    name: "Commodity & Clear Polymers",
+    resins: "PP (Homopolymer/Copolymer), HIPS, GPPS, HDPE, PMMA (Acrylic), Tritan",
+    properties: "Optical clarity, high flowability for thin walls, economic scalability, food-contact compliance.",
+    typicalParts: "Water tank modules, consumer countertop appliance enclosures, display light pipes."
+  },
+  {
+    name: "Elastomers & Overmolding Resins",
+    resins: "TPE, TPU, TPV, Liquid Silicone Rubber (LSR)",
+    properties: "Shore 30A to 90A hardness, chemical bonding without primer, vibration damping, hermetic sealing.",
+    typicalParts: "Ergonomic handheld grips, waterproof gaskets, soft-touch buttons, dual-shot instrument casings."
+  }
+];
+
+// 📐 DFM 设计工程准则
+const dfmGuidelines = [
+  {
+    title: "Wall Thickness Uniformity",
+    spec: "0.8 mm – 3.5 mm (Resin Dependent)",
+    tip: "Maintain nominal wall within ±15% variation to avoid differential shrinkage, sink marks, and internal voids."
+  },
+  {
+    title: "Draft Angle Optimization",
+    spec: "0.5° – 1.0° (Core/Cavity), 3.0°+ (Textured)",
+    tip: "Ensure minimum 1° per 0.025mm texture depth (VDI/SPI) to allow smooth part ejection without drag marks."
+  },
+  {
+    title: "Rib-to-Wall Ratio",
+    spec: "40% – 60% of Nominal Base Wall",
+    tip: "Design rib thickness below 60% of the adjacent base wall to eliminate cosmetic sink on class-A surfaces."
+  },
+  {
+    title: "Corner Radii & Transitions",
+    spec: "R_inner ≥ 0.5 × Wall, R_outer ≥ 1.5 × Wall",
+    tip: "Avoid sharp 90° corners to minimize stress concentrations and improve molten resin flow trajectories."
+  }
+];
+
+// ❓ 常见工程与采购问答
+const faqs = [
+  {
+    q: "What press tonnage range is available in your Dongguan plant?",
+    a: "We operate an in-house fleet of Haitian servo-hydraulic and high-precision all-electric injection presses ranging from 90T to 1200T, accommodating micro precision components up to large structural appliance water tanks and housings."
+  },
+  {
+    q: "How quickly can NEXMOLD deliver T1 sample parts?",
+    a: "For rapid prototype tooling (aluminum or pre-hardened steel like NAK80), initial T1 samples are typically molded and shipped in 7 to 14 calendar days along with full CMM inspection reports."
+  },
+  {
+    q: "Do you support bridge tooling and low-volume production runs?",
+    a: "Yes. We impose no strict minimum order quantities (MOQs). Our bridge tooling packages support pilot runs from 100 to 10,000+ parts before you commit to multi-cavity Class 101 production steel tooling."
+  },
+  {
+    q: "What quality documentation is provided with production batches?",
+    a: "Every batch includes raw material Certificate of Analysis (CoA/CoC), First Article Inspection (FAI) dimensional logs measured via ZEISS CMM, and Certificate of Conformity to DIN 16742 / ISO 2768-m standards."
+  }
+];
+
+// 🛡️ 结构化数据
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "@id": "https://nxmold.com/services/custom-injection-molding/#service",
+      "name": "Custom Plastic Injection Molding Services",
+      "serviceType": "Plastic Injection Molding",
+      "provider": {
+        "@type": "ManufacturingPlant",
+        "name": "NEXMOLD Precision Manufacturing Co., Ltd.",
+        "url": "https://nxmold.com"
+      },
+      "areaServed": "Global",
+      "description": "Direct injection molding manufacturing in Dongguan with Haitian 90T-1200T fleet, ISO 2768-m precision, and 180+ resins."
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": f.a
+        }
+      }))
+    }
+  ]
+};
+---
+
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+    
+    <style>
+      .bg-texture-vdi {
+        background-color: #f8fafc;
+        background-image: radial-gradient(rgba(15, 43, 91, 0.06) 1px, transparent 1px), radial-gradient(rgba(15, 43, 91, 0.04) 1px, #f8fafc 1px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+      }
+      .bg-texture-grid {
+        background-size: 24px 24px;
+        background-image: 
+          linear-gradient(to right, rgba(15, 43, 91, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(15, 43, 91, 0.05) 1px, transparent 1px);
+      }
+      .bg-texture-dark {
+        background-color: #0B1E40;
+        background-image: radial-gradient(rgba(234, 88, 12, 0.12) 1px, transparent 1px), radial-gradient(rgba(255, 255, 255, 0.03) 1px, #0B1E40 1px);
+        background-size: 28px 28px;
+        background-position: 0 0, 14px 14px;
+      }
+    </style>
+  </head>
+
+  <body class="bg-white text-[#0F2B5B] font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-[#EA580C] selection:text-white">
+    
+    <Header lang={lang} />
+
+    <main class="flex-grow">
+      
+      <!-- 🎯 1. Hero 屏：技术承诺 + 24h 询价 Widget -->
+      <section class="w-full py-16 lg:py-20 bg-[#F8FAFC] border-b border-[#0F2B5B]/15 relative overflow-hidden">
+        <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          <div class="lg:col-span-7 space-y-6">
+            <div class="font-mono text-xs font-bold text-[#0F2B5B]/60 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#EA580C]"></span>
+              <span>CORE MANUFACTURING PILLAR</span>
+              <span class="text-[#0F2B5B]/30">|</span>
+              <span class="text-[#EA580C]">DONGGUAN PLANT (DIRECT)</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-[1000] text-[#0F2B5B] uppercase italic tracking-tight leading-[0.95]">
+              Custom Plastic <br />
+              <span class="text-[#EA580C]">Injection Molding</span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-[#0F2B5B]/80 font-semibold leading-relaxed max-w-2xl">
+              Factory-direct injection molding scaled for high-yield precision and rapid market entry. Supported by an automated fleet of Haitian presses (90T–1200T), in-house moldmaking, and scientific decoupled molding process control.
+            </p>
+
+            <!-- 核心工程参数带 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#0F2B5B]/10 font-mono">
+              {engineeringHighlights.map(item => (
+                <div class="bg-white border border-[#0F2B5B]/10 p-3 rounded-xs shadow-2xs">
+                  <span class="block text-[9px] text-[#0F2B5B]/50 font-bold uppercase truncate">{item.label}</span>
+                  <span class="text-xs sm:text-sm font-black text-[#EA580C] mt-0.5 block">{item.val}</span>
+                  <span class="block text-[8px] text-[#0F2B5B]/60 truncate mt-0.5">{item.sub}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- 右侧 CAD 询价卡片 -->
+          <div class="lg:col-span-5">
+            <div 
+              onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('pillar_hero')"
+              class="bg-white border-2 border-dashed border-[#EA580C]/40 hover:border-[#EA580C] p-8 rounded-xs shadow-xl text-center cursor-pointer transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden"
+            >
+              <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0F2B5B] via-[#EA580C] to-[#0F2B5B]"></div>
+
+              <div class="w-12 h-12 bg-[#EA580C]/10 text-[#EA580C] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              </div>
+              <h3 class="text-base font-[1000] uppercase italic text-[#0F2B5B] mb-1">
+                Upload 3D CAD (STEP / X_T)
+              </h3>
+              <p class="text-xs text-[#0F2B5B]/60 font-semibold mb-4">
+                Receive DFM Analysis & Production Pricing in 24 Hours
+              </p>
+
+              <span class="inline-block bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs font-black uppercase py-3.5 px-8 rounded-xs tracking-wider transition-colors shadow-sm">
+                Get Instant DFM & Quote →
+              </span>
+              <p class="text-[10px] font-mono text-[#0F2B5B]/40 uppercase mt-3">Strict NDA Protected • Direct Dongguan Pricing</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 2. 工法能力与海天机台设备视窗 (图文并茂) -->
+      <section class="py-20 bg-white border-b border-[#0F2B5B]/15">
+        <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div class="lg:col-span-6 space-y-5">
+            <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-widest block">
+              AUTOMATED PRESS INFRASTRUCTURE
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic text-[#0F2B5B] leading-tight">
+              High-Yield Molding on Haitian Presses (90T–1200T)
+            </h2>
+            <p class="text-sm text-[#0F2B5B]/80 font-semibold leading-relaxed">
+              Our injection molding facility features clean, climate-controlled press bays outfitted with servo-driven Haitian presses. Integrated with 3-axis servo robots for automated degating and part extraction, we achieve consistent shot-to-shot cycle times and 99.2%+ first-pass yield rates.
+            </p>
+            
+            <div class="space-y-2 pt-2 border-t border-[#0F2B5B]/10 font-mono text-xs font-bold text-[#0F2B5B]">
+              <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+                <span>Scientific Decoupled Molding II/III Validation</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+                <span>Automated Mold Temperature & Hot Runner Controllers</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+                <span>In-House Toolroom for Fast Cavity Maintenance</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6">
+            <div class="rounded-xs overflow-hidden border-2 border-[#0F2B5B]/15 shadow-xl aspect-16/10 bg-[#0B1E40] relative">
+              <img 
+                src="/images/services/automated-haitian-injection-molding-fleet.webp" 
+                alt="Automated Haitian injection molding fleet at NEXMOLD factory"
+                width="1200"
+                height="750"
+                loading="lazy"
+                class="w-full h-full object-cover"
+                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Haitian Press Fleet Photo ]</div>';"
+              />
+              <div class="absolute bottom-3 left-3 bg-[#0B1E40]/90 text-white font-mono text-[9px] font-bold px-2.5 py-1 rounded-xs uppercase tracking-wider backdrop-blur-xs border border-white/20">
+                HAITIAN 90T–1200T FLEET
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 3. DFM 设计准则速查矩阵 (提升技术权威度) -->
+      <section class="py-20 bg-texture-vdi border-b border-[#0F2B5B]/15">
+        <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-12">
+          
+          <div class="text-center max-w-2xl mx-auto space-y-2">
+            <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-[0.25em] block">
+              ENGINEERING STANDARDS
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic text-[#0F2B5B]">
+              DFM Guidelines for Plastic Injection
+            </h2>
+            <p class="text-xs sm:text-sm text-[#0F2B5B]/70 font-semibold leading-relaxed">
+              Design parts optimized for mold filling, uniform cooling, and minimal cycle time before releasing CAD to tooling.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {dfmGuidelines.map(g => (
+              <div class="bg-white border border-[#0F2B5B]/15 p-6 rounded-xs shadow-xs hover:border-[#EA580C] transition-all flex flex-col justify-between">
+                <div>
+                  <span class="font-mono text-[10px] font-black text-[#EA580C] uppercase tracking-wider block mb-1">
+                    SPECIFICATION
+                  </span>
+                  <h3 class="text-base font-[1000] uppercase italic text-[#0F2B5B] mb-2 leading-snug">
+                    {g.title}
+                  </h3>
+                  <div class="bg-[#F8FAFC] border border-[#0F2B5B]/10 p-2 rounded-xs font-mono text-xs font-bold text-[#EA580C] mb-3">
+                    {g.spec}
+                  </div>
+                  <p class="text-xs text-[#0F2B5B]/70 font-semibold leading-relaxed">
+                    {g.tip}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 4. 180+ 树脂兼容库与应用场景对比表 -->
+      <section class="py-20 bg-white border-b border-[#0F2B5B]/15 bg-texture-grid">
+        <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-12">
+          
+          <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-[#0F2B5B]/10">
+            <div>
+              <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-widest block mb-1">
+                MATERIALS SELECTION
+              </span>
+              <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic text-[#0F2B5B]">
+                Certified Resin Inventory (180+ Formulations)
+              </h2>
+            </div>
+            <a href="/materials" class="font-mono text-xs font-black uppercase text-[#EA580C] hover:underline mt-2 md:mt-0">
+              Browse Full 180+ Material Library →
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {resinFamilies.map(fam => (
+              <div class="bg-[#F8FAFC] border border-[#0F2B5B]/15 p-6 rounded-xs space-y-3">
+                <div class="flex items-center justify-between border-b border-[#0F2B5B]/10 pb-2">
+                  <h3 class="text-base font-[1000] uppercase italic text-[#0F2B5B]">
+                    {fam.name}
+                  </h3>
+                  <span class="font-mono text-[9px] font-bold bg-[#0F2B5B]/5 px-2 py-0.5 rounded-xs text-[#0F2B5B]/70 uppercase">
+                    CERTIFIED GRADES
+                  </span>
+                </div>
+                <div class="font-mono text-xs font-bold text-[#EA580C]">
+                  {fam.resins}
+                </div>
+                <p class="text-xs text-[#0F2B5B]/80 font-semibold leading-relaxed">
+                  <strong>Key Properties:</strong> {fam.properties}
+                </p>
+                <p class="text-xs text-[#0F2B5B]/60 font-semibold leading-relaxed">
+                  <strong>Typical Parts:</strong> {fam.typicalParts}
+                </p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 5. 蔡司 CMM 质检与公差保证 -->
+      <section class="py-20 bg-[#F8FAFC] border-b border-[#0F2B5B]/15">
+        <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div class="lg:col-span-6 lg:order-2 space-y-5">
+            <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-widest block">
+              METROLOGY & QUALITY CONTROL
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic text-[#0F2B5B] leading-tight">
+              ZEISS CMM Inspection & Full FAI Compliance
+            </h2>
+            <p class="text-sm text-[#0F2B5B]/80 font-semibold leading-relaxed">
+              Every production batch undergoes First Article Inspection (FAI) using our in-house ZEISS 3D coordinate measuring machines (CMM) and optical blue light scanners. We guarantee conformance to ISO 2768-m (general) and DIN 16742 (plastic moldings) tolerances.
+            </p>
+
+            <div class="pt-2">
+              <button 
+                onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('cmm_inspection')"
+                class="bg-[#0F2B5B] hover:bg-[#0B1E40] text-white font-mono text-xs font-black uppercase py-3.5 px-6 rounded-xs transition-colors shadow-xs cursor-pointer"
+              >
+                Request Sample FAI & CMM Log →
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 lg:order-1">
+            <div class="rounded-xs overflow-hidden border-2 border-[#0F2B5B]/15 shadow-xl aspect-16/10 bg-[#0B1E40] relative">
+              <img 
+                src="/images/services/zeiss-cmm-quality-inspection-metrology.webp" 
+                alt="ZEISS CMM inspection measuring injection molded components at NEXMOLD"
+                width="1200"
+                height="750"
+                loading="lazy"
+                class="w-full h-full object-cover"
+                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ ZEISS CMM Metrology Photo ]</div>';"
+              />
+              <div class="absolute bottom-3 left-3 bg-[#0B1E40]/90 text-white font-mono text-[9px] font-bold px-2.5 py-1 rounded-xs uppercase tracking-wider backdrop-blur-xs border border-white/20">
+                ZEISS 3D CMM • ±0.001mm
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 6. 制造工程常见 FAQ 问答 -->
+      <section class="py-20 bg-white border-b border-[#0F2B5B]/15">
+        <div class="max-w-[1200px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-10">
+          
+          <div class="text-center space-y-2">
+            <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-widest block">
+              FREQUENTLY ASKED QUESTIONS
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-[1000] uppercase italic text-[#0F2B5B]">
+              Plastic Injection Molding FAQs
+            </h2>
+          </div>
+
+          <div class="space-y-4">
+            {faqs.map((faq, idx) => (
+              <details class="bg-[#F8FAFC] border border-[#0F2B5B]/15 p-6 rounded-xs group [&_summary::-webkit-details-marker]:hidden" open={idx === 0}>
+                <summary class="flex justify-between items-center font-[1000] text-base text-[#0F2B5B] cursor-pointer uppercase italic">
+                  <span>{faq.q}</span>
+                  <span class="ml-4 font-mono text-sm text-[#EA580C] group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <p class="mt-4 text-xs sm:text-sm text-[#0F2B5B]/80 font-semibold leading-relaxed border-t border-[#0F2B5B]/10 pt-4">
+                  {faq.a}
+                </p>
+              </details>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎯 7. 底部终极 CTA 收尾 Banner -->
+      <section class="py-20 bg-texture-dark text-white text-center relative overflow-hidden select-none">
+        <div class="max-w-[1200px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-6 relative z-10">
+          <span class="text-[#EA580C] font-mono text-xs font-black uppercase tracking-[0.3em] block">
+            FACTORY-DIRECT DONGGUAN INJECTION MOLDING
+          </span>
+
+          <h2 class="text-3xl sm:text-5xl font-[1000] uppercase italic tracking-tight leading-tight">
+            Ready to Quote Your Custom Injection Project?
+          </h2>
+
+          <p class="text-sm sm:text-base text-slate-300 font-semibold max-w-2xl mx-auto leading-relaxed">
+            Upload your 3D CAD files today for free DFM review, gate location advisory, and factory-direct production quotes within 24 hours.
+          </p>
+
+          <div class="pt-4">
+            <button 
+              onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('bottom_pillar_cta')"
+              class="bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs sm:text-sm font-black uppercase tracking-[0.2em] px-10 py-5 rounded-xs transition-colors shadow-2xl cursor-pointer"
+            >
+              Upload CAD & Get 24h DFM Quote →
+            </button>
+          </div>
+
+          <p class="text-[11px] font-mono text-slate-400 font-bold uppercase pt-2">
+            STRICT NDA PROTECTED | ISO 9001:2015 AUDITED DONGGUAN FACILITY
+          </p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer 页脚 -->
+    <footer class="bg-[#0F2B5B] text-white py-12 border-t-4 border-[#EA580C]">
+      <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] flex flex-col sm:flex-row justify-between items-center gap-6">
+        <div>
+          <span class="text-2xl font-[1000] italic uppercase">NEX<span class="text-[#EA580C]">MOLD</span></span>
+          <p class="text-xs text-slate-300 mt-1 font-mono">Precision Plastic Injection Tooling & High-Yield Molding Plant</p>
+        </div>
+        <div class="text-xs font-mono text-slate-400">
+          &copy; {new Date().getFullYear()} NEXMOLD. All rights reserved. Dongguan Facility.
+        </div>
+      </div>
+    </footer>
+
+    <!-- 全局询价 Modal 弹窗 -->
+    <dialog id="lead-modal" class="backdrop:bg-[#0F2B5B]/80 rounded-xs p-0 border border-[#0F2B5B]/20 max-w-lg w-full shadow-2xl">
+      <div class="bg-white p-6 sm:p-8 relative">
+        <button id="close-modal-btn" class="absolute top-4 right-4 text-[#0F2B5B]/50 hover:text-[#0F2B5B] font-mono text-lg font-bold cursor-pointer">✕</button>
+        
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-widest block mb-1">RFQ & DFM REVIEW</span>
+        <h3 class="text-xl font-black uppercase text-[#0F2B5B] mb-2">Request Injection Quote</h3>
+        <p class="text-xs text-[#0F2B5B]/70 mb-6 font-medium">Upload your 3D STEP/IGES CAD files for rapid manufacturability analysis.</p>
+
+        <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request submitted successfully!'); const m = document.getElementById('lead-modal'); if (m && typeof m.close === 'function') m.close();">
+          <div>
+            <label class="block text-[11px] font-mono font-bold text-[#0F2B5B] uppercase mb-1">Work Email *</label>
+            <input type="email" required placeholder="engineer@company.com" class="w-full px-3 py-2 text-xs border border-[#0F2B5B]/20 focus:border-[#EA580C] focus:outline-none rounded-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono font-bold text-[#0F2B5B] uppercase mb-1">Estimated Annual Volume / Part Details</label>
+            <textarea rows="3" placeholder="e.g., PC/ABS resin, 10k pcs/year, textured finish VDI 27" class="w-full px-3 py-2 text-xs border border-[#0F2B5B]/20 focus:border-[#EA580C] focus:outline-none rounded-xs"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs font-black uppercase py-3 tracking-widest transition-colors rounded-xs cursor-pointer">
+            Submit For 24h DFM & Quote
+          </button>
+        </form>
+      </div>
+    </dialog>
+
+    <script>
+      function initPillarModal() {
+        const modal = document.getElementById('lead-modal') as HTMLDialogElement | null;
+        const closeBtn = document.getElementById('close-modal-btn');
+
+        (window as any).NEXMOLD_OPEN_LEAD_MODAL = function(source?: string) {
+          if (modal && typeof modal.showModal === 'function') {
+            modal.showModal();
+          } else {
+            alert('Opening RFQ portal...');
+          }
+        };
+
+        if (closeBtn && modal) {
+          closeBtn.onclick = function() {
+            if (typeof modal.close === 'function') modal.close();
+          };
+          modal.onclick = function(e) {
+            if (e.target === modal && typeof modal.close === 'function') {
+              modal.close();
+            }
+          };
+        }
+      }
+
+      initPillarModal();
+      document.addEventListener('astro:after-swap', initPillarModal);
+    </script>
+
+  </body>
+</html>

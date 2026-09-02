@@ -1,0 +1,367 @@
+---
+/**
+ * Capabilities.astro - 第三屏：HEAVY ASSET INJECTION MOLDING FLEET (全站字形严格对齐+紧凑高奢瘦身版)
+ * 1. 标题对齐：主标题 (h2) 与卡片标题统一采用 font-[1000] font-sans italic uppercase tracking-tighter，与全站完全一致
+ * 2. 卡片瘦身：2x2 横向双列网格，垂直高度直接缩短 40%，去除纵向拉长拖沓感
+ * 3. 视觉排版：背景全景大图 (/images/fleet/molding-machine.webp) 1:1 通透高清晰呈现
+ * 4. GEO & SEO：内置 Schema.org 结构化数据，深度精准覆盖搜索抓取
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "HEAVY ASSET MANUFACTURING FLEET",
+    title: "AUTOMATED SERVO PRESS MATRIX",
+    subtitle: "Automated precision presses from 90T to 1200T. Certified ISO 2768-m high-yield production.",
+    view_all: "EXPLORE FULL TOOLROOM SPECS →",
+    cards: [
+      {
+        tonnage: "90T – 250T",
+        title: "MICRO & PRECISION COMPONENTS",
+        tag: "HIGH SPEED",
+        image: "/images/fleet/fleet-90t.webp",
+        alt: "Precision plastic injection molding machine 90T to 250T for electrical connectors and snap-fits ISO 2768-m",
+        specs: [
+          { label: "SHOT WEIGHT", value: "0.5g – 250g" },
+          { label: "TOLERANCE", value: "ISO 2768-m" },
+          { label: "TARGET PARTS", value: "Connectors, Fasteners, Clips" },
+          { label: "ROBOTICS", value: "3-Axis High-Speed Servo" }
+        ],
+        leadTime: "Fast T1: 3–10 Days"
+      },
+      {
+        tonnage: "300T – 650T",
+        title: "MEDIUM APPLIANCE HOUSINGS",
+        tag: "HIGH YIELD",
+        image: "/images/fleet/fleet-300t.webp",
+        alt: "300T to 650T automated injection molding press for home appliance housings and power tools",
+        specs: [
+          { label: "SHOT WEIGHT", value: "200g – 1500g" },
+          { label: "AUTOMATION", value: "5-Axis Servo Robotics" },
+          { label: "TARGET PARTS", value: "Power Tools, Shells" },
+          { label: "FEEDING", value: "Central Auto-Drying" }
+        ],
+        leadTime: "Fast T1: 5–12 Days"
+      },
+      {
+        tonnage: "700T – 1000T",
+        title: "LARGE STRUCTURAL MOLDINGS",
+        tag: "HEAVY DUTY",
+        image: "/images/fleet/fleet-700t.webp",
+        alt: "700T to 1000T heavy plastic injection molding machine for large structural covers and AC panels",
+        specs: [
+          { label: "SHOT WEIGHT", value: "1200g – 4500g" },
+          { label: "AUTOMATION", value: "Conveyor Pick & Place" },
+          { label: "TARGET PARTS", value: "AC Covers, Heavy Panels" },
+          { label: "LINE OUTPUT", value: "Continuous High-Yield" }
+        ],
+        leadTime: "Fast T1: 7–15 Days"
+      },
+      {
+        tonnage: "1000T – 1200T",
+        title: "HEAVY APPLIANCE & CHASSIS",
+        tag: "MAX TONNAGE",
+        image: "/images/fleet/fleet-1200t.webp",
+        alt: "1200T maximum clamping force heavy plastic injection molding machine for large structural chassis",
+        specs: [
+          { label: "SHOT WEIGHT", value: "4000g – 8000g" },
+          { label: "CLAMP FORCE", value: "1200T Hydraulic" },
+          { label: "TARGET PARTS", value: "Auto Covers, Chassis" },
+          { label: "OUTPUT", value: "Robot Conveyor Line" }
+        ],
+        leadTime: "Fast T1: 7–15 Days"
+      }
+    ],
+    trust_bar: [
+      "1200T Max Press Tonnage",
+      "ISO 2768-m Quality Standard",
+      "Automated Servo Lines",
+      "DDP Freight to US & Europe"
+    ],
+    cta_btn: "REQUEST INSTANT DFM & QUOTE"
+  },
+  de: {
+    badge: "EIGENER FERTIGUNGSMASCHINENPARK",
+    title: "AUTOMATISIERTE SERVO-PRESSEN-MATRIX",
+    subtitle: "Automatisierte Präzisionspressen von 90T bis 1200T. ISO 2768-m zertifizierte Produktion.",
+    view_all: "VOLLSTÄNDIGE SPEZIFIKATIONEN →",
+    cards: [
+      {
+        tonnage: "90T – 250T",
+        title: "MIKRO- & PRÄZISIONSTEILE",
+        tag: "HOCHGESCHWINDIGKEIT",
+        image: "/images/fleet/fleet-90t.webp",
+        alt: "Präzisions-Spritzgießmaschine 90T bis 250T für Steckverbinder und Klipse ISO 2768-m",
+        specs: [
+          { label: "SCHUSSGEWICHT", value: "0,5g – 250g" },
+          { label: "TOLERANZ", value: "ISO 2768-m" },
+          { label: "ZIELTEILE", value: "Steckverbinder, Klipse" },
+          { label: "ROBOTER", value: "3-Achsen Servo" }
+        ],
+        leadTime: "Schnelle T1: 3–10 Tage"
+      },
+      {
+        tonnage: "300T – 650T",
+        title: "MITTLERE GEHÄUSESCHALEN",
+        tag: "AUTOMATISIERT",
+        image: "/images/fleet/fleet-300t.webp",
+        alt: "300T bis 650T Spritzgießmaschine für Haushaltsgerätegehäuse und Elektrowerkzeuge",
+        specs: [
+          { label: "SCHUSSGEWICHT", value: "200g – 1500g" },
+          { label: "AUTOMATION", value: "5-Achsen Roboter" },
+          { label: "ZIELTEILE", value: "Elektrowerkzeuge" },
+          { label: "ZUFÜHRUNG", value: "Zentrales System" }
+        ],
+        leadTime: "Schnelle T1: 5–12 Tage"
+      },
+      {
+        tonnage: "700T – 1000T",
+        title: "GROSSE STRUKTURBAUTEILE",
+        tag: "SCHWERLAST",
+        image: "/images/fleet/fleet-700t.webp",
+        alt: "700T bis 1000T Schwerlast-Spritzgießmaschine mit Entnahmeroboter",
+        specs: [
+          { label: "SCHUSSGEWICHT", value: "1200g – 4500g" },
+          { label: "AUTOMATION", value: "Förderband & Pick" },
+          { label: "ZIELTEILE", value: "Klimaanlagen-Abdeckungen" },
+          { label: "AUSSTELLUNG", value: "Kontinuierliche Linie" }
+        ],
+        leadTime: "Schnelle T1: 7–15 Tage"
+      },
+      {
+        tonnage: "1000T – 1200T",
+        title: "SCHWERE PLATTEN & CHASSIS",
+        tag: "MAX TONNAGE",
+        image: "/images/fleet/fleet-1200t.webp",
+        alt: "1200T maximale Schließkraft Spritzgießpresse für schwere Strukturplatten",
+        specs: [
+          { label: "SCHUSSGEWICHT", value: "4000g – 8000g" },
+          { label: "SCHLIESSKRAFT", value: "1200T Hydraulik" },
+          { label: "ZIELTEILE", value: "Automobilgehäuse" },
+          { label: "ROBOTER", value: "Förderband-Ausgang" }
+        ],
+        leadTime: "Schnelle T1: 7–15 Tage"
+      }
+    ],
+    trust_bar: [
+      "1200T Max Press Tonnage",
+      "ISO 2768-m Quality Standard",
+      "Automated Servo Lines",
+      "DDP Freight to US & Europe"
+    ],
+    cta_btn: "REQUEST INSTANT DFM & QUOTE"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<!-- 🏭 全局容器背景：纯净白底 (#FFFFFF) 结合高清全景背景 -->
+<section class="relative bg-white py-16 sm:py-20 border-b border-[#0F2B5B]/15 overflow-hidden select-none" id="capabilities">
+  
+  <!-- 💥 1. 厂房全景背景图：1:1 通透呈现，85% 真实不透明度 -->
+  <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none transform-gpu">
+    <img 
+      src="/images/fleet/molding-machine.webp" 
+      alt="NEXMOLD Heavy Asset Precision Injection Molding Facility and Toolroom Workshop"
+      class="w-full h-full object-cover object-center brightness-95 contrast-105 opacity-85"
+      loading="lazy"
+      decoding="async"
+      onerror="this.style.display='none';"
+    />
+  </div>
+  
+  <!-- 极浅顶部与底部柔光掩膜 -->
+  <div class="absolute inset-0 bg-gradient-to-b from-white/90 via-white/20 to-white/90 z-0 pointer-events-none"></div>
+
+  <div class="max-w-[1650px] mx-auto px-4 sm:px-8 relative z-10">
+    
+    <!-- 💥 2. 1:1 对齐全站标准的 Header 模块 (字形、倾斜度、字重完全同频) -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-6">
+      <div class="max-w-3xl space-y-2.5">
+        
+        <!-- Tag Badge (1:1 保持全站 Badge 标准) -->
+        <div class="inline-block bg-[#0F2B5B] text-white px-3 py-1 rounded-xs shadow-sm">
+          <span class="font-mono text-[10px] font-black uppercase tracking-widest text-[#EA580C]">
+            {t.badge}
+          </span>
+        </div>
+
+        <!-- 主标题 (1:1 复制上屏字形：font-[1000] italic uppercase tracking-tighter) -->
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-[1000] font-sans text-[#0F2B5B] italic uppercase tracking-tighter leading-tight">
+          {t.title}
+        </h2>
+
+        <!-- 副标题 -->
+        <p class="text-xs sm:text-base font-bold font-sans text-[#0F2B5B]/80 leading-relaxed max-w-2xl">
+          {t.subtitle}
+        </p>
+
+      </div>
+
+      <!-- 右侧内页跳转按钮 -->
+      <a 
+        href="/process" 
+        class="inline-flex items-center gap-2 font-mono text-xs font-black text-white bg-[#0F2B5B] hover:bg-[#EA580C] px-6 py-3.5 rounded-full transition-all duration-300 shadow-xl shrink-0 uppercase tracking-wider border border-white/20"
+      >
+        <span>{t.view_all}</span>
+      </a>
+    </div>
+
+    <!-- 💥 3. 4 列瘦身紧凑卡片阵列 (高度精简，字形保持统一 italic 倾斜) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      {t.cards.map((card: any) => (
+        <div class="bg-white/95 backdrop-blur-md border-2 border-[#0F2B5B]/20 hover:border-[#EA580C] rounded-[24px] overflow-hidden shadow-2xl transition-all duration-300 flex flex-col justify-between group transform hover:-translate-y-1.5 relative">
+          
+          <div>
+            <!-- 精致视口区域 -->
+            <div class="w-full h-36 bg-white relative overflow-hidden border-b border-[#0F2B5B]/10">
+              <img 
+                src={card.image} 
+                alt={card.alt}
+                title={card.alt}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                loading="lazy"
+                decoding="async"
+              />
+              
+              <!-- 吨位 HUD 浮层 -->
+              <div class="absolute top-2.5 left-2.5 bg-[#0F2B5B] text-white px-2.5 py-0.5 rounded-md font-mono text-xs font-black shadow-md border border-white/20">
+                {card.tonnage}
+              </div>
+
+              <!-- 亮橙分类 Tag -->
+              <div class="absolute top-2.5 right-2.5 bg-[#EA580C] text-white px-2 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase tracking-wider shadow-sm">
+                {card.tag}
+              </div>
+            </div>
+
+            <!-- 卡片主体：双列 2x2 紧凑数控 Grid 排版 (卡片标题带 italic) -->
+            <div class="p-4 sm:p-5">
+              <h3 class="font-sans font-[1000] italic text-sm uppercase text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-3 pb-2 border-b border-[#0F2B5B]/10 tracking-tight leading-tight truncate">
+                {card.title}
+              </h3>
+
+              <!-- 2×2 横向双列网格 -->
+              <div class="grid grid-cols-2 gap-2.5">
+                {card.specs.map((spec: any) => (
+                  <div class="flex flex-col">
+                    <span class="font-mono text-[8px] font-black text-[#0F2B5B]/50 uppercase tracking-tight truncate">
+                      {spec.label}
+                    </span>
+                    <span class="font-sans text-[11px] font-[1000] text-[#0F2B5B] leading-snug truncate mt-0.5" title={spec.value}>
+                      {spec.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <!-- 卡片底部：极简横向 Pill 出样周期 -->
+          <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
+            <div class="pt-2.5 border-t border-[#0F2B5B]/10 flex items-center justify-between">
+              <span class="font-mono text-[9px] font-bold text-[#0F2B5B]/70 uppercase tracking-tight">
+                LEAD TIME
+              </span>
+              <span class="font-mono text-[10px] font-black text-[#EA580C] bg-[#EA580C]/10 border border-[#EA580C]/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-pulse"></span>
+                {card.leadTime}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      ))}
+    </div>
+
+    <!-- 💥 4. 底部一体化信任 Bar 与 亮橙 RFQ 按钮 -->
+    <div class="bg-white/95 backdrop-blur-md border-2 border-[#0F2B5B]/20 rounded-[24px] p-3 sm:p-4 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-4">
+      
+      <!-- 4 个横向背书标签 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 px-4 w-full lg:w-auto">
+        {t.trust_bar.map((item: string) => (
+          <div class="flex items-center gap-2 border-r last:border-r-0 border-[#0F2B5B]/15 pr-2 sm:pr-4">
+            <span class="w-2 h-2 rounded-full bg-[#EA580C] shrink-0"></span>
+            <span class="font-sans text-[11px] sm:text-xs font-black text-[#0F2B5B] uppercase whitespace-nowrap">
+              {item}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <!-- 亮橙转换按钮 -->
+      <a 
+        href="#rfq"
+        class="w-full lg:w-auto bg-[#EA580C] hover:bg-[#d94e05] text-white font-sans font-black text-xs sm:text-sm px-8 py-3.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-center uppercase tracking-wider shrink-0 border border-white/20"
+      >
+        {t.cta_btn} →
+      </a>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- 🌐 GEO & SEO 结构化数据 Schema -->
+<script type="application/ld+json" is:inline>
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ManufacturingFacility",
+      "@id": "https://nexmold.com/#facility",
+      "name": "NEXMOLD Precision Injection Molding Facility",
+      "description": "Tier-1 Heavy Asset Custom Plastic Injection Molding Facility in Dongguan operating automated servo presses from 90T to 1200T compliant with ISO 2768-m standards.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dongguan",
+        "addressCountry": "CN"
+      }
+    },
+    {
+      "@type": "OfferCatalog",
+      "name": "NEXMOLD Automated Press Fleet Capabilities",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "90T - 250T Micro Precision Injection Molding",
+            "description": "Precision plastic injection molding for electronic connectors and snap-fits under ISO 2768-m audit with 3-10 days T1 lead time."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "300T - 650T Automated Appliance Housing Injection Molding",
+            "description": "Medium plastic housing injection molding with 5-axis servo robotics for home appliances and power tools."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "700T - 1000T Heavy Structural Plastic Component Pressing",
+            "description": "Large plastic panel molding and air conditioner covers with automated conveyor pick-and-place lines."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "1000T - 1200T Ultra Heavy Tonnage Hydraulic Injection Press",
+            "description": "Heavy-duty automotive enclosure and chassis plastic molding with up to 1200T max clamping force."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>

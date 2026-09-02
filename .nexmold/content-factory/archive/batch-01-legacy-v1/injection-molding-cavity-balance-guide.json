@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-cavity-balance-guide",
+  "targetSlug": "injection-molding-cavity-balance-guide",
+  "sourceArticleSlug": "multi-cavity-mold-cavity-balance",
+  "slug": "injection-molding-cavity-balance-guide",
+  "lineage": {
+    "pageId": "v714:injection-molding-cavity-balance-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-cavity-balance-guide/",
+    "evidenceIds": [
+      "knowledge:multi-cavity-mold-cavity-balance"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-cavity-balance-guide"
+    ],
+    "sourceArtifactHash": "118bff182a35adad578f571501e9375c51ae2cb699acb510aeb5a0107f020d82"
+  },
+  "sourceArtifactHash": "118bff182a35adad578f571501e9375c51ae2cb699acb510aeb5a0107f020d82",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-cavity-balance-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-cavity-balance-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-cavity-balance-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:multi-cavity-mold-cavity-balance",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#multi-cavity-mold-cavity-balance",
+            "contentHash": "multi-cavity-mold-cavity-balance:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-cavity-balance-guide",
+            "claimKey": "batch01.injection-molding-cavity-balance-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "118bff182a35adad578f571501e9375c51ae2cb699acb510aeb5a0107f020d82"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

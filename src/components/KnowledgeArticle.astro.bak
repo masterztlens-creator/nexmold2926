@@ -1,0 +1,156 @@
+---
+// @ts-nocheck
+import { knowledgeArticles } from '../data/knowledge';
+import DynamicFunnelCTA from './DynamicFunnelCTA.astro';
+
+const { article, related = [] } = Astro.props;
+if (!article) {
+  return;
+}
+
+const siteUrl = 'https://www.nxmold.com';
+const canonical = `${siteUrl}${article.path || `/knowledge-hub/${article.categorySlug || article.category}/${article.slug}/`}`;
+
+// 安全降级：如果没�?enhancements 文件，则使用空数组防止构建崩�?
+const table = article.specifications || [];
+const comparison = article.comparisonTable ? [article.comparisonTable] : [];
+const workflow = [];
+const diagnosis = article.diagnosticMatrix ? article.diagnosticMatrix.issues : [];
+const entities = [];
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: article.title,
+  description: article.description,
+  url: canonical,
+  inLanguage: 'en-US',
+  author: { '@type': 'Organization', name: 'NEXMOLD', url: siteUrl },
+  publisher: { '@type': 'Organization', name: 'NEXMOLD', url: siteUrl },
+  articleSection: article.categoryName || article.category,
+  keywords: [article.name || article.title, 'plastic injection molding', 'injection mold', 'DFM'],
+  mainEntityOfPage: canonical,
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Knowledge Hub', item: `${siteUrl}/knowledge-hub/` },
+    { '@type': 'ListItem', position: 3, name: article.categoryName || article.category, item: `${siteUrl}/knowledge-hub/${article.categorySlug || article.category}/` },
+    { '@type': 'ListItem', position: 4, name: article.name || article.title, item: canonical },
+  ],
+};
+
+const faqSchema = article.faq ? {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: article.faq.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })),
+} : null;
+---
+
+<article class="knowledge-article">
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  {faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
+
+  <div class="article-breadcrumb-wrap">
+    <div class="container breadcrumb">
+      <a href="/">Home</a><span>/</span><a href="/knowledge-hub/">Knowledge Hub</a><span>/</span>
+      <a href={`/knowledge-hub/${article.categorySlug || article.category}/`}>{article.categoryName || article.category}</a><span>/</span><strong>{article.name || article.title}</strong>
+    </div>
+  </div>
+
+  <header class="article-hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow"><i></i>{article.eyebrow || 'ENGINEERING GUIDELINE'}</div>
+        <h1>{article.title}</h1>
+        <p class="lead">{article.description}</p>
+        <div class="intent-row"><span>ENGINEERING REFERENCE</span><span>DFM / TOOLING / PROCESS</span><span>PRODUCTION DECISION</span></div>
+        <div class="hero-actions">
+          <a class="btn primary" href={`/free-dfm-analysis/?source=knowledge-hub&topic=${article.slug}`}>Get Free DFM Analysis <span>�?/span></a>
+          <a class="btn secondary" href={`/knowledge-hub/${article.categorySlug || article.category}/`}>Explore {article.categoryName || article.category}</a>
+        </div>
+      </div>
+      <aside class="engineering-card" aria-label="NEXMOLD engineering knowledge graph">
+        <div class="engineering-card-top"><span>NEXMOLD / ENGINEERING REF.</span><b>NX-ENG</b></div>
+        <div class="engineering-diagram">
+          <div class="diagram-ring ring-a"></div><div class="diagram-ring ring-b"></div>
+          <div class="diagram-center"><span>KNOWLEDGE</span><strong>�?/strong><small>PRODUCTION</small></div>
+          <div class="diagram-node node-a">DESIGN</div><div class="diagram-node node-b">TOOLING</div><div class="diagram-node node-c">PROCESS</div><div class="diagram-node node-d">QUALITY</div>
+        </div>
+        <div class="engineering-card-bottom"><span>PRECISION TOOLING</span><span>INJECTION MOLDING</span></div>
+      </aside>
+    </div>
+  </header>
+
+  {article.directAnswer && (
+    <section class="quick-answer">
+      <div class="container answer-grid">
+        <div><span class="section-kicker">DIRECT ENGINEERING ANSWER</span><h2>{article.directAnswer.question}</h2></div>
+        <div class="answer"><p>{article.directAnswer.answer}</p>
+          <div class="answer-note"><strong>Key Drivers:</strong> {article.directAnswer.keyPoints ? article.directAnswer.keyPoints.join(' �?') : ''}</div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <div class="container article-layout">
+    <aside class="article-sidebar">
+      <div class="sidebar-card toc-card">
+        <span class="sidebar-label">ON THIS PAGE</span>
+        <nav aria-label="Article contents">
+          {table.length > 0 && <a href="#engineering-table"><span>01</span>Engineering specifications</a>}
+          {article.sections && article.sections.map((section, index) => <a href={`#section-${index + 1}`}><span>{String(index + 2).padStart(2,'0')}</span>{section.heading || section.title}</a>)}
+          {article.faq && <a href="#faq"><span>FAQ</span>Common questions</a>}
+        </nav>
+      </div>
+      <div class="sidebar-card conversion-card">
+        <span class="sidebar-label">COMMERCIAL NEXT STEP</span>
+        <h3>Have a CAD file?</h3>
+        <p>Turn the engineering reference into a part-specific DFM review before mold construction.</p>
+        <a href={`/free-dfm-analysis/?source=knowledge-hub&topic=${article.slug}`}>Upload CAD �?/a>
+      </div>
+    </aside>
+
+    <div class="article-content">
+      {table.length > 0 && (
+        <section id="engineering-table" class="data-section">
+          <div class="section-head"><div><span class="content-kicker">TECHNICAL SPECIFICATIONS</span><h2>Key parameters to verify</h2></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>{table.map((row) => <tr><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody></table></div>
+        </section>
+      )}
+
+      {article.contentBlocks && article.contentBlocks.map((block, index) => (
+        <section id={`section-${index + 1}`} class="content-section">
+          <div class="section-number">{String(index + 1).padStart(2,'0')}</div>
+          <div>
+            <h2>{block.heading}</h2>
+            <div set:html={block.content} />
+            {block.callout && <div class="engineering-callout" style="margin-top: 15px; padding: 15px; background: #f8fafc; border-left: 3px solid #f45116;">{block.callout}</div>}
+          </div>
+        </section>
+      ))}
+
+      {related.length > 0 && (
+        <section class="related">
+          <div class="related-heading"><div><span class="content-kicker">INTERNAL KNOWLEDGE GRAPH</span><h2>Continue through adjacent entities</h2></div><a href={`/knowledge-hub/${article.categorySlug || article.category}/`}>View cluster �?/a></div>
+          <div class="related-grid">{related.map((item) => <a href={`/knowledge-hub/${item.categorySlug}/${item.slug}/`} class="related-card"><span>{item.category}</span><h3>{item.title}</h3><p>{item.description}</p><strong>Read Guide �?/strong></a>)}</div>
+        </section>
+      )}
+
+      {article.faq && article.faq.length > 0 && (
+        <section id="faq" class="faq"><div class="content-kicker">AI-READY ENGINEERING FAQ</div><h2>Frequently asked questions</h2><div class="faq-list">{article.faq.map((item, index) => <details open={index === 0}><summary><span>{item.question}</span><b>+</b></summary><div class="faq-answer"><p>{item.answer}</p></div></details>)}</div></section>
+      )}
+    </div>
+  </div>
+
+  <section class="final-cta"><div class="container"><div class="cta-panel"><div><span class="content-kicker">FROM ENGINEERING TO PRODUCTION</span><h2>Need a tooling or molding partner?</h2><p>Send CAD, drawings, material requirements and annual volume. NEXMOLD can turn the knowledge-base topic into a project-specific DFM and tooling discussion.</p></div><div class="cta-actions"><a class="btn white" href={`/free-dfm-analysis/?source=knowledge-hub-final&topic=${article.slug}`}>Upload CAD <span>�?/span></a><a class="btn outline" href="/contact/">Contact Engineering</a></div></div></div></section>
+</article>
+
+<style>
+.knowledge-article{--navy:#10284f;--orange:#f45116;--muted:#68778d;--line:#dfe5ec;--soft:#f6f8fa}*{box-sizing:border-box}.container{width:min(1240px,calc(100% - 48px));margin:auto}.article-breadcrumb-wrap{border-bottom:1px solid var(--line);background:#fff}.breadcrumb{min-height:48px;display:flex;align-items:center;gap:9px;white-space:nowrap;overflow:hidden;color:#8490a1;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.breadcrumb a{color:#63738a;text-decoration:none}.breadcrumb a:hover{color:var(--orange)}.breadcrumb strong{color:var(--orange);overflow:hidden;text-overflow:ellipsis}.article-hero{background:linear-gradient(135deg,#f5f8fb,#fff 60%,#f2f5f8);border-bottom:1px solid var(--line)}.hero-grid{min-height:560px;display:grid;grid-template-columns:1.08fr .92fr;gap:80px;align-items:center}.eyebrow,.section-kicker,.content-kicker,.sidebar-label{color:var(--orange);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.eyebrow{display:flex;align-items:center;gap:9px}.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px rgba(244,81,22,.1)}.hero-copy h1{font-size:clamp(44px,5.2vw,70px);line-height:.96;letter-spacing:-.055em;margin:22px 0}.lead{max-width:760px;color:var(--muted);font-size:17px;line-height:1.75;margin:0}.intent-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.intent-row span{padding:8px 10px;border:1px solid #d6dee7;background:#fff;color:#62738a;font-size:8px;font-weight:900;letter-spacing:.1em}.hero-actions{display:flex;gap:10px;margin-top:28px}.btn{min-height:50px;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.btn.primary{background:var(--orange);color:#fff}.btn.secondary{border:1px solid #ccd5df;background:#fff;color:var(--navy)}.engineering-card{min-height:430px;padding:25px;position:relative;background:var(--navy);color:#fff;overflow:hidden}.engineering-card:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}.engineering-card-top,.engineering-card-bottom{position:relative;z-index:1;display:flex;justify-content:space-between;color:#91a1b9;font-size:8px;font-weight:800;letter-spacing:.14em}.engineering-card-top b{color:var(--orange)}.engineering-diagram{position:absolute;inset:65px 20px 55px}.diagram-ring{position:absolute;border:1px solid rgba(255,255,255,.16);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}.ring-a{width:190px;height:190px}.ring-b{width:340px;height:340px;border-color:rgba(255,255,255,.07)}.diagram-center{position:absolute;width:150px;height:150px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.25);background:rgba(16,40,79,.72)}.diagram-center:after{content:"";position:absolute;width:48px;height:48px;border-radius:50%;background:var(--orange);z-index:-1}.diagram-center span{font-size:8px;letter-spacing:.15em}.diagram-center strong{font-size:34px;line-height:1;margin:5px 0}.diagram-center small{font-size:7px;color:#a9b6c8;letter-spacing:.12em}.diagram-node{position:absolute;padding:9px 11px;background:#173762;border:1px solid rgba(255,255,255,.18);font-size:8px;font-weight:900;letter-spacing:.1em}.node-a{left:2px;top:22%}.node-b{right:2px;top:22%}.node-c{left:2px;bottom:22%}.node-d{right:2px;bottom:22%}.engineering-card-bottom{position:absolute;left:25px;right:25px;bottom:22px}.quick-answer{background:var(--navy);color:#fff;padding:62px 0}.answer-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:80px}.quick-answer h2{font-size:34px;letter-spacing:-.04em;margin:12px 0}.answer p{font-size:18px;line-height:1.75;margin:0}.answer-note{margin-top:22px;padding:16px 18px;border-left:2px solid var(--orange);background:rgba(255,255,255,.05);color:#b9c5d5;font-size:12px;line-height:1.7}.answer-note strong{color:#fff}.article-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:70px;padding-top:85px}.article-sidebar{position:relative}.sidebar-card{border:1px solid var(--line);background:#fff;padding:22px;margin-bottom:18px}.toc-card{position:sticky;top:20px}.toc-card nav{display:grid;margin-top:14px}.toc-card nav a{display:grid;grid-template-columns:28px 1fr;gap:5px;padding:11px 0;border-bottom:1px solid #edf0f3;text-decoration:none;color:#607188;font-size:10px;line-height:1.4}.toc-card nav a span{color:#a4afbd;font-weight:900}.toc-card nav a:hover{color:var(--orange)}.conversion-card{background:var(--navy);color:#fff}.conversion-card h3{font-size:21px;line-height:1.15;margin:13px 0}.conversion-card p{color:#aebbd0;font-size:11px;line-height:1.7}.conversion-card a{color:var(--orange);text-decoration:none;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.article-content{min-width:0}.data-section,.process-section{padding-bottom:70px}.section-head{display:flex;justify-content:space-between;gap:50px;align-items:end;margin-bottom:24px}.section-head h2{margin:10px 0 0;font-size:34px;line-height:1.05;letter-spacing:-.04em}.table-wrap{overflow:auto;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:760px;background:#fff}th,td{padding:15px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;text-align:left;font-size:11px;line-height:1.6}thead th{background:var(--navy);color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.08em}tbody th{color:var(--navy);font-weight:900;background:#fafbfd}.considerations{padding:35px 0 75px;border-top:1px solid var(--line)}.consideration-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.consideration{min-height:96px;padding:18px;background:var(--soft);border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}.consideration span{color:var(--orange);font-size:9px;font-weight:900}.consideration strong{font-size:12px;line-height:1.3}.content-section{display:grid;grid-template-columns:62px 1fr;gap:25px;padding:55px 0;border-top:1px solid var(--line)}.section-number{font-size:28px;font-weight:900;color:#ccd4de}.content-section h2{margin:0 0 14px;font-size:30px;line-height:1.1;letter-spacing:-.035em}.content-section p{margin:0;color:#596a80;font-size:15px;line-height:1.85}.related{padding:5px 0 75px}.related-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:22px}.related-heading h2,.faq h2{margin:10px 0 0;font-size:30px;letter-spacing:-.035em}.related-heading>a{color:var(--orange);text-decoration:none;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.related-card{padding:22px;border:1px solid var(--line);text-decoration:none;color:var(--navy);min-height:220px;display:flex;flex-direction:column}.related-card:hover{border-color:var(--orange)}.related-card span{color:var(--orange);font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.related-card h3{font-size:18px;line-height:1.2;margin:12px 0}.related-card p{color:var(--muted);font-size:11px;line-height:1.6}.related-card strong{margin-top:auto;font-size:9px;letter-spacing:.1em;text-transform:uppercase}.faq{padding:5px 0 80px}.faq-list{margin-top:22px;border-top:1px solid var(--line)}details{border-bottom:1px solid var(--line)}summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:20px;padding:19px 0;font-size:13px;font-weight:800}summary::-webkit-details-marker{display:none}summary b{color:var(--orange);font-size:18px}.faq-answer{padding:0 35px 18px 0}.faq-answer p{margin:0;color:var(--muted);font-size:12px;line-height:1.75}.final-cta{padding:0 0 100px}.cta-panel{padding:45px;display:flex;justify-content:space-between;align-items:center;gap:50px;background:var(--orange);color:#fff}.cta-panel h2{font-size:34px;line-height:1.05;letter-spacing:-.04em;margin:10px 0}.cta-panel p{max-width:700px;margin:0;color:#ffe4d8;font-size:12px;line-height:1.7}.cta-panel .content-kicker{color:#fff}.cta-actions{display:flex;gap:9px;flex-shrink:0}.btn.white{background:#fff;color:var(--navy)}.btn.outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+@media(max-width:980px){.hero-grid,.answer-grid,.article-layout{grid-template-columns:1fr}.hero-grid{padding:55px 0}.article-sidebar{order:2}.toc-card{position:static}.related-grid{grid-template-columns:1fr 1fr}.cta-panel{display:block}.cta-actions{margin-top:25px}.engineering-card{min-height:390px}.article-layout{gap:35px}}
+@media(max-width:620px){.container{width:min(100% - 30px,1240px)}.hero-copy h1{font-size:43px}.hero-actions,.cta-actions{display:grid;grid-template-columns:1fr}.related-grid{grid-template-columns:1fr}.section-head,.related-heading{display:block}.section-head>p{margin-top:14px}.content-section{grid-template-columns:1fr;gap:10px}.cta-panel{padding:25px}.article-layout{padding-top:55px}}
+</style>
+

@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-rib-design",
+  "targetSlug": "injection-molding-rib-design",
+  "sourceArticleSlug": "rib-boss-gusset-design",
+  "slug": "injection-molding-rib-design",
+  "lineage": {
+    "pageId": "v714:injection-molding-rib-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-rib-design/",
+    "evidenceIds": [
+      "knowledge:rib-boss-gusset-design"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-rib-design"
+    ],
+    "sourceArtifactHash": "20c4ec0ac7533d6b76342b3b524c7aeed0c72b7a14223108b6c682bbb6c73a2b"
+  },
+  "sourceArtifactHash": "20c4ec0ac7533d6b76342b3b524c7aeed0c72b7a14223108b6c682bbb6c73a2b",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-rib-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-rib-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-rib-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "rib-boss-gusset-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-rib-design",
+            "claimKey": "batch01.injection-molding-rib-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "20c4ec0ac7533d6b76342b3b524c7aeed0c72b7a14223108b6c682bbb6c73a2b"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

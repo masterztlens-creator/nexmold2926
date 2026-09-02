@@ -1,0 +1,257 @@
+---
+/**
+ * src/pages/index.astro - NEXMOLD 首页 (全量极致融合版)
+ * 1. 屏 1：Hero (转询盘钩子 + 品牌信任墙)
+ * 2. 屏 2：ServicesTab (核心制造服务 4 大 Tab)
+ * 3. 屏 3：Capabilities (工程塑料与树脂数据库)
+ * 4. 屏 4：OrderToDelivery (履约流程 7 大核心卡片)
+ * 5. 屏 5：IndustriesNav (应用行业矩阵)
+ * 6. 屏 6：About (Smart Production 实体工厂控制台 & ISO 认证)
+ * 7. 屏 7：Projects (精密模具及成品 Showcase)
+ * 8. 屏 8：InsightsAndPlatform (画廊风：DFM 模流分析、质检与数字平台)
+ * 9. 屏 9：HowToWorkWithUs (4 步合作流程)
+ * 10. 屏 10：Testimonials (Trustpilot 独立第三方评价背书)
+ * 11. 屏 11：GlobalPresence (全球交付与工厂实力指标)
+ * 12. 屏 12：TrustAndRFQ (终极 RFQ 询盘控制台)
+ * ⚡️ 页脚：EcosystemFooter (已开启 hideCadBanner={true} 消除撞车与卡片重复)
+ */
+
+const lang: 'en' | 'de' | 'fr' = 'en';
+const location = 'North America & Europe';
+
+// ⚡️ SEO & GEO (AI 引擎) 极致优化 Meta 信息 (融合 GKP 高 CPC 买家词：Quick-Turn, Low-Volume, ISO 2768-m)
+const description = 'NEXMOLD - ISO 2768-m precision plastic injection molding & fast tooling partner. Direct facility with 90T-1200T Haitian fleet, T1 samples in 7 days, low-volume manufacturing, free DFM analysis, and DDP ocean delivery to North America & Europe.';
+const title = "NEXMOLD | Precision Injection Molding, Fast Tooling & Low-Volume Manufacturing";
+
+import MainLayout from '../layouts/MainLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';                // ⚡️ 屏 1：Hero
+import ServicesTab from '../components/ServicesTab.astro';    // 🛠️ 屏 2：Our Manufacturing Services
+import Capabilities from '../components/Capabilities.astro';  // 🧪 屏 3：工程材料库 & 机队参数
+import OrderToDelivery from '../components/OrderToDelivery.astro'; // 🚚 屏 4：OrderToDelivery 履约流程
+import IndustriesNav from '@/components/IndustriesNav.astro'; // 🏭 屏 5：应用行业
+import About from '../components/About.astro';             // 🏭 屏 6：Smart Production & Factory
+import Projects from '../components/Projects.astro';         // 📦 屏 7：精密模具及成品 showcase
+import InsightsAndPlatform from '../components/InsightsAndPlatform.astro'; // 💡 屏 8：Insights, DFM & CMM
+import HowToWorkWithUs from '../components/HowToWorkWithUs.astro'; // 🤝 屏 9：4步合作流程
+import Testimonials from '../components/Testimonials.astro';  // 🟢 屏 10：Trustpilot 第三方评价背书
+import GlobalPresence from '../components/GlobalPresence.astro'; // 🌐 屏 11：全球交付与工厂实力指标
+import TrustAndRFQ from '../components/TrustAndRFQ.astro';  // ⚡️ 屏 12：终极 RFQ 控制台
+import EcosystemFooter from '../components/EcosystemFooter.astro';
+import LeadModal from '../components/LeadModal.astro';
+import QuickRFQ from '../components/QuickRFQ.astro';
+
+// 🤖 GEO / AI 生成式引擎 (Perplexity, SearchGPT, Google AIO) 专用 JSON-LD 结构化数据
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nexmold.com/#organization",
+      "name": "NEXMOLD",
+      "url": "https://nexmold.com",
+      "logo": "https://nexmold.com/logo.png",
+      "description": "Tier-1 direct source plastic injection molding and fast tooling manufacturer operating with a 90T to 1200T Haitian machine fleet.",
+      "knowsAbout": [
+        "Plastic Injection Molding",
+        "Quick Turn Injection Molding",
+        "Low Volume Injection Molding",
+        "Insert Molding",
+        "Overmolding",
+        "PEEK Injection Molding",
+        "Moldflow Analysis & DFM",
+        "DDP Ocean Shipping Logistics"
+      ]
+    },
+    {
+      "@type": "ManufacturingPlant",
+      "@id": "https://nexmold.com/#factory",
+      "name": "NEXMOLD Manufacturing Facility",
+      "parentOrganization": { "@id": "https://nexmold.com/#organization" },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dongguan",
+        "addressCountry": "CN"
+      },
+      "hasFacilityEquipment": [
+        "Haitian Injection Molding Fleet (90T - 1200T)",
+        "CMM Precision Inspection Equipment",
+        "CNC Machining Centers for Mold Tooling"
+      ]
+    },
+    {
+      "@type": "Service",
+      "name": "Custom Plastic Injection Molding & Fast Tooling Services",
+      "provider": { "@id": "https://nexmold.com/#organization" },
+      "areaServed": ["North America", "Europe"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Injection Molding Capabilities",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Quick Turn & Prototype Injection Molding",
+              "description": "Fast T1 samples delivery within 7-14 days using aluminum or soft steel tooling."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Low Volume Plastic Manufacturing",
+              "description": "Bridge production runs from 100 to 10,000+ parts with no strict MOQ."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Specialty & High-Temp Resin Molding",
+              "description": "Precision molding for PEEK, Ultem, Polycarbonate, TPU, and Insert/Overmolding."
+            }
+          }
+        ]
+      }
+    }
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang={lang} location={location}>
+  
+  <!-- 🤖 注入 GEO / SEO 实体结构化标签 (不显示在前端，专门供 AI/Search 爬虫抓取) -->
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+  <!-- 🎛️ 左侧数控精密游标滑轨 -->
+  <aside class="fixed left-0 top-[36px] bottom-0 w-[100px] z-[50] hidden lg:flex flex-col items-center pointer-events-none" aria-hidden="true">
+    <div class="relative h-full w-[1px] bg-[#0F2B5B]/15 flex justify-center overflow-visible">
+      
+      <div class="absolute inset-0 overflow-hidden z-10">
+        <div class="absolute top-[-20%] left-[-0.5px] w-[2px] h-[30vh] bg-gradient-to-b from-transparent via-[#EA580C]/80 to-transparent animate-laser-meteor"></div>
+      </div>
+
+      <div id="vernier-core" class="absolute w-10 h-[60px] flex items-center justify-center z-50 opacity-0 transition-opacity duration-500">
+        <div class="relative w-[3px] h-full bg-[#EA580C] shadow-[0_0_12px_#EA580C]">
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-[1px] bg-[#0F2B5B]"></div>
+        </div>
+
+        <div class="absolute left-8 flex flex-col items-start font-mono whitespace-nowrap bg-[#0F2B5B] p-1.5 border-l-2 border-[#EA580C] shadow-md rounded-r-sm">
+          <div class="flex items-baseline gap-1">
+            <span class="text-[9px] text-white/50 uppercase tracking-tighter">COORD:</span>
+            <span class="text-[14px] text-[#EA580C] font-black" id="coord-display">0.000</span>
+            <span class="text-[8px] text-white/40 italic">mm</span>
+          </div>
+          <div class="w-14 h-[1px] bg-white/10 mt-1"></div>
+          <span class="text-[6px] text-white/50 uppercase tracking-widest mt-1 italic animate-pulse">ISO2768_AUDIT</span>
+        </div>
+      </div>
+
+      <div class="absolute inset-0 flex flex-col justify-between py-24 opacity-20">
+        {Array.from({ length: 31 }).map((_, i) => (
+          <div class={`h-[1px] bg-[#0F2B5B] ${i % 5 === 0 ? 'w-4' : 'w-2'}`}></div>
+        ))}
+      </div>
+    </div>
+  </aside>
+
+  <!-- 🎯 Header 顶部导航栏 -->
+  <Header lang={lang} />
+
+  <!-- 🎯 主业务视角与结构层级 -->
+  <main class="bg-white text-[#0F2B5B] lg:pl-[100px] relative">
+    
+    <!-- 1. 第一屏：Hero (转询盘钩子 + 品牌信任墙) -->
+    <Hero lang={lang} location={location} />
+
+    <!-- 🛠️ 2. 第二屏：Our Manufacturing Services 交互式 Tab 面板 -->
+    <ServicesTab lang={lang} />
+
+    <!-- 🧪 3. 第三屏：Capabilities 工程塑料与树脂数据库 -->
+    <Capabilities lang={lang} />
+
+    <!-- 🚚 4. 第四屏：OrderToDelivery 7 大履约流程 -->
+    <OrderToDelivery lang={lang} />
+
+    <!-- 🏭 5. 第五屏：应用行业 -->
+    <IndustriesNav lang={lang} />
+
+    <!-- 🏭 6. 第六屏：Smart Production Starts at NEXMOLD (实体工厂控制台) -->
+    <About lang={lang} />
+
+    <!-- 📦 7. 第七屏：Projects 精密模具及成品 Showcase -->
+    <Projects lang={lang} />
+
+    <!-- 💡 8. 第八屏：InsightsAndPlatform (画廊式 DFM 模流分析、质检与平台) -->
+    <InsightsAndPlatform lang={lang} />
+
+    <!-- 🤝 9. 第九屏：HowToWorkWithUs (4 步合作流程) -->
+    <HowToWorkWithUs lang={lang} />
+
+    <!-- 🟢 10. 第十屏：Testimonials (第三方 Trustpilot 独立评价背书) -->
+    <Testimonials lang={lang} />
+
+    <!-- 🌐 11. 第十一屏：GlobalPresence (全球交付与工厂实力指标) -->
+    <GlobalPresence lang={lang} />
+
+    <!-- ⚡️ 12. 第十二屏：终极 RFQ 询盘控制台 -->
+    <TrustAndRFQ lang={lang} />
+  </main>
+
+  <!-- ⚡️ 生态页脚：传入 hideCadBanner={true} 隐藏顶部 Banner，彻底消除撞车与重复卡片 -->
+  <EcosystemFooter lang={lang} hideCadBanner={true} />
+
+  <LeadModal lang={lang} />
+  <QuickRFQ lang={lang} />
+
+</MainLayout>
+
+<script>
+  function initPageLogic() {
+    const slider = document.getElementById('vernier-core');
+    const coord = document.getElementById('coord-display');
+    if (!slider || !coord) return;
+
+    let targetY = 0;
+    let currentY = 0;
+    const lerpAmount = 0.1;
+
+    const update = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = maxScroll <= 0 ? 0 : Math.max(0, Math.min(scrollY / maxScroll, 1));
+      
+      if (scrollY < 100) {
+        slider.style.opacity = "0";
+      } else {
+        slider.style.opacity = "1";
+      }
+
+      targetY = scrollPercent * 80; 
+      currentY += (targetY - currentY) * lerpAmount;
+      slider.style.transform = `translateY(${currentY}vh)`; 
+      
+      coord.textContent = (scrollPercent * 50).toFixed(3);
+      
+      requestAnimationFrame(update);
+    };
+
+    requestAnimationFrame(update);
+  }
+
+  document.addEventListener('DOMContentLoaded', initPageLogic);
+  document.addEventListener('astro:after-swap', initPageLogic);
+</script>
+
+<style is:global>
+  @keyframes laser-meteor {
+    0% { transform: translateY(-40vh); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(140vh); opacity: 0; }
+  }
+  .animate-laser-meteor { animation: laser-meteor 3s cubic-bezier(0.8, 0, 0.2, 1) infinite; }
+
+  aside { background: transparent !important; }
+  html { scroll-behavior: smooth; background-color: #FFFFFF; } 
+</style>

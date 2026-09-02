@@ -1,0 +1,530 @@
+2026-09-01T05:48:42.510Z [V714_CORE_GATE] import scripts\v714-core-gate.mjs :: runV714CoreGate
+2026-09-01T05:48:42.516Z [V714_REGIONAL_PRODUCTION_GATE] import scripts\v714-regional-gate.mjs :: runV714RegionalGate
+2026-09-01T05:48:42.554Z [ROUTE_CONFLICT_GATE] import scripts\route-conflict-check.mjs
+2026-09-01T05:48:42.568Z [TYPECHECK] $ npx astro check
+[2m13:48:45[22m [34m[content][39m Syncing content
+[2m13:48:45[22m [34m[content][39m Synced content
+[2m13:48:45[22m [34m[types][39m Generated [2m366ms[22m
+[2m13:48:45[22m [34m[check][39m Getting diagnostics for Astro files in E:\nexmold...
+[96msrc/content.config.ts[0m:[93m1[0m:[93m28[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m1[0m import { defineCollection, z } from 'astro:content';
+[7m [0m [93m                           ~[0m
+[96msrc/content.config.ts[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6192): [0mAll imports in import declaration are unused.
+
+[7m1[0m import { defineCollection, z } from 'astro:content';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/Header.astro[0m:[93m107[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m107[0m <script type="application/ld+json" set:html={JSON.stringify(schemaNavData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/components/KnowledgeArticle.astro[0m:[93m54[0m:[93m25[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m54[0m   {faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
+[7m  [0m [93m                        ~~~~[0m
+[96msrc/components/KnowledgeArticle.astro[0m:[93m53[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m53[0m   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+[7m  [0m [93m          ~~~~[0m
+[96msrc/components/KnowledgeArticle.astro[0m:[93m52[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m52[0m   <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/data/knowledge.ts[0m:[93m5473[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'renderContentBlock' is declared but its value is never read.
+
+[7m5473[0m function renderContentBlock(block: RawContentBlock): ContentBlock {
+[7m    [0m [93m         ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/data/knowledge.ts[0m:[93m5250[0m:[93m9[0m - [93mwarning[0m[90m ts(6133): [0m'category' is declared but its value is never read.
+
+[7m5250[0m   const category = raw.category.toLowerCase();
+[7m    [0m [93m        ~~~~~~~~[0m
+[96msrc/data/knowledge.ts[0m:[93m5223[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'CATEGORY_AUDIENCE' is declared but its value is never read.
+
+[7m5223[0m const CATEGORY_AUDIENCE: Record<string, string[]> = {
+[7m    [0m [93m      ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/layouts/MainLayout.astro[0m:[93m26[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'industry' is declared but its value is never read.
+
+[7m26[0m   industry = "OEM / Industrial Applications"
+[7m  [0m [93m  ~~~~~~~~[0m
+[96msrc/layouts/MainLayout.astro[0m:[93m25[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'material' is declared but its value is never read.
+
+[7m25[0m   material = "Custom Engineering Polymer",
+[7m  [0m [93m  ~~~~~~~~[0m
+
+[96msrc/pages/about.astro[0m:[93m242[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m242[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/index.astro[0m:[93m125[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m125[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/capabilities/index.astro[0m:[93m185[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m185[0m <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/capabilities/rapid-tooling-s136.astro[0m:[93m236[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m236[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/components/microfluidic-cartridges.astro[0m:[93m200[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m200[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/components/precision-gears.astro[0m:[93m200[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m200[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/free-dfm-analysis/index.astro[0m:[93m54[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m54[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/pages/industries/index.astro[0m:[93m1494[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m1494[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request successfully submitted!'); const m = document.getElementById('lead-modal'); if (m) m.close();">
+[7m    [0m [93m                                          ~~~~~[0m
+[96msrc/pages/industries/index.astro[0m:[93m224[0m:[93m13[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m224[0m     <script type="application/ld+json">
+[7m   [0m [93m            ~~~~[0m
+
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2041[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2041[0m   validatedMetadata.production
+[7m    [0m [91m  ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2036[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2036[0m   validatedMetadata.production
+[7m    [0m [91m  ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2031[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2031[0m   validatedMetadata.production
+[7m    [0m [91m  ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2027[0m:[93m7[0m - [91merror[0m[90m ts(18046): [0m'artifact.hreflangSet' is of type 'unknown'.
+
+[7m2027[0m     ? artifact.hreflangSet.length
+[7m    [0m [91m      ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2027[0m:[93m7[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m2027[0m     ? artifact.hreflangSet.length
+[7m    [0m [91m      ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2025[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m2025[0m     artifact.hreflangSet,
+[7m    [0m [91m    ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2019[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2019[0m     validatedMetadata.sourceArticleSlug ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2013[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2013[0m     validatedMetadata.route ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2001[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m2001[0m     validatedMetadata.schema ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1995[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m1995[0m     validatedMetadata.producerVersion ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1989[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m1989[0m     validatedMetadata.articleId ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1983[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'validatedMetadata' is possibly 'undefined'.
+
+[7m1983[0m     validatedMetadata.factoryRun ??
+[7m    [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1977[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m1977[0m     artifact.pageContentHash ??
+[7m    [0m [91m    ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1968[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m1968[0m   artifact.bindings
+[7m    [0m [91m  ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1962[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m1962[0m   artifact.evidence
+[7m    [0m [91m  ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1957[0m:[93m3[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m1957[0m   artifact.evidence
+[7m    [0m [91m  ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1931[0m:[93m5[0m - [91merror[0m[90m ts(18048): [0m'artifact' is possibly 'undefined'.
+
+[7m1931[0m     artifact.canonicalUrl,
+[7m    [0m [91m    ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1909[0m:[93m12[0m - [91merror[0m[90m ts(7006): [0mParameter 'item' implicitly has an 'any' type.
+
+[7m1909[0m           (item) =>
+[7m    [0m [91m           ~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1908[0m:[93m10[0m - [91merror[0m[90m ts(2339): [0mProperty 'map' does not exist on type 'string | string[]'.
+  Property 'map' does not exist on type 'string'.
+
+[7m1908[0m         .map(
+[7m    [0m [91m         ~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1836[0m:[93m5[0m - [91merror[0m[90m ts(2345): [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1836[0m     markdown,
+[7m    [0m [91m    ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1560[0m:[93m22[0m - [91merror[0m[90m ts(18048): [0m'report.results' is possibly 'undefined'.
+
+[7m1560[0m   for (const item of report.results) {
+[7m    [0m [91m                     ~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1560[0m:[93m22[0m - [91merror[0m[90m ts(18047): [0m'report' is possibly 'null'.
+
+[7m1560[0m   for (const item of report.results) {
+[7m    [0m [91m                     ~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m217[0m:[93m9[0m - [91merror[0m[90m ts(2552): [0mCannot find name 'file'. Did you mean 'File'?
+
+[7m217[0m         file,
+[7m   [0m [91m        ~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2040[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'historicalBatch01Modified' is declared but its value is never read.
+
+[7m2040[0m const historicalBatch01Modified =
+[7m    [0m [93m      ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2035[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'existingSiteContentModified' is declared but its value is never read.
+
+[7m2035[0m const existingSiteContentModified =
+[7m    [0m [93m      ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m2030[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'automaticPublication' is declared but its value is never read.
+
+[7m2030[0m const automaticPublication =
+[7m    [0m [93m      ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m1551[0m:[93m1[0m - [93mwarning[0m[90m ts(7027): [0mUnreachable code detected.
+
+[7m1551[0m const report =
+[7m    [0m [93m~~~~~~~~~~~~~~[0m
+[7m1552[0m   loadPublicationJson(
+[7m    [0m [93m~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m ...[0m 
+[7m1585[0m   }
+[7m    [0m [93m~~~[0m
+[7m1586[0m }
+[7m    [0m [93m~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m280[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'isString' is declared but its value is never read.
+
+[7m280[0m function isString(
+[7m   [0m [93m         ~~~~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m226[0m:[93m5[0m - [93mwarning[0m[90m ts(7027): [0mUnreachable code detected.
+
+[7m226[0m   } catch {
+[7m   [0m [93m    ~~~~~~~[0m
+[7m227[0m     return null;
+[7m   [0m [93m~~~~~~~~~~~~~~~~[0m
+[7m228[0m   }
+[7m   [0m [93m~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m229[0m:[93m1[0m - [91merror[0m[90m ts(1128): [0mDeclaration or statement expected.
+
+[7m229[0m }
+[7m   [0m [91m~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m226[0m:[93m5[0m - [91merror[0m[90m ts(1005): [0m'try' expected.
+
+[7m226[0m   } catch {
+[7m   [0m [91m    ~~~~~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m226[0m:[93m3[0m - [91merror[0m[90m ts(1128): [0mDeclaration or statement expected.
+
+[7m226[0m   } catch {
+[7m   [0m [91m  ~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m191[0m:[93m1[0m - [91merror[0m[90m ts(1128): [0mDeclaration or statement expected.
+
+[7m191[0m }
+[7m   [0m [91m~[0m
+[96msrc/pages/industries/v714/[slug].astro[0m:[93m188[0m:[93m1[0m - [91merror[0m[90m ts(1005): [0m'try' expected.
+
+[7m188[0m catch {
+[7m   [0m [91m~~~~~[0m
+
+[96msrc/pages/industries/v714/index.astro[0m:[93m453[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'canonicalUrl' is declared but its value is never read.
+
+[7m453[0m const canonicalUrl =
+[7m   [0m [93m      ~~~~~~~~~~~~[0m
+[96msrc/pages/industries/v714/index.astro[0m:[93m439[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'producedCount' is declared but its value is never read.
+
+[7m439[0m const producedCount = articles.length;
+[7m   [0m [93m      ~~~~~~~~~~~~~[0m
+
+[96msrc/pages/knowledge-hub/index.astro[0m:[93m101[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m101[0m   <script type="application/ld+json" set:html={JSON.stringify({
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/materials/index.astro[0m:[93m1020[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m1020[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('CAD file received. An engineering DFM analysis and tooling quotation will be generated within 24 hours.');">
+[7m    [0m [93m                                          ~~~~~[0m
+[96msrc/pages/materials/index.astro[0m:[93m929[0m:[93m63[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m929[0m           <form class="space-y-3 text-xs font-mono" onsubmit="event.preventDefault(); alert('Sample kit request received. An engineer will verify shipping address within 2 hours.');">
+[7m   [0m [93m                                                              ~~~~~[0m
+[96msrc/pages/materials/index.astro[0m:[93m279[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m279[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/products/index.astro[0m:[93m217[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m217[0m <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/quality/zeiss-cmm-inspection.astro[0m:[93m201[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m201[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/faq.astro[0m:[93m197[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m197[0m <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/index.astro[0m:[93m221[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m221[0m <script type="application/ld+json" set:html={JSON.stringify(resourcesSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/calculators/cost-guide.astro[0m:[93m18[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'calculatorSchema' is declared but its value is never read.
+
+[7m18[0m const calculatorSchema = {
+[7m  [0m [93m      ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/resources/calculators/faq.astro[0m:[93m135[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m135[0m <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/calculators/instant-dfm-checker.astro[0m:[93m183[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m183[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/defect-troubleshooting.astro[0m:[93m152[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m152[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/surface-finish.astro[0m:[93m153[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m153[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/wall-thickness.astro[0m:[93m153[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m153[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/services/[slug].astro[0m:[93m39[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'comparisonTable' is declared but its value is never read.
+
+[7m39[0m const comparisonTable = spoke.comparisonTable || [];
+[7m  [0m [93m      ~~~~~~~~~~~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m369[0m:[93m126[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m369[0m         <form class="bg-[#F8FAFC] border border-[#0F2B5B]/10 rounded-lg p-6 sm:p-8 space-y-4 text-left shadow-2xs" onsubmit="event.preventDefault(); alert('CAD File received. Our Dongguan engineering team will review and return your DFM report within 24 hours.');">
+[7m   [0m [93m                                                                                                                             ~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m180[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m180[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center font-mono text-xs text-white/60\'>[ DONGGUAN HAITIAN SERVO WORKCELL ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m68[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m68[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m496[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m496[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request submitted successfully!'); const m = document.getElementById('lead-modal'); if (m && typeof m.close === 'function') m.close();">
+[7m   [0m [93m                                          ~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m401[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m401[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ ZEISS CMM Metrology Photo ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m271[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m271[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Haitian Press Fleet Photo ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m517[0m:[93m60[0m - [93mwarning[0m[90m ts(6133): [0m'source' is declared but its value is never read.
+
+[7m517[0m         (window as any).NEXMOLD_OPEN_LEAD_MODAL = function(source?: string) {
+[7m   [0m [93m                                                           ~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m140[0m:[93m13[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m140[0m     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m            ~~~~[0m
+
+[96msrc/pages/services/index.astro[0m:[93m809[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m809[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request submitted successfully!'); const m = document.getElementById('lead-modal'); if (m && typeof m.close === 'function') m.close();">
+[7m   [0m [93m                                          ~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m735[0m:[93m270[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m735[0m                   <img src="/images/services/nexmold_volume_pricing_lead_time.webp" alt="Volume Tiered Pricing Breakdown Sample" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ Price Breakdown ]</span><span>1k / 10k / 100k Production</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                             ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m707[0m:[93m263[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m707[0m                   <img src="/images/services/nexmold_t1_sample_cmm_inspection.webp" alt="ZEISS CMM Inspection Log Sample" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ CMM Log Plot ]</span><span>ISO 2768 Tolerance Pass</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                      ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m679[0m:[93m279[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m679[0m                   <img src="/images/services/nexmold_injection_tool_dfm_analysis.webp" alt="Injection Tooling DFM Analysis Sample Report" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ DFM CAD Mesh ]</span><span>Draft Angle & Sink Map</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                                      ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m541[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m541[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Resin Raw Material Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m508[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m508[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ DFM CAD Analysis Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m475[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m475[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Part Life Cycle Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m408[0m:[93m37[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m408[0m                       onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-32 bg-[#F8FAFC] border border-dashed border-[#0F2B5B]/20 rounded-xs flex items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase\'>[ Part Image ]</div>';"
+[7m   [0m [93m                                    ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m866[0m:[93m51[0m - [93mwarning[0m[90m ts(6133): [0m'source' is declared but its value is never read.
+
+[7m866[0m         window.NEXMOLD_OPEN_LEAD_MODAL = function(source?: string) {
+[7m   [0m [93m                                                  ~~~~~~[0m
+
+[96msrc/regional/engineering-knowledge-compiler.ts[0m:[93m434[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'firstSentence' is declared but its value is never read.
+
+[7m434[0m function firstSentence(
+[7m   [0m [93m         ~~~~~~~~~~~~~[0m
+[96msrc/regional/engineering-knowledge-compiler.ts[0m:[93m279[0m:[93m11[0m - [93mwarning[0m[90m ts(6196): [0m'SourceComparisonLayer' is declared but never used.
+
+[7m279[0m interface SourceComparisonLayer {
+[7m   [0m [93m          ~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/regional/engineering-knowledge-compiler.ts[0m:[93m252[0m:[93m11[0m - [93mwarning[0m[90m ts(6196): [0m'SourceSpecificationLayer' is declared but never used.
+
+[7m252[0m interface SourceSpecificationLayer {
+[7m   [0m [93m          ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/regional/publication-gate.ts[0m:[93m31[0m:[93m3[0m - [93mwarning[0m[90m ts(6196): [0m'PageId' is declared but never used.
+
+[7m31[0m   PageId,
+[7m  [0m [93m  ~~~~~~[0m
+[96msrc/regional/publication-gate.ts[0m:[93m30[0m:[93m3[0m - [93mwarning[0m[90m ts(6196): [0m'EligibleRegionalDecision' is declared but never used.
+
+[7m30[0m   EligibleRegionalDecision,
+[7m  [0m [93m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+Result (97 files): 
+- 28 errors
+- 0 warnings
+- 65 hints
+

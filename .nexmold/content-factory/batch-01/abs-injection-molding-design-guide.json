@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:abs-injection-molding-design-guide",
+  "targetSlug": "abs-injection-molding-design-guide",
+  "route": "/industries/v714/abs-injection-molding-design-guide/",
+  "sourceArticleSlug": "abs-injection-molding",
+  "sourceArticle": {
+    "slug": "abs-injection-molding",
+    "title": "ABS Injection Molding Guide"
+  },
+  "sourceArtifactHash": "890b48b53e4728e6d7a59d531cc7af2bab5c98933a154986578f0ea6d1bfe59c",
+  "artifact": {
+    "pageId": "v714:whitepaper:abs-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/abs-injection-molding-design-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:abs-injection-molding-design-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:abs-injection-molding",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#abs-injection-molding",
+            "contentHash": "3f36cf70b51fd68aea011bf4a54c30fe3b62cbbf98685045c3ae6918713eb2d5"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:abs-injection-molding-design-guide",
+            "claimKey": "v714.whitepaper.abs-injection-molding-design-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "890b48b53e4728e6d7a59d531cc7af2bab5c98933a154986578f0ea6d1bfe59c"
+  },
+  "seo": {
+    "longTailQueries": [
+      "abs injection molding design guide: dfm, wall thickness, gates, cooling and defects",
+      "ABS injection molding design guide",
+      "ABS injection molding DFM",
+      "ABS injection molding best practices",
+      "ABS injection molding design rules",
+      "ABS injection molding engineering guide",
+      "ABS injection molding wall thickness",
+      "ABS injection molding processing temperature",
+      "ABS injection molding gate design",
+      "ABS injection molding defects",
+      "ABS injection molding plastic part design",
+      "ABS injection molding ABS grade",
+      "ABS grade in ABS injection molding",
+      "ABS injection molding melt temperature",
+      "melt temperature in ABS injection molding",
+      "ABS injection molding mold temperature",
+      "mold temperature in ABS injection molding",
+      "wall thickness in ABS injection molding",
+      "ABS injection molding flow length",
+      "flow length in ABS injection molding",
+      "ABS injection molding packing",
+      "packing in ABS injection molding",
+      "ABS injection molding cooling",
+      "cooling in ABS injection molding",
+      "ABS injection molding surface finish",
+      "surface finish in ABS injection molding",
+      "ABS injection molding sink marks",
+      "how to prevent sink marks in ABS injection molding",
+      "ABS injection molding warpage",
+      "how to prevent warpage in ABS injection molding",
+      "ABS injection molding weld lines",
+      "how to prevent weld lines in ABS injection molding",
+      "ABS injection molding burn marks",
+      "how to prevent burn marks in ABS injection molding",
+      "ABS injection molding silver streaks",
+      "how to prevent silver streaks in ABS injection molding",
+      "ABS injection molding short shots",
+      "how to prevent short shots in ABS injection molding"
+    ],
+    "relatedTopics": [
+      "pc-injection-molding-design-guide",
+      "injection-molding-wall-thickness-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

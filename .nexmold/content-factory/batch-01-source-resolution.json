@@ -1,0 +1,244 @@
+{
+    "schema":  "nexmold.v7.14.batch-01-source-resolution.v1",
+    "generatedAt":  "2026-08-30T10:04:27.194Z",
+    "sourceManifest":  ".nexmold\\content-factory\\batch-01-keyword-manifest.json",
+    "sourceKnowledge":  "src\\data\\knowledge.ts",
+    "policy":  {
+                   "modifyKnowledgeSource":  false,
+                   "modifyExistingContent":  false,
+                   "publishAutomatically":  false,
+                   "semanticCollisionReviewRequired":  true,
+                   "v714CompilerRequired":  true
+               },
+    "knowledgeArticleCount":  71,
+    "summary":  {
+                    "candidates":  20,
+                    "resolved":  20,
+                    "blockedSemanticCollision":  0,
+                    "sourceMissing":  0,
+                    "sourceNotInKnowledge":  0,
+                    "unresolved":  0
+                },
+    "results":  [
+                    {
+                        "id":  "BL01",
+                        "keyword":  "injection molding wall thickness design",
+                        "targetSlug":  "injection-molding-wall-thickness-design",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "plastic-wall-thickness-design",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL02",
+                        "keyword":  "injection molding draft angle",
+                        "targetSlug":  "injection-molding-draft-angle",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "draft-angle-injection-molding",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL03",
+                        "keyword":  "injection molding rib design",
+                        "targetSlug":  "injection-molding-rib-design",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "rib-boss-gusset-design",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL04",
+                        "keyword":  "injection molding boss design",
+                        "targetSlug":  "injection-molding-boss-design",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "rib-boss-gusset-design",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL05",
+                        "keyword":  "injection molding corner radius",
+                        "targetSlug":  "injection-molding-corner-radius",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "plastic-corner-radii",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL06",
+                        "keyword":  "injection molding undercuts",
+                        "targetSlug":  "injection-molding-undercuts-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "injection-molding-undercuts",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL07",
+                        "keyword":  "injection molding parting line design",
+                        "targetSlug":  "injection-molding-parting-line-design",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "parting-line-design",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL08",
+                        "keyword":  "injection molding gate location",
+                        "targetSlug":  "injection-molding-gate-location",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "gate-location-best-practices",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL09",
+                        "keyword":  "injection mold venting design",
+                        "targetSlug":  "injection-mold-venting-design",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "injection-mold-venting",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL10",
+                        "keyword":  "injection molding sink marks causes solutions",
+                        "targetSlug":  "injection-molding-sink-marks-causes-solutions",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "sink-marks-causes-solutions",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL11",
+                        "keyword":  "injection molding warpage causes solutions",
+                        "targetSlug":  "injection-molding-warpage-causes-solutions",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "injection-molding-warpage",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL12",
+                        "keyword":  "injection molding weld lines causes solutions",
+                        "targetSlug":  "injection-molding-weld-lines-causes-solutions",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "weld-lines-knit-lines",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL13",
+                        "keyword":  "injection mold steel selection",
+                        "targetSlug":  "injection-mold-steel-selection-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "injection-mold-steel-selection",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL14",
+                        "keyword":  "S136 vs NAK80 mold steel",
+                        "targetSlug":  "s136-vs-nak80-mold-steel",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "s136-vs-nak80-vs-718h",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL15",
+                        "keyword":  "hot runner vs cold runner injection mold",
+                        "targetSlug":  "hot-runner-vs-cold-runner-injection-mold",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "hot-runner-vs-cold-runner",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL16",
+                        "keyword":  "conformal cooling injection mold",
+                        "targetSlug":  "conformal-cooling-injection-mold",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "conformal-cooling",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL17",
+                        "keyword":  "ABS injection molding design guide",
+                        "targetSlug":  "abs-injection-molding-design-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "abs-injection-molding",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL18",
+                        "keyword":  "PC injection molding design guide",
+                        "targetSlug":  "pc-injection-molding-design-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "pc-injection-molding",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL19",
+                        "keyword":  "injection molding cycle time optimization",
+                        "targetSlug":  "injection-molding-cycle-time-optimization-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "injection-molding-cycle-optimization",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    },
+                    {
+                        "id":  "BL20",
+                        "keyword":  "injection molding cavity balance",
+                        "targetSlug":  "injection-molding-cavity-balance-guide",
+                        "manifestStatus":  "CANDIDATE",
+                        "sourceArticleSlug":  "multi-cavity-mold-cavity-balance",
+                        "resolutionStatus":  "RESOLVED_EXISTING_KNOWLEDGE_ARTICLE",
+                        "reasonCodes":  [
+                                            "V714_EXISTING_KNOWLEDGE_SOURCE_RESOLVED"
+                                        ]
+                    }
+                ]
+}

@@ -1,0 +1,102 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-parting-line-design",
+  "targetSlug": "injection-molding-parting-line-design",
+  "route": "/industries/v714/injection-molding-parting-line-design/",
+  "sourceArticleSlug": "parting-line-design",
+  "sourceArticle": {
+    "slug": "parting-line-design",
+    "title": "Parting Line Design for Injection Molded Parts"
+  },
+  "sourceArtifactHash": "632035e760f6bdf7882d7e7c91ca80652be6832a8e2880e4ebe56ce56cc9a450",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-parting-line-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-parting-line-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-parting-line-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:parting-line-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#parting-line-design",
+            "contentHash": "8d1ca0443e52c80f814c249d520e3f90132145fe9cc9ff760ccc3fa738fdeca6"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-parting-line-design",
+            "claimKey": "v714.whitepaper.injection-molding-parting-line-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "632035e760f6bdf7882d7e7c91ca80652be6832a8e2880e4ebe56ce56cc9a450"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection mold parting line design: dfm, flash, ejection and cosmetic control",
+      "injection mold parting line design guide",
+      "injection mold parting line DFM",
+      "injection mold parting line best practices",
+      "injection mold parting line design rules",
+      "injection mold parting line engineering guide",
+      "injection mold parting line flash prevention",
+      "injection mold parting line mold design",
+      "injection mold parting line shutoff",
+      "injection mold parting line cosmetic part",
+      "injection mold parting line parting line witness",
+      "injection mold parting line part geometry",
+      "part geometry in injection mold parting line",
+      "injection mold parting line ejection direction",
+      "ejection direction in injection mold parting line",
+      "injection mold parting line draft",
+      "draft in injection mold parting line",
+      "injection mold parting line shutoff angle",
+      "shutoff angle in injection mold parting line",
+      "injection mold parting line cosmetic surface",
+      "cosmetic surface in injection mold parting line",
+      "injection mold parting line flash risk",
+      "flash risk in injection mold parting line",
+      "injection mold parting line tool access",
+      "tool access in injection mold parting line",
+      "injection mold parting line mold construction",
+      "mold construction in injection mold parting line",
+      "injection mold parting line flash",
+      "how to prevent flash in injection mold parting line",
+      "injection mold parting line mismatch",
+      "how to prevent mismatch in injection mold parting line",
+      "injection mold parting line witness marks",
+      "how to prevent witness marks in injection mold parting line",
+      "injection mold parting line ejection problems",
+      "how to prevent ejection problems in injection mold parting line",
+      "injection mold parting line shutoff wear",
+      "how to prevent shutoff wear in injection mold parting line",
+      "injection mold parting line tooling instability",
+      "how to prevent tooling instability in injection mold parting line"
+    ],
+    "relatedTopics": [
+      "injection-molding-undercuts-guide",
+      "injection-molding-gate-location"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

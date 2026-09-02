@@ -1,0 +1,30 @@
+[
+  { "material": "peek", "industry": "vertical-farming", "component": "custom-hydroponic-housing" },
+  { "material": "peek", "industry": "vertical-farming", "component": "custom-anti-leak-water-tank" },
+  { "material": "peek", "industry": "vertical-farming", "component": "custom-valve-bodies" },
+  { "material": "peek", "industry": "vertical-farming", "component": "custom-fluidic-manifolds" },
+  { "material": "peek", "industry": "vertical-farming", "component": "custom-filter-retainer-cages" },
+
+  { "material": "peek", "industry": "countertop-ice-makers", "component": "precision-valve-bodies" },
+  { "material": "peek", "industry": "countertop-ice-makers", "component": "precision-gears" },
+  { "material": "peek", "industry": "countertop-ice-makers", "component": "custom-anti-leak-water-tank" },
+
+  { "material": "peek", "industry": "medical-consumables", "component": "custom-surgical-trays" },
+  { "material": "peek", "industry": "medical-consumables", "component": "precision-microfluidic-cartridges" },
+  { "material": "peek", "industry": "medical-consumables", "component": "precision-optical-test-cuvettes" },
+  { "material": "peek", "industry": "medical-consumables", "component": "precision-fluidic-manifolds" },
+
+  { "material": "peek", "industry": "ev-powertrain", "component": "high-tolerance-busbar-insulators" },
+  { "material": "peek", "industry": "ev-powertrain", "component": "precision-gears" },
+  { "material": "peek", "industry": "ev-powertrain", "component": "heavy-duty-sealed-access-covers" },
+
+  { "material": "polycarbonate", "industry": "vertical-farming", "component": "custom-hydroponic-housing" },
+  { "material": "polycarbonate", "industry": "vertical-farming", "component": "custom-optical-test-cuvettes" },
+
+  { "material": "nylon66", "industry": "vertical-farming", "component": "custom-hydroponic-housing" },
+  { "material": "nylon66", "industry": "vertical-farming", "component": "heavy-duty-valve-bodies" },
+
+  { "material": "ultem", "industry": "vertical-farming", "component": "high-tolerance-fluidic-manifolds" },
+  { "material": "pom", "industry": "vertical-farming", "component": "precision-gears" },
+  { "material": "abs", "industry": "smart-home-security", "component": "custom-sealed-access-covers" }
+]

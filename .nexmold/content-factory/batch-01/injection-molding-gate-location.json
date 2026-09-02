@@ -1,0 +1,106 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-gate-location",
+  "targetSlug": "injection-molding-gate-location",
+  "route": "/industries/v714/injection-molding-gate-location/",
+  "sourceArticleSlug": "gate-location-best-practices",
+  "sourceArticle": {
+    "slug": "gate-location-best-practices",
+    "title": "Gate Location Best Practices for Injection Molding"
+  },
+  "sourceArtifactHash": "250855a40ec5d0bd6e8a00a65f37e4d409423b25087f6fdf7946ec5f595662d9",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-gate-location",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-gate-location/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-gate-location",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:gate-location-best-practices",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#gate-location-best-practices",
+            "contentHash": "1c8a37f14b98ceeffff876c1c7c4a752719a670b3ae80c4e5f1c0ac48d067899"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-gate-location",
+            "claimKey": "v714.whitepaper.injection-molding-gate-location"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "250855a40ec5d0bd6e8a00a65f37e4d409423b25087f6fdf7946ec5f595662d9"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding gate location: flow, weld lines, packing, warpage and dfm",
+      "injection mold gate location design guide",
+      "injection mold gate location DFM",
+      "injection mold gate location best practices",
+      "injection mold gate location design rules",
+      "injection mold gate location engineering guide",
+      "injection mold gate location gate design",
+      "injection mold gate location gate placement",
+      "injection mold gate location weld line",
+      "injection mold gate location warpage",
+      "injection mold gate location moldflow",
+      "injection mold gate location hot runner",
+      "injection mold gate location cold runner",
+      "injection mold gate location gate location",
+      "gate location in injection mold gate location",
+      "injection mold gate location flow length",
+      "flow length in injection mold gate location",
+      "injection mold gate location gate type",
+      "gate type in injection mold gate location",
+      "injection mold gate location fill time",
+      "fill time in injection mold gate location",
+      "injection mold gate location packing pressure",
+      "packing pressure in injection mold gate location",
+      "injection mold gate location weld-line location",
+      "weld-line location in injection mold gate location",
+      "injection mold gate location fiber orientation",
+      "fiber orientation in injection mold gate location",
+      "injection mold gate location cosmetic requirements",
+      "cosmetic requirements in injection mold gate location",
+      "injection mold gate location short shot",
+      "how to prevent short shot in injection mold gate location",
+      "injection mold gate location weld lines",
+      "how to prevent weld lines in injection mold gate location",
+      "injection mold gate location air traps",
+      "how to prevent air traps in injection mold gate location",
+      "injection mold gate location jetting",
+      "how to prevent jetting in injection mold gate location",
+      "how to prevent warpage in injection mold gate location",
+      "injection mold gate location burn marks",
+      "how to prevent burn marks in injection mold gate location",
+      "injection mold gate location gate blush",
+      "how to prevent gate blush in injection mold gate location"
+    ],
+    "relatedTopics": [
+      "injection-molding-weld-lines-causes-solutions",
+      "injection-molding-warpage-causes-solutions",
+      "injection-molding-parting-line-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

@@ -1,0 +1,146 @@
+---
+// src/components/DynamicFunnelCTA.astro
+interface Props {
+  categorySlug: string;
+  articleSlug: string;
+}
+
+const { categorySlug, articleSlug } = Astro.props;
+
+// 动态矩阵配置
+const funnelMatrix = {
+  "defects-solutions": {
+    kicker: "DIAGNOSTIC SUPPORT",
+    title: "Stop guessing the root cause.",
+    desc: "Upload your CAD and defect photos. Let our engineering team run a root-cause analysis on your specific moldflow and geometry.",
+    btnText: "Get Defect Analysis",
+    intentParam: "diagnose-defect"
+  },
+  "dfm-tolerances": {
+    kicker: "DESIGN VALIDATION",
+    title: "Verify your design before cutting steel.",
+    desc: "Get a comprehensive DFM review for wall thickness, draft angles, and potential sink marks within 24 hours.",
+    btnText: "Request Free DFM",
+    intentParam: "validate-design"
+  },
+  "calculators-tools": {
+    kicker: "ENGINEERING DECISION",
+    title: "Optimize cycle time and tooling cost.",
+    desc: "Calculations are just the start. Discuss your structural constraints and annual volume with a senior tooling engineer.",
+    btnText: "Consult Engineer",
+    intentParam: "cost-optimization"
+  },
+  "materials": {
+    kicker: "MATERIAL SELECTION",
+    title: "Validate your resin choice.",
+    desc: "Ensure your selected material meets thermal, mechanical, and regulatory (FDA/RoHS) requirements for your real-world application.",
+    btnText: "Verify Resin Fit",
+    intentParam: "material-check"
+  },
+  "tooling-metallurgy": {
+    kicker: "TOOLING ARCHITECTURE",
+    title: "Build a mold that lasts.",
+    desc: "From S136 steel selection to conformal cooling design, get an expert tooling strategy that matches your production volume.",
+    btnText: "Discuss Tooling",
+    intentParam: "tooling-strategy"
+  },
+  "default": {
+    kicker: "ENGINEERING TO PRODUCTION",
+    title: "Turn this knowledge into a real part.",
+    desc: "Send your CAD (STEP/STP) and material requirements. We'll provide actionable DFM feedback and an injection molding quote.",
+    btnText: "Upload CAD",
+    intentParam: "general-inquiry"
+  }
+};
+
+const funnelData = funnelMatrix[categorySlug as keyof typeof funnelMatrix] || funnelMatrix["default"];
+
+// 构建携带精准追踪参数的 URL
+const actionUrl = `/free-dfm-analysis/?source=knowledge-hub&topic=${articleSlug}&intent=${funnelData.intentParam}`;
+---
+
+<div class="dynamic-funnel-card">
+  <div class="funnel-content">
+    <span class="funnel-kicker">{funnelData.kicker}</span>
+    <h3 class="funnel-title">{funnelData.title}</h3>
+    <p class="funnel-desc">{funnelData.desc}</p>
+  </div>
+  <div class="funnel-action">
+    <a href={actionUrl} class="funnel-btn">
+      {funnelData.btnText} <span>→</span>
+    </a>
+  </div>
+</div>
+
+<style>
+  .dynamic-funnel-card {
+    background: #ffffff;
+    border: 1px solid #dfe5ec;
+    border-left: 4px solid #f45116;
+    padding: 32px;
+    margin: 40px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    box-shadow: 0 4px 20px rgba(16, 40, 79, 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .dynamic-funnel-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(16, 40, 79, 0.06);
+    border-color: #f45116;
+  }
+  .funnel-kicker {
+    color: #f45116;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .funnel-title {
+    color: #10284f;
+    font-size: 24px;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+  }
+  .funnel-desc {
+    color: #68778d;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 500px;
+  }
+  .funnel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #f45116;
+    color: #ffffff;
+    padding: 16px 28px;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+  }
+  .funnel-btn:hover {
+    background: #c2410c;
+  }
+  @media (max-width: 768px) {
+    .dynamic-funnel-card {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 24px;
+    }
+    .funnel-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

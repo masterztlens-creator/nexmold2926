@@ -1,0 +1,108 @@
+{
+  "schema": "nexmold.v7.14.release-state.v1",
+  "status": "VERIFIED",
+  "epoch": "20260902T033838Z-32572-3e44656b",
+  "startedAt": "2026-09-02T03:38:38.563Z",
+  "finishedAt": "2026-09-02T03:38:58.408Z",
+  "projectRoot": "E:\\nexmold",
+  "dist": "E:\\nexmold\\dist",
+  "summary": [
+    {
+      "label": "GLOBAL_KILL_SWITCH",
+      "status": "PASS",
+      "detail": "OFF"
+    },
+    {
+      "label": "PRECHECK",
+      "status": "PASS",
+      "detail": "Required project structure present."
+    },
+    {
+      "label": "V714_CORE_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "V714_REGIONAL_PRODUCTION_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "ROUTE_CONFLICT_GATE",
+      "status": "PASS",
+      "detail": "Route conflict gate completed successfully."
+    },
+    {
+      "label": "TYPE_CONTRACTS",
+      "status": "PASS",
+      "detail": "Type contracts verified."
+    },
+    {
+      "label": "CONTRACT_TESTS",
+      "status": "PASS",
+      "detail": "Configured test suite passed."
+    },
+    {
+      "label": "V714_ARTICLE_FACTORY",
+      "status": "PASS",
+      "detail": "V7.14 article factory completed before Astro build."
+    },
+    {
+      "label": "EPOCH",
+      "status": "PASS",
+      "detail": "Build epoch 20260902T033838Z-32572-3e44656b created."
+    },
+    {
+      "label": "BUILD",
+      "status": "PASS",
+      "detail": "Production static build completed."
+    },
+    {
+      "label": "HTML_MANIFEST",
+      "status": "PASS",
+      "detail": "Recorded 153 HTML artifacts; setSha256=d6c7438c7d31a192f1de4d95578db1f3434739042f6de1c6154ce09598a8d71a"
+    },
+    {
+      "label": "ARTIFACT_SECRETS",
+      "status": "PASS",
+      "detail": "No forbidden secret/config artifacts found in dist."
+    },
+    {
+      "label": "HTML_INTEGRITY",
+      "status": "PASS",
+      "detail": "Validated 153 rendered HTML files."
+    },
+    {
+      "label": "GLOBAL_HTML_SET_EQUALITY",
+      "status": "SKIPPED",
+      "detail": "No expected HTML manifest configured. Current set is recorded but equality is not asserted."
+    },
+    {
+      "label": "STATIC_SMOKE",
+      "status": "PASS",
+      "detail": "Validated 6 local route artifacts."
+    },
+    {
+      "label": "CDN_HEALTH",
+      "status": "SKIPPED",
+      "detail": "NEXMOLD_HEALTH_URL not configured; no remote health claim was made."
+    },
+    {
+      "label": "RUNTIME_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "SITEMAP_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "RELEASE_PREFLIGHT",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    }
+  ],
+  "releaseManifest": "releases/20260902T033838Z-32572-3e44656b/manifest.json",
+  "publicArtifactImpact": 0
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "nexmold.v7.14.last-known-good.v1",
+  "epoch": "20260902T033838Z-32572-3e44656b",
+  "verifiedAt": "2026-09-02T03:38:58.406Z",
+  "releaseManifest": "releases/20260902T033838Z-32572-3e44656b/manifest.json",
+  "htmlSetSha256": "d6c7438c7d31a192f1de4d95578db1f3434739042f6de1c6154ce09598a8d71a",
+  "htmlCount": 153
+}

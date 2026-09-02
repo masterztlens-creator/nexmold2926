@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:pc-injection-molding-design-guide",
+  "targetSlug": "pc-injection-molding-design-guide",
+  "route": "/industries/v714/pc-injection-molding-design-guide/",
+  "sourceArticleSlug": "pc-injection-molding",
+  "sourceArticle": {
+    "slug": "pc-injection-molding",
+    "title": "Polycarbonate (PC) Injection Molding Guide"
+  },
+  "sourceArtifactHash": "09f70b2f13aa26719ffe8c1f0200119f666a5ccbaa131f828919f193d35d88e8",
+  "artifact": {
+    "pageId": "v714:whitepaper:pc-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/pc-injection-molding-design-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:pc-injection-molding-design-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:pc-injection-molding",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#pc-injection-molding",
+            "contentHash": "43047ff0b71ad194471071bc16110e7315adcaf204d0834bccaa41d81ed49725"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:pc-injection-molding-design-guide",
+            "claimKey": "v714.whitepaper.pc-injection-molding-design-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "09f70b2f13aa26719ffe8c1f0200119f666a5ccbaa131f828919f193d35d88e8"
+  },
+  "seo": {
+    "longTailQueries": [
+      "pc injection molding design guide: drying, stress, gates, cooling and dfm",
+      "polycarbonate injection molding design guide",
+      "polycarbonate injection molding DFM",
+      "polycarbonate injection molding best practices",
+      "polycarbonate injection molding design rules",
+      "polycarbonate injection molding engineering guide",
+      "polycarbonate injection molding drying",
+      "polycarbonate injection molding processing",
+      "polycarbonate injection molding residual stress",
+      "polycarbonate injection molding optical molding",
+      "polycarbonate injection molding defects",
+      "polycarbonate injection molding PC grade",
+      "PC grade in polycarbonate injection molding",
+      "polycarbonate injection molding moisture content",
+      "moisture content in polycarbonate injection molding",
+      "polycarbonate injection molding melt temperature",
+      "melt temperature in polycarbonate injection molding",
+      "polycarbonate injection molding mold temperature",
+      "mold temperature in polycarbonate injection molding",
+      "residual stress in polycarbonate injection molding",
+      "polycarbonate injection molding wall thickness",
+      "wall thickness in polycarbonate injection molding",
+      "polycarbonate injection molding gate design",
+      "gate design in polycarbonate injection molding",
+      "polycarbonate injection molding cooling",
+      "cooling in polycarbonate injection molding",
+      "polycarbonate injection molding splay",
+      "how to prevent splay in polycarbonate injection molding",
+      "polycarbonate injection molding cracking",
+      "how to prevent cracking in polycarbonate injection molding",
+      "polycarbonate injection molding crazing",
+      "how to prevent crazing in polycarbonate injection molding",
+      "polycarbonate injection molding stress whitening",
+      "how to prevent stress whitening in polycarbonate injection molding",
+      "polycarbonate injection molding warpage",
+      "how to prevent warpage in polycarbonate injection molding",
+      "polycarbonate injection molding flow marks",
+      "how to prevent flow marks in polycarbonate injection molding"
+    ],
+    "relatedTopics": [
+      "abs-injection-molding-design-guide",
+      "injection-molding-corner-radius"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

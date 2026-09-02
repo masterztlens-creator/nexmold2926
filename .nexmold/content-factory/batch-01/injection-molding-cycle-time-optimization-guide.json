@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-cycle-time-optimization-guide",
+  "targetSlug": "injection-molding-cycle-time-optimization-guide",
+  "route": "/industries/v714/injection-molding-cycle-time-optimization-guide/",
+  "sourceArticleSlug": "injection-molding-cycle-optimization",
+  "sourceArticle": {
+    "slug": "injection-molding-cycle-optimization",
+    "title": "Injection Molding Cycle Optimization Guide"
+  },
+  "sourceArtifactHash": "4113b9a2919a14fd4e681974211385582c51eb6bdf4b374887406d02396d37e6",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-cycle-time-optimization-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-cycle-time-optimization-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-cycle-time-optimization-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-cycle-optimization",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-cycle-optimization",
+            "contentHash": "9c6ee6aa926596c385fac354bb56886782e2259eef36c1cb20fc72b270c2ba4a"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-cycle-time-optimization-guide",
+            "claimKey": "v714.whitepaper.injection-molding-cycle-time-optimization-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "4113b9a2919a14fd4e681974211385582c51eb6bdf4b374887406d02396d37e6"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding cycle time optimization: cooling, filling, packing and process economics",
+      "injection molding cycle time design guide",
+      "injection molding cycle time DFM",
+      "injection molding cycle time best practices",
+      "injection molding cycle time design rules",
+      "injection molding cycle time engineering guide",
+      "injection molding cycle time optimization",
+      "injection molding cycle time cooling time",
+      "injection molding cycle time cycle reduction",
+      "injection molding cycle time productivity",
+      "injection molding cycle time OEE",
+      "injection molding cycle time cost reduction",
+      "injection molding cycle time process optimization",
+      "cooling time in injection molding cycle time",
+      "injection molding cycle time fill time",
+      "fill time in injection molding cycle time",
+      "injection molding cycle time packing time",
+      "packing time in injection molding cycle time",
+      "injection molding cycle time mold temperature",
+      "mold temperature in injection molding cycle time",
+      "injection molding cycle time part thickness",
+      "part thickness in injection molding cycle time",
+      "injection molding cycle time cooling-channel layout",
+      "cooling-channel layout in injection molding cycle time",
+      "injection molding cycle time ejection temperature",
+      "ejection temperature in injection molding cycle time",
+      "injection molding cycle time machine capability",
+      "machine capability in injection molding cycle time",
+      "injection molding cycle time warpage",
+      "how to prevent warpage in injection molding cycle time",
+      "injection molding cycle time ejection deformation",
+      "how to prevent ejection deformation in injection molding cycle time",
+      "injection molding cycle time sink marks",
+      "how to prevent sink marks in injection molding cycle time",
+      "injection molding cycle time incomplete packing",
+      "how to prevent incomplete packing in injection molding cycle time",
+      "injection molding cycle time dimensional drift",
+      "how to prevent dimensional drift in injection molding cycle time"
+    ],
+    "relatedTopics": [
+      "conformal-cooling-injection-mold",
+      "injection-molding-wall-thickness-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

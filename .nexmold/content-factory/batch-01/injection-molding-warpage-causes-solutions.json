@@ -1,0 +1,103 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-warpage-causes-solutions",
+  "targetSlug": "injection-molding-warpage-causes-solutions",
+  "route": "/industries/v714/injection-molding-warpage-causes-solutions/",
+  "sourceArticleSlug": "injection-molding-warpage",
+  "sourceArticle": {
+    "slug": "injection-molding-warpage",
+    "title": "Injection Molding Warpage: Causes and Solutions"
+  },
+  "sourceArtifactHash": "256c69ed3b77cd79ebea1d57bae255fd6af357d626521eee4d5426fc443e4152",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-warpage-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-warpage-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-warpage-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-warpage",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-warpage",
+            "contentHash": "8175391e05ead1584aeb502255a083687f2c22894db03d722f62fbaaba2550b7"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-warpage-causes-solutions",
+            "claimKey": "v714.whitepaper.injection-molding-warpage-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "256c69ed3b77cd79ebea1d57bae255fd6af357d626521eee4d5426fc443e4152"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding warpage: causes, physics, simulation and corrective action",
+      "injection molding warpage design guide",
+      "injection molding warpage DFM",
+      "injection molding warpage best practices",
+      "injection molding warpage design rules",
+      "injection molding warpage engineering guide",
+      "injection molding warpage causes",
+      "injection molding warpage solutions",
+      "injection molding warpage prevention",
+      "injection molding warpage simulation",
+      "injection molding warpage moldflow",
+      "injection molding warpage fiber-filled plastic",
+      "injection molding warpage cooling",
+      "injection molding warpage differential shrinkage",
+      "differential shrinkage in injection molding warpage",
+      "injection molding warpage cooling balance",
+      "cooling balance in injection molding warpage",
+      "injection molding warpage packing",
+      "packing in injection molding warpage",
+      "injection molding warpage fiber orientation",
+      "fiber orientation in injection molding warpage",
+      "injection molding warpage wall thickness",
+      "wall thickness in injection molding warpage",
+      "injection molding warpage gate location",
+      "gate location in injection molding warpage",
+      "injection molding warpage mold temperature",
+      "mold temperature in injection molding warpage",
+      "injection molding warpage ejection temperature",
+      "ejection temperature in injection molding warpage",
+      "injection molding warpage bowing",
+      "how to prevent bowing in injection molding warpage",
+      "injection molding warpage twisting",
+      "how to prevent twisting in injection molding warpage",
+      "injection molding warpage corner lift",
+      "how to prevent corner lift in injection molding warpage",
+      "injection molding warpage flatness failure",
+      "how to prevent flatness failure in injection molding warpage",
+      "injection molding warpage dimensional drift",
+      "how to prevent dimensional drift in injection molding warpage"
+    ],
+    "relatedTopics": [
+      "conformal-cooling-injection-mold",
+      "injection-molding-wall-thickness-design",
+      "injection-molding-gate-location"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

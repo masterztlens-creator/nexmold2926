@@ -1,0 +1,339 @@
+---
+/**
+ * IndustriesNav.astro - 第二屏：Industries We Serve (SEO/GEO 行业实体强化版)
+ * 1. 角标改造：将普通 SEC-01 升级为 Google/AI 极度敏感的通用工业认证与工艺缩写 (如 IATF 16949, ISO 13485, UL94 V-0)
+ * 2. GEO 增强：增加 data-industry-sector 与 aria-label 属性，强化语义网络
+ * 3. 视觉与路径：100% 保持品牌三色 + 本地 /images/industries/*.webp 路径
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "GLOBAL PRIMARY SECTORS",
+    title: "Industries We Serve",
+    subtitle: "Precision injection molded components for global industries",
+    more_title: "More Industries"
+  },
+  de: {
+    badge: "GLOBALE PRIMÄRBRANCHEN",
+    title: "Branchen, Die Wir Beliefern",
+    subtitle: "Präzisions-Spritzgusskomponenten für globale Branchen",
+    more_title: "Weitere Branchen"
+  },
+  fr: {
+    badge: "SECTEURS PRIMAIRES MONDIAUX",
+    title: "Secteurs Que Nous Desservons",
+    subtitle: "Composants moulés par injection de précision pour l'industrie mondiale",
+    more_title: "Autres Secteurs"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+// 1. 上面 5 大核心行业（角标注入高价值 ISO/IATF 认证与工业大词，极利于 SEO/GEO 抓取）
+const primaryIndustries = [
+  {
+    id: "appliance",
+    name: "Home Appliance",
+    seoCode: "OEM-SPEC", // 家电 OEM 标准
+    seoLabel: "Home Appliance OEM Precision Injection Molding",
+    image: "/images/industries/appliance.webp",
+    darkOverlay: false
+  },
+  {
+    id: "automotive-ev",
+    name: "Automotive & EV",
+    seoCode: "IATF 16949", // 汽车行业全球通用顶级认证
+    seoLabel: "IATF 16949 Automotive and EV Component Molding",
+    image: "/images/industries/automotive.webp",
+    darkOverlay: true
+  },
+  {
+    id: "medical",
+    name: "Medical Devices",
+    seoCode: "ISO 13485", // 医疗器械全球通用顶级认证
+    seoLabel: "ISO 13485 Cleanroom Medical Device Plastic Molding",
+    image: "/images/industries/medical.webp",
+    darkOverlay: false
+  },
+  {
+    id: "electronics",
+    name: "Consumer Electronics",
+    seoCode: "2K OVERMOLD", // 消费电子核心高频检索工艺词
+    seoLabel: "Micro Precision 2K Overmolding Electronics Housings",
+    image: "/images/industries/electronics.webp",
+    darkOverlay: false
+  },
+  {
+    id: "industrial",
+    name: "Industrial Components",
+    seoCode: "PEEK / GEAR", // 工业特种耐磨工程塑胶
+    seoLabel: "Heavy Duty PEEK and POM Industrial Components Molding",
+    image: "/images/industries/industrial.webp",
+    darkOverlay: true
+  }
+];
+
+// 2. 下面 3 大行业（角标同样注入阻燃/FDA/抗 UV 标准）
+const secondaryIndustries = [
+  {
+    id: "energy",
+    name: "Energy & Power",
+    seoCode: "UL94 V-0", // 电池储能强制阻燃标准
+    seoLabel: "UL94 V-0 Flame Retardant Energy Storage BMS Molding",
+    svgIcon: `
+      <svg class="w-12 h-12 text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="22" y="10" width="20" height="44" rx="2" />
+        <rect x="14" y="24" width="8" height="30" rx="1" />
+        <rect x="42" y="34" width="8" height="20" rx="1" />
+        <line x1="28" y1="20" x2="36" y2="20" />
+        <line x1="32" y1="16" x2="32" y2="24" />
+        <line x1="28" y1="32" x2="36" y2="32" />
+        <line x1="17" y1="32" x2="19" y2="32" />
+        <line x1="45" y1="42" x2="47" y2="42" />
+      </svg>
+    `
+  },
+  {
+    id: "packaging",
+    name: "Packaging",
+    seoCode: "FDA / SPI-A1", // 食品级与镜面抛光标准
+    seoLabel: "FDA Compliant Clear Cosmetic Packaging Injection Molding",
+    svgIcon: `
+      <svg class="w-12 h-12 text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="20" y="22" width="24" height="32" rx="2" />
+        <path d="M26 22 V 14 H 38 V 22" />
+        <path d="M22 14 H 42" />
+        <circle cx="42" cy="28" r="3" />
+        <path d="M42 31 V 44" />
+        <path d="M38 44 H 46" />
+      </svg>
+    `
+  },
+  {
+    id: "outdoor",
+    name: "Consumer & Outdoor",
+    seoCode: "ANTI-UV PA66", // 耐候抗冲击标准
+    seoLabel: "Anti-UV Weather Resistant Outdoor Goods Plastic Molding",
+    svgIcon: `
+      <svg class="w-12 h-12 text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 10 L 52 20 V 44 L 32 54 L 12 44 V 20 Z" />
+        <path d="M32 10 V 54" />
+        <path d="M52 20 L 32 32 L 12 20" />
+        <rect x="22" y="28" width="10" height="16" />
+      </svg>
+    `
+  }
+];
+---
+
+<!-- 🏭 全局容器背景：钛钢灰/白色 (#F1F5F9) -->
+<section class="relative select-none bg-[#F1F5F9] overflow-hidden" id="industries">
+  
+  <!-- 💥 1. 上半区：模具咬花颗粒背景 (#0F2B5B) -->
+  <div class="mold-texture-bg pt-16 sm:pt-20 pb-28 sm:pb-36 relative overflow-hidden border-b-2 border-[#EA580C]/40">
+    <div class="absolute -right-20 -top-20 w-96 h-96 bg-[#EA580C]/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,4vw,3.5rem)] text-center relative z-10 space-y-3">
+      <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-3.5 py-1 rounded-xs backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+        <span class="font-mono text-[10px] font-black uppercase text-white tracking-widest">
+          {t.badge}
+        </span>
+      </div>
+
+      <h2 class="text-3xl sm:text-5xl font-[1000] text-white tracking-tight font-sans italic uppercase">
+        {t.title}
+      </h2>
+
+      <p class="text-xs sm:text-sm text-white/80 font-sans font-medium max-w-xl mx-auto leading-relaxed">
+        {t.subtitle}
+      </p>
+    </div>
+  </div>
+
+  <!-- 💥 2. 核心 5 大卡片：注入 SEO/GEO 抓取 Tag -->
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,4vw,3.5rem)] relative z-20 -mt-20 sm:-mt-24">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+      {primaryIndustries.map((item) => (
+        <a
+          href="#rfq"
+          aria-label={item.seoLabel}
+          data-industry-sector={item.id}
+          class="group bg-white rounded-[24px] p-2 shadow-xl hover:shadow-2xl border border-[#0F2B5B]/10 hover:border-[#EA580C] transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer relative"
+        >
+          <!-- 图片视口 -->
+          <div class="w-full h-56 sm:h-64 rounded-[18px] bg-[#E2E8F0] overflow-hidden relative flex flex-col justify-between p-4">
+            
+            <!-- 🎯 SEO & GEO 优化点：角标由无意义代码升级为重工业认证缩写 (如 IATF 16949 / ISO 13485) -->
+            <div class="self-end bg-[#0F2B5B]/90 backdrop-blur-md px-2 py-0.5 rounded-xs border border-white/15 z-20 shadow-sm">
+              <span class="font-mono text-[8.5px] font-black text-[#EA580C] tracking-wider uppercase block">
+                {item.seoCode}
+              </span>
+            </div>
+
+            <!-- 本地大写 Industries 路径图片 -->
+            <img
+              src={item.image}
+              alt={item.seoLabel}
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 z-0"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <!-- 品牌深蓝渐变蒙层 (#0F2B5B) -->
+            {item.darkOverlay && (
+              <div class="absolute inset-0 bg-gradient-to-t from-[#0F2B5B]/90 via-[#0F2B5B]/40 to-transparent z-10 pointer-events-none"></div>
+            )}
+
+            <!-- 底部标题 -->
+            <div class="relative z-20 mt-auto pt-4 text-center">
+              <h3 class={`font-sans font-black text-sm sm:text-base tracking-tight uppercase transition-colors ${item.darkOverlay ? 'text-white group-hover:text-[#EA580C]' : 'text-[#0F2B5B] group-hover:text-[#EA580C]'}`}>
+                {item.name}
+              </h3>
+            </div>
+
+            <!-- Hover 亮橙边框 -->
+            <div class="absolute inset-0 rounded-[18px] border-2 border-transparent group-hover:border-[#EA580C] transition-colors z-30 pointer-events-none"></div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- 💥 3. 下半区：More Industries -->
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,4vw,3.5rem)] pt-16 sm:pt-20 pb-20 sm:pb-24 text-center relative z-10">
+    
+    <h3 class="text-2xl sm:text-3xl font-[1000] text-[#0F2B5B] tracking-tight font-sans uppercase italic mb-8 relative z-10">
+      {t.more_title}
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto relative z-10">
+      {secondaryIndustries.map((sec) => (
+        <a
+          href="#rfq"
+          aria-label={sec.seoLabel}
+          data-industry-sector={sec.id}
+          class="group bg-white rounded-[22px] p-8 shadow-md hover:shadow-xl border border-[#0F2B5B]/10 hover:border-[#EA580C] transition-all duration-300 flex flex-col items-center justify-center gap-4 cursor-pointer relative overflow-hidden"
+        >
+          <!-- SEO/GEO 缩写角标 -->
+          <span class="absolute top-3 right-3 font-mono text-[8.5px] font-bold text-[#0F2B5B]/60 group-hover:text-[#EA580C] transition-colors uppercase tracking-wider">
+            {sec.seoCode}
+          </span>
+
+          <!-- 原生 SVG 线条图标 -->
+          <div class="p-2 transition-transform duration-300 group-hover:scale-110">
+            <div set:html={sec.svgIcon}></div>
+          </div>
+
+          <!-- 卡片文案 -->
+          <h4 class="font-sans font-black text-sm sm:text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors uppercase tracking-tight">
+            {sec.name}
+          </h4>
+        </a>
+      ))}
+    </div>
+
+  </div>
+
+</section>
+
+<!-- 💥 模具咬花纹理 -->
+<style is:global>
+  .mold-texture-bg {
+    background-color: #0F2B5B;
+    background-image: 
+      radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 0),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.18'/%3E%3C/svg%3E");
+    background-size: 24px 24px, 180px 180px;
+  }
+</style>
+
+<!-- 🌐 8 大全球通用一级行业 JSON-LD Schema 结构化数据 (SEO / GEO 引擎专供) -->
+<script type="application/ld+json" is:inline>
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Precision Plastic Injection Molding Solutions",
+  "provider": {
+    "@type": "Organization",
+    "name": "NEXMOLD",
+    "url": "https://nxmold.com"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Global Primary Injection Molding Sectors",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Home Appliance Plastic Injection Molding",
+          "description": "ABS/PC/PP/PMMA high-clarity anti-leak housings, water tanks, and internal assemblies."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Automotive & EV Injection Molding",
+          "description": "IATF 16949 certified PA66+30%GF/PBT/POM under-the-hood and structural components for EVs."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Medical Device Plastic Components",
+          "description": "ISO 13485 compliant cleanroom molding using Medical PC, PEEK, and TPU with ±0.015mm tolerance."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Consumer Electronics Injection Molding",
+          "description": "Micro-precision 2K overmolding with ±0.01mm tolerance using LCP, POM, and TPE."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Industrial Components Molding",
+          "description": "High-wear resistant gears, valves, and automation structural housings in PEEK and POM-H."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Energy & Power Storage BMS Molding",
+          "description": "UL94 V-0 flame-retardant insulating battery module housings and busbar covers."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Packaging & Cosmetic Plastic Molding",
+          "description": "FDA compliant non-toxic thick-wall clear packaging, caps, and SPI-A1 mirror finish pump housings."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Consumer & Outdoor Goods Molding",
+          "description": "Weather-resistant anti-UV Nylon 66 heavy-impact lawnmower and power tool housings."
+        }
+      }
+    ]
+  }
+}
+</script>

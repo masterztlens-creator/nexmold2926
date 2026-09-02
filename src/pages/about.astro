@@ -1,0 +1,258 @@
+---
+/**
+ * src/pages/about.astro
+ * 👑 NEXMOLD 品牌重资产与企业实力页 (05 COMPANY 核心落地页)
+ * 1. 架构定位：展示 10,000m² 东莞实体厂房、海天 90T-1200T 自动化机队、蔡司 CMM 质检与盐田港 DDP 出港物流
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO / SEO：Quick Answer, Fleet & Logistics Specification Table, JSON-LD Organization Schema
+ */
+
+import MainLayout from '../layouts/MainLayout.astro';
+import Header from '../components/Header.astro';
+import EcosystemFooter from '../components/EcosystemFooter.astro';
+import LeadModal from '../components/LeadModal.astro';
+
+const title = "About NEXMOLD | 10,000m² Dongguan Injection Molding Facility & Press Fleet";
+const description = "Learn about NxMold Precision Manufacturing. Operating 30+ Haitian automated presses (90T-1200T), Zeiss CMM 3D metrology, and direct DDP ocean freight to USA and Europe.";
+
+// GEO JSON-LD Schema
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "NxMold Precision Manufacturing Co., Ltd.",
+  "alternateName": "NEXMOLD",
+  "url": "https://nexmold.pages.dev",
+  "logo": "https://nexmold.pages.dev/logo.png",
+  "description": description,
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Dongguan",
+    "addressRegion": "Guangdong",
+    "addressCountry": "China"
+  },
+  "knowsAbout": [
+    "Plastic Injection Molding",
+    "Rapid Steel Tooling",
+    "Zeiss CMM Metrology",
+    "DDP Export Logistics"
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 1. 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/#about" class="hover:text-[#EA580C] transition-colors">Company</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">About NEXMOLD</span>
+      </nav>
+
+      <!-- 👑 2. GEO Quick Answer 核心框 (Featured Snippet 抢占) -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          COMPANY_PROFILE // HEAVY_ASSET_PHYSICAL_FACILITY
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          10,000m² Manufacturing Facility &<br/>
+          <span class="text-[#EA580C]">Haitian Press Fleet (90T - 1200T)</span>
+        </h1>
+        <!-- Featured Snippet Summary -->
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Quick Answer:</strong> NxMold Precision Manufacturing Co., Ltd. (东莞耐思模塑科技有限公司) is an export-oriented B2B custom injection molding and rapid tooling partner headquartered in Dongguan, China. Operating a dedicated <strong>10,000m² facility with 30+ Haitian automated servo presses (90T to 1200T)</strong>, an in-house CNC/EDM toolroom, and a multi-axis <strong>Zeiss CMM metrology center</strong>, NEXMOLD delivers <strong>99.2%+ yield rates</strong> and seamless DDP door-to-door ocean freight direct to USA and European ports.
+        </p>
+      </section>
+
+      <!-- 3. 重资产核心指标与装备矩阵 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+        
+        <!-- 左侧：工厂物理参数与认证 -->
+        <div class="lg:col-span-7 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-6">
+          <h2 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4">
+            Factory Infrastructure & Manufacturing Assets
+          </h2>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Facility Footprint</span>
+              <strong class="text-sm font-black text-[#EA580C]">10,000 m² Floor</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Haitian Press Fleet</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">30+ Automated Units</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Clamping Range</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">90T - 1200T Tonnage</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Metrology System</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">Zeiss CMM 3D Optical</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Quality Management</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">ISO 9001:2015</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Target Markets</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">North America & EU</strong>
+            </div>
+          </div>
+
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl font-mono text-[11px] text-[#0F2B5B]/80 leading-relaxed">
+            <strong>Toolroom & Production Capacity:</strong> Our in-house toolroom operates high-speed 5-axis CNC machining centers, Makino EDM wire-cut equipment, and automated robotic arms, supporting S136 hardened steel molds and rapid prototype T1 sampling in 7–14 calendar days.
+          </div>
+        </div>
+
+        <!-- 右侧：出海物流与验厂预约 CTA 面板 -->
+        <div class="lg:col-span-5 bg-[#0F2B5B] text-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-2">EXPORT_LOGISTICS_&_AUDIT</span>
+            <h3 class="text-2xl font-[1000] uppercase italic">Direct Yantian DDP Ocean Freight & Virtual Audits</h3>
+            <p class="text-xs text-white/80 font-sans mt-2 leading-relaxed">
+              We eliminate export friction with weekly FCL/LCL vessel departures from Yantian Port & Hong Kong, delivering DDP customs-cleared shipments directly to USA and European warehouses.
+            </p>
+
+            <div class="mt-6 space-y-3 font-mono text-xs">
+              <a href="/quality/zeiss-cmm-inspection" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>View Zeiss CMM Quality Standards →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">METROLOGY</span>
+              </a>
+              <a href="/resources/calculators/clamping-force-calculator" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Match Part Size to Press Fleet →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">FLEET</span>
+              </a>
+            </div>
+          </div>
+
+          <button id="company-rfq-trigger" type="button" class="mt-8 bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+            Schedule Factory Audit or Get DFM Quote →
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 👑 4. 海天注塑机队规格明细表 (Haitian Servo Fleet Matrix) -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg mb-16">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          NEXMOLD Automated Haitian Press Fleet Specifications
+        </h3>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="bg-[#0F2B5B] text-white">
+                <th class="p-3 border border-[#0F2B5B]">Machine Model / Class</th>
+                <th class="p-3 border border-[#0F2B5B]">Tonnage Range</th>
+                <th class="p-3 border border-[#0F2B5B]">Automation / Robotics</th>
+                <th class="p-3 border border-[#0F2B5B] text-[#EA580C]">Primary Target Component</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#0F2B5B]/10 text-[#0F2B5B]">
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold text-[#EA580C]">Haitian MA900 - MA1600</td>
+                <td class="p-3 font-bold">90 Tons - 160 Tons</td>
+                <td class="p-3">3-Axis Servo Pick-and-Place Robots</td>
+                <td class="p-3">Microfluidic Cartridges, Small POM Gears, Connectors</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Haitian MA2000 - MA3800</td>
+                <td class="p-3 font-bold">200 Tons - 380 Tons</td>
+                <td class="p-3">Automated In-Line Vision & Part Ejection</td>
+                <td class="p-3">Medical Surgical Trays, EV Busbar Insulators, Valves</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">Haitian MA5300 - MA8000</td>
+                <td class="p-3 font-bold">530 Tons - 800 Tons</td>
+                <td class="p-3">Centralized Closed-Loop Dryer & Conveyor Systems</td>
+                <td class="p-3">AgTech Hydroponic Housings, Anti-Leak Water Tanks</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Haitian MA12000 Heavy Fleet</td>
+                <td class="p-3 font-bold">1200 Tons Heavy Press</td>
+                <td class="p-3">Heavy-Duty Hydraulic Core Pull & Robotic Handlers</td>
+                <td class="p-3">Large EV Battery Covers, Automotive Bumper & Shields</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. 盐田港 DDP 全包出口物流流程 -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg mb-16">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+          Global Supply Chain & Turnkey DDP Export Logistics
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 font-mono text-xs">
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl relative">
+            <span class="text-[#EA580C] font-black text-sm block mb-1">STEP 01</span>
+            <h4 class="font-bold text-[#0F2B5B] mb-2 uppercase">Custom Export Packaging</h4>
+            <p class="text-[#0F2B5B]/80 font-sans leading-relaxed">Inner thermoformed blisters, anti-static polybags, and custom Amazon FBA barcoding.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl relative">
+            <span class="text-[#EA580C] font-black text-sm block mb-1">STEP 02</span>
+            <h4 class="font-bold text-[#0F2B5B] mb-2 uppercase">Port Dispatch (Yantian/HK)</h4>
+            <p class="text-[#0F2B5B]/80 font-sans leading-relaxed">Direct FCL/LCL ocean container bookings out of Yantian Port or air express via Hong Kong (HKG).</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl relative">
+            <span class="text-[#EA580C] font-black text-sm block mb-1">STEP 03</span>
+            <h4 class="font-bold text-[#0F2B5B] mb-2 uppercase">US/EU Customs Clearance</h4>
+            <p class="text-[#0F2B5B]/80 font-sans leading-relaxed">Turnkey DDP duty processing, import bond clearance, and ISF filing managed by NEXMOLD logisticians.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl relative">
+            <span class="text-[#EA580C] font-black text-sm block mb-1">STEP 04</span>
+            <h4 class="font-bold text-[#0F2B5B] mb-2 uppercase">Door-to-Door Delivery</h4>
+            <p class="text-[#0F2B5B]/80 font-sans leading-relaxed">Final delivery directly to your designated manufacturing plant or Amazon FBA fulfillment center.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 公司 FAQs -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Company & Manufacturing Integrity FAQs
+        </h3>
+
+        <div class="space-y-4 font-sans text-xs sm:text-sm text-[#0F2B5B]">
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> Is NEXMOLD a direct manufacturer or a trading intermediary?</h4>
+            <p class="text-[#0F2B5B]/80 leading-relaxed">NEXMOLD is a direct B2B manufacturer operating out of a 10,000m² factory floor in Dongguan, China, complete with our own Haitian servo presses, toolroom CNC equipment, and Zeiss CMM inspection lab.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> How do you protect IP (Intellectual Property) for North American buyers?</h4>
+            <p class="text-[#0F2B5B]/80 leading-relaxed">We sign strict bilateral Non-Disclosure Agreements (NDAs) before reviewing 3D CAD files. All CAD geometries and mold tools remain 100% exclusive to the customer, stored on secure, encrypted local servers.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+<script>
+  function setupCompanyEvents() {
+    const btn = document.getElementById('company-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupCompanyEvents);
+</script>

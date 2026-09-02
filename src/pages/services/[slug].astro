@@ -1,0 +1,493 @@
+﻿---
+/**
+ * src/pages/services/[slug].astro
+ * NEXMOLD 鏃楄埌绾у伐涓氭妧鏈惤鍦伴〉 (涓?index.astro 100% 娣卞害鍚屾瀯涓庤川鎰熷榻愮増)
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+import QuickRFQ from '../../components/QuickRFQ.astro';
+import { serviceSpokesData, type ServiceSpoke } from '../../data/servicesData';
+
+export async function getStaticPaths() {
+  return Object.keys(serviceSpokesData)
+    .filter((slugKey) => slugKey !== "custom-injection-molding")
+    .map((slugKey) => ({
+      params: { slug: slugKey },
+      props: { spoke: serviceSpokesData[slugKey] }
+    }));
+}
+
+interface Props {
+  spoke: ServiceSpoke;
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { slug } = Astro.params;
+const { spoke: propSpoke, lang = 'en' } = Astro.props;
+const location = 'North America & Europe';
+
+const spoke = propSpoke || (slug && serviceSpokesData[slug]) || serviceSpokesData["custom-injection-molding"];
+
+const keyStats = spoke.keyStats || [];
+const trustSignals = spoke.trustSignals || [];
+const dfmSpecs = spoke.dfmSpecs || [];
+const materials = spoke.materials || [];
+const applications = spoke.applications || [];
+const comparisonTable = spoke.comparisonTable || [];
+const productionSteps = spoke.productionSteps || [];
+const faq = spoke.faq || [];
+
+const pageTitle = `${spoke.title} Services | NEXMOLD Precision Tooling & Molding`;
+const pageDescription = `Direct factory ${spoke.title} in Dongguan. Haitian servo press fleet (90T-1200T), T1 sampling in ${spoke.leadTime}, ${spoke.tolerance} tolerances. Free 24h DFM review.`;
+
+// SEO / GEO AI 缁撴瀯鍖栨暟鎹?
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "name": spoke.title,
+      "provider": {
+        "@type": "Organization",
+        "name": "NEXMOLD",
+        "url": "https://nexmold.com"
+      },
+      "description": spoke.overview,
+      "areaServed": ["North America", "Europe"]
+    }
+  ]
+};
+---
+
+<MainLayout title={pageTitle} description={pageDescription} lang={lang} location={location}>
+  
+  <!-- 馃 娉ㄥ叆 SEO/GEO 瀹炰綋缁撴瀯鍖栨爣绛?-->
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+  <!-- 馃帥锔?宸︿晶鏁版帶绮惧瘑娓告爣婊戣建 (涓庨椤?100% 瀵归綈) -->
+  <aside class="fixed left-0 top-[36px] bottom-0 w-[100px] z-[50] hidden lg:flex flex-col items-center pointer-events-none" aria-hidden="true">
+    <div class="relative h-full w-[1px] bg-[#0F2B5B]/15 flex justify-center overflow-visible">
+      
+      <div class="absolute inset-0 overflow-hidden z-10">
+        <div class="absolute top-[-20%] left-[-0.5px] w-[2px] h-[30vh] bg-gradient-to-b from-transparent via-[#EA580C]/80 to-transparent animate-laser-meteor"></div>
+      </div>
+
+      <div id="vernier-core" class="absolute w-10 h-[60px] flex items-center justify-center z-50 opacity-0 transition-opacity duration-500">
+        <div class="relative w-[3px] h-full bg-[#EA580C] shadow-[0_0_12px_#EA580C]">
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-[1px] bg-[#0F2B5B]"></div>
+        </div>
+
+        <div class="absolute left-8 flex flex-col items-start font-mono whitespace-nowrap bg-[#0F2B5B] p-1.5 border-l-2 border-[#EA580C] shadow-md rounded-r-sm">
+          <div class="flex items-baseline gap-1">
+            <span class="text-[9px] text-white/50 uppercase tracking-tighter">COORD:</span>
+            <span class="text-[14px] text-[#EA580C] font-black" id="coord-display">0.000</span>
+            <span class="text-[8px] text-white/40 italic">mm</span>
+          </div>
+          <div class="w-14 h-[1px] bg-white/10 mt-1"></div>
+          <span class="text-[6px] text-white/50 uppercase tracking-widest mt-1 italic animate-pulse">SPEC_MATRIX</span>
+        </div>
+      </div>
+
+      <div class="absolute inset-0 flex flex-col justify-between py-24 opacity-20">
+        {Array.from({ length: 31 }).map((_, i) => (
+          <div class={`h-[1px] bg-[#0F2B5B] ${i % 5 === 0 ? 'w-4' : 'w-2'}`}></div>
+        ))}
+      </div>
+    </div>
+  </aside>
+
+  <!-- 馃幆 Header 椤堕儴瀵艰埅鏍?-->
+  <Header lang={lang} />
+
+  <!-- 馃幆 涓讳笟鍔¤瑙掍笌缁撴瀯灞傜骇 -->
+  <main class="bg-white text-[#0F2B5B] lg:pl-[100px] relative">
+    
+    <!-- ========================================================================= -->
+    <!-- 1. HERO SECTION: 宸ヤ笟鍥剧焊椋庤鏍艰绐?-->
+    <!-- ========================================================================= -->
+    <section class="w-full bg-[#F8FAFC] border-b border-[#0F2B5B]/10 py-12 lg:py-16 relative">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- 闈㈠寘灞戜笌鐘舵€?-->
+        <div class="flex items-center justify-between pb-6 border-b border-[#0F2B5B]/10 font-mono text-xs mb-8">
+          <nav class="flex items-center gap-2 text-slate-500 uppercase">
+            <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+            <span>/</span>
+            <a href="/services/custom-injection-molding" class="hover:text-[#EA580C] transition-colors">Services</a>
+            <span>/</span>
+            <span class="text-[#0F2B5B] font-bold">{spoke.title}</span>
+          </nav>
+          <div class="hidden sm:flex items-center gap-2 font-bold text-emerald-600 bg-white border border-[#0F2B5B]/10 px-2.5 py-1 rounded-sm shadow-2xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>DONGGUAN PLANT DIRECT // 90T-1200T</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          
+          <!-- 宸︿晶瑙勬牸鏍稿績鍙欒堪 -->
+          <div class="lg:col-span-7 space-y-6">
+            <div class="space-y-3">
+              <span class="text-xs font-bold text-[#EA580C] uppercase tracking-widest block font-mono">
+                {spoke.heroBadge} // TECHNICAL SPECIFICATION
+              </span>
+              <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0F2B5B] leading-[1.06]">
+                {spoke.title}
+              </h1>
+              <p class="text-base sm:text-lg text-slate-600 font-normal leading-relaxed pt-1">
+                {spoke.overview}
+              </p>
+            </div>
+
+            <!-- 4 澶ф牳蹇冨弬鏁版暟鎹潯 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-[#0F2B5B]/10 font-mono">
+              {keyStats.map((st: any) => (
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">{st.label}</span>
+                  <span class="text-2xl font-bold text-[#0F2B5B] block mt-0.5">{st.val}</span>
+                  <span class="text-[11px] text-[#EA580C] font-semibold block">{st.sub}</span>
+                </div>
+              ))}
+            </div>
+
+            <!-- 杞寲鎸夐挳缁?-->
+            <div class="flex flex-wrap items-center gap-4 pt-1 font-mono text-xs">
+              <button 
+                onclick="document.getElementById('get-quote')?.scrollIntoView({ behavior: 'smooth' })"
+                class="bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold uppercase px-8 py-4 rounded-sm transition-colors shadow-sm cursor-pointer tracking-wider"
+              >
+                Upload CAD for 24h DFM 鈫?
+              </button>
+              <a 
+                href="#design-guidelines" 
+                class="bg-white hover:bg-slate-50 text-[#0F2B5B] border border-[#0F2B5B]/20 font-bold uppercase px-6 py-4 rounded-sm transition-colors tracking-wider"
+              >
+                View Design Guidelines 鈫?
+              </a>
+            </div>
+          </div>
+
+          <!-- 鍙充晶瀹炴櫙杞﹂棿鍥?-->
+          <div class="lg:col-span-5">
+            <div class="relative rounded-lg overflow-hidden border border-[#0F2B5B]/15 aspect-4/3 bg-[#0F2B5B] shadow-sm">
+              <img 
+                src={spoke.heroImage} 
+                alt={spoke.title} 
+                class="w-full h-full object-cover opacity-95"
+                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center font-mono text-xs text-white/60\'>[ DONGGUAN HAITIAN SERVO WORKCELL ]</div>';"
+              />
+              <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white font-mono text-xs flex justify-between items-center">
+                <span class="font-bold">{spoke.equipment}</span>
+                <span class="text-emerald-400 text-[10px] bg-black/40 px-2 py-0.5 rounded border border-white/10">ISO 9001:2015 AUDITED</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 2. KEY ADVANTAGES: 4 澶ф牳蹇冨伐绋嬩紭鍔?(鏃犲湡鍛宠壊鍧楋紝绾噣鍗曠嚎鎺掔増) -->
+    <!-- ========================================================================= -->
+    <section class="w-full bg-white border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="max-w-3xl space-y-2">
+          <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">01 // KEY ADVANTAGES</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">Why Choose {spoke.title}?</h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Achieve precise repeatability, high thermal and chemical resistance, and rapid production turnaround directly through our Dongguan facility.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {trustSignals.map((sig: any, idx: number) => (
+            <div class="bg-[#F8FAFC] border border-[#0F2B5B]/10 p-6 rounded-sm space-y-2">
+              <span class="font-mono text-xs font-bold text-[#EA580C] block">0{idx + 1} //</span>
+              <h3 class="font-bold text-base text-[#0F2B5B]">{sig.label}</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">{sig.sub}</p>
+              <div class="pt-2 font-mono text-lg font-bold text-[#0F2B5B]">{sig.num}</div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 3. HOW IT WORKS: 4 姝ヤ氦浠樻祦 -->
+    <!-- ========================================================================= -->
+    <section class="w-full bg-[#F8FAFC] border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="max-w-3xl space-y-2">
+          <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">02 // PROCESS PIPELINE</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">How {spoke.title} Works</h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Our automated manufacturing pipeline ensures rapid design verification, precision tool build, and high-yield production runs.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {productionSteps.map((st: any, idx: number) => (
+            <div class="bg-white border border-[#0F2B5B]/10 p-5 rounded-sm space-y-2 shadow-2xs">
+              <div class="flex justify-between items-center font-mono">
+                <span class="text-xs font-bold text-[#EA580C]">{st.phase}</span>
+                <span class="text-xs text-slate-400">Step 0{idx + 1}</span>
+              </div>
+              <h3 class="font-bold text-sm text-[#0F2B5B]">{st.title}</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">{st.desc}</p>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 4. DESIGN GUIDELINES: Protolabs 1:1 鏍囧噯宸ョ▼鍏樊琛?-->
+    <!-- ========================================================================= -->
+    <section id="design-guidelines" class="w-full bg-white border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#0F2B5B]/10 pb-4">
+          <div>
+            <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">03 // DESIGN GUIDELINES</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">{spoke.title} Specifications & Tolerances</h2>
+          </div>
+          <span class="font-mono text-xs text-slate-500">STANDARD: DIN 16742 TG4 / 卤0.002 IN.</span>
+        </div>
+
+        <div class="bg-white border border-[#0F2B5B]/10 rounded-sm overflow-hidden shadow-2xs">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#0F2B5B] text-white font-mono text-[11px] uppercase">
+                <tr>
+                  <th class="py-3.5 px-4 font-semibold">Design Feature</th>
+                  <th class="py-3.5 px-4 font-semibold">Minimum</th>
+                  <th class="py-3.5 px-4 font-semibold text-[#EA580C]">Recommended</th>
+                  <th class="py-3.5 px-4 font-semibold">Maximum</th>
+                  <th class="py-3.5 px-4 font-semibold">Engineering Advisory</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#0F2B5B]/10 text-slate-700 font-sans">
+                {dfmSpecs.map((row: any) => (
+                  <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-3.5 px-4 font-bold text-[#0F2B5B]">{row.label}</td>
+                    <td class="py-3.5 px-4 font-mono text-slate-500">{row.min}</td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-[#EA580C] bg-orange-50/50">{row.rec}</td>
+                    <td class="py-3.5 px-4 font-mono text-slate-500">{row.max}</td>
+                    <td class="py-3.5 px-4 text-slate-600 leading-relaxed">{row.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 5. MATERIALS & APPLICATIONS: 鐜拌揣鏉愭枡搴撲笌宸ヤ欢鐢诲粖 -->
+    <!-- ========================================================================= -->
+    <section class="w-full bg-[#F8FAFC] border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        
+        <!-- 鏉愭枡搴?-->
+        <div class="space-y-6">
+          <div class="flex justify-between items-end border-b border-[#0F2B5B]/10 pb-4">
+            <div>
+              <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">04 // QUALIFIED RESINS</span>
+              <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">Common Materials for {spoke.title}</h2>
+            </div>
+            <a href="/materials" class="font-mono text-xs font-bold text-[#EA580C] hover:underline uppercase">
+              Explore All 180+ Resins 鈫?
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            {materials.map((mat: any) => (
+              <div class="bg-white border border-[#0F2B5B]/10 p-4 rounded-sm space-y-1.5 shadow-2xs">
+                <div class="flex justify-between items-center font-bold text-[#0F2B5B]">
+                  <span>{mat.name}</span>
+                  <span class="text-[9px] text-[#EA580C] bg-[#EA580C]/10 px-1.5 py-0.5 rounded-2xs font-mono">{mat.type}</span>
+                </div>
+                <div class="font-mono text-[10px] text-slate-400">{mat.grade} 鈥?{mat.density}</div>
+                <p class="text-[11px] text-slate-600 pt-1 border-t border-[#0F2B5B]/10 leading-normal">
+                  {mat.prop}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- 鐪熷疄閲忎骇宸ヤ欢鐢诲粖 -->
+        <div class="space-y-6 pt-4">
+          <div class="border-b border-[#0F2B5B]/10 pb-4">
+            <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">05 // PROVEN WORKPIECES</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">Target Components & Assemblies</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {applications.map((app: any) => (
+              <div class="bg-white border border-[#0F2B5B]/10 rounded-sm overflow-hidden flex flex-col justify-between shadow-2xs">
+                <div class="h-44 overflow-hidden bg-[#0F2B5B] relative">
+                  <img src={app.img} alt={app.name} class="w-full h-full object-cover" />
+                </div>
+                <div class="p-4 bg-white space-y-1 border-t border-slate-100">
+                  <h3 class="font-bold text-xs uppercase text-[#0F2B5B]">{app.name}</h3>
+                  <p class="text-xs text-slate-600 leading-normal">{app.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 6. RFQ / DFM INGESTION: 鏋佺畝 CAD 浼犲浘璇㈢洏鍖?-->
+    <!-- ========================================================================= -->
+    <section id="get-quote" class="w-full bg-white border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 text-center">
+        
+        <div class="space-y-2">
+          <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">06 // DIRECT RFQ INGESTION</span>
+          <h2 class="text-3xl font-bold text-[#0F2B5B]">Upload Your 3D CAD Model</h2>
+          <p class="text-sm text-slate-600 max-w-lg mx-auto">
+            Get an automated interactive DFM report with moldability feedback and fixed-price tooling quotes within 24 hours.
+          </p>
+        </div>
+
+        <form class="bg-[#F8FAFC] border border-[#0F2B5B]/10 rounded-lg p-6 sm:p-8 space-y-4 text-left shadow-2xs" onsubmit="event.preventDefault(); alert('CAD File received. Our Dongguan engineering team will review and return your DFM report within 24 hours.');">
+          
+          <div class="border border-dashed border-slate-300 hover:border-[#EA580C] bg-white rounded-md p-6 text-center cursor-pointer transition-all">
+            <span class="text-2xl block mb-1">馃搨</span>
+            <span class="text-xs font-bold text-[#0F2B5B] block">Drag and drop your 3D CAD (STEP, STP, IGES, X_T)</span>
+            <span class="font-mono text-[10px] text-slate-400 block mt-0.5">Maximum 50MB 鈥?Mutual NDA Protected</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-mono text-[10px] font-bold text-slate-600 uppercase mb-1">Corporate Email *</label>
+              <input type="email" required placeholder="engineer@oem.com" class="w-full bg-white border border-slate-200 focus:border-[#EA580C] rounded-sm px-3 py-2 text-xs text-[#0F2B5B] outline-none" />
+            </div>
+            <div>
+              <label class="block font-mono text-[10px] font-bold text-slate-600 uppercase mb-1">Annual Volume</label>
+              <input type="text" placeholder="e.g. 5,000 - 50,000 pcs" class="w-full bg-white border border-slate-200 focus:border-[#EA580C] rounded-sm px-3 py-2 text-xs text-[#0F2B5B] outline-none" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono text-xs font-bold uppercase py-3.5 rounded-sm transition-colors shadow-sm cursor-pointer tracking-wider">
+            Submit CAD for 24h Factory DFM & Pricing 鈫?
+          </button>
+
+          <div class="flex items-center justify-between font-mono text-[10px] text-slate-400 pt-1">
+            <span>馃敀 Mutual NDA Protected</span>
+            <span>100% Direct Factory Rates</span>
+          </div>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 7. FREQUENTLY ASKED QUESTIONS: 瀛椾綋涓庢牱寮忓畬鍏ㄧ粺涓€鐨?FAQ -->
+    <!-- ========================================================================= -->
+    <section class="w-full bg-[#F8FAFC] border-b border-[#0F2B5B]/10 py-16">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 space-y-8">
+        
+        <div class="text-center space-y-2">
+          <span class="font-mono text-xs font-bold text-[#EA580C] uppercase tracking-widest block">07 // FAQ</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-[#0F2B5B] tracking-tight">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="space-y-4 pt-2">
+          {faq.map((f: any, idx: number) => (
+            <details class="bg-white border border-[#0F2B5B]/10 rounded-sm group [&_summary::-webkit-details-marker]:hidden shadow-2xs transition-all" open={idx === 0}>
+              <summary class="flex justify-between items-center px-6 py-4 cursor-pointer select-none list-none">
+                <span class="text-base font-bold text-[#0F2B5B] leading-snug group-hover:text-[#EA580C] transition-colors">
+                  {f.q}
+                </span>
+                <span class="ml-4 shrink-0 text-xs text-slate-400 group-open:rotate-180 transition-transform duration-200">
+                  鈻?
+                </span>
+              </summary>
+              <div class="px-6 pb-5 pt-1 border-t border-[#0F2B5B]/5">
+                <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                  {f.a}
+                </p>
+              </div>
+            </details>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 鈿★笍 鐢熸€侀〉鑴?(涓庨椤典繚鎸?100% 鍚屾缁勪欢) -->
+  <EcosystemFooter lang={lang} hideCadBanner={true} />
+
+  <!-- 馃幆 鍏ㄥ眬寮圭獥鎺у埗鍙?(涓庨椤典繚鎸佸畬鍏ㄤ竴鑷? -->
+  <LeadModal lang={lang} />
+  <QuickRFQ lang={lang} />
+
+</MainLayout>
+
+<script>
+  function initPageLogic() {
+    const slider = document.getElementById('vernier-core');
+    const coord = document.getElementById('coord-display');
+    if (!slider || !coord) return;
+
+    let targetY = 0;
+    let currentY = 0;
+    const lerpAmount = 0.1;
+
+    const update = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = maxScroll <= 0 ? 0 : Math.max(0, Math.min(scrollY / maxScroll, 1));
+      
+      if (scrollY < 100) {
+        slider.style.opacity = "0";
+      } else {
+        slider.style.opacity = "1";
+      }
+
+      targetY = scrollPercent * 80; 
+      currentY += (targetY - currentY) * lerpAmount;
+      slider.style.transform = `translateY(${currentY}vh)`; 
+      
+      coord.textContent = (scrollPercent * 50).toFixed(3);
+      
+      requestAnimationFrame(update);
+    };
+
+    requestAnimationFrame(update);
+  }
+
+  document.addEventListener('DOMContentLoaded', initPageLogic);
+  document.addEventListener('astro:after-swap', initPageLogic);
+</script>
+
+<style is:global>
+  @keyframes laser-meteor {
+    0% { transform: translateY(-40vh); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(140vh); opacity: 0; }
+  }
+  .animate-laser-meteor { animation: laser-meteor 3s cubic-bezier(0.8, 0, 0.2, 1) infinite; }
+
+  aside { background: transparent !important; }
+  html { scroll-behavior: smooth; background-color: #FFFFFF; } 
+</style>

@@ -1,0 +1,86 @@
+---
+/**
+ * FAQ.astro - 常见采购问题解答 (扫清下单最后迷茫)
+ * 纯粹三色：纯白 (#FFFFFF) + 工业深蓝 (#0F2B5B) + 工业橙 (#EA580C)
+ */
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "FREQUENTLY ASKED PROCUREMENT QUESTIONS",
+    title: "Buyer Guidance & Manufacturing FAQs",
+    subtitle: "Clear, transparent answers regarding MOQ, lead times, mold ownership, and international DDP logistics."
+  },
+  de: {
+    badge: "HÄUFIG GESTELLTE EINKAUFSFRAGEN",
+    title: "Häufig gestellte Fragen (FAQ)",
+    subtitle: "Klara Antworten zu Mindestbestellmengen, Lieferzeiten, Werkzeugeigentum und DDP-Logistik."
+  },
+  fr: {
+    badge: "QUESTIONS FRÉQUEMMENT POSÉES PAR LES ACHATEURS",
+    title: "Foire Aux Questions (FAQ)",
+    subtitle: "Réponses claires concernant les MOQs, les délais, la propriété des moules et la logistique DDP."
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+const faqs = [
+  {
+    q: "What is your typical lead time for T1 samples and production runs?",
+    a: "Fast tooling and T1 sample delivery typically take 3 to 15 days depending on component complexity and steel selection (ASSAB S136 / NAK80). Mass production runs start immediately following T1 approval."
+  },
+  {
+    q: "Who owns the injection molds after production?",
+    a: "You retain 100% ownership of all custom injection tooling. Molds are maintained in our climate-controlled toolroom under lifetime guarantee without maintenance fees during production."
+  },
+  {
+    q: "How do you handle out-of-spec or non-conforming components?",
+    a: "Every batch is shipped with 100% CMM measurement logs and First Article Inspection (FAI) reports. In the rare event of out-of-spec parts, we provide immediate free tool modification or remanufacturing."
+  },
+  {
+    q: "Do you offer direct door-to-door (DDP) shipping to the US and Europe?",
+    a: "Yes. We handle end-to-end Ocean Express (FCL/LCL) and Air Freight logistics including all customs clearance, tariffs, and duty directly to your facility in North America or Europe."
+  }
+];
+---
+
+<section class="bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative" id="faq">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    
+    <div class="max-w-3xl mb-12">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="w-6 h-[3px] bg-[#EA580C]"></span>
+        <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-[0.25em]">
+          {t.badge}
+        </span>
+      </div>
+      <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-[#0F2B5B]">
+        {t.title}
+      </h2>
+      <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {faqs.map(item => (
+        <div class="p-6 bg-white border border-[#0F2B5B]/20 rounded-sm">
+          <h3 class="font-bold text-sm uppercase text-[#0F2B5B] mb-2 flex items-start gap-2">
+            <span class="text-[#EA580C] font-mono">Q:</span>
+            {item.q}
+          </h3>
+          <p class="text-[#0F2B5B]/75 text-xs leading-relaxed pl-5 font-sans">
+            {item.a}
+          </p>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>

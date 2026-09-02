@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-undercuts-guide",
+  "targetSlug": "injection-molding-undercuts-guide",
+  "sourceArticleSlug": "injection-molding-undercuts",
+  "slug": "injection-molding-undercuts-guide",
+  "lineage": {
+    "pageId": "v714:injection-molding-undercuts-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-undercuts-guide/",
+    "evidenceIds": [
+      "knowledge:injection-molding-undercuts"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-undercuts-guide"
+    ],
+    "sourceArtifactHash": "077b9b3c2bd42dee603eb817e9f92faeecb73f8d16b57fbe2a786ada18050693"
+  },
+  "sourceArtifactHash": "077b9b3c2bd42dee603eb817e9f92faeecb73f8d16b57fbe2a786ada18050693",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-undercuts-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-undercuts-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-undercuts-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-undercuts",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-undercuts",
+            "contentHash": "injection-molding-undercuts:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-undercuts-guide",
+            "claimKey": "batch01.injection-molding-undercuts-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "077b9b3c2bd42dee603eb817e9f92faeecb73f8d16b57fbe2a786ada18050693"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

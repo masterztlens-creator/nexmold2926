@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-cycle-time-optimization-guide",
+  "targetSlug": "injection-molding-cycle-time-optimization-guide",
+  "sourceArticleSlug": "injection-molding-cycle-optimization",
+  "slug": "injection-molding-cycle-time-optimization-guide",
+  "lineage": {
+    "pageId": "v714:injection-molding-cycle-time-optimization-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-cycle-time-optimization-guide/",
+    "evidenceIds": [
+      "knowledge:injection-molding-cycle-optimization"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-cycle-time-optimization-guide"
+    ],
+    "sourceArtifactHash": "9247b23c671cf233095c40fd72b5169a205b97eb0152ac0c9c75cbff23a4a2cf"
+  },
+  "sourceArtifactHash": "9247b23c671cf233095c40fd72b5169a205b97eb0152ac0c9c75cbff23a4a2cf",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-cycle-time-optimization-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-cycle-time-optimization-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-cycle-time-optimization-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-cycle-optimization",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-cycle-optimization",
+            "contentHash": "injection-molding-cycle-optimization:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-cycle-time-optimization-guide",
+            "claimKey": "batch01.injection-molding-cycle-time-optimization-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "9247b23c671cf233095c40fd72b5169a205b97eb0152ac0c9c75cbff23a4a2cf"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

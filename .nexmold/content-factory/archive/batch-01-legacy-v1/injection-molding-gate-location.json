@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-gate-location",
+  "targetSlug": "injection-molding-gate-location",
+  "sourceArticleSlug": "gate-location-best-practices",
+  "slug": "injection-molding-gate-location",
+  "lineage": {
+    "pageId": "v714:injection-molding-gate-location",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-gate-location/",
+    "evidenceIds": [
+      "knowledge:gate-location-best-practices"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-gate-location"
+    ],
+    "sourceArtifactHash": "71d59e51a0655f071b7816f7d66a55450280f2f8c5a6a58b756bf9848cb0ea23"
+  },
+  "sourceArtifactHash": "71d59e51a0655f071b7816f7d66a55450280f2f8c5a6a58b756bf9848cb0ea23",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-gate-location",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-gate-location/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-gate-location",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:gate-location-best-practices",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#gate-location-best-practices",
+            "contentHash": "gate-location-best-practices:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-gate-location",
+            "claimKey": "batch01.injection-molding-gate-location"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "71d59e51a0655f071b7816f7d66a55450280f2f8c5a6a58b756bf9848cb0ea23"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

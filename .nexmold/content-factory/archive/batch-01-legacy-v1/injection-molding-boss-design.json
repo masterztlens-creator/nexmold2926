@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-boss-design",
+  "targetSlug": "injection-molding-boss-design",
+  "sourceArticleSlug": "rib-boss-gusset-design",
+  "slug": "injection-molding-boss-design",
+  "lineage": {
+    "pageId": "v714:injection-molding-boss-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-boss-design/",
+    "evidenceIds": [
+      "knowledge:rib-boss-gusset-design"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-boss-design"
+    ],
+    "sourceArtifactHash": "1fd37ad28f8d77993528610169925a206d3cd94fe6b0da6a800e06670aeec410"
+  },
+  "sourceArtifactHash": "1fd37ad28f8d77993528610169925a206d3cd94fe6b0da6a800e06670aeec410",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-boss-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-boss-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "rib-boss-gusset-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-boss-design",
+            "claimKey": "batch01.injection-molding-boss-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "1fd37ad28f8d77993528610169925a206d3cd94fe6b0da6a800e06670aeec410"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

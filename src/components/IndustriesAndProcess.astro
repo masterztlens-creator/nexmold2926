@@ -1,0 +1,202 @@
+---
+/**
+ * IndustriesAndProcess.astro - NEXMOLD 第四层 (行业应用与 4 步极速合作流程 + Learn More 入口)
+ * 极简三色规范：纯白 (#FFFFFF) + 工业深蓝 (#0F2B5B) + 工业橙 (#EA580C)
+ * 流量与 CRO 核心：GEO 实体词注入 + 24H 询盘强截流 + DDP 双清包税保障
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "INDUSTRIES & ONBOARDING WORKFLOW",
+    ind_title: "Target OEM Applications",
+    ind_subtitle: "Precision structural and aesthetic plastic components custom-engineered for demanding global industries.",
+    proc_title: "Seamless 4-Step Onboarding Workflow",
+    proc_subtitle: "From CAD design upload to global DDP ocean freight delivery. Engineered for high-turnover production predictability.",
+    cta_banner_title: "READY TO ACCELERATE YOUR MOLDING PROJECT?",
+    cta_banner_desc: "Upload your CAD file (STEP / IGES / STL) today. Get a full DFM analysis and competitive tooling quote within 24 hours.",
+    cta_btn: "GET INSTANT 24H DFM & QUOTE →",
+    learn_more: "LEARN MORE APPLICATIONS →",
+    learn_logistics: "EXPLORE DDP LOGISTICS →"
+  },
+  de: {
+    badge: "BRANCHEN & ONBOARDING-PROZESS",
+    ind_title: "OEM-Anwendungsbereiche",
+    ind_subtitle: "Präzise Struktur- und Gehäuseteile für anspruchsvolle globale Industriebranchen.",
+    proc_title: "Nahtloser 4-Schritte Fertigungsprozess",
+    proc_subtitle: "Vom CAD-Upload bis zur DDP-Lieferung an Ihren Zielhafen.",
+    cta_banner_title: "BEREIT FÜR DIE BESCHLEUNIGUNG IHRES PROJEKTS?",
+    cta_banner_desc: "Laden Sie Ihre CAD-Datei hoch. Erhalten Sie innerhalb von 24 Stunden eine vollständige DFM-Analyse und ein Angebot.",
+    cta_btn: "24H DFM & ANGEBOT ANFORDERN →",
+    learn_more: "ANWENDUNGEN ANSEHEN →",
+    learn_logistics: "DDP-LOGISTIK DETAILS →"
+  },
+  fr: {
+    badge: "INDUSTRIES & WORKFLOW D'INTÉGRATION",
+    ind_title: "Applications Équipementiers OEM",
+    ind_subtitle: "Composants plastiques structurels et esthétiques de précision pour les industries mondiales.",
+    proc_title: "Workflow d'Intégration en 4 Étapes",
+    proc_subtitle: "Du téléchargement CAD à la livraison DDP au port. Conçu pour la prédictibilité de production.",
+    cta_banner_title: "PRÊT À ACCÉLÉRER VOTRE PROJET DE MOULAGE?",
+    cta_banner_desc: "Téléchargez votre fichier CAO. Obtenez une analyse DFM complète et un devis sous 24 heures.",
+    cta_btn: "OBTENIR DFM & DEVIS 24H →",
+    learn_more: "EN SAVOIR PLUS →",
+    learn_logistics: "DÉCOUVRIR LOGISTIQUE DDP →"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+// 1. 4 大重点行业 (GEO & pSEO 核心抓取实体)
+const industriesList = [
+  {
+    title: "Consumer & Home Appliances",
+    specs: "ABS+PC, Flame Retardant UL94-V0",
+    desc: "High-turnover structural chassis, control panels, and aesthetic housings with SPI-A2 high gloss or SPI-C1 textured finishes.",
+    slug: "home-appliances"
+  },
+  {
+    title: "Automotive & EV Structural",
+    specs: "PA66+30% GF, PBT, ISO 2768-m",
+    desc: "Under-the-hood enclosures, connector housings, and lightweight structural brackets with tight tolerance consistency.",
+    slug: "automotive-ev"
+  },
+  {
+    title: "Industrial & Power Tools",
+    specs: "Overmolded TPE + Polypropylene",
+    desc: "Heavy-duty shock-absorbing handles, gear housing covers, and impact-resistant outer shells built for rugged environments.",
+    slug: "power-tools"
+  },
+  {
+    title: "Medical Devices & Diagnostics",
+    specs: "Medical Grade PEEK / PC, Cleanroom Audit",
+    desc: "Precision fluidic manifolds, diagnostic casing, and sterilization-compatible components with 100% CMM FAI tracking.",
+    slug: "medical-devices"
+  }
+];
+
+// 2. 4 步合作流程 (CRO 闭环)
+const steps = [
+  { num: "01", name: "CAD Upload & 24H DFM", detail: "Upload STEP/IGES. Receive automated 3D Moldflow analytics & draft angle audits within 24 hours." },
+  { num: "02", name: "Fast Tooling & T1 Samples", detail: "ASSAB S136 / NAK80 steel tooling. Fast T1 sample inspection delivery in as fast as 3-15 days." },
+  { num: "03", name: "High-Yield Mass Production", detail: "Automated robotic press lines operating 90T-1200T ensuring 99.2%+ consistent component yield." },
+  { num: "04", name: "Direct Ocean / Air DDP Freight", detail: "Direct containerization (FCL/LCL) straight from port hubs to North America & Europe with full customs clearance." }
+];
+---
+
+<section class="bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative select-none" id="industries">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    
+    <!-- 头部 Badge & 标题 -->
+    <div class="max-w-3xl mb-12" data-aos="fade-up">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="w-6 h-[3px] bg-[#EA580C]"></span>
+        <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-[0.25em]">
+          {t.badge}
+        </span>
+      </div>
+      <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-[#0F2B5B]">
+        {t.ind_title}
+      </h2>
+      <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl">
+        {t.ind_subtitle}
+      </p>
+    </div>
+
+    <!-- 1. 行业应用矩阵 (2x2 Grid + Learn More 精准链接) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20" data-aos="fade-up" data-aos-delay="100">
+      {industriesList.map((ind, idx) => (
+        <div class="bg-white border-2 border-[#0F2B5B]/15 p-6 sm:p-8 rounded-sm hover:border-[#EA580C] transition-all duration-300 relative group shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[#EA580C] font-mono font-black text-xs uppercase tracking-widest">SECTOR // 0{idx + 1}</span>
+              <span class="font-mono text-[10px] text-[#0F2B5B]/60 font-bold bg-[#0F2B5B]/5 px-2.5 py-0.5 rounded-sm border border-[#0F2B5B]/10">{ind.specs}</span>
+            </div>
+            <h3 class="text-lg font-extrabold uppercase italic text-[#0F2B5B] mb-2 group-hover:text-[#EA580C] transition-colors">{ind.title}</h3>
+            <p class="text-[#0F2B5B]/75 text-xs leading-relaxed font-sans mb-6">{ind.desc}</p>
+          </div>
+
+          <div class="pt-4 border-t border-[#0F2B5B]/10 flex items-center justify-between">
+            <a 
+              href={`/industries/${ind.slug}`} 
+              class="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold text-[#0F2B5B] group-hover:text-[#EA580C] uppercase tracking-wider transition-colors"
+            >
+              <span>{t.learn_more}</span>
+              <span class="group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+            <span class="font-mono text-[9px] text-[#0F2B5B]/40">ISO 2768-m</span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- 2. 4 步极速合作流程 (Process Workflow) -->
+    <div class="pt-12 border-t border-[#0F2B5B]/15 mb-16" id="process">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4" data-aos="fade-up">
+        <div class="max-w-3xl">
+          <h2 class="text-[clamp(1.5rem,2.8vw,2.2rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-[#0F2B5B]">
+            {t.proc_title}
+          </h2>
+          <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-medium leading-relaxed">
+            {t.proc_subtitle}
+          </p>
+        </div>
+
+        <a 
+          href="/logistics" 
+          class="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#EA580C] hover:text-[#C2410C] uppercase tracking-wider transition-colors group whitespace-nowrap"
+        >
+          <span>{t.learn_logistics}</span>
+          <span class="group-hover:translate-x-1 transition-transform">→</span>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-aos="fade-up" data-aos-delay="150">
+        {steps.map(s => (
+          <div class="bg-white border-2 border-[#0F2B5B]/15 p-5 rounded-sm relative hover:border-[#EA580C] transition-colors flex flex-col justify-between">
+            <div>
+              <div class="text-[#EA580C] font-mono font-black text-3xl mb-2">{s.num}</div>
+              <h4 class="font-bold text-xs uppercase tracking-wide text-[#0F2B5B] mb-2">{s.name}</h4>
+              <p class="text-[#0F2B5B]/75 text-[11px] leading-relaxed font-sans mb-4">{s.detail}</p>
+            </div>
+            <div class="pt-3 border-t border-[#0F2B5B]/10 font-mono text-[9px] text-[#0F2B5B]/50 flex justify-between">
+              <span>WORKFLOW STEP</span>
+              <span class="text-[#EA580C] font-bold">VERIFIED</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- ⚡️ 3. 终极询盘收割 Banner (CRO 临门一脚) -->
+    <div class="bg-[#0F2B5B] text-white p-8 sm:p-10 rounded-sm border-l-4 border-[#EA580C] shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8" data-aos="fade-up">
+      <div class="max-w-2xl">
+        <div class="font-mono text-[#EA580C] text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+          INSTANT CAPABILITY MATCHING
+        </div>
+        <h3 class="text-xl sm:text-2xl font-[1000] uppercase italic tracking-tight text-white mb-2">
+          {t.cta_banner_title}
+        </h3>
+        <p class="text-white/80 text-xs sm:text-sm leading-relaxed font-sans">
+          {t.cta_banner_desc}
+        </p>
+      </div>
+
+      <div class="shrink-0 w-full lg:w-auto">
+        <button 
+          onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL()"
+          class="w-full lg:w-auto bg-[#EA580C] hover:bg-[#C2410C] text-white font-mono font-black text-xs uppercase tracking-widest px-8 py-5 rounded-sm transition-all shadow-xl cursor-pointer transform hover:-translate-y-0.5 text-center"
+        >
+          {t.cta_btn}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>

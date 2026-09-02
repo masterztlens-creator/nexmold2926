@@ -1,0 +1,249 @@
+---
+/**
+ * InsightsAndPlatform.astro - 第六屏：数字化平台与工程资源 (工业画廊画幅版)
+ * 1. 结构：2/3 主展区 + 1/3 堆叠侧展区的画廊非等宽布局 (Asymmetric Gallery)
+ * 2. 色彩：纯粹三色 (纯白 #FFFFFF + 工业深蓝 #0F2B5B + 工业橙 #EA580C)
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "RESOURCE & DIGITAL INNOVATION // EXHIBITION",
+    title: "Latest Manufacturing Insights & Digital Platform",
+    subtitle: "Explore NEXMOLD engineering thermoplastics updates, advanced injection DFM whitepapers, and our automated quoting platform.",
+    
+    // 主展品：NEXDESK 数字平台
+    hero_exhibit: "EXHIBIT // 01",
+    hero_tag: "DIGITAL PLATFORM",
+    hero_title: "Meet NEXDESK™ by NEXMOLD",
+    hero_desc: "Our enhanced digital portal for instant 24-hour quoting, automated DFM feedback, and live T1 toolroom status tracking from prototype to mass production.",
+    hero_link: "EXPLORE NEXDESK™ PORTAL →",
+
+    // 展品 02: 特种树脂
+    ex2_exhibit: "EXHIBIT // 02",
+    ex2_tag: "MATERIAL EXPANSION",
+    ex2_title: "18 New High-Performance Resins Added",
+    ex2_desc: "Medical-grade PEEK, PPSU, and high-glass-fill PA66+50%GF for extreme mechanical durability.",
+    ex2_link: "BROWSE MATERIALS →",
+
+    // 展品 03: DFM 白皮书
+    ex3_exhibit: "EXHIBIT // 03",
+    ex3_tag: "DFM TECHNICAL REPORT",
+    ex3_title: "2026 High-Yield Tooling & Moldability Guide",
+    ex3_desc: "Eliminating sink marks, wall thickness optimization, and fast T1 tooling strategies.",
+    ex3_link: "DOWNLOAD DFM REPORT →"
+  },
+  de: {
+    badge: "RESSOURCEN & DIGITALE INNOVATION // AUSSTELLUNG",
+    title: "Neueste Fertigungseinblicke & Digitale Plattform",
+    subtitle: "Erkunden Sie Material-Updates, DFM-Weißbücher und unsere automatisierte Angebotsplattform.",
+    
+    hero_exhibit: "EXPONAT // 01",
+    hero_tag: "DIGITALE PLATTFORM",
+    hero_title: "Erleben Sie NEXDESK™ von NEXMOLD",
+    hero_desc: "Unser digitales Portal für sofortige 24-Stunden-Angebote, automatisierte DFM-Rückmeldungen und Live-T1-Werkzeugstatus-Verfolgung.",
+    hero_link: "NEXDESK™ PORTAL ERKUNDEN →",
+
+    ex2_exhibit: "EXPONAT // 02",
+    ex2_tag: "MATERIALERWEITERUNG",
+    ex2_title: "18 neue Hochleistungsharze hinzugefügt",
+    ex2_desc: "Medizinisches PEEK, PPSU und PA66+50%GF für extreme mechanische Haltbarkeit.",
+    ex2_link: "MATERIALIEN DURCHSUCHEN →",
+
+    ex3_exhibit: "EXPONAT // 03",
+    ex3_tag: "DFM-TECHNIKBERICHT",
+    ex3_title: "Leitfaden für hohe Werkzeugausbeute 2026",
+    ex3_desc: "Vermeidung von Einfallstellen, Wandstärkenoptimierung und schnelle T1-Strategien.",
+    ex3_link: "DFM-BERICHT HERUNTERLADEN →"
+  },
+  fr: {
+    badge: "RESSOURCES ET INNOVATION NUMÉRIQUE // EXPOSITION",
+    title: "Dernières Perspectives de Fabrication et Plateforme",
+    subtitle: "Découvrez les mises à jour de matériaux, les guides DFM et notre plateforme de devis automatisée.",
+    
+    hero_exhibit: "EXPOSITION // 01",
+    hero_tag: "PLATEFORME NUMÉRIQUE",
+    hero_title: "Découvrez NEXDESK™ par NEXMOLD",
+    hero_desc: "Notre portail numérique pour des devis instantanés en 24h, un retour DFM automatisé et un suivi du statut outillage T1 en direct.",
+    hero_link: "EXPLORER LE PORTAIL NEXDESK™ →",
+
+    ex2_exhibit: "EXPOSITION // 02",
+    ex2_tag: "EXTENSION MATÉRIAUX",
+    ex2_title: "18 Nouvelles Résines Haute Performance",
+    ex2_desc: "PEEK médical, PPSU et PA66+50%GF à haute teneur en verre pour une durabilité mécanique extrême.",
+    ex2_link: "PARCOURIR LES MATÉRIAUX →",
+
+    ex3_exhibit: "EXPOSITION // 03",
+    ex3_tag: "RAPPORT TECHNIQUE DFM",
+    ex3_title: "Guide d'Outillage et Moulabilité 2026",
+    ex3_desc: "Élimination des retassures, optimisation de l'épaisseur des parois et stratégies T1 rapides.",
+    ex3_link: "TÉLÉCHARGER LE RAPPORT DFM →"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative select-none" id="insights">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)]">
+    
+    <!-- 🎯 1. 标题与说明区 -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 border-b border-[#0F2B5B]/15 pb-6">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <span class="w-6 h-[3px] bg-[#EA580C]"></span>
+          <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-[0.25em]">
+            {t.badge}
+          </span>
+        </div>
+        <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-none text-[#0F2B5B]">
+          {t.title}
+        </h2>
+      </div>
+
+      <p class="text-[#0F2B5B]/75 text-xs sm:text-sm font-medium leading-relaxed max-w-md font-sans">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- 🖼️ 2. 工业画廊网格 (画廊展区非等宽布局) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- 🌟 左侧：展位 01 (主展区占据 2/3 宽，大画幅视窗) -->
+      <div class="lg:col-span-2 bg-white border-2 border-[#0F2B5B]/15 rounded-xs overflow-hidden shadow-xs hover:border-[#EA580C] transition-all duration-300 flex flex-col justify-between group">
+        <div>
+          <!-- 大尺寸 16:9 画廊大图 -->
+          <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] bg-[#0F2B5B]/5 border-b border-[#0F2B5B]/15 overflow-hidden">
+            <img 
+              src="/images/Insights/nexdesk-quoting-platform.webp" 
+              alt="NEXDESK Digital Platform Quoting System"
+              class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 ease-out"
+              loading="lazy"
+              decoding="async"
+            />
+            
+            <!-- 画廊展品编号与 Tag -->
+            <div class="absolute top-3 left-3 flex items-center gap-2">
+              <span class="bg-[#0F2B5B] text-white font-mono text-[9px] font-bold px-2.5 py-1 rounded-xs uppercase tracking-widest shadow-xs">
+                {t.hero_exhibit}
+              </span>
+              <span class="bg-white/90 backdrop-blur-xs text-[#EA580C] border border-[#EA580C]/30 font-mono text-[9px] font-bold px-2.5 py-1 rounded-xs uppercase tracking-wider">
+                {t.hero_tag}
+              </span>
+            </div>
+          </div>
+
+          <!-- 主展品文字区 -->
+          <div class="p-8">
+            <h3 class="text-xl sm:text-2xl font-[1000] uppercase italic text-[#0F2B5B] mb-3 group-hover:text-[#EA580C] transition-colors">
+              {t.hero_title}
+            </h3>
+            <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-sans leading-relaxed max-w-3xl">
+              {t.hero_desc}
+            </p>
+          </div>
+        </div>
+
+        <!-- 动作栏 -->
+        <div class="px-8 pb-8 pt-0">
+          <a 
+            href="#rfq"
+            class="inline-flex items-center font-mono text-xs font-black text-[#EA580C] uppercase tracking-wider group-hover:translate-x-1.5 transition-transform duration-300"
+          >
+            {t.hero_link}
+          </a>
+        </div>
+      </div>
+
+      <!-- 📦 右侧：展位 02 & 03 (上下堆叠占 1/3 宽) -->
+      <div class="flex flex-col gap-8">
+        
+        <!-- 展位 02: 18 种特种树脂 -->
+        <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-xs overflow-hidden shadow-xs hover:border-[#EA580C] transition-all duration-300 flex flex-col justify-between group flex-1">
+          <div>
+            <div class="relative w-full h-36 bg-[#0F2B5B]/5 border-b border-[#0F2B5B]/15 overflow-hidden">
+              <img 
+                src="/images/Insights/material-expansion-resins.webp" 
+                alt="High Performance Polymer Resin Samples"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                loading="lazy"
+                decoding="async"
+              />
+              <div class="absolute top-2 left-2 bg-[#0F2B5B] text-white font-mono text-[8.5px] font-bold px-2 py-0.5 rounded-xs uppercase tracking-widest">
+                {t.ex2_exhibit}
+              </div>
+            </div>
+
+            <div class="p-5">
+              <span class="font-mono text-[9px] font-black text-[#EA580C] uppercase tracking-wider block mb-1">
+                {t.ex2_tag}
+              </span>
+              <h4 class="font-extrabold text-[#0F2B5B] text-sm uppercase italic leading-tight mb-2 group-hover:text-[#EA580C] transition-colors">
+                {t.ex2_title}
+              </h4>
+              <p class="text-[#0F2B5B]/75 text-[11px] font-sans leading-relaxed">
+                {t.ex2_desc}
+              </p>
+            </div>
+          </div>
+
+          <div class="px-5 pb-5 pt-0">
+            <a 
+              href="#rfq"
+              class="inline-flex items-center font-mono text-[11px] font-black text-[#EA580C] uppercase tracking-wider group-hover:translate-x-1 transition-transform duration-300"
+            >
+              {t.ex2_link}
+            </a>
+          </div>
+        </div>
+
+        <!-- 展位 03: DFM 技术报告 -->
+        <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-xs overflow-hidden shadow-xs hover:border-[#EA580C] transition-all duration-300 flex flex-col justify-between group flex-1">
+          <div>
+            <div class="relative w-full h-36 bg-[#0F2B5B]/5 border-b border-[#0F2B5B]/15 overflow-hidden">
+              <img 
+                src="/images/Insights/dfm-tooling-guide.webp" 
+                alt="NEXMOLD Injection Molding DFM Whitepaper"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                loading="lazy"
+                decoding="async"
+              />
+              <div class="absolute top-2 left-2 bg-[#0F2B5B] text-white font-mono text-[8.5px] font-bold px-2 py-0.5 rounded-xs uppercase tracking-widest">
+                {t.ex3_exhibit}
+              </div>
+            </div>
+
+            <div class="p-5">
+              <span class="font-mono text-[9px] font-black text-[#EA580C] uppercase tracking-wider block mb-1">
+                {t.ex3_tag}
+              </span>
+              <h4 class="font-extrabold text-[#0F2B5B] text-sm uppercase italic leading-tight mb-2 group-hover:text-[#EA580C] transition-colors">
+                {t.ex3_title}
+              </h4>
+              <p class="text-[#0F2B5B]/75 text-[11px] font-sans leading-relaxed">
+                {t.ex3_desc}
+              </p>
+            </div>
+          </div>
+
+          <div class="px-5 pb-5 pt-0">
+            <a 
+              href="#rfq"
+              class="inline-flex items-center font-mono text-[11px] font-black text-[#EA580C] uppercase tracking-wider group-hover:translate-x-1 transition-transform duration-300"
+            >
+              {t.ex3_link}
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>

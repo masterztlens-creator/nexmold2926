@@ -1,0 +1,194 @@
+---
+/**
+ * RFQ.astro - 最终优化版
+ * 修复：移除 define:vars，改用 data-attributes 传递国际化文本，消除 astro(4000) 警告。
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en', location = "Global Market" } = Astro.props;
+
+const i18n = {
+  en: {
+    title: "Request for Quote",
+    subtitle: "Precision Engineering Starts Here",
+    name: "Full Name",
+    email: "Work Email",
+    company: "Company",
+    message: "Project Requirements",
+    submit: "Initialize Transmission",
+    loading: "TRANSMITTING...",
+    success: "SUCCESS"
+  },
+  de: {
+    title: "Angebot Anfordern",
+    subtitle: "Präzision beginnt hier",
+    name: "Vollständiger Name",
+    email: "Geschäftliche E-Mail",
+    company: "Unternehmen",
+    message: "Projektanforderungen",
+    submit: "Übermittlung Starten",
+    loading: "ÜBERMITTLUNG...",
+    success: "ERFOLGREICH"
+  },
+  fr: {
+    title: "Demander un Devis",
+    subtitle: "L'ingénierie de précision commence ici",
+    name: "Nom complet",
+    email: "Email professionnel",
+    company: "Entreprise",
+    message: "Exigences du projet",
+    submit: "Lancer la Transmission",
+    loading: "ENVOI EN COURS...",
+    success: "SUCCÈS"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="relative bg-[#0B1221] py-32 overflow-hidden border-t border-white/5" id="rfq">
+  <div class="max-w-4xl mx-auto px-6 relative z-10">
+    
+    <header class="text-center mb-16" data-aos="fade-up">
+      <h2 class="text-5xl lg:text-7xl font-[1000] text-white uppercase italic tracking-tighter mb-4">
+        {t.title}
+      </h2>
+      <p class="text-[#94A3B8] font-light uppercase tracking-widest text-xs">
+        // {t.subtitle}
+      </p>
+    </header>
+
+    <form 
+      id="rfq-form" 
+      class="grid grid-cols-1 md:grid-cols-2 gap-8"
+      data-aos="fade-up"
+      data-aos-delay="200"
+      data-t-submit={t.submit}
+      data-t-loading={t.loading}
+      data-t-success={t.success}
+    >
+      <input type="hidden" name="user_location" value={location} />
+      <input type="hidden" name="subject" value={`New Inquiry from NEXMOLD (${location})`} />
+      <input type="hidden" name="from_name" value="NEXMOLD Web System" />
+
+      <div class="space-y-2 flex flex-col">
+        <label for="rfq-name" class="text-[10px] font-black text-white/40 uppercase tracking-widest">{t.name}</label>
+        <input 
+          type="text" 
+          id="rfq-name" 
+          name="name" 
+          required 
+          autocomplete="name" 
+          placeholder="e.g. John Doe"
+          class="w-full bg-white/5 border border-white/10 p-4 text-white focus:border-[#F97316] outline-none transition-colors italic" 
+        />
+      </div>
+
+      <div class="space-y-2 flex flex-col">
+        <label for="rfq-email" class="text-[10px] font-black text-white/40 uppercase tracking-widest">{t.email}</label>
+        <input 
+          type="email" 
+          id="rfq-email" 
+          name="email" 
+          required 
+          autocomplete="email" 
+          placeholder="email@company.com"
+          class="w-full bg-white/5 border border-white/10 p-4 text-white focus:border-[#F97316] outline-none transition-colors italic" 
+        />
+      </div>
+
+      <div class="md:col-span-2 space-y-2 flex flex-col">
+        <label for="rfq-company" class="text-[10px] font-black text-white/40 uppercase tracking-widest">{t.company}</label>
+        <input 
+          type="text" 
+          id="rfq-company" 
+          name="company" 
+          autocomplete="organization" 
+          placeholder="Your Company Name"
+          class="w-full bg-white/5 border border-white/10 p-4 text-white focus:border-[#F97316] outline-none transition-colors italic" 
+        />
+      </div>
+
+      <div class="md:col-span-2 space-y-2 flex flex-col">
+        <label for="rfq-message" class="text-[10px] font-black text-white/40 uppercase tracking-widest">{t.message}</label>
+        <textarea 
+          id="rfq-message" 
+          name="message" 
+          rows="5" 
+          required 
+          placeholder="Describe your precision tooling requirements..."
+          class="w-full bg-white/5 border border-white/10 p-4 text-white focus:border-[#F97316] outline-none transition-colors italic resize-none"
+        ></textarea>
+      </div>
+
+      <div class="md:col-span-2 mt-8">
+        <button 
+          type="submit" 
+          id="rfq-submit-btn"
+          class="group relative w-full bg-[#F97316] py-6 text-white font-black uppercase tracking-[0.3em] italic hover:bg-white hover:text-[#0B1221] transition-all duration-500 active:scale-[0.98]"
+        >
+          <span id="rfq-btn-text">{t.submit}</span>
+          <div class="absolute bottom-0 left-0 w-full h-[2px] bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  function initRFQ() {
+    const form = document.getElementById('rfq-form') as HTMLFormElement;
+    const btnText = document.getElementById('rfq-btn-text');
+    const btn = document.getElementById('rfq-submit-btn') as HTMLButtonElement;
+    const ACCESS_KEY = "840bb3ed-23d6-4bc1-8c07-68dd7f124c91";
+
+    if (form && !form.dataset.listener) {
+      form.dataset.listener = "true";
+
+      // 从 Data Attributes 获取文本
+      const submitText = form.dataset.tSubmit || "";
+      const loadingText = form.dataset.tLoading || "";
+      const successText = form.dataset.tSuccess || "";
+      
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (btn) btn.style.pointerEvents = 'none';
+        if (btnText) btnText.textContent = loadingText;
+
+        const formData = new FormData(form);
+        formData.append("access_key", ACCESS_KEY);
+
+        try {
+          const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            if (btnText) btnText.textContent = successText;
+            form.reset();
+            setTimeout(() => {
+              if (btnText) btnText.textContent = submitText;
+              if (btn) btn.style.pointerEvents = 'auto';
+            }, 5000);
+          }
+        } catch (error) {
+          if (btnText) btnText.textContent = "TRANSMISSION ERROR";
+          setTimeout(() => {
+            if (btnText) btnText.textContent = submitText;
+            if (btn) btn.style.pointerEvents = 'auto';
+          }, 3000);
+        }
+      });
+    }
+  }
+
+  initRFQ();
+  document.addEventListener('astro:after-swap', initRFQ);
+</script>

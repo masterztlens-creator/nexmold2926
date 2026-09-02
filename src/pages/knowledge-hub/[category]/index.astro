@@ -1,0 +1,62 @@
+﻿---
+import '../../../styles/global.css';
+
+// src/pages/knowledge-hub/[category]/index.astro
+
+import Header from "../../../components/Header.astro";
+import Footer from "../../../components/Footer.astro";
+import { getArticlesByCategory } from "../../../data/knowledge";
+
+// 鍛婅瘔 Astro 闇€瑕佺敓鎴愬摢 5 涓垎绫荤殑闈欐€侀〉闈?
+export function getStaticPaths() {
+  return [
+    { params: { category: 'calculators-tools' } },
+    { params: { category: 'dfm-tolerances' } },
+    { params: { category: 'tooling-metallurgy' } },
+    { params: { category: 'defects-solutions' } },
+    { params: { category: 'materials' } },
+    { params: { category: 'standards' } }
+  ];
+}
+
+const { category } = Astro.params;
+const articles = getArticlesByCategory(category);
+
+// 渚濇嵁 category 娓叉煋涓嶅悓鐨勫ご閮ㄦ枃妗?
+const categoryContent = {
+  'defects-solutions': { title: 'Injection Molding Defects & Solutions', desc: 'Diagnose warpage, sink marks, flash, and other molding defects.' },
+  // ...浣犲彲浠ュ湪杩欓噷琛ュ叏鍏朵粬4涓垎绫荤殑鏂囨
+}[category as string] || { title: 'Engineering Knowledge Base', desc: 'Technical resources for injection molding.' };
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{categoryContent.title} | NEXMOLD</title>
+</head>
+<body class="bg-slate-50 font-sans text-[#0F2B5B]">
+  <Header />
+
+  <main class="max-w-[1240px] mx-auto px-6 py-20">
+    <h1 class="text-5xl font-black mb-4 uppercase">{categoryContent.title}</h1>
+    <p class="text-lg text-slate-500 mb-12">{categoryContent.desc}</p>
+
+    <!-- 鍔ㄦ€佸垪鍑鸿鍒嗙被涓嬬殑鎵€鏈夊瓙鏂囩珷 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {articles.length > 0 ? articles.map(article => (
+        <a href={`/knowledge-hub/${category}/${article.slug}/`} class="block bg-white p-8 rounded-xl border border-slate-200 hover:border-[#EA580C] shadow-sm hover:shadow-md transition-all">
+          <h2 class="text-xl font-bold mb-3">{article.title}</h2>
+          <p class="text-sm text-slate-500">{article.description}</p>
+          <span class="inline-block mt-6 text-[#EA580C] font-bold text-xs uppercase tracking-widest">Read Article →</span>
+        </a>
+      )) : (
+        <p class="text-slate-400 font-mono">Knowledge nodes are being populated...</p>
+      )}
+    </div>
+  </main>
+
+  <Footer />
+</body>
+</html>
+

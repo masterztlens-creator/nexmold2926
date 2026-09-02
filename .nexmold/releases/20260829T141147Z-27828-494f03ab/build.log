@@ -1,0 +1,843 @@
+2026-08-29T14:11:47.429Z [GATE_FILE] runtime: scripts\runtime-gate.mjs
+2026-08-29T14:11:47.430Z [GATE_FILE] sitemap: scripts\sitemap-gate.mjs
+2026-08-29T14:11:47.431Z [GATE_FILE] releasePreflight: scripts\release-preflight.mjs
+2026-08-29T14:11:47.431Z [GATE_FILE] routeConflict: scripts\route-conflict-check.mjs
+2026-08-29T14:11:47.432Z [GATE_FILE] core: scripts\v714-core-gate.mjs
+2026-08-29T14:11:47.433Z [RUNTIME_GATE] $ node "E:\nexmold\scripts\runtime-gate.mjs"
+2026-08-29T14:11:47.646Z [SITEMAP_GATE] $ node "E:\nexmold\scripts\sitemap-gate.mjs"
+2026-08-29T14:11:47.801Z [RELEASE_PREFLIGHT] $ node "E:\nexmold\scripts\release-preflight.mjs"
+{
+  "schema": "nexmold.v7.14.release-preflight.v1",
+  "gate": "release-preflight",
+  "passed": true,
+  "checks": [
+    {
+      "id": "exists:package.json",
+      "passed": true
+    },
+    {
+      "id": "exists:astro.config.mjs",
+      "passed": true
+    },
+    {
+      "id": "exists:src",
+      "passed": true
+    },
+    {
+      "id": "exists:public",
+      "passed": true
+    }
+  ]
+}
+2026-08-29T14:11:47.964Z [ROUTE_CONFLICT_GATE] $ node "E:\nexmold\scripts\route-conflict-check.mjs"
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/about:/[lang]
+------------------------------------------------------------
+{
+  "gate": "route-conflict",
+  "policy": "V7.14.1",
+  "passed": true,
+  "filesScanned": 31,
+  "staticRoutes": 27,
+  "dynamicRoutes": 4,
+  "conflicts": 0,
+  "shadowedRoutes": 11,
+  "warnings": 11,
+  "hardConflicts": 0,
+  "routeOwners": [
+    {
+      "route": "/",
+      "rel": "index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/[lang]",
+      "rel": "[lang]/index.astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/about",
+      "rel": "about.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/capabilities",
+      "rel": "capabilities/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/capabilities/rapid-tooling-s136",
+      "rel": "capabilities/rapid-tooling-s136.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/components/microfluidic-cartridges",
+      "rel": "components/microfluidic-cartridges.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/components/precision-gears",
+      "rel": "components/precision-gears.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/free-dfm-analysis",
+      "rel": "free-dfm-analysis/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/industries",
+      "rel": "industries/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/knowledge-hub",
+      "rel": "knowledge-hub/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/knowledge-hub/[category]",
+      "rel": "knowledge-hub/[category]/index.astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/knowledge-hub/[category]/[slug]",
+      "rel": "knowledge-hub/[category]/[slug].astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/materials",
+      "rel": "materials/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/products",
+      "rel": "products/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/quality",
+      "rel": "quality.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/quality/zeiss-cmm-inspection",
+      "rel": "quality/zeiss-cmm-inspection.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources",
+      "rel": "resources/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/clamping-force-calculator",
+      "rel": "resources/calculators/clamping-force-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/cost-guide",
+      "rel": "resources/calculators/cost-guide.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/draft-angle-calculator",
+      "rel": "resources/calculators/draft-angle-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/faq",
+      "rel": "resources/calculators/faq.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/injection-mold-cost-estimator",
+      "rel": "resources/calculators/injection-mold-cost-estimator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/instant-dfm-checker",
+      "rel": "resources/calculators/instant-dfm-checker.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/calculators/shrinkage-calculator",
+      "rel": "resources/calculators/shrinkage-calculator.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/defect-troubleshooting",
+      "rel": "resources/design-guides/defect-troubleshooting.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/surface-finish",
+      "rel": "resources/design-guides/surface-finish.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/design-guides/wall-thickness",
+      "rel": "resources/design-guides/wall-thickness.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/resources/faq",
+      "rel": "resources/faq.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/services",
+      "rel": "services/index.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    },
+    {
+      "route": "/services/[slug]",
+      "rel": "services/[slug].astro",
+      "dynamic": true,
+      "dynamicKind": "dynamic"
+    },
+    {
+      "route": "/services/custom-injection-molding",
+      "rel": "services/custom-injection-molding.astro",
+      "dynamic": false,
+      "dynamicKind": null
+    }
+  ]
+}
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/capabilities:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/free-dfm-analysis:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/industries:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/knowledge-hub:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/materials:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/products:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/quality:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/resources:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/services:/[lang]
+[V7.14 Route Gate][WARN] STATIC_SHADOWS_DYNAMIC:/services/custom-injection-molding:/services/[slug]
+2026-08-29T14:11:48.135Z [V714_CORE_GATE] $ node "E:\nexmold\scripts\v714-core-gate.mjs"
+[NEXMOLD][V7.14][CORE] Evidence -> Claim -> Firewall -> Publication Gate
+[NEXMOLD][V7.14][CORE] Evidence contract: PRESENT
+[NEXMOLD][V7.14][CORE] Eligibility contract: PRESENT
+[NEXMOLD][V7.14][CORE] Epistemic Firewall: PRESENT
+[NEXMOLD][V7.14][CORE] Publication Gate: PRESENT
+[NEXMOLD][V7.14][CORE] Evidence contract: PASS
+[NEXMOLD][V7.14][CORE] Claim boundary: CLOSED
+[NEXMOLD][V7.14][CORE] Epistemic Firewall: PRESENT
+[NEXMOLD][V7.14][CORE] Publication Gate: PRESENT
+[NEXMOLD][V7.14][CORE] Public Artifact = 0
+[NEXMOLD][V7.14][CORE] PASS
+{
+  "orchestrator": "V7.14-CORE",
+  "phase": "core-pass",
+  "passed": true,
+  "reason": "V714_PUBLIC_BOUNDARY_CLOSED",
+  "contracts": [
+    {
+      "name": "Evidence contract",
+      "passed": true,
+      "path": "src/regional/types.ts"
+    },
+    {
+      "name": "Eligibility contract",
+      "passed": true,
+      "path": "src/regional/eligibility.ts"
+    },
+    {
+      "name": "Epistemic Firewall",
+      "passed": true,
+      "path": "src/regional/epistemic-firewall.ts"
+    },
+    {
+      "name": "Publication Gate",
+      "passed": true,
+      "path": "src/regional/publication-gate.ts"
+    }
+  ],
+  "publicArtifacts": {
+    "passed": true,
+    "count": 0,
+    "artifacts": []
+  }
+}
+2026-08-29T14:11:48.303Z [TYPECHECK] $ npx astro check
+[2m22:11:51[22m [34m[content][39m Syncing content
+[2m22:11:51[22m [34m[content][39m Synced content
+[2m22:11:51[22m [34m[types][39m Generated [2m381ms[22m
+[2m22:11:51[22m [34m[check][39m Getting diagnostics for Astro files in E:\nexmold...
+[96msrc/content.config.ts[0m:[93m1[0m:[93m28[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m1[0m import { defineCollection, z } from 'astro:content';
+[7m [0m [93m                           ~[0m
+[96msrc/content.config.ts[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6192): [0mAll imports in import declaration are unused.
+
+[7m1[0m import { defineCollection, z } from 'astro:content';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/Header.astro[0m:[93m107[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m107[0m <script type="application/ld+json" set:html={JSON.stringify(schemaNavData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/components/KnowledgeArticle.astro[0m:[93m54[0m:[93m25[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m54[0m   {faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
+[7m  [0m [93m                        ~~~~[0m
+[96msrc/components/KnowledgeArticle.astro[0m:[93m53[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m53[0m   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+[7m  [0m [93m          ~~~~[0m
+[96msrc/components/KnowledgeArticle.astro[0m:[93m52[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m52[0m   <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/data/knowledge.ts[0m:[93m5473[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'renderContentBlock' is declared but its value is never read.
+
+[7m5473[0m function renderContentBlock(block: RawContentBlock): ContentBlock {
+[7m    [0m [93m         ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/data/knowledge.ts[0m:[93m5250[0m:[93m9[0m - [93mwarning[0m[90m ts(6133): [0m'category' is declared but its value is never read.
+
+[7m5250[0m   const category = raw.category.toLowerCase();
+[7m    [0m [93m        ~~~~~~~~[0m
+[96msrc/data/knowledge.ts[0m:[93m5223[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'CATEGORY_AUDIENCE' is declared but its value is never read.
+
+[7m5223[0m const CATEGORY_AUDIENCE: Record<string, string[]> = {
+[7m    [0m [93m      ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/layouts/MainLayout.astro[0m:[93m24[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'industry' is declared but its value is never read.
+
+[7m24[0m   industry = "OEM / Industrial Applications"
+[7m  [0m [93m  ~~~~~~~~[0m
+[96msrc/layouts/MainLayout.astro[0m:[93m23[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'material' is declared but its value is never read.
+
+[7m23[0m   material = "Custom Engineering Polymer",
+[7m  [0m [93m  ~~~~~~~~[0m
+
+[96msrc/pages/about.astro[0m:[93m242[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m242[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/index.astro[0m:[93m125[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m125[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/capabilities/index.astro[0m:[93m185[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m185[0m <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/capabilities/rapid-tooling-s136.astro[0m:[93m236[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m236[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/components/microfluidic-cartridges.astro[0m:[93m200[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m200[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/components/precision-gears.astro[0m:[93m200[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m200[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/free-dfm-analysis/index.astro[0m:[93m54[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m54[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/pages/industries/index.astro[0m:[93m1292[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m1292[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request successfully submitted!'); const m = document.getElementById('lead-modal'); if (m) m.close();">
+[7m    [0m [93m                                          ~~~~~[0m
+[96msrc/pages/industries/index.astro[0m:[93m224[0m:[93m13[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m224[0m     <script type="application/ld+json">
+[7m   [0m [93m            ~~~~[0m
+
+[96msrc/pages/knowledge-hub/index.astro[0m:[93m101[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m101[0m   <script type="application/ld+json" set:html={JSON.stringify({
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/materials/index.astro[0m:[93m1020[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m1020[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('CAD file received. An engineering DFM analysis and tooling quotation will be generated within 24 hours.');">
+[7m    [0m [93m                                          ~~~~~[0m
+[96msrc/pages/materials/index.astro[0m:[93m929[0m:[93m63[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m929[0m           <form class="space-y-3 text-xs font-mono" onsubmit="event.preventDefault(); alert('Sample kit request received. An engineer will verify shipping address within 2 hours.');">
+[7m   [0m [93m                                                              ~~~~~[0m
+[96msrc/pages/materials/index.astro[0m:[93m279[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m279[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m          ~~~~[0m
+
+[96msrc/pages/products/index.astro[0m:[93m217[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m217[0m <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/quality/zeiss-cmm-inspection.astro[0m:[93m201[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m201[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/faq.astro[0m:[93m197[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m197[0m <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/index.astro[0m:[93m221[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m221[0m <script type="application/ld+json" set:html={JSON.stringify(resourcesSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/calculators/cost-guide.astro[0m:[93m18[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'calculatorSchema' is declared but its value is never read.
+
+[7m18[0m const calculatorSchema = {
+[7m  [0m [93m      ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/resources/calculators/faq.astro[0m:[93m135[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m135[0m <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/calculators/instant-dfm-checker.astro[0m:[93m183[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m183[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/defect-troubleshooting.astro[0m:[93m152[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m152[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/surface-finish.astro[0m:[93m153[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m153[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/resources/design-guides/wall-thickness.astro[0m:[93m153[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m153[0m <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m        ~~~~[0m
+
+[96msrc/pages/services/[slug].astro[0m:[93m39[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'comparisonTable' is declared but its value is never read.
+
+[7m39[0m const comparisonTable = spoke.comparisonTable || [];
+[7m  [0m [93m      ~~~~~~~~~~~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m369[0m:[93m126[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m369[0m         <form class="bg-[#F8FAFC] border border-[#0F2B5B]/10 rounded-lg p-6 sm:p-8 space-y-4 text-left shadow-2xs" onsubmit="event.preventDefault(); alert('CAD File received. Our Dongguan engineering team will review and return your DFM report within 24 hours.');">
+[7m   [0m [93m                                                                                                                             ~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m180[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m180[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center font-mono text-xs text-white/60\'>[ DONGGUAN HAITIAN SERVO WORKCELL ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/[slug].astro[0m:[93m68[0m:[93m11[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m68[0m   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m  [0m [93m          ~~~~[0m
+
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m496[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m496[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request submitted successfully!'); const m = document.getElementById('lead-modal'); if (m && typeof m.close === 'function') m.close();">
+[7m   [0m [93m                                          ~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m401[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m401[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ ZEISS CMM Metrology Photo ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m271[0m:[93m31[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m271[0m                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Haitian Press Fleet Photo ]</div>';"
+[7m   [0m [93m                              ~~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m517[0m:[93m60[0m - [93mwarning[0m[90m ts(6133): [0m'source' is declared but its value is never read.
+
+[7m517[0m         (window as any).NEXMOLD_OPEN_LEAD_MODAL = function(source?: string) {
+[7m   [0m [93m                                                           ~~~~~~[0m
+[96msrc/pages/services/custom-injection-molding.astro[0m:[93m140[0m:[93m13[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m140[0m     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+[7m   [0m [93m            ~~~~[0m
+
+[96msrc/pages/services/index.astro[0m:[93m809[0m:[93m43[0m - [93mwarning[0m[90m ts(6385): [0m'event' is deprecated.
+
+[7m809[0m         <form class="space-y-4" onsubmit="event.preventDefault(); alert('Request submitted successfully!'); const m = document.getElementById('lead-modal'); if (m && typeof m.close === 'function') m.close();">
+[7m   [0m [93m                                          ~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m735[0m:[93m270[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m735[0m                   <img src="/images/services/nexmold_volume_pricing_lead_time.webp" alt="Volume Tiered Pricing Breakdown Sample" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ Price Breakdown ]</span><span>1k / 10k / 100k Production</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                             ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m707[0m:[93m263[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m707[0m                   <img src="/images/services/nexmold_t1_sample_cmm_inspection.webp" alt="ZEISS CMM Inspection Log Sample" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ CMM Log Plot ]</span><span>ISO 2768 Tolerance Pass</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                      ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m679[0m:[93m279[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m679[0m                   <img src="/images/services/nexmold_injection_tool_dfm_analysis.webp" alt="Injection Tooling DFM Analysis Sample Report" loading="lazy" class="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase gap-1\'><span class=\'font-black text-[#EA580C]\'>[ DFM CAD Mesh ]</span><span>Draft Angle & Sink Map</span></div>';" />
+[7m   [0m [93m                                                                                                                                                                                                                                                                                      ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m541[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m541[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Resin Raw Material Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m508[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m508[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ DFM CAD Analysis Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m475[0m:[93m33[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m475[0m                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-[#F8FAFC] flex items-center justify-center font-mono text-xs text-[#0F2B5B]/50 uppercase\'>[ Part Life Cycle Photo ]</div>';"
+[7m   [0m [93m                                ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m408[0m:[93m37[0m - [93mwarning[0m[90m ts(6133): [0m'onerror' is declared but its value is never read.
+
+[7m408[0m                       onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-32 bg-[#F8FAFC] border border-dashed border-[#0F2B5B]/20 rounded-xs flex items-center justify-center font-mono text-[10px] text-[#0F2B5B]/50 uppercase\'>[ Part Image ]</div>';"
+[7m   [0m [93m                                    ~~~~~~~[0m
+[96msrc/pages/services/index.astro[0m:[93m866[0m:[93m51[0m - [93mwarning[0m[90m ts(6133): [0m'source' is declared but its value is never read.
+
+[7m866[0m         window.NEXMOLD_OPEN_LEAD_MODAL = function(source?: string) {
+[7m   [0m [93m                                                  ~~~~~~[0m
+
+Result (93 files): 
+- 0 errors
+- 0 warnings
+- 52 hints
+
+2026-08-29T14:12:00.071Z [TEST] $ node --experimental-strip-types tests/contracts/v714-contracts.mjs
+{
+  "schema": "nexmold.v7.14.contract-tests.v1",
+  "passed": true,
+  "total": 10,
+  "failed": 0,
+  "results": [
+    {
+      "name": "eligible-publishes-artifact",
+      "passed": true
+    },
+    {
+      "name": "artifact-is-branded",
+      "passed": true
+    },
+    {
+      "name": "blocked-produces-zero-public-artifact",
+      "passed": true
+    },
+    {
+      "name": "not-applicable-produces-zero-public-artifact",
+      "passed": true
+    },
+    {
+      "name": "non-verified-compliance-produces-zero-public-artifact",
+      "passed": true
+    },
+    {
+      "name": "incomplete-evidence-produces-zero-public-artifact",
+      "passed": true
+    },
+    {
+      "name": "missing-evidence-binding-produces-zero-public-artifact",
+      "passed": true
+    },
+    {
+      "name": "route-is-projected-from-artifact",
+      "passed": true
+    },
+    {
+      "name": "route-hash-equals-artifact-hash",
+      "passed": true
+    },
+    {
+      "name": "publication-gate-blocks-without-artifact",
+      "passed": true
+    }
+  ]
+}
+2026-08-29T14:12:00.370Z [EPOCH] Existing dist removed before build.
+2026-08-29T14:12:00.371Z [BUILD] $ npx astro build
+[2m22:12:03[22m [34m[content][39m Syncing content
+[2m22:12:03[22m [34m[content][39m Synced content
+[2m22:12:03[22m [34m[types][39m Generated [2m362ms[22m
+[2m22:12:03[22m [34m[build][39m output: [34m"static"[39m
+[2m22:12:03[22m [34m[build][39m mode: [34m"static"[39m
+[2m22:12:03[22m [34m[build][39m directory: [34mE:\nexmold\dist\[39m
+[2m22:12:03[22m [34m[build][39m Collecting build info...
+[2m22:12:03[22m [34m[build][39m [32m✓ Completed in 419ms.[39m
+[2m22:12:03[22m [34m[build][39m Building static entrypoints...
+[2m22:12:05[22m [34m[vite][39m [32m✓ built in 2.38s[39m
+[2m22:12:05[22m [34m[vite][39m [32m✓ built in 262ms[39m
+[2m22:12:05[22m [34m[build][39m Rearranging server assets...
+
+[42m[30m generating static routes [39m[49m
+[2m22:12:06[22m   [34m├─[39m [2m/404.html[22m [2m(+9ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/about/index.html[22m [2m(+9ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/capabilities/rapid-tooling-s136/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/capabilities/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/components/microfluidic-cartridges/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/components/precision-gears/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/free-dfm-analysis/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/industries/index.html[22m [2m(+8ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/injection-molding-fundamentals/what-is-injection-molding/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/injection-molding-fundamentals/injection-molding-process/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/injection-molding-fundamentals/injection-molding-machine-components/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/injection-molding-fundamentals/thermoplastic-vs-thermoset-vs-elastomer-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/injection-molding-fundamentals/injection-molding-cost-drivers/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/clamp-tonnage-calculator/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/shrinkage-calculator/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/cycle-time-calculator/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/injection-molding-cost-estimator/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/gate-runner-sizing/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/shot-size-machine-selection/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/plastic-wall-thickness-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/draft-angle-injection-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/rib-boss-gusset-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/injection-molding-undercuts/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/parting-line-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/gate-location-best-practices/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/injection-mold-venting/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/snap-fit-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/plastic-screw-boss-thread-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/living-hinge-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/plastic-tolerance-stack-up/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/cosmetic-surface-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/ultrasonic-welding-joint-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/overmolding-two-shot-dfm/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/plastic-corner-radii/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/injection-mold-steel-selection/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/s136-vs-nak80-vs-718h/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/injection-mold-cooling-channel-design/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/conformal-cooling/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/hot-runner-vs-cold-runner/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/valve-gate-vs-hot-tip/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/edm-vs-cnc-mold-tooling/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/injection-mold-polishing/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/spi-vdi-3400-texture/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/mold-ejection-system-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/slides-lifters-core-mechanisms/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/injection-mold-maintenance/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/moldflow-analysis/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/scientific-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/abs-injection-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/pc-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/pp-injection-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/pa6-pa66-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/pom-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/peek-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/iso-20457-plastic-part-tolerances/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/din-16742-tolerances/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/iso-2768-general-tolerances/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/spi-mold-finish-standards/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/vdi-3400-mold-texture/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards-tolerances/gdt-for-plastic-injection-molded-parts/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/injection-molding-defects-guide/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/sink-marks-causes-solutions/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/injection-molding-warpage/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/injection-molding-flash/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/injection-molding-short-shot/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/weld-lines-knit-lines/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/mold-trial-t1-t2-t3/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/injection-molding-cycle-optimization/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/plastic-resin-drying-guide/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/cavity-pressure-process-monitoring/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/process-validation-iq-oq-pq/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/first-article-inspection-injection-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/multi-cavity-mold-cavity-balance/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/family-mold-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/insert-molding-design/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/gas-assisted-injection-molding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/micro-injection-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/injection-molding-quality-control-plan/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/production-quality/injection-molding-traceability/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/calculators-tools/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/dfm-tolerances/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/tooling-metallurgy/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/defects-solutions/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/materials/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/standards/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/knowledge-hub/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/materials/index.html[22m [2m(+8ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/products/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/quality/zeiss-cmm-inspection/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/quality/index.html[22m [2m(+7ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/clamping-force-calculator/index.html[22m [2m(+6ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/cost-guide/index.html[22m [2m(+16ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/draft-angle-calculator/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/faq/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/injection-mold-cost-estimator/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/instant-dfm-checker/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/calculators/shrinkage-calculator/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/design-guides/defect-troubleshooting/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/design-guides/surface-finish/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/design-guides/wall-thickness/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/faq/index.html[22m [2m(+4ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/resources/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/custom-injection-molding/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/liquid-silicone/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/overmolding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/insert-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/mucell-foaming/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/iml-imd/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/gas-water-assist/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/cleanroom-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/rapid-tooling/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/production-tooling/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/stack-molds/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/conformal-cooling/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/unscrewing-molds/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/hot-runner/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/moldflow-analysis/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/cnc-milling/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/cnc-turning/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/edm-machining/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/deep-hole-drilling/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/steel-cavities/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/zeiss-cmm/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/scientific-molding/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/annealing/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/emi-shielding/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/surface-finishing/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/assembly-fba/index.html[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/services/index.html[22m [2m(+5ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/sitemap.xml[22m [2m(+3ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/de/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/fr/index.html[22m [2m(+2ms)[22m 
+[2m22:12:06[22m   [34m├─[39m [2m/index.html[22m [2m(+15ms)[22m 
+[2m22:12:06[22m [32m✓ Completed in 487ms.
+[39m
+[42m[30m generating optimized images [39m[49m
+[2m22:12:06[22m   [32m▶[39m /_astro/hero-injection-component.BKIeMyF2_iuynz.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(1/1)[22m
+[2m22:12:06[22m [32m✓ Completed in 2ms.
+[39m
+[2m22:12:06[22m [34m[build][39m [32m✓ Completed in 3.22s.[39m
+[2m22:12:06[22m [34m[@astrojs/sitemap][39m `sitemap-index.xml` created at `dist`
+[2m22:12:06[22m [34m[build][39m 132 page(s) built in [1m3.66s[22m
+[2m22:12:06[22m [34m[build][39m [1mComplete![22m

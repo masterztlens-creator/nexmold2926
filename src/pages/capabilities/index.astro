@@ -1,0 +1,185 @@
+---
+/**
+ * src/pages/capabilities/index.astro
+ * 👑 NEXMOLD 全产业链 Capabilities & Materials 顶级 Hub 聚合页
+ * 1. 架构定位：承接整站所有材料库、表面处理、ISO 2768-m 公差与 DFM 模流分析的高权重中枢
+ * 2. 视觉规范：100% 钛白高奢风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO/SEO：高密度工程参数对比大盘 + CollectionPage 结构化数据深埋
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const title = "Engineering Capabilities, Resins & Metrology Database | NEXMOLD";
+const description = "Explore NEXMOLD's engineering capabilities: 200+ resin database (PEEK, PC, PA66+GF, POM), SPI/VDI surface finishes, ISO 2768-m CMM metrology, and 24H DFM moldflow analysis.";
+
+// 1. 工程塑料与特种树脂大盘
+const resinDatabase = [
+  { name: "PEEK (Polyetheretherketone)", category: "High-Temp Polymer", shrinkage: "1.2% - 1.5%", desc: "Extreme thermal resistance & bio-compatibility for medical & aerospace manifolds.", href: "/peek/medical-consumables/custom-surgical-trays", tag: "USP CLASS VI" },
+  { name: "Polycarbonate (PC)", category: "Engineering Plastic", shrinkage: "0.5% - 0.7%", desc: "High impact strength & optical clarity for high-gloss water tanks and housings.", href: "/polycarbonate/consumer-electronics/custom-optical-tanks", tag: "SPI-A2 MIRROR" },
+  { name: "Nylon 66 (PA66 + 30% GF)", category: "Reinforced Polymer", shrinkage: "0.5% - 0.8%", desc: "Glass-fiber reinforced for high-rigidity under-hood automotive connectors.", href: "/nylon66/automotive/custom-connectors", tag: "IATF 16949" },
+  { name: "POM (Polyoxymethylene / Acetal)", category: "Precision Polymer", shrinkage: "1.8% - 2.2%", desc: "Low friction coefficient & dimensional stability for gears, valves & pumps.", href: "/pom/industrial/custom-precision-gears", tag: "LOW FRICTION" },
+  { name: "Ultem PEI (Polyetherimide)", category: "High-Temp Polymer", shrinkage: "0.5% - 0.7%", desc: "High dielectric strength and environmental resistance for electrical housings.", href: "/ultem/electronics/custom-electrical-cases", tag: "UL94-V0" },
+  { name: "PC + ABS Blend", category: "Engineering Alloy", shrinkage: "0.4% - 0.6%", desc: "Optimal balance of toughness and heat resistance for appliances & automotive.", href: "/abs-pc/appliances/custom-appliance-housings", tag: "HIGH IMPACT" }
+];
+
+// 2. 表面处理与纹理标准
+const surfaceFinishes = [
+  { name: "SPI-A2 / SPI-A3 Optical Polish", desc: "Diamond buff polish for lens-quality optical clarity and mirror surfaces.", href: "/capabilities/finishes/spi-a2", tag: "OPTICAL MIRROR" },
+  { name: "Mold-Tech Texture Grain", desc: "Industry-standard chemical etching for tactile automotive and electronic surfaces.", href: "/capabilities/finishes/mold-tech", tag: "LEATHER / GRAIN" },
+  { name: "VDI 3400 EDM Spark Texture", desc: "Electrical discharge machining texture standards from VDI 12 to VDI 36.", href: "/capabilities/finishes/vdi-3400", tag: "EDM TEXTURE" },
+  { name: "Type II & III Hard Anodizing", desc: "Corrosion-resistant anodized finishes for CNC aluminum 6061/7075 components.", href: "/capabilities/finishes/anodizing", tag: "CORROSION RESISTANT" }
+];
+
+// 3. 公差控制与 Zeiss CMM 测量
+const metrologySpecs = [
+  { name: "ISO 2768-m Precision Standard", desc: "Strict adherence to medium-class linear and angular dimension tolerances.", href: "/capabilities/tolerance/iso-2768-m", tag: "MASTER SPEC" },
+  { name: "DIN 16742 Molded Tolerances", desc: "German standard tolerance groups for high-yield precision plastic injection.", href: "/capabilities/tolerance/din-16742", tag: "PLASTIC SPEC" },
+  { name: "Zeiss CMM 3D Metrology", desc: "Full First Article Inspection (FAI) reports with multi-axis Zeiss CMM equipment.", href: "/capabilities/metrology/zeiss-cmm", tag: "FAI INSPECTION" }
+];
+
+// CollectionPage Schema
+const collectionSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": title,
+  "description": description,
+  "url": "https://nexmold.com/capabilities",
+  "hasPart": [
+    ...resinDatabase.map(r => ({ "@type": "DefinedTerm", "name": r.name, "description": r.desc })),
+    ...surfaceFinishes.map(s => ({ "@type": "DefinedTerm", "name": s.name, "description": s.desc }))
+  ]
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Capabilities & Materials</span>
+      </nav>
+
+      <!-- 顶层 Banner -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-16">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          TOPIC_CLUSTER_ROOT // MATERIALS_&_METROLOGY_GRAPH
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Engineering Capabilities<br/>
+          <span class="text-[#EA580C]">& Resin Database</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          Access NEXMOLD’s comprehensive resin database, SPI/VDI surface finish standards, ISO 2768-m precision tolerance guidelines, and automated 24-hour DFM moldflow simulation capabilities.
+        </p>
+      </section>
+
+      <!-- 三大核心工程能力板块 -->
+      <div class="space-y-16">
+        
+        <!-- 模块 1: 工程树脂数据库 (Buyers Keyword 杀手锏) -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">DATABASE_01</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Engineering Resins & Polymers</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              200+ RESIN FORMULATIONS
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {resinDatabase.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-1">{item.name}</h3>
+                  <span class="text-[10px] font-mono font-bold text-[#EA580C] block mb-2">Shrinkage: {item.shrinkage}</span>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">Explore Material Specs →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 2: 表面处理与纹理标准 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">STANDARDS_02</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Surface Finishes & Textures</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#0F2B5B]/5 px-3 py-1.5 rounded text-[#0F2B5B]/70">
+              SPI / VDI / MOLD-TECH
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {surfaceFinishes.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#0F2B5B] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View Polish Standards →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- 模块 3: 公差控制与 Zeiss CMM 检测 -->
+        <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div class="flex items-center justify-between border-b-2 border-[#0F2B5B]/15 pb-4 mb-8">
+            <div>
+              <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block">METROLOGY_03</span>
+              <h2 class="text-2xl sm:text-3xl font-[1000] font-sans uppercase italic text-[#0F2B5B]">Precision Tolerances & Metrology</h2>
+            </div>
+            <span class="hidden sm:inline-block font-mono text-xs font-bold bg-[#EA580C]/10 text-[#EA580C] px-3 py-1.5 rounded">
+              ZEISS CMM AUDITED
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {metrologySpecs.map(item => (
+              <a href={item.href} class="group bg-[#FAFAFA] border border-[#0F2B5B]/10 hover:border-[#EA580C] p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-[8px] bg-[#EA580C] text-white font-mono font-black px-2 py-0.5 rounded-xs uppercase">{item.tag}</span>
+                    <span class="text-[#EA580C] font-black text-sm group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                  <h3 class="font-sans font-extrabold text-base text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors mb-2">{item.name}</h3>
+                  <p class="text-xs text-[#0F2B5B]/70 font-sans leading-relaxed">{item.desc}</p>
+                </div>
+                <span class="mt-4 pt-3 border-t border-[#0F2B5B]/10 text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-wider block">View Tolerance Specs →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<!-- Schema 注入 -->
+<script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />

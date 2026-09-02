@@ -1,0 +1,24 @@
+---
+/**
+ * SectionDivider.astro - 终极流体自适应版
+ * 1. 应用 clamp() 控制光束宽度：确保在 1024px (Nest Hub) 设备上比例完美。
+ * 2. 性能优化：使用 will-change 提升移动端滚动时的动画流畅度。
+ */
+---
+
+<div class="relative h-px w-full bg-white/5 overflow-hidden" aria-hidden="true">
+  <div 
+    class="absolute inset-y-0 bg-gradient-to-r from-transparent via-[#F97316] to-transparent animate-scan will-change-[left]"
+    style="width: clamp(100px, 25vw, 400px);"
+  ></div>
+</div>
+
+<style>
+  @keyframes scan { 
+    0% { left: -50%; } 
+    100% { left: 120%; } 
+  }
+  .animate-scan { 
+    animation: scan 6s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+  }
+</style>

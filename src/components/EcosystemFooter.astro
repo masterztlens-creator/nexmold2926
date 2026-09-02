@@ -1,0 +1,222 @@
+---
+/**
+ * EcosystemFooter.astro - NEXMOLD 全球数字制造网络终极功能补齐控制台
+ * ⚡️ 修复：新增 hideCadBanner 属性，彻底解决首页与 #rfq 表单区域撞车重复的严重问题
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  hideCadBanner?: boolean; // 👈 新增开关：在含有 #rfq 表单的页面设为 true，隐藏顶部重复卡片
+}
+
+const { lang = 'en', hideCadBanner = false } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "24/7 GLOBAL ENGINEERING DESK",
+    hero_title: "READY TO SCALE YOUR",
+    hero_title_orange: "INJECTION PRODUCTION?",
+    cad_drop_title: "SUBMIT YOUR CAD FILES FOR 24H DFM & QUOTE",
+    cad_drop_sub: "Upload .STEP, .STP, .IGS or .X_T files for automated moldability analysis, wall thickness check & instant quote.",
+    cta_btn: "UPLOAD CAD & REQUEST DFM →",
+    quick_links_title: "QUICK NAVIGATION",
+    legal_title: "COMPLIANCE & CREDENTIALS",
+  },
+  de: {
+    badge: "24/7 GLOBALE INGENIEUR-ZENTRALE",
+    hero_title: "BEREIT FÜR DIE SKALIERUNG",
+    hero_title_orange: "IHRER SPRITZGUSS-PRODUKTION?",
+    cad_drop_title: "CAD-DATEIEN FÜR 24H DFM & ANGEBOT EINREICHEN",
+    cad_drop_sub: "Laden Sie .STEP, .STP, .IGS oder .X_T Dateien für automatische Formbarkeitsprüfung & Sofortangebot hoch.",
+    cta_btn: "CAD HOCHLADEN & DFM ANFORDERN →",
+    quick_links_title: "SCHNELL-NAVIGATION",
+    legal_title: "COMPLIANCE & ZERTIFIKATE",
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+const quickNav = [
+  { name: "Press Fleet Capabilities", href: "#capabilities" },
+  { name: "Engineering & DFM Process", href: "/process" },
+  { name: "Target Industry Solutions", href: "#industries" },
+  { name: "Quality Control & Standards", href: "/quality" }
+];
+
+const credentials = [
+  "DUNS Registered: 554432109",
+  "ISO 9001:2015 Quality System",
+  "IATF 16949 Automotive Compliance",
+  "ISO 2768-m Precision Standard",
+  "Yantian Port / HK Direct Hub",
+  "DDP Duty-Paid US & EU Express"
+];
+---
+
+<footer class="bg-[#FAFAFA] text-[#0F2B5B] pt-12 sm:pt-16 pb-10 border-t-4 border-[#0F2B5B] relative overflow-hidden select-none" aria-label="NEXMOLD Ecosystem Final Command Control">
+  
+  <!-- 微网格底纹 -->
+  <div class="absolute inset-0 pointer-events-none opacity-[0.03]" 
+       style="background-image: linear-gradient(#0F2B5B 1.5px, transparent 1.5px), linear-gradient(90deg, #0F2B5B 1.5px, transparent 1.5px); background-size: 40px 40px;"
+       aria-hidden="true">
+  </div>
+
+  <div class="max-w-[1650px] mx-auto px-4 sm:px-8 relative z-10">
+    
+    <!-- 💥 1. CAD 引导 Card：当 hideCadBanner 为 false 时才渲染，避免与上方 #rfq 表单撞车 -->
+    {!hideCadBanner && (
+      <div class="mb-12 sm:mb-16 bg-white p-6 sm:p-10 rounded-2xl border-2 border-[#0F2B5B]/20 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col xl:flex-row items-center justify-between gap-8 relative z-10">
+          
+          <div class="space-y-3 text-center xl:text-left max-w-3xl">
+            <div class="inline-flex items-center gap-2 bg-[#EA580C]/10 border border-[#EA580C]/20 px-3 py-1 rounded-xs text-[#EA580C] font-mono text-xs font-black uppercase">
+              <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+              {t.badge}
+            </div>
+
+            <h2 class="text-2xl sm:text-4xl font-[1000] font-sans text-[#0F2B5B] italic uppercase tracking-tighter leading-tight">
+              {t.cad_drop_title}
+            </h2>
+
+            <p class="font-sans font-bold text-xs sm:text-base text-[#0F2B5B]/70 leading-relaxed">
+              {t.cad_drop_sub}
+            </p>
+          </div>
+
+          <a 
+            href="#rfq" 
+            class="w-full xl:w-auto bg-[#EA580C] hover:bg-[#d94e05] text-white font-sans font-[1000] text-sm sm:text-base px-10 py-5 rounded-full shadow-2xl transition-all duration-300 text-center uppercase tracking-wider shrink-0 border-2 border-white/30 transform hover:-translate-y-1"
+          >
+            {t.cta_btn}
+          </a>
+
+        </div>
+      </div>
+    )}
+
+    <!-- 💥 2. 导航、合规资质、联系方式三列 Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b-2 border-[#0F2B5B]/15">
+      
+      <!-- 快速导航 -->
+      <div class="space-y-4">
+        <h3 class="font-mono text-xs font-black text-[#0F2B5B] uppercase tracking-wider border-b-2 border-[#0F2B5B] pb-2 inline-block">
+          {t.quick_links_title}
+        </h3>
+        <ul class="space-y-2.5 font-mono text-xs font-bold text-[#0F2B5B]/80">
+          {quickNav.map(item => (
+            <li>
+              <a href={item.href} class="hover:text-[#EA580C] transition-colors flex items-center gap-2 group">
+                <span class="text-[#EA580C] font-black group-hover:translate-x-1 transition-transform">›</span>
+                <span>{item.name}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- 补齐实体合规资质 -->
+      <div class="space-y-4">
+        <h3 class="font-mono text-xs font-black text-[#0F2B5B] uppercase tracking-wider border-b-2 border-[#0F2B5B] pb-2 inline-block">
+          {t.legal_title}
+        </h3>
+        <ul class="space-y-2.5 font-mono text-xs font-bold text-[#0F2B5B]/80">
+          {credentials.map(item => (
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- 补齐官方联系面板 & 双时钟 -->
+      <div class="space-y-4 bg-white p-5 rounded-xl border-2 border-[#0F2B5B]/15 shadow-md">
+        <h3 class="font-mono text-xs font-black text-[#EA580C] uppercase tracking-wider border-b border-[#0F2B5B]/10 pb-2">
+          OFFICIAL DESK & GLOBAL HOURS
+        </h3>
+
+        <div class="space-y-2 font-mono text-xs">
+          <div class="flex justify-between items-center bg-[#FAFAFA] p-2 rounded-md border border-[#0F2B5B]/10">
+            <span class="font-black text-[#0F2B5B]/60 text-[10px]">DONGGUAN HQ</span>
+            <span class="font-black text-[#0F2B5B]" id="footer-time-cn">00:00:00 CST</span>
+          </div>
+          <div class="flex justify-between items-center bg-[#FAFAFA] p-2 rounded-md border border-[#0F2B5B]/10">
+            <span class="font-black text-[#0F2B5B]/60 text-[10px]">US EASTERN</span>
+            <span class="font-black text-[#0F2B5B]" id="footer-time-us">00:00:00 EST</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-[#0F2B5B]/10">
+          <span class="block font-mono text-[9px] font-black text-[#EA580C] uppercase tracking-wider">
+            DIRECT INQUIRY MAIL:
+          </span>
+          <a href="mailto:contact@nexmold.com" class="font-mono text-sm font-[1000] text-[#0F2B5B] hover:text-[#EA580C] transition-colors block truncate mt-0.5">
+            contact@nexmold.com
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 💥 3. 版权线与底衬 -->
+    <div class="pt-8 text-center font-mono">
+      <p class="text-xs font-black text-[#0F2B5B]/80 uppercase tracking-wider">
+        © {new Date().getFullYear()} NXMOLD PRECISION MANUFACTURING CO., LTD. ALL RIGHTS RESERVED.
+      </p>
+    </div>
+
+  </div>
+</footer>
+
+<script type="application/ld+json" is:inline>
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Corporation",
+      "@id": "https://nexmold.com/#corporation",
+      "name": "NxMold Precision Manufacturing Co., Ltd.",
+      "alternateName": "东莞耐思模塑科技有限公司",
+      "url": "https://nexmold.com",
+      "logo": "https://nexmold.com/favicon.svg",
+      "email": "contact@nexmold.com",
+      "description": "Tier-1 Heavy Asset Custom Plastic Injection Molding Facility in Dongguan operating automated servo presses from 90T to 1200T compliant with ISO 2768-m standards.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dongguan",
+        "addressRegion": "Guangdong",
+        "addressCountry": "CN"
+      }
+    },
+    {
+      "@type": "ContactPoint",
+      "contactType": "sales",
+      "email": "contact@nexmold.com",
+      "areaServed": ["US", "CA", "DE", "FR", "EU"],
+      "availableLanguage": ["en", "de"]
+    }
+  ]
+}
+</script>
+
+<script>
+  function initClocks() {
+    const elCn = document.getElementById('footer-time-cn');
+    const elUs = document.getElementById('footer-time-us');
+    function update() {
+      const now = new Date();
+      const cnTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Shanghai', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if(elCn) elCn.textContent = cnTime + ' CST';
+
+      const usTime = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if(elUs) elUs.textContent = usTime + ' EST';
+    }
+
+    const clockInterval = setInterval(update, 1000);
+    update();
+    document.addEventListener('astro:before-swap', () => clearInterval(clockInterval), { once: true });
+  }
+
+  initClocks();
+  document.addEventListener('astro:after-swap', initClocks);
+</script>

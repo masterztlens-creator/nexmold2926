@@ -1,0 +1,168 @@
+---
+/**
+ * src/pages/resources/design-guides/defect-troubleshooting.astro
+ * 👑 NEXMOLD 注塑常见缺陷排查与工程工艺解法指南 (04 RESOURCES 核心节点)
+ * 1. 架构定位：系统剖析缩水痕、气孔、飞边、翘曲等常见注塑缺陷的成因与注塑机参数对策
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO / SEO：Quick Answer, Defect Troubleshooting Matrix, TechArticle Schema
+ */
+
+import MainLayout from '../../../layouts/MainLayout.astro';
+import Header from '../../../components/Header.astro';
+import EcosystemFooter from '../../../components/EcosystemFooter.astro';
+import LeadModal from '../../../components/LeadModal.astro';
+
+const title = "Injection Molding Defect Troubleshooting & Solutions Guide | NEXMOLD";
+const description = "Master plastic injection molding defect troubleshooting. Expert engineering solutions for sink marks, flash, warpage, voids, and short shots across PEEK, PC, and POM.";
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Plastic Injection Molding Defect Troubleshooting and Engineering Solutions Guide",
+  "description": description,
+  "author": {
+    "@type": "Organization",
+    "name": "NEXMOLD Precision Manufacturing"
+  }
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/resources" class="hover:text-[#EA580C] transition-colors">Resources</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Defect Troubleshooting Guide</span>
+      </nav>
+
+      <!-- 👑 GEO Quick Answer 核心框 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          ENGINEERING_KNOWLEDGE // DEFECT_TROUBLESHOOTING
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Injection Molding Defect<br/>
+          <span class="text-[#EA580C]">Troubleshooting & Solutions Guide</span>
+        </h1>
+        <!-- Featured Snippet Summary -->
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Quick Answer:</strong> Resolving plastic injection molding defects requires pinpointing root causes across mold design, material pre-drying, and machine processing parameters. Common structural defects such as <strong>sink marks, flash, warpage, and voids</strong> are systematically eliminated through optimized holding pressure, balanced gate sizing, and precise mold temperature control.
+        </p>
+      </section>
+
+      <!-- 缺陷排查矩阵表 -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg mb-16">
+        <h2 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Injection Molding Defect Analysis & Engineering Solutions Matrix
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="bg-[#0F2B5B] text-white">
+                <th class="p-3 border border-[#0F2B5B]">Defect Type</th>
+                <th class="p-3 border border-[#0F2B5B]">Primary Root Cause</th>
+                <th class="p-3 border border-[#0F2B5B] text-[#EA580C]">Processing & Machine Solution</th>
+                <th class="p-3 border border-[#0F2B5B]">Tooling / DFM Countermeasure</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#0F2B5B]/10 text-[#0F2B5B]">
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold text-[#EA580C]">Sink Marks (Surface Depressions)</td>
+                <td class="p-3">Insufficient holding pressure or excessive local wall thickness at ribs/bosses.</td>
+                <td class="p-3">Increase holding pressure & extend gate freeze/cooling time.</td>
+                <td class="p-3">Core out thick sections to maintain uniform nominal wall thickness.</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Flash (Excess Resin Spillage)</td>
+                <td class="p-3">Excessive clamping tonnage, high injection pressure, or damaged parting lines.</td>
+                <td class="p-3">Reduce injection speed near end-of-fill; optimize clamping force.</td>
+                <td class="p-3">Re-match steel parting lines; inspect mold platen parallelism.</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">Warpage (Dimensional Distortion)</td>
+                <td class="p-3">Differential cooling rates or glass fiber orientation anisotropy.</td>
+                <td class="p-3">Balance mold cooling water channels; equalize mold half temperatures.</td>
+                <td class="p-3">Perform Moldflow fiber orientation analysis; optimize gate locations.</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Internal Voids (Vacuum Bubbles)</td>
+                <td class="p-3">Rapid cooling of outer skin while core is molten, causing volumetric pull-in.</td>
+                <td class="p-3">Increase injection holding pressure and back pressure during plasticizing.</td>
+                <td class="p-3">Enlarge gate land and thickness to prevent premature gate freezing.</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">Short Shots (Incomplete Fill)</td>
+                <td class="p-3">Low melt temperature, restricted venting, or insufficient shot volume.</td>
+                <td class="p-3">Raise barrel melt temperature; increase injection speed and pressure.</td>
+                <td class="p-3">Add gas vents (0.02mm depth) along the final flow fronts.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 核心排查三大原则 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs text-[#0F2B5B] mb-16">
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">STEP 01</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Material Preparation Check</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">Over 40% of cosmetic defects (such as splay, silver streaks, and brittleness) stem from inadequate resin pre-drying. Always verify dehumidifying hopper temperatures against material data sheets.</p>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">STEP 02</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Process Parameter Optimization</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">Adjust one variable at a time (holding pressure, melt temperature, or injection speed) on Haitian servo presses while monitoring shot-to-shot repeatability and Zeiss CMM dimensions.</p>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">STEP 03</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Tooling & Venting Maintenance</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">Clean parting lines and gas vent paths every 10,000 cycles to prevent resin gas buildup, burn marks (diesel effect), and localized mold degradation.</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <section class="bg-[#0F2B5B] text-white rounded-2xl p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-1">EXPERT_DFM_SUPPORT</span>
+          <h3 class="text-2xl font-[1000] uppercase italic">Facing Persistent Molding Defects on Your Existing Tooling?</h3>
+          <p class="text-xs text-white/80 font-sans mt-2">Consult our senior tooling engineers in Dongguan for root-cause analysis and DFM tool modifications.</p>
+        </div>
+        <button id="defect-rfq-trigger" type="button" class="shrink-0 bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 px-8 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+          Request Expert DFM Analysis →
+        </button>
+      </section>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+<script>
+  function setupDefectEvents() {
+    const btn = document.getElementById('defect-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupDefectEvents);
+</script>

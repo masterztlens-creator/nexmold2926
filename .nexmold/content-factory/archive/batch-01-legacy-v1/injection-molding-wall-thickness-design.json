@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-wall-thickness-design",
+  "targetSlug": "injection-molding-wall-thickness-design",
+  "sourceArticleSlug": "plastic-wall-thickness-design",
+  "slug": "injection-molding-wall-thickness-design",
+  "lineage": {
+    "pageId": "v714:injection-molding-wall-thickness-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-wall-thickness-design/",
+    "evidenceIds": [
+      "knowledge:plastic-wall-thickness-design"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-wall-thickness-design"
+    ],
+    "sourceArtifactHash": "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a"
+  },
+  "sourceArtifactHash": "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-wall-thickness-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-wall-thickness-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-wall-thickness-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:plastic-wall-thickness-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#plastic-wall-thickness-design",
+            "contentHash": "plastic-wall-thickness-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-wall-thickness-design",
+            "claimKey": "batch01.injection-molding-wall-thickness-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "2611b60c6b3ba645bbf371a937379bd0d4958dbc7ddb2732d8e7819611b3628a"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

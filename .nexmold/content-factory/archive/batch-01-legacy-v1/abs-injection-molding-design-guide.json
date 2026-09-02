@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:abs-injection-molding-design-guide",
+  "targetSlug": "abs-injection-molding-design-guide",
+  "sourceArticleSlug": "abs-injection-molding",
+  "slug": "abs-injection-molding-design-guide",
+  "lineage": {
+    "pageId": "v714:abs-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/abs-injection-molding-design-guide/",
+    "evidenceIds": [
+      "knowledge:abs-injection-molding"
+    ],
+    "semanticClaimIds": [
+      "claim:abs-injection-molding-design-guide"
+    ],
+    "sourceArtifactHash": "17e992395697b05afb5d07367abf02ae78a6f21e46010d1a295e2ceb6f7e85ad"
+  },
+  "sourceArtifactHash": "17e992395697b05afb5d07367abf02ae78a6f21e46010d1a295e2ceb6f7e85ad",
+  "sourceArtifact": {
+    "pageId": "v714:abs-injection-molding-design-guide",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/abs-injection-molding-design-guide/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:abs-injection-molding-design-guide",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:abs-injection-molding",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#abs-injection-molding",
+            "contentHash": "abs-injection-molding:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:abs-injection-molding-design-guide",
+            "claimKey": "batch01.abs-injection-molding-design-guide"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "17e992395697b05afb5d07367abf02ae78a6f21e46010d1a295e2ceb6f7e85ad"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

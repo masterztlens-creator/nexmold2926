@@ -1,0 +1,169 @@
+---
+/**
+ * Projects.astro - 精密模具与注塑成品展示 (已接入 public/images/Projects 4 张 WebP 实拍图)
+ */
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "MOLDED COMPONENTS & TOOLING PORTFOLIO",
+    title: "High-Yield Precision Component Showcase",
+    subtitle: "Sample matrix of custom injection molded structural parts, multi-cavity tooling, and overmolded assemblies.",
+    learn_more: "LEARN MORE SPECS →",
+    view_full_gallery: "EXPLORE FULL CASE GALLERY →"
+  },
+  de: {
+    badge: "SPRITZGUSS-KOMPONENTEN & WERKZEUGBALL-PORTFOLIO",
+    title: "Präzisions-Bauteile & Formbau-Portfolio",
+    subtitle: "Musterübersicht über maßgeschneiderte Spritzguss-Strukturteile, Mehrkavitäten-Werkzeuge und 2K-Baugruppen.",
+    learn_more: "SPEZIFIKATIONEN ANSEHEN →",
+    view_full_gallery: "ALLE FALLSTUDIEN ANSEHEN →"
+  },
+  fr: {
+    badge: "COMPOSANTS MOULÉS ET PORTFOLIO D'OUTILLAGE",
+    title: "Vitrine de Composants de Précision à Haut Rendement",
+    subtitle: "Échantillons de pièces structurelles moulées par injection sur mesure, outillage multi-empreintes et assemblages surmoulés.",
+    learn_more: "EN SAVOIR PLUS →",
+    view_full_gallery: "VOIR TOUTES LES ÉTUDES DE CAS →"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+
+const productShowcase = [
+  {
+    category: "Consumer Appliance",
+    title: "High-Gloss Control Housing Shell",
+    material: "ABS + PC Alloy",
+    finish: "SPI-A2 Mirror Polish",
+    desc: "Zero-defect surface finish with ultrasonic welding ribs for home appliances. High-yield automated production.",
+    slug: "appliance-housing-shell",
+    image: "/images/Projects/high-gloss-control-housing.webp"
+  },
+  {
+    category: "Automotive & EV",
+    title: "Sealed Cable Connector Enclosure",
+    material: "PA66 + 30% GF",
+    finish: "SPI-C1 Texture",
+    desc: "Strict ISO 2768-m dimensional audit with UL94-V0 flame retardancy and 100% CMM inspection.",
+    slug: "automotive-connector-enclosure",
+    image: "/images/Projects/sealed-connector-enclosure.webp"
+  },
+  {
+    category: "Power Tools",
+    title: "Ergonomic 2K Overmolded Handle",
+    material: "PP + Soft TPE",
+    finish: "Tactile Grip",
+    desc: "Double-shot injection providing chemical resistance, heavy shock protection, and precise bonding.",
+    slug: "2k-overmolded-handle",
+    image: "/images/Projects/2k-overmolded-handle.webp"
+  },
+  {
+    category: "Toolroom Steel",
+    title: "16-Cavity ASSAB S136 Tooling",
+    material: "ASSAB S136 (HRC 48-52)",
+    finish: "SPI-A1 Polish",
+    desc: "High-speed CNC milled, EDM polished multi-cavity mold built for 1,000,000+ high-yield production cycles.",
+    slug: "s136-multi-cavity-tooling",
+    image: "/images/Projects/s136-multi-cavity-tooling.webp"
+  }
+];
+---
+
+<section class="bg-white text-[#0F2B5B] py-20 border-b border-[#0F2B5B]/15 relative select-none" id="projects">
+  <div class="max-w-[1600px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10">
+    
+    <!-- 头部标语区 -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+      <div class="max-w-3xl">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="w-6 h-[3px] bg-[#EA580C]"></span>
+          <span class="text-[#EA580C] font-mono text-[11px] font-black uppercase tracking-[0.25em]">
+            {t.badge}
+          </span>
+        </div>
+        <h2 class="text-[clamp(1.8rem,3.2vw,2.6rem)] font-[1000] tracking-tight uppercase italic leading-none mb-3 text-[#0F2B5B]">
+          {t.title}
+        </h2>
+        <p class="text-[#0F2B5B]/80 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl">
+          {t.subtitle}
+        </p>
+      </div>
+
+      <a 
+        href="/cases" 
+        class="inline-flex items-center gap-2 font-mono text-xs font-bold text-[#EA580C] hover:text-[#C2410C] uppercase tracking-wider transition-colors group whitespace-nowrap"
+      >
+        <span>{t.view_full_gallery}</span>
+        <span class="group-hover:translate-x-1 transition-transform">→</span>
+      </a>
+    </div>
+
+    <!-- 📦 精密模具与注塑件展示卡片阵列 (2x2 Card Grid) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {productShowcase.map((item, idx) => (
+        <div class="bg-white border-2 border-[#0F2B5B]/15 rounded-sm p-6 hover:border-[#EA580C] transition-all duration-300 flex flex-col sm:flex-row gap-6 shadow-xs group">
+          
+          <!-- 产品/模具实拍 WebP 图片显示区 -->
+          <div class="sm:w-2/5 h-44 bg-[#0F2B5B]/[0.03] border border-[#0F2B5B]/15 rounded-sm shrink-0 relative overflow-hidden">
+            <img 
+              src={item.image} 
+              alt={item.title}
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              loading="lazy"
+              decoding="async"
+            />
+            
+            <!-- 水印标签 -->
+            <div class="absolute top-2 left-2 px-2 py-0.5 bg-[#0F2B5B]/85 backdrop-blur-xs text-white font-mono text-[8px] font-bold rounded-xs uppercase tracking-wider z-10 border border-white/20">
+              100% CMM PASSED
+            </div>
+
+            <div class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-xs text-white/90 font-mono text-[8px] rounded-xs z-10">
+              REF_0{idx + 1}
+            </div>
+          </div>
+
+          <!-- 右侧信息与 Learn More 跳转 -->
+          <div class="sm:w-3/5 flex flex-col justify-between">
+            <div>
+              <div class="text-[#EA580C] font-mono text-[10px] font-black uppercase mb-1 flex items-center justify-between">
+                <span>{item.category}</span>
+                <span class="text-[#0F2B5B]/40 font-normal">ISO 2768-m</span>
+              </div>
+              <h3 class="text-base font-extrabold uppercase italic text-[#0F2B5B] mb-2 group-hover:text-[#EA580C] transition-colors">
+                {item.title}
+              </h3>
+              
+              <div class="flex flex-wrap gap-1.5 mb-3 font-mono text-[9px]">
+                <span class="bg-[#0F2B5B] text-white px-2 py-0.5 rounded-xs font-bold">{item.material}</span>
+                <span class="border border-[#0F2B5B]/30 text-[#0F2B5B] px-2 py-0.5 rounded-xs font-bold">{item.finish}</span>
+              </div>
+
+              <p class="text-[#0F2B5B]/75 text-xs leading-relaxed font-sans mb-4">
+                {item.desc}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-[#0F2B5B]/10 flex items-center justify-between">
+              <a 
+                href={`/cases/${item.slug}`} 
+                class="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold text-[#0F2B5B] group-hover:text-[#EA580C] uppercase tracking-wider transition-colors"
+              >
+                <span>{t.learn_more}</span>
+              </a>
+              <span class="font-mono text-[9px] text-[#0F2B5B]/40">FAST T1: 3-15D</span>
+            </div>
+          </div>
+
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>

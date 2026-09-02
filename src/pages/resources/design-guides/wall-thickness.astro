@@ -1,0 +1,169 @@
+---
+/**
+ * src/pages/resources/design-guides/wall-thickness.astro
+ * 👑 NEXMOLD 注塑壁厚与缩水 (Sink Marks) DFM 设计规范指南 (04 RESOURCES 核心节点)
+ * 1. 架构定位：指导工程采购人员优化壁厚均匀性、加强筋 (Ribs) 比例与拔模角，降低缩水率
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO / SEO：Quick Answer, Nominal Wall Thickness Reference Table, TechArticle Schema
+ */
+
+import MainLayout from '../../../layouts/MainLayout.astro';
+import Header from '../../../components/Header.astro';
+import EcosystemFooter from '../../../components/EcosystemFooter.astro';
+import LeadModal from '../../../components/LeadModal.astro';
+
+const title = "Injection Molding Nominal Wall Thickness Design Guide | NEXMOLD";
+const description = "Comprehensive DFM engineering guide for plastic injection molding nominal wall thickness, rib proportions, and sink mark prevention across ABS, PC, POM, and PEEK.";
+
+// GEO JSON-LD Schema
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Injection Molding Wall Thickness and Rib Design DFM Guidelines",
+  "description": description,
+  "author": {
+    "@type": "Organization",
+    "name": "NEXMOLD Precision Manufacturing"
+  }
+};
+---
+
+<MainLayout title={title} description={description} lang="en" location="North America">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/resources" class="hover:text-[#EA580C] transition-colors">Resources</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Wall Thickness DFM Guide</span>
+      </nav>
+
+      <!-- 👑 GEO Quick Answer 核心框 -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          DESIGN_FOR_MANUFACTURABILITY // WALL_THICKNESS_DFM
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Plastic Injection Molding Nominal<br/>
+          <span class="text-[#EA580C]">Wall Thickness DFM Guide</span>
+        </h1>
+        <!-- Featured Snippet Summary -->
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Quick Answer:</strong> Recommended nominal wall thickness for injection molded plastics ranges between <strong>1.5mm and 3.0mm (0.060 in – 0.120 in)</strong>. Maintaining uniform wall thickness prevents internal void formation, sink marks, and differential cooling warpage. Rib thickness should never exceed <strong>50% to 60%</strong> of the attached main wall thickness to avoid surface depressions.
+        </p>
+      </section>
+
+      <!-- 规格与推荐表格 -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg mb-16">
+        <h2 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Recommended Nominal Wall Thickness by Polymer Type
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="bg-[#0F2B5B] text-white">
+                <th class="p-3 border border-[#0F2B5B]">Resin Material</th>
+                <th class="p-3 border border-[#0F2B5B] text-[#EA580C]">Recommended Min. Wall</th>
+                <th class="p-3 border border-[#0F2B5B]">Recommended Max. Wall</th>
+                <th class="p-3 border border-[#0F2B5B]">Shrink Risk Level</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#0F2B5B]/10 text-[#0F2B5B]">
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">ABS / ABS+PC Alloy</td>
+                <td class="p-3 font-bold text-[#EA580C]">1.14 mm (0.045 in)</td>
+                <td class="p-3">3.56 mm (0.140 in)</td>
+                <td class="p-3">Low</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Polycarbonate (PC) Clear</td>
+                <td class="p-3 font-bold text-[#EA580C]">1.00 mm (0.040 in)</td>
+                <td class="p-3">3.80 mm (0.150 in)</td>
+                <td class="p-3">Moderate (Stress Voids)</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">POM (Acetal / Delrin)</td>
+                <td class="p-3 font-bold text-[#EA580C]">0.75 mm (0.030 in)</td>
+                <td class="p-3">3.00 mm (0.120 in)</td>
+                <td class="p-3">High (Volumetric Contraction)</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Nylon 66 (PA66 + 30% GF)</td>
+                <td class="p-3 font-bold text-[#EA580C]">0.75 mm (0.030 in)</td>
+                <td class="p-3">2.90 mm (0.115 in)</td>
+                <td class="p-3">Moderate-High</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">PEEK High-Temp Grade</td>
+                <td class="p-3 font-bold text-[#EA580C]">1.00 mm (0.040 in)</td>
+                <td class="p-3">3.50 mm (0.138 in)</td>
+                <td class="p-3">High (High Thermal Stress)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 核心 DFM 原则卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs text-[#0F2B5B] mb-16">
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">RULE 01</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Maintain Wall Uniformity</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">Transitions between thick and thin sections must feature gradual tapers (minimum 3:1 chamfer ratio). Sudden wall thickness changes cause uneven flow fronts and severe warpage.</p>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">RULE 02</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Rib-to-Wall Proportions</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">To prevent cosmetic sink marks on Class-A visible surfaces, design structural stiffening ribs with a base thickness equal to 50% of the adjacent main wall thickness.</p>
+        </div>
+
+        <div class="p-6 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl shadow-sm">
+          <span class="text-[#EA580C] font-mono font-black text-sm block mb-2">RULE 03</span>
+          <h3 class="font-bold text-sm text-[#0F2B5B] uppercase mb-2">Corner Radii & Fillets</h3>
+          <p class="leading-relaxed text-[#0F2B5B]/80">Avoid sharp 90-degree internal corners. Provide an internal radius of at least 50% of the nominal wall thickness to reduce stress concentration factors from 3.0 down to 1.5.</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <section class="bg-[#0F2B5B] text-white rounded-2xl p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-1">AUTOMATED_DFM_CHECK</span>
+          <h3 class="text-2xl font-[1000] uppercase italic">Want Your 3D Model Checked for Wall Thickness Volumetric Shrinkage?</h3>
+          <p class="text-xs text-white/80 font-sans mt-2">Upload your .STEP drawing for an automated Moldflow report within 24 hours.</p>
+        </div>
+        <button id="guide-rfq-trigger" type="button" class="shrink-0 bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 px-8 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+          Upload 3D CAD Drawing →
+        </button>
+      </section>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+<script>
+  function setupGuideEvents() {
+    const btn = document.getElementById('guide-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupGuideEvents);
+</script>

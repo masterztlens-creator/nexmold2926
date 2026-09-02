@@ -1,0 +1,65 @@
+---
+// 接收从外部传进来的案例数据
+const { title, description, category, href } = Astro.props;
+---
+
+<a href={href} class="case-card">
+  <div class="card-content">
+    <span class="category">{category}</span>
+    <h3>{title}</h3>
+    <p>{description}</p>
+    <div class="more-link">
+      View Details 
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </div>
+  </div>
+</a>
+
+<style>
+  .case-card {
+    display: block;
+    text-decoration: none;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    border-left: 4px solid #F97316; /* 你的品牌橙 */
+  }
+
+  .case-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-left-width: 8px; /* 悬停时加粗侧边橙条 */
+  }
+
+  .category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #F97316;
+    letter-spacing: 0.1em;
+  }
+
+  h3 {
+    margin: 0.5rem 0;
+    color: #111827;
+    font-size: 1.5rem;
+  }
+
+  p {
+    color: #4b5563;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .more-link {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #111827;
+  }
+</style>

@@ -1,0 +1,1613 @@
+---
+/**
+ * Header.astro - NEXMOLD 全球工业级旗舰导航组件 (分类路径全对齐版)
+ */
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+
+interface TranslationItem {
+  services: string;
+  industries: string;
+  materials: string;
+  knowledgeHub: string;
+  company: string;
+  cta: string;
+  sampleKit: string;
+  shortName: string;
+  pathPrefix: string;
+  logoTitle: string;
+  searchPlaceholder: string;
+  expertConsult: string;
+  viewAllResins: string;
+  virginGuarantee: string;
+}
+
+const translations: Record<string, TranslationItem> = {
+  en: {
+    services: 'Services',
+    industries: 'Industries',
+    materials: 'Materials',
+    knowledgeHub: 'Knowledge Hub',
+    company: 'Company',
+    cta: 'Get Quote',
+    sampleKit: 'Sample Kit',
+    shortName: 'EN',
+    pathPrefix: '',
+    logoTitle: 'NEXMOLD - Precision Injection Molding & Tooling Factory',
+    searchPlaceholder: 'Search 180+ resins (e.g. PEEK, PA66-GF30, ABS)...',
+    expertConsult: 'Unsure which resin to choose? Chat with our Polymer Engineer',
+    viewAllResins: 'Explore 180+ Polymer Hub Matrix',
+    virginGuarantee: '100% Virgin Resins with Lot Traceability & CoC'
+  },
+  de: {
+    services: 'Dienstleistungen',
+    industries: 'Branchen',
+    materials: 'Materialien',
+    knowledgeHub: 'Wissenszentrum',
+    company: 'Unternehmen',
+    cta: 'Angebot anfordern',
+    sampleKit: 'Musterbox',
+    shortName: 'DE',
+    pathPrefix: '/de',
+    logoTitle: 'NEXMOLD - Präzisions-Spritzguss & Formenbau',
+    searchPlaceholder: '180+ Kunststoffe durchsuchen (z.B. PEEK, PA66)...',
+    expertConsult: 'Unsicher bei der Materialwahl? Sprechen Sie mit unserem Ingenieur',
+    viewAllResins: '180+ Polymer-Datenbank öffnen',
+    virginGuarantee: '100% Neuware mit Chargenrückverfolgung & Werkszeugnis'
+  },
+  fr: {
+    services: 'Services',
+    industries: 'Secteurs',
+    materials: 'Matériaux',
+    knowledgeHub: 'Centre Technique',
+    company: 'Société',
+    cta: 'Devis Rapide',
+    sampleKit: 'Échantillons',
+    shortName: 'FR',
+    pathPrefix: '/fr',
+    logoTitle: 'NEXMOLD - Moulage par Injection & Outillage de Précision',
+    searchPlaceholder: 'Rechercher parmi 180+ résines (ex. PEEK, PA66)...',
+    expertConsult: 'Besoin d’aide pour choisir ? Consultez notre ingénieur polymère',
+    viewAllResins: 'Accéder à la base de 180+ polymères',
+    virginGuarantee: 'Résines 100% vierges garanties avec traçabilité & CoC'
+  }
+};
+
+const t = translations[lang] || translations.en;
+
+const navLinks = [
+  { name: t.services, href: `${t.pathPrefix}/services`, key: 'services' },
+  { name: t.industries, href: `${t.pathPrefix}/industries`, key: 'industries' },
+  { name: t.materials, href: `${t.pathPrefix}/materials`, key: 'materials' },
+  { name: t.knowledgeHub, href: `${t.pathPrefix}/knowledge-hub`, key: 'knowledgeHub' },
+  { name: t.company, href: `${t.pathPrefix}/company`, key: 'company' },
+];
+
+const locales = Object.keys(translations);
+
+const schemaNavData = {
+  "@context": "https://schema.org",
+  "@type": "SiteNavigationElement",
+  "name": "NEXMOLD Global Navigation",
+  "url": "https://nxmold.com",
+  "hasPart": [
+    { "@type": "WebPage", "name": "Plastic Injection Molding Services", "url": `https://nxmold.com${t.pathPrefix}/services/injection-molding` },
+    { "@type": "WebPage", "name": "Precision Tooling & Rapid Molds", "url": `https://nxmold.com${t.pathPrefix}/services/tooling` },
+    { "@type": "WebPage", "name": "180+ Polymer Material Hub", "url": `https://nxmold.com${t.pathPrefix}/materials` },
+    { "@type": "WebPage", "name": "Engineering Knowledge Hub & DFM Calculators", "url": `https://nxmold.com${t.pathPrefix}/knowledge-hub` }
+  ]
+};
+---
+
+<!-- Schema.org 结构化数据 -->
+<script type="application/ld+json" set:html={JSON.stringify(schemaNavData)} />
+
+<!-- 吸顶 Header -->
+<header 
+  id="main-header" 
+  class="sticky top-0 z-[100] w-full bg-white transition-all duration-300 border-b border-[#0F2B5B]/15 shadow-xs select-none"
+  itemscope 
+  itemtype="https://schema.org/SiteNavigationElement"
+>
+  <div class="max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between static">
+    
+    <!-- Logo 区域 -->
+    <a 
+      href={t.pathPrefix || "/"} 
+      class="group flex items-center gap-3.5 relative z-[110] focus-visible:outline-2 focus-visible:outline-[#EA580C] focus-visible:outline-offset-2 rounded-xs" 
+      title={t.logoTitle} 
+      aria-label="NEXMOLD Homepage" 
+      itemprop="url"
+    >
+      <div class="relative w-9 h-9 lg:w-10 lg:h-10 flex items-center justify-center overflow-visible">
+        <div class="absolute inset-0 border border-[#0F2B5B]/30 group-hover:border-[#EA580C] transition-colors duration-500 rounded-xs"></div>
+        <div class="absolute left-1.5 top-1.5 w-[2px] h-4 bg-[#0F2B5B] group-hover:-translate-y-0.5 transition-transform duration-500"></div>
+        <div class="absolute right-1.5 bottom-1.5 w-[2px] h-4 bg-[#0F2B5B] group-hover:translate-y-0.5 transition-transform duration-500"></div>
+        <div class="w-4 h-[2px] bg-[#EA580C] -rotate-45 group-hover:rotate-45 transition-transform duration-700"></div>
+      </div>
+      
+      <div class="flex flex-col">
+        <span class="text-xl lg:text-2xl font-[1000] tracking-[-0.05em] text-[#0F2B5B] leading-none italic uppercase" itemprop="name">
+          NEX<span class="text-[#EA580C]">MOLD</span>
+        </span>
+        <span class="text-[8px] font-mono tracking-[0.22em] text-slate-500 font-bold uppercase mt-0.5">Precision Tooling</span>
+      </div>
+    </a>
+
+    <!-- 桌面端主导航 -->
+    <nav class="hidden xl:flex items-center gap-8 xl:gap-10 static" aria-label="Main Navigation">
+      {navLinks.map((link) => (
+        <div class="group/nav h-full flex items-center py-2.5 static">
+          <a 
+            href={link.href} 
+            class="relative group/link py-1 focus-visible:outline-2 focus-visible:outline-[#EA580C] rounded-xs" 
+            aria-expanded="false"
+            aria-haspopup="true"
+            aria-controls={`megamenu-${link.key}`}
+            itemprop="url"
+          >
+            <div class="flex items-center">
+              <span class="text-[11.5px] font-bold uppercase tracking-[0.14em] text-[#0F2B5B] group-hover/link:text-[#EA580C] transition-colors duration-200 flex items-center gap-1.5" itemprop="name">
+                {link.name}
+                <svg class="w-3 h-3 transition-transform duration-200 group-hover/nav:rotate-180 text-[#0F2B5B]/40 group-hover/link:text-[#EA580C]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
+            <div class="absolute bottom-0 left-0 w-0 h-[2px] bg-[#EA580C] group-hover/link:w-full transition-all duration-300"></div>
+          </a>
+
+          <!-- 1. SERVICES MEGA MENU -->
+          {link.key === 'services' && (
+            <div 
+              id="megamenu-services" 
+              class="mega-menu-panel absolute top-full left-0 right-0 w-full bg-white border-y border-slate-200 border-b-4 border-b-[#EA580C] shadow-2xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 py-6 z-[105]"
+              role="region"
+              aria-label="Services Submenu"
+            >
+              <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 grid grid-cols-5 gap-7 text-left">
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <a href={`${t.pathPrefix}/services/dfm-engineering`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                      <span>Engineering & DFM</span>
+                      <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                    </a>
+                  </div>
+                  <ul class="space-y-2 h-[220px] flex flex-col justify-between" role="list">
+                    <li>
+                      <a href={`${t.pathPrefix}/services/dfm-moldflow`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Free 24h Engineering DFM</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Wall thickness, draft & gate analysis</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/moldflow-simulation`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Moldflow Simulation (CAE)</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Weld line, air trap & thermal warp check</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/cad-optimization`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">CAD Part Optimization</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Sink mark elimination & rib design</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/scientific-molding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Scientific Molding DOE</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Decoupled molding & process stability</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/cost-reduction`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Tooling Cost Optimization</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Cavity layout & cycle time reduction</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <a href={`${t.pathPrefix}/services/tooling`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                      <span>Tooling & Rapid Molds</span>
+                      <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                    </a>
+                  </div>
+                  <ul class="space-y-2 h-[220px] flex flex-col justify-between" role="list">
+                    <li>
+                      <a href={`${t.pathPrefix}/services/rapid-tooling`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Rapid Prototype Tooling</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Aluminum & P20 molds <span class="text-slate-300">•</span> T1 in 5-10 days</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/production-tooling`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Production Tooling (Class 101)</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Hardened S136 / H13 <span class="text-slate-300">•</span> 1M+ shots</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/multi-cavity-molds`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Multi-Cavity Precision Molds</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">High cavitation with hot runner valve gates</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/export-molds`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Export Mold Building</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">DME / HASCO standard molds for US & EU</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/mold-maintenance`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Lifetime Tooling Guarantee</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">100% Free mold maintenance during production</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <a href={`${t.pathPrefix}/services/injection-molding`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                      <span>Injection Molding</span>
+                      <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                    </a>
+                  </div>
+                  <ul class="space-y-2 h-[220px] flex flex-col justify-between" role="list">
+                    <li>
+                      <a href={`${t.pathPrefix}/services/low-volume-molding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Low-Volume / Bridge Molding</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">100 to 10,000+ parts <span class="text-slate-300">•</span> Fast turnaround</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/high-volume-molding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">High-Volume Production</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">90T-1200T fleet with 24/7 robotic cells</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/custom-injection-molding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Custom Plastic Molding</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Appliance housings, structural & rigid parts</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/insert-molding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Insert & Threaded Molding</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Brass bushings, stamped leads & encapsulation</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/overmolding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Two-Shot (2K) & Overmolding</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">TPE/TPU soft touch grips & sealing perimeters</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <a href={`${t.pathPrefix}/services/post-processing`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                      <span>Post-Processing & QC</span>
+                      <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                    </a>
+                  </div>
+                  <ul class="space-y-2 h-[220px] flex flex-col justify-between" role="list">
+                    <li>
+                      <a href={`${t.pathPrefix}/services/ultrasonic-welding`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Ultrasonic Plastic Welding</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Hermetic sealing for pressure tanks & shells</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/heat-staking`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Brass Threaded Heat Staking</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Thermal insert installation for M2-M8 nuts</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/pad-printing`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Surface Branding & Printing</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Pad printing, silkscreen & laser marking</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/cmm-inspection`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Zeiss CMM Inspection & FAI</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Full dimensional reports to DIN 16742</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href={`${t.pathPrefix}/services/contract-assembly`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Box-Build & Final Assembly</span>
+                        <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Turnkey mechanical packing & Amazon FBA</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <h3 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider">Dongguan Plant</h3>
+                  </div>
+
+                  <div class="bg-[#F8FAFC] border border-[#0F2B5B]/15 rounded-xs overflow-hidden h-[220px] flex flex-col justify-between shadow-2xs">
+                    <div class="h-16 bg-[#0F2B5B] relative overflow-hidden flex items-center justify-center shrink-0">
+                      <div class="absolute inset-0 bg-cover bg-center opacity-85" style="background-image: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80');"></div>
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <span class="relative z-10 text-[9px] font-mono text-white bg-[#EA580C] px-2 py-0.5 rounded-xs uppercase tracking-widest font-bold">HAITIAN 90T-1200T</span>
+                    </div>
+                    
+                    <div class="p-2.5 flex flex-col justify-between flex-1">
+                      <div class="space-y-1 text-[10px] font-mono text-slate-600">
+                        <div class="flex items-center justify-between border-b border-slate-200/60 pb-0.5">
+                          <span>Fleet Scale:</span>
+                          <span class="font-bold text-[#0F2B5B]">30+ Presses (90T-1200T)</span>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-slate-200/60 pb-0.5">
+                          <span>T1 Lead Time:</span>
+                          <span class="font-bold text-[#EA580C]">5 - 10 Days</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                          <span>Plant Standard:</span>
+                          <span class="font-bold text-[#0F2B5B]">ISO 9001:2015</span>
+                        </div>
+                      </div>
+                      
+                      <a 
+                        href="#rfq" 
+                        class="mega-cta-trigger block text-center py-1.5 bg-[#EA580C] hover:bg-[#C2410C] active:scale-[0.98] text-white font-bold text-[10px] uppercase tracking-wider transition-all rounded-xs shadow-2xs focus-visible:outline-2 focus-visible:outline-[#0F2B5B]"
+                      >
+                        Get 24h DFM & Quote →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <!-- 2. INDUSTRIES MEGA MENU -->
+          {link.key === 'industries' && (
+            <div 
+              id="megamenu-industries" 
+              class="mega-menu-panel absolute top-full left-0 right-0 w-full bg-white border-y border-slate-200 border-b-4 border-b-[#EA580C] shadow-2xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 py-6 z-[105]"
+              role="region"
+              aria-label="Industries Submenu"
+            >
+              <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 grid grid-cols-4 gap-7 text-left items-start">
+                <div class="flex flex-col space-y-5">
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                      <a href={`${t.pathPrefix}/industries/home-appliances`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                        <span>Home Appliances</span>
+                        <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                      </a>
+                      <span class="text-[9px] font-mono text-[#EA580C] bg-[#EA580C]/10 px-1 rounded font-bold">FDA / ABS</span>
+                    </div>
+                    <ul class="space-y-2" role="list">
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/countertop-ice-maker-parts`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Countertop Ice Maker Parts</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Food-grade ABS/PP housings & ice trays</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/ultrasonic-welded-water-tanks`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#0F2B5B] transition-colors block truncate">Ultrasonic Welded Water Tanks</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Hermetic pressure-tested reservoirs</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                      <a href={`${t.pathPrefix}/industries/automotive-child-safety`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                        <span>Automotive & Safety</span>
+                        <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                      </a>
+                      <span class="text-[9px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1 rounded font-bold">PA66+GF</span>
+                    </div>
+                    <ul class="space-y-2" role="list">
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/child-safety-seat-parts`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors block truncate">Child Safety Seat Molds & Parts</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">High-impact structural safety components</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/automotive-interior-trims`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Automotive Interior Trims</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Class-A surface finish bezels & consoles</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-5">
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                      <a href={`${t.pathPrefix}/industries/commercial-agtech`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-wider transition-colors flex items-center gap-1">
+                        <span>Commercial & AgTech</span>
+                        <span class="text-[9px] text-[#0F2B5B]/40">→</span>
+                      </a>
+                      <span class="text-[9px] font-mono text-[#EA580C] bg-[#EA580C]/10 px-1 rounded font-bold">UV-PC/PP</span>
+                    </div>
+                    <ul class="space-y-2" role="list">
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/vertical-farming-hydroponic-trays`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors block truncate">Vertical Farming Hydroponics</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">UV-resistant cultivation modules</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/smart-iot-sensor-housings`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Smart IoT Sensor Housings</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">IP67 weatherproof enclosures</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                      <span class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider">Industrial Equipment</span>
+                      <span class="text-[9px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1 rounded font-bold">HDPE/POM</span>
+                    </div>
+                    <ul class="space-y-2" role="list">
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/heavy-duty-logistics-crates`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Heavy-Duty Logistics Crates</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">High load-bearing stackable bins</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/industries/under-hood-gf-brackets`} class="group/item block p-1 -mx-1 rounded-xs hover:bg-slate-50 transition-colors">
+                          <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Glass-Filled Structural Brackets</span>
+                          <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">PA66+GF30 high-temp engine mounts</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-5">
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                      <span class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider">Industry Resources</span>
+                    </div>
+                    <ul class="space-y-2.5 text-xs font-sans text-slate-700">
+                      <li>
+                        <a href={`${t.pathPrefix}/knowledge-hub/appliance-molding-guide`} class="hover:text-[#EA580C] transition-colors block font-semibold text-[#0F2B5B] truncate">
+                          Appliance Injection Molding Guide
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/knowledge-hub/automotive-dfm-handbook`} class="hover:text-[#EA580C] transition-colors block font-semibold text-[#0F2B5B] truncate">
+                          Automotive DFM & Tolerance Handbook
+                        </a>
+                      </li>
+                      <li>
+                        <a href={`${t.pathPrefix}/knowledge-hub/case-studies`} class="hover:text-[#EA580C] transition-colors block text-[#475569] hover:underline">
+                          Industry Success Case Studies →
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                      <span class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider">Quality Metrology</span>
+                    </div>
+                    <ul class="space-y-1.5 text-[11px] font-mono text-slate-700 font-medium">
+                      <li class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="text-slate-500">Quality Plant:</span>
+                        <span class="font-bold text-[#0F2B5B]">ISO 9001:2015</span>
+                      </li>
+                      <li class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="text-slate-500">Tolerance Std:</span>
+                        <span class="font-bold text-[#0F2B5B]">DIN 16742 / ISO 2768</span>
+                      </li>
+                      <li class="flex justify-between">
+                        <span class="text-slate-500">CMM Inspection:</span>
+                        <span class="font-bold text-[#EA580C]">Zeiss CMM ±0.001mm</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center">
+                    <h3 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider">Featured Story</h3>
+                  </div>
+
+                  <div class="bg-[#F8FAFC] border border-[#0F2B5B]/15 rounded-xs overflow-hidden h-[216px] flex flex-col justify-between shadow-2xs group/card">
+                    <div class="h-24 bg-[#0F2B5B] relative overflow-hidden flex items-center justify-center shrink-0">
+                      <div class="absolute inset-0 bg-cover bg-center opacity-85 group-hover/card:scale-105 transition-transform duration-500" style="background-image: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80');"></div>
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                      <span class="relative z-10 text-[9px] font-mono text-white bg-[#EA580C] px-2 py-0.5 rounded-xs uppercase tracking-widest font-bold">CASE STUDY</span>
+                    </div>
+                    
+                    <div class="p-3 flex flex-col justify-between flex-1">
+                      <div>
+                        <h4 class="text-xs font-[1000] italic uppercase text-[#0F2B5B] tracking-tight">NEXMOLD x Appliance OEM</h4>
+                        <p class="text-[10px] text-[#475569] leading-tight mt-1 line-clamp-2">
+                          Watertight ultrasonic-welded water tanks delivered with T1 in 7 days via our 90T-1200T press fleet.
+                        </p>
+                      </div>
+                      
+                      <a 
+                        href={`${t.pathPrefix}/knowledge-hub/appliance-water-tank`} 
+                        class="block text-center py-1.5 bg-[#0F2B5B] hover:bg-[#EA580C] text-white font-bold text-[10px] uppercase tracking-wider transition-all rounded-xs shadow-2xs"
+                      >
+                        Read Success Story →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <!-- 3. MATERIALS MEGA MENU -->
+          {link.key === 'materials' && (
+            <div 
+              id="megamenu-materials" 
+              class="mega-menu-panel absolute top-full left-0 right-0 w-full bg-white border-y border-slate-200 border-b-4 border-b-[#EA580C] shadow-2xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 py-6 z-[105]"
+              role="region"
+              aria-label="Materials Submenu"
+            >
+              <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col space-y-5">
+                
+                <!-- 主材料分类五列矩阵 (28px Gutter + 底部完美对齐) -->
+                <div class="grid grid-cols-5 gap-7 text-left items-stretch">
+                  
+                  <!-- 列 1: Commodity Resins [5] -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/materials/commodity-resins`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Commodity Resins</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#EA580C] bg-[#EA580C]/12 px-1.5 py-0.5 rounded font-black tracking-wider">COST-EFF</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/abs-injection-molding`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="ABS">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">ABS & FR-ABS</span>
+                              <span class="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded">UL94 V-0</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Rigid housings <span class="text-slate-300">•</span> High impact</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/hips-water-tank-grade`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="HIPS">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#0F2B5B] transition-colors truncate">HIPS (High Impact PS)</span>
+                              <span class="text-[8px] font-mono text-slate-500 border border-slate-200 px-1 rounded">FDA</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Ultrasonic water tanks <span class="text-slate-300">•</span> ESCR</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pp-homopolymer-copolymer`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PP">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">PP (Homo & Copolymer)</span>
+                              <span class="text-[8px] font-mono text-slate-500 border border-slate-200 px-1 rounded">RoHS</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Living hinges <span class="text-slate-300">•</span> Chemical resistant</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/gpps-transparent`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="GPPS">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">GPPS (General Purpose PS)</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Crystal optical clarity <span class="text-slate-300">•</span> Display cases</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/hdpe-ldpe`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="HDPE">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">HDPE & LDPE Resins</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Chemical tanks <span class="text-slate-300">•</span> Flexible closures</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 2: Engineering Resins [5] -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/materials/engineering-resins`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Engineering Resins</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/12 px-1.5 py-0.5 rounded font-black tracking-wider">MECHANICAL</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pa66-gf30`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PA66-GF30">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors truncate">PA66-GF30 (30% Glass)</span>
+                              <span class="text-[9px] font-mono text-blue-700 bg-blue-50 px-1 rounded">STRUCT</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">EV brackets <span class="text-slate-300">•</span> 175 MPa Tensile</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pom-delrin-acetal`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="POM">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">POM / Delrin (Acetal)</span>
+                              <span class="text-[8px] font-mono text-slate-500 border border-slate-200 px-1 rounded">LOW-FRIC</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Precision gears <span class="text-slate-300">•</span> Bushings & cams</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/polycarbonate-pc`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PC">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">PC (Optical & FR Grade)</span>
+                              <span class="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded">V-0</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Light guides <span class="text-slate-300">•</span> Impact faceplates</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/nylon-pa6-pa12`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="Nylon">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Nylon PA6 / PA12 Toughened</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Wear resistance <span class="text-slate-300">•</span> Snap fits & clips</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pbt-gf30`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PBT-GF30">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">PBT-GF30 Electrical Grade</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Connectors & sockets <span class="text-slate-300">•</span> Dielectric</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 3: High-Performance Polymers [5] -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/materials/high-performance-plastics`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>High-Performance</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#EA580C] bg-[#EA580C]/12 px-1.5 py-0.5 rounded font-black tracking-wider">HIGH-HEAT</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/peek-cf-peek`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PEEK">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors truncate">PEEK & CF-PEEK (30% CF)</span>
+                              <span class="text-[9px] font-mono text-purple-700 bg-purple-50 px-1 rounded">260°C</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Medical ISO 10993 <span class="text-slate-300">•</span> Metal replacement</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pei-ultem`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PEI">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">PEI / Ultem (1000/2300)</span>
+                              <span class="text-[9px] font-mono text-amber-700 bg-amber-50 px-1 rounded">217°C</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Aerospace manifolds <span class="text-slate-300">•</span> Autoclavable</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/pps-gf40`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PPS">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">PPS-GF40 Chemical Grade</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Fuel pumps & valves <span class="text-slate-300">•</span> Zero solvent swell</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/ppa-high-temp-nylon`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="PPA">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">PPA High-Temp (SMT Lead-Free)</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">280°C Reflow solderable connectors</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/petg-pctg-tritan`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="Tritan">
+                            <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">PCTG & Tritan Copolyester</span>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">BPA-free clear food appliances & blenders</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 4: Elastomers & Specialty [5] -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/materials/elastomers-specialty`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Elastomers & Specialty</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/12 px-1.5 py-0.5 rounded font-black tracking-wider">2K / OVERMOLD</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/tpe-tpu-elastomers`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="TPE/TPU">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">TPE, TPU & TPV (30A-95A)</span>
+                              <span class="text-[9px] font-mono text-cyan-700 bg-cyan-50 px-1 rounded">2K BOND</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Soft-touch grips <span class="text-slate-300">•</span> Sealing gaskets</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/fda-food-contact`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="FDA">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">FDA / EU Food Contact Resins</span>
+                              <span class="text-[8px] font-mono text-emerald-700 border border-emerald-300 px-1 rounded">EU 10/2011</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Certified food & potable water parts</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/esd-conductive-compounds`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="ESD">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">ESD & Anti-Static Polymer</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">10^6 - 10^9 Ohm cleanroom wafer trays</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/ul94-flame-retardant`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="UL94">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">UL94 V-0 / 5VA Flame Retardant</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">EV battery modules & junction boxes</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/materials/carbon-fiber-glass-filled`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all" data-resin="CF">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Carbon Fiber Reinforcement (CF)</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Ultra-stiff lightweight drone & robotics</span>
+                            </div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 5: 转化与数据库广告卡片 (立体阴影 + 梯度排版) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-[0.08em]">Material Hub</h3>
+                        <span class="text-[9px] font-mono text-slate-500">v4.8</span>
+                      </div>
+
+                      <div class="bg-[#F8FAFC] border border-[#0F2B5B]/20 rounded-xs overflow-hidden h-[220px] flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 group/card relative">
+                        <div class="h-20 bg-[#0F2B5B] relative overflow-hidden flex items-center justify-center shrink-0">
+                          <img 
+                            src="https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=500&q=80" 
+                            alt="NEXMOLD Polymer Material Inspection and Injection Molding Laboratory" 
+                            loading="lazy"
+                            width="500"
+                            height="160"
+                            class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover/card:scale-105 transition-transform duration-500"
+                          />
+                          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                          <div class="relative z-10 flex items-center gap-1.5 bg-[#EA580C] text-white px-2 py-0.5 rounded-xs shadow-xs">
+                            <span class="text-[11px] font-mono font-[1000] tracking-tight">180+ RESINS</span>
+                          </div>
+                        </div>
+                        
+                        <div class="p-2.5 flex flex-col justify-between flex-1 bg-white">
+                          <div>
+                            <span class="text-[11px] font-bold uppercase text-[#0F2B5B] tracking-tight block">Resin Selector & DFM</span>
+                            <p class="text-[10px] text-slate-600 leading-tight mt-0.5 line-clamp-2">
+                              Full physical datasheet matrix with shrink rates, ISO/ASTM tensile & flammability certs.
+                            </p>
+                          </div>
+                          
+                          <div class="grid grid-cols-2 gap-1.5 mt-2">
+                            <a 
+                              href={`${t.pathPrefix}/materials`} 
+                              class="text-center py-1.5 bg-[#0F2B5B] hover:bg-[#EA580C] text-white font-bold text-[9px] uppercase tracking-wider transition-all rounded-xs shadow-xs truncate"
+                            >
+                              Browse Hub →
+                            </a>
+                            <a 
+                              href="#sample-kit" 
+                              class="mega-cta-trigger text-center py-1.5 bg-white hover:bg-slate-100 border border-[#0F2B5B]/30 text-[#0F2B5B] font-bold text-[9px] uppercase tracking-wider transition-all rounded-xs shadow-2xs truncate"
+                            >
+                              Sample Kit
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- 底部工程实用工具与转化通栏 -->
+                <div class="border-t border-slate-200 pt-3 flex flex-wrap items-center justify-between text-xs text-slate-600">
+                  <div class="flex items-center gap-6">
+                    <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/shrinkage-calculator`} class="flex items-center gap-1.5 text-[#0F2B5B] hover:text-[#EA580C] font-semibold transition-colors">
+                      <span class="w-1.5 h-1.5 bg-[#EA580C] rounded-full"></span>
+                      <span>Resin Shrinkage Calculator</span>
+                      <span class="text-[9px] font-mono text-slate-400">↗</span>
+                    </a>
+                    <span class="text-slate-300">•</span>
+                    <a href={`${t.pathPrefix}/services/dfm-engineering`} class="text-slate-600 hover:text-[#EA580C] transition-colors">
+                      Custom Compounding & Blending Services →
+                    </a>
+                    <span class="text-slate-300 hidden md:inline">•</span>
+                    <div class="hidden md:flex items-center gap-1.5 text-emerald-800 font-mono text-[11px]">
+                      <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                      <span>{t.virginGuarantee}</span>
+                    </div>
+                  </div>
+
+                  <a href="#rfq" class="mega-cta-trigger font-bold text-[#EA580C] hover:text-[#C2410C] flex items-center gap-1 transition-colors">
+                    <span>{t.expertConsult}</span>
+                    <span>→</span>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          <!-- 👑 4. KNOWLEDGE HUB MEGA MENU (SEO & GEO 深度工业化旗舰级重构 - 准确匹配 knowledge.ts 真实分类路径) -->
+          {link.key === 'knowledgeHub' && (
+            <div 
+              id="megamenu-knowledgeHub" 
+              class="mega-menu-panel absolute top-full left-0 right-0 w-full bg-white border-y border-slate-200 border-b-4 border-b-[#EA580C] shadow-2xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 py-6 z-[105]"
+              role="region"
+              aria-label="Knowledge Hub Submenu"
+            >
+              <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col space-y-5">
+                
+                <!-- 主知识库五列矩阵 (28px Gutter + 底部完美对齐) -->
+                <div class="grid grid-cols-5 gap-7 text-left items-stretch">
+                  
+                  <!-- 列 1: CALCULATORS & TOOLS [5] (对应 calculators-tools) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Calculators & Tools</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">CALC ENGINE</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/shrinkage-calculator`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Resin Shrinkage Engine</span>
+                              <span class="text-[9px] font-mono text-blue-700 bg-blue-50 px-1 rounded">ISO 294</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Directional flow/cross-shrink calculation</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/clamp-tonnage-calculator`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Clamp Tonnage Estimator</span>
+                              <span class="text-[8px] font-mono text-slate-600 bg-slate-100 px-1 rounded">TONNAGE</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Cavity pressure & projected surface area</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/wall-thickness-draft`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Wall Thickness & Draft Tool</span>
+                              <span class="text-[8px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded">DFM</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Min/max nominal wall & core release taper</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/cycle-time-calculator`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Cycle Time & Cost Estimator</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Thermal diffusivity & multi-cavity cost</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/gate-runner-sizing`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors block truncate">Gate & Runner Sizing Matrix</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Submarine, edge & hot tip shear limits</span>
+                            </div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 2: DFM & TOLERANCES [5] (对应 dfm-tolerances) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>DFM & Tolerances</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">STANDARDS</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/wall-thickness`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors truncate">Plastic Wall Thickness Design</span>
+                              <span class="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded">DFM</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Nominal wall rules & coring strategies</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/draft-angle`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Draft Angles Complete Guide</span>
+                              <span class="text-[8px] font-mono text-slate-500 border border-slate-200 px-1 rounded">1°-2°</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Core vs cavity draft & texture allowance</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/ribs-bosses-gussets`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Ribs, Bosses & Gussets</span>
+                              <span class="text-[8px] font-mono text-slate-500 border border-slate-200 px-1 rounded">60% RULE</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Structural support and sink prevention</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/undercuts`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Managing Undercuts</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Sliders, lifters, and bump-off mechanics</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/parting-line`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Parting Line Strategy</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Minimizing flash and optimizing venting</span>
+                            </div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 3: TOOLING & METALLURGY [5] (对应 tooling-metallurgy) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Tooling & Metallurgy</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">STEEL LAB</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy/mold-steel`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#EA580C] group-hover/item:text-[#0F2B5B] transition-colors truncate">S136 vs. 718H vs. NAK80</span>
+                              <span class="text-[9px] font-mono text-purple-700 bg-purple-50 px-1 rounded">52 HRC</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Core/cavity steel selection & polish</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy/p20-vs-718h`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">P20 vs. 718H Steels</span>
+                              <span class="text-[8px] font-mono text-blue-700 bg-blue-50 px-1 rounded">PRE-HARD</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Through-hardness & polishability comparison</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy/hot-runner`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Hot Runner vs. Cold Runner</span>
+                              <span class="text-[8px] font-mono text-amber-700 bg-amber-50 px-1 rounded">VALVE</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Valve pin sequencing & scrap elimination</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy/cooling-system`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Conformal Cooling Design</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">3D metal printing & rapid heat extraction</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/tooling-metallurgy/mold-maintenance`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">SPI Class 101 Maintenance</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Preventive cleaning & lifetime warranty</span>
+                            </div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 4: DEFECTS & SOLUTIONS [5] (对应 defects-solutions) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="relative group/head border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions`} class="text-xs font-bold text-[#0F2B5B] hover:text-[#EA580C] uppercase tracking-[0.08em] transition-colors flex items-center gap-1">
+                          <span>Defects & Solutions</span>
+                          <span class="font-mono text-[10px] text-slate-400 font-normal">[5]</span>
+                          <span class="text-[9px] text-[#0F2B5B]/40 group-hover/head:translate-x-0.5 transition-transform">→</span>
+                        </a>
+                        <span class="text-[8px] font-mono text-[#0F2B5B] bg-[#0F2B5B]/10 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">SOLUTIONS</span>
+                        <div class="absolute bottom-[-1px] left-0 w-0 h-[1.5px] bg-[#EA580C] group-hover/head:w-full transition-all duration-300"></div>
+                      </div>
+                      
+                      <ul class="space-y-1.5" role="list">
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions/sink-marks`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Sink Marks & Voids</span>
+                              <span class="text-[9px] font-mono text-rose-700 bg-rose-50 px-1 rounded">QC FIX</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Volumetric shrinkage & packing pressure</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions/short-shot`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Short Shots & Venting</span>
+                              <span class="text-[8px] font-mono text-amber-700 bg-amber-50 px-1 rounded">DIESEL</span>
+                            </div>
+                            <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Trapped air & injection pressure limits</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions/flash`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Flash & Tonnage Deficits</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Parting line clamp force & parting separation</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions/weld-lines`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Weld Lines & Knit Lines</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Flow front convergence & structural weakness</span>
+                            </div>
+                          </a>
+                        </li>
+                        <li>
+                          <a href={`${t.pathPrefix}/knowledge-hub/defects-solutions/burn-marks`} class="group/item block p-1.5 -mx-1 rounded-xs hover:bg-slate-50 active:scale-[0.98] transition-all">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-[#0F2B5B] group-hover/item:text-[#EA580C] transition-colors truncate">Burn Marks (Dieseling)</span>
+                              <span class="text-[11px] text-[#475569] block leading-tight mt-0.5 truncate">Trapped air superheating & carbon black spots</span>
+                            </div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- 列 5: FREE ENGINEERING DFM 评审卡片 (立体阴影 + 双转化按钮) -->
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <div class="border-b border-[#0F2B5B]/15 pb-1.5 mb-2.5 h-[28px] flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-[0.08em]">Free Engineering DFM</h3>
+                        <span class="text-[8px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-black tracking-wider">24H</span>
+                      </div>
+
+                      <div class="bg-[#F8FAFC] border border-[#0F2B5B]/20 rounded-xs overflow-hidden h-[220px] flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 group/card relative">
+                        <div class="h-20 bg-[#0F2B5B] relative overflow-hidden flex items-center justify-center shrink-0">
+                          <img 
+                            src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=500&q=80" 
+                            alt="NEXMOLD Engineering CAD and Moldflow Simulation Analysis Review" 
+                            loading="lazy"
+                            width="500"
+                            height="160"
+                            class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover/card:scale-105 transition-transform duration-500"
+                          />
+                          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                          <div class="relative z-10 flex items-center gap-1.5 bg-emerald-600 text-white px-2 py-0.5 rounded-xs shadow-xs">
+                            <span class="w-1.5 h-1.5 bg-emerald-200 rounded-full animate-pulse"></span>
+                            <span class="text-[10px] font-mono font-[1000] tracking-wider uppercase">PILOT LINE: CAE</span>
+                          </div>
+                        </div>
+                        
+                        <div class="p-2.5 flex flex-col justify-between flex-1 bg-white">
+                          <div>
+                            <span class="text-[11px] font-bold uppercase text-[#0F2B5B] tracking-tight block">Get Engineering DFM</span>
+                            <p class="text-[10px] text-slate-600 leading-tight mt-0.5 line-clamp-2">
+                              Upload CAD (STEP/STP) for wall thickness, draft, weld lines & gate location feedback.
+                            </p>
+                          </div>
+                          
+                          <div class="grid grid-cols-2 gap-1.5 mt-2">
+                            <a 
+                              href="#rfq" 
+                              class="mega-cta-trigger text-center py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-[9px] uppercase tracking-wider transition-all rounded-xs shadow-xs truncate"
+                            >
+                              Upload CAD →
+                            </a>
+                            <a 
+                              href={`${t.pathPrefix}/knowledge-hub/dfm-sample-report`} 
+                              class="text-center py-1.5 bg-white hover:bg-slate-100 border border-[#0F2B5B]/30 text-[#0F2B5B] font-bold text-[9px] uppercase tracking-wider transition-all rounded-xs shadow-2xs truncate"
+                            >
+                              Sample DFM
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- 底部工程实用工具与指南通栏 -->
+                <div class="border-t border-slate-200 pt-3 flex flex-wrap items-center justify-between text-xs text-slate-600">
+                  <div class="flex items-center gap-6">
+                    <a href={`${t.pathPrefix}/knowledge-hub/calculators-tools/shrinkage-calculator`} class="flex items-center gap-1.5 text-[#0F2B5B] hover:text-[#EA580C] font-semibold transition-colors">
+                      <span class="w-1.5 h-1.5 bg-[#EA580C] rounded-full"></span>
+                      <span>Resin Shrinkage Calculator</span>
+                      <span class="text-[9px] font-mono text-slate-400">↗</span>
+                    </a>
+                    <span class="text-slate-300">•</span>
+                    <a href={`${t.pathPrefix}/knowledge-hub/dfm-tolerances/wall-thickness`} class="text-slate-600 hover:text-[#EA580C] transition-colors">
+                      Plastic Wall Thickness DFM Rules →
+                    </a>
+                  </div>
+
+                  <a href="#rfq" class="mega-cta-trigger font-bold text-[#EA580C] hover:text-[#C2410C] flex items-center gap-1 transition-colors">
+                    <span>Consult with a Senior Tooling Engineer</span>
+                    <span>→</span>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          <!-- 5. COMPANY MEGA MENU -->
+          {link.key === 'company' && (
+            <div 
+              id="megamenu-company" 
+              class="mega-menu-panel absolute top-full left-0 right-0 w-full bg-white border-y border-slate-200 border-b-4 border-b-[#EA580C] shadow-2xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 py-6 z-[105]"
+              role="region"
+              aria-label="Company Submenu"
+            >
+              <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-10 grid grid-cols-4 gap-8 text-left items-start">
+                <div class="space-y-3">
+                  <h4 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider pb-1.5 border-b border-[#0F2B5B]/15">About NEXMOLD</h4>
+                  <ul class="space-y-2 text-xs font-sans text-slate-700">
+                    <li><a href={`${t.pathPrefix}/company/about`} class="hover:text-[#EA580C] transition-colors block font-semibold text-[#0F2B5B]">About Our Facility</a></li>
+                    <li><a href={`${t.pathPrefix}/company/factory-floor`} class="hover:text-[#EA580C] transition-colors block">30+ Haitian Press Floor (90T-1200T)</a></li>
+                    <li><a href={`${t.pathPrefix}/company/toolroom`} class="hover:text-[#EA580C] transition-colors block">In-House Toolroom & CNC Center</a></li>
+                    <li><a href={`${t.pathPrefix}/company/dongguan-plant`} class="hover:text-[#EA580C] transition-colors block">Dongguan Manufacturing Base</a></li>
+                    <li><a href={`${t.pathPrefix}/company/automation`} class="hover:text-[#EA580C] transition-colors block">Robotic Extraction Workcells</a></li>
+                  </ul>
+                </div>
+
+                <div class="space-y-3">
+                  <h4 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider pb-1.5 border-b border-[#0F2B5B]/15">Quality & Metrology</h4>
+                  <ul class="space-y-2 text-xs font-sans text-slate-700">
+                    <li><a href={`${t.pathPrefix}/company/quality-control`} class="hover:text-[#EA580C] transition-colors block font-semibold text-[#0F2B5B]">Zeiss CMM Metrology Center</a></li>
+                    <li><a href={`${t.pathPrefix}/company/certifications`} class="hover:text-[#EA580C] transition-colors block">ISO 9001:2015 Certified Plant</a></li>
+                    <li><a href={`${t.pathPrefix}/company/traceability`} class="hover:text-[#EA580C] transition-colors block">Material Lot Traceability & CoC</a></li>
+                    <li><a href={`${t.pathPrefix}/company/inspection-rig`} class="hover:text-[#EA580C] transition-colors block">Multi-Stage Quality Assurance</a></li>
+                  </ul>
+                </div>
+
+                <div class="space-y-3">
+                  <h4 class="text-xs font-bold text-[#0F2B5B] uppercase tracking-wider pb-1.5 border-b border-[#0F2B5B]/15">Export Logistics</h4>
+                  <ul class="space-y-2 text-xs font-sans text-slate-700">
+                    <li><a href={`${t.pathPrefix}/company/shipping-logistics`} class="hover:text-[#EA580C] transition-colors block font-semibold text-[#0F2B5B]">Yantian Port Ocean Direct</a></li>
+                    <li><a href={`${t.pathPrefix}/company/ddp-customs`} class="hover:text-[#EA580C] transition-colors block">Turnkey DDP Freight (USA & EU)</a></li>
+                    <li><a href={`${t.pathPrefix}/company/fba-warehousing`} class="hover:text-[#EA580C] transition-colors block">Amazon FBA Packaging & Prep</a></li>
+                    <li><a href={`${t.pathPrefix}/company/customs-clearance`} class="hover:text-[#EA580C] transition-colors block">Customs & Container Tracking</a></li>
+                  </ul>
+                </div>
+
+                <div class="bg-[#F8FAFC] border border-[#0F2B5B]/15 rounded-xs overflow-hidden flex flex-col justify-between shadow-2xs">
+                  <div class="h-24 bg-[#0F2B5B] relative overflow-hidden flex items-center justify-center">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                    <div class="absolute inset-0 bg-cover bg-center opacity-80" style="background-image: url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80');"></div>
+                    <span class="relative z-20 text-[9px] font-mono text-white bg-[#EA580C] px-2 py-0.5 rounded-xs uppercase tracking-widest font-bold">AUDITED</span>
+                  </div>
+                  <div class="p-3">
+                    <h4 class="text-xs font-bold text-[#0F2B5B] leading-snug">Virtual Factory Audit</h4>
+                    <p class="text-[11px] text-[#555555] leading-relaxed mt-1">Book a live video tour of our Dongguan workshop or review plant audit reports.</p>
+                    <a href="#rfq" class="mega-cta-trigger mt-2 inline-block text-[11px] font-bold text-[#EA580C] hover:underline uppercase tracking-wider">Request Factory Tour →</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      ))}
+    </nav>
+
+    <!-- 右侧操作栏 (多语言切换 + RFQ 按钮) -->
+    <div class="flex items-center gap-3.5 lg:gap-5 relative z-[110]">
+      <!-- 语言切换器 -->
+      <div class="relative group/lang hidden xl:block">
+        <button 
+          id="lang-menu-button"
+          class="flex items-center gap-1.5 px-2.5 py-1.5 border border-[#0F2B5B]/20 hover:border-[#EA580C] transition-all bg-white font-mono text-[10px] text-[#0F2B5B] font-bold tracking-wider uppercase rounded-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#EA580C]" 
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-label="Select Language"
+        >
+          <span class="w-1.5 h-1.5 bg-[#EA580C] rounded-full"></span>
+          {t.shortName}
+          <svg class="w-2.5 h-2.5 text-[#0F2B5B]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+  
+        <div 
+          class="absolute top-full right-0 mt-1.5 py-1 w-28 bg-white border border-[#0F2B5B]/20 opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all duration-200 shadow-lg rounded-xs z-50"
+          role="menu"
+          aria-orientation="vertical"
+        >
+          {locales.map((l) => (
+            <a 
+              href={translations[l].pathPrefix || "/"} 
+              class={`block px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${l === lang ? 'text-[#EA580C] font-bold bg-slate-50' : 'text-[#0F2B5B]/80 hover:text-[#0F2B5B] hover:bg-slate-50'}`}
+              role="menuitem"
+              lang={l}
+            >
+              {translations[l].shortName} - {l.toUpperCase()}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <!-- 核心 RFQ 转化 CTA 按钮 -->
+      <a 
+        id="header-cta-desktop" 
+        href="#rfq" 
+        class="hidden xl:inline-flex items-center justify-center px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] active:scale-[0.98] transition-all duration-200 shadow-xs rounded-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0F2B5B]"
+      >
+        <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+          {t.cta}
+        </span>
+      </a>
+
+      <!-- 移动端汉堡菜单按钮 -->
+      <button 
+        id="mobile-menu-btn" 
+        class="xl:hidden w-11 h-11 flex flex-col items-center justify-center gap-1.5 bg-transparent border border-[#0F2B5B]/15 rounded-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-[#EA580C]" 
+        aria-label="Open Navigation Menu"
+        aria-expanded="false"
+        aria-controls="mobile-overlay"
+      >
+        <div class="w-5 h-[2px] bg-[#0F2B5B] transition-all duration-300"></div>
+        <div class="w-5 h-[2px] bg-[#0F2B5B] transition-all duration-300"></div>
+        <div class="w-3.5 h-[2px] bg-[#EA580C] self-start ml-3 transition-all duration-300"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- 移动端抽屉导航 -->
+  <div 
+    id="mobile-overlay" 
+    class="fixed inset-0 bg-[#0F2B5B] z-[120] opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col px-6 pt-5 pb-8 overflow-y-auto"
+    aria-hidden="true"
+  >
+    <div class="flex items-center justify-between border-b border-white/10 pb-4 shrink-0">
+      <span class="text-2xl font-[1000] text-white italic uppercase">NEX<span class="text-[#EA580C]">MOLD</span></span>
+      <button id="mobile-close-btn" class="flex items-center gap-2 p-2 bg-transparent border-none cursor-pointer text-white/80 hover:text-white" aria-label="Close Navigation Menu">
+        <span class="text-[10px] font-mono uppercase tracking-widest">Close</span>
+        <div class="w-5 h-5 relative flex items-center justify-center">
+          <div class="absolute w-4 h-[2px] bg-white rotate-45"></div>
+          <div class="absolute w-4 h-[2px] bg-white -rotate-45"></div>
+        </div>
+      </button>
+    </div>
+
+    <!-- 移动端材料搜索过滤框 -->
+    <div class="mt-5 shrink-0">
+      <div class="relative">
+        <input 
+          type="text" 
+          id="mobile-resin-search" 
+          placeholder={t.searchPlaceholder}
+          class="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 text-xs px-3.5 py-2.5 rounded-xs font-mono focus:outline-none focus:border-[#EA580C]"
+        />
+        <div class="absolute right-3 top-2.5 text-white/40 text-xs">⌕</div>
+      </div>
+    </div>
+
+    <!-- 移动端主导航手风琴列表 -->
+    <nav class="flex flex-col mt-4 divide-y divide-white/10 text-white" aria-label="Mobile Navigation">
+      <!-- Materials 手风琴展开项 -->
+      <div class="py-3">
+        <button class="mobile-accordion-btn w-full flex items-center justify-between text-lg font-bold tracking-tight uppercase hover:text-[#EA580C] transition-colors py-1 cursor-pointer bg-transparent border-none text-white text-left">
+          <span>{t.materials}</span>
+          <span class="accordion-icon text-xs transition-transform duration-200 text-[#EA580C]">+</span>
+        </button>
+        <div class="accordion-content hidden pt-3 pl-2 space-y-3 text-xs font-mono">
+          <div>
+            <span class="text-[9px] uppercase tracking-widest text-[#EA580C] block font-bold mb-1">Commodity</span>
+            <div class="grid grid-cols-2 gap-2 text-white/80">
+              <a href={`${t.pathPrefix}/materials/abs-injection-molding`} class="hover:text-white">• ABS / FR-ABS</a>
+              <a href={`${t.pathPrefix}/materials/hips-water-tank-grade`} class="hover:text-white">• HIPS Water Tank</a>
+              <a href={`${t.pathPrefix}/materials/pp-homopolymer-copolymer`} class="hover:text-white">• PP Copolymer</a>
+              <a href={`${t.pathPrefix}/materials/gpps-transparent`} class="hover:text-white">• GPPS Optical</a>
+            </div>
+          </div>
+          <div>
+            <span class="text-[9px] uppercase tracking-widest text-[#EA580C] block font-bold mb-1">Engineering</span>
+            <div class="grid grid-cols-2 gap-2 text-white/80">
+              <a href={`${t.pathPrefix}/materials/pa66-gf30`} class="hover:text-white">• PA66-GF30 (30% GF)</a>
+              <a href={`${t.pathPrefix}/materials/pom-delrin-acetal`} class="hover:text-white">• POM / Delrin</a>
+              <a href={`${t.pathPrefix}/materials/polycarbonate-pc`} class="hover:text-white">• PC Optical / FR</a>
+              <a href={`${t.pathPrefix}/materials/pbt-gf30`} class="hover:text-white">• PBT-GF30</a>
+            </div>
+          </div>
+          <div>
+            <span class="text-[9px] uppercase tracking-widest text-[#EA580C] block font-bold mb-1">High-Performance</span>
+            <div class="grid grid-cols-2 gap-2 text-white/80">
+              <a href={`${t.pathPrefix}/materials/peek-cf-peek`} class="hover:text-white">• PEEK / CF-PEEK</a>
+              <a href={`${t.pathPrefix}/materials/pei-ultem`} class="hover:text-white">• PEI / Ultem</a>
+              <a href={`${t.pathPrefix}/materials/pps-gf40`} class="hover:text-white">• PPS-GF40</a>
+              <a href={`${t.pathPrefix}/materials/petg-pctg-tritan`} class="hover:text-white">• Tritan Copolyester</a>
+            </div>
+          </div>
+          <a href={`${t.pathPrefix}/materials`} class="inline-block mt-2 text-[#EA580C] font-bold underline text-[11px]">
+            {t.viewAllResins} →
+          </a>
+        </div>
+      </div>
+
+      <!-- 其他主导航项 -->
+      <a href={`${t.pathPrefix}/services`} class="text-lg font-bold tracking-tight uppercase py-3.5 flex items-center justify-between hover:text-[#EA580C] transition-colors">
+        {t.services}
+        <span class="text-xs text-white/40">→</span>
+      </a>
+      <a href={`${t.pathPrefix}/industries`} class="text-lg font-bold tracking-tight uppercase py-3.5 flex items-center justify-between hover:text-[#EA580C] transition-colors">
+        {t.industries}
+        <span class="text-xs text-white/40">→</span>
+      </a>
+      <a href={`${t.pathPrefix}/knowledge-hub`} class="text-lg font-bold tracking-tight uppercase py-3.5 flex items-center justify-between hover:text-[#EA580C] transition-colors">
+        {t.knowledgeHub}
+        <span class="text-xs text-white/40">→</span>
+      </a>
+      <a href={`${t.pathPrefix}/company`} class="text-lg font-bold tracking-tight uppercase py-3.5 flex items-center justify-between hover:text-[#EA580C] transition-colors">
+        {t.company}
+        <span class="text-xs text-white/40">→</span>
+      </a>
+    </nav>
+
+    <!-- 多语言切换 (移动端) -->
+    <div class="mt-6 shrink-0">
+      <p class="text-[9px] font-mono uppercase tracking-[0.25em] text-[#EA580C] mb-2 font-bold">Region & Language</p>
+      <div class="grid grid-cols-3 gap-2 bg-white/5 p-1 border border-white/10 max-w-xs rounded-xs">
+        {locales.map((l) => (
+          <a 
+            href={translations[l].pathPrefix || "/"} 
+            class={`py-1.5 text-center text-[10px] font-mono tracking-wider transition-all rounded-xs ${l === lang ? 'bg-[#EA580C] text-white font-bold' : 'text-white/70 hover:text-white'}`}
+          >
+            {translations[l].shortName}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- 底部转化入口 -->
+    <div class="mt-auto pt-6 shrink-0">
+      <a 
+        id="header-cta-mobile" 
+        href="#rfq" 
+        class="w-full bg-[#EA580C] hover:bg-[#C2410C] py-3 text-center flex items-center justify-center active:scale-[0.98] transition-all rounded-xs shadow-md"
+      >
+        <span class="text-xs font-bold uppercase tracking-[0.16em] text-white">{t.cta}</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  function initMegaHeader() {
+    const openBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('mobile-close-btn');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const ctaDesktop = document.getElementById('header-cta-desktop');
+    const ctaMobile = document.getElementById('header-cta-mobile');
+    const megaCtas = document.querySelectorAll('.mega-cta-trigger');
+    const accordionBtns = document.querySelectorAll('.mobile-accordion-btn');
+    const searchInput = document.getElementById('mobile-resin-search') as HTMLInputElement | null;
+
+    // 1. 移动端抽屉开关
+    const closeMenu = () => {
+      if (mobileOverlay) {
+        mobileOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+        mobileOverlay.classList.add('opacity-0', 'pointer-events-none');
+        mobileOverlay.setAttribute('aria-hidden', 'true');
+      }
+      if (openBtn) {
+        openBtn.setAttribute('aria-expanded', 'false');
+      }
+      document.body.style.overflow = '';
+    };
+
+    const openMenu = () => {
+      if (mobileOverlay) {
+        mobileOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        mobileOverlay.classList.add('opacity-100', 'pointer-events-auto');
+        mobileOverlay.setAttribute('aria-hidden', 'false');
+      }
+      if (openBtn) {
+        openBtn.setAttribute('aria-expanded', 'true');
+      }
+      document.body.style.overflow = 'hidden';
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    };
+
+    if (openBtn) openBtn.onclick = openMenu;
+    if (closeBtn) closeBtn.onclick = closeMenu;
+
+    // 2. 移动端手风琴折叠
+    accordionBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const content = btn.nextElementSibling as HTMLElement;
+        const icon = btn.querySelector('.accordion-icon');
+        if (content) {
+          const isHidden = content.classList.contains('hidden');
+          content.classList.toggle('hidden', !isHidden);
+          if (icon) {
+            icon.textContent = isHidden ? '−' : '+';
+          }
+        }
+      });
+    });
+
+    // 3. 移动端搜索树脂实时过滤
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+        const links = mobileOverlay?.querySelectorAll('.accordion-content a');
+        links?.forEach((link) => {
+          const text = link.textContent?.toLowerCase() || '';
+          (link as HTMLElement).style.display = text.includes(query) || !query ? 'block' : 'none';
+        });
+      });
+    }
+
+    // 4. 转化漏斗预填与模态框唤醒
+    const handleCtaClick = (e: Event) => {
+      e.preventDefault();
+      const target = e.currentTarget as HTMLElement;
+      const resinCode = target.getAttribute('data-resin') || '';
+      
+      closeMenu();
+
+      if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+        (window as any).NEXMOLD_OPEN_LEAD_MODAL({ resin: resinCode });
+      } else {
+        const rfqSection = document.getElementById('rfq');
+        if (rfqSection) {
+          rfqSection.scrollIntoView({ behavior: 'smooth' });
+          if (resinCode) {
+            const resinInput = document.querySelector('input[name="resin"], select[name="resin"]') as HTMLInputElement | null;
+            if (resinInput) resinInput.value = resinCode;
+          }
+        }
+      }
+    };
+
+    if (ctaDesktop) ctaDesktop.onclick = handleCtaClick;
+    if (ctaMobile) ctaMobile.onclick = handleCtaClick;
+    megaCtas.forEach((cta) => {
+      (cta as HTMLElement).onclick = handleCtaClick;
+    });
+
+    // 为所有具有 data-resin 属性的链接绑定预填行为
+    document.querySelectorAll('[data-resin]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const resin = el.getAttribute('data-resin');
+        if (resin && typeof (window as any).NEXMOLD_SET_SELECTED_RESIN === 'function') {
+          (window as any).NEXMOLD_SET_SELECTED_RESIN(resin);
+        }
+      });
+    });
+
+    // 5. 键盘 Escape 关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMenu();
+      }
+    });
+
+    // 6. 滚动监听：向下滚动超过 80px 自动平滑隐藏下拉浮层防误触
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      if (Math.abs(window.scrollY - lastScrollY) > 80) {
+        document.querySelectorAll('.mega-menu-panel').forEach((panel) => {
+          (panel as HTMLElement).style.pointerEvents = 'none';
+          setTimeout(() => {
+            (panel as HTMLElement).style.pointerEvents = '';
+          }, 200);
+        });
+        lastScrollY = window.scrollY;
+      }
+    }, { passive: true });
+  }
+
+  initMegaHeader();
+  document.addEventListener('astro:page-load', initMegaHeader);
+</script>
+
+<style>
+  header nav a { 
+    white-space: nowrap;
+    hyphens: auto;
+  }
+  
+  /* 强制实体白底与层叠阻尼 */
+  .mega-menu-panel {
+    background-color: #ffffff !important;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, visibility;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mega-menu-panel,
+    #mobile-overlay {
+      transition: none !important;
+    }
+  }
+</style>

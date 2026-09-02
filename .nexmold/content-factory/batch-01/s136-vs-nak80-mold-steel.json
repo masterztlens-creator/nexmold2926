@@ -1,0 +1,98 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:s136-vs-nak80-mold-steel",
+  "targetSlug": "s136-vs-nak80-mold-steel",
+  "route": "/industries/v714/s136-vs-nak80-mold-steel/",
+  "sourceArticleSlug": "s136-vs-nak80-vs-718h",
+  "sourceArticle": {
+    "slug": "s136-vs-nak80-vs-718h",
+    "title": "S136 vs NAK80 vs 718H Mold Steel Comparison"
+  },
+  "sourceArtifactHash": "b34c66c93e92d04466b8d6f5964e655b7f30878aeee3921fc17c498fb47ed197",
+  "artifact": {
+    "pageId": "v714:whitepaper:s136-vs-nak80-mold-steel",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/s136-vs-nak80-mold-steel/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:s136-vs-nak80-mold-steel",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:s136-vs-nak80-vs-718h",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#s136-vs-nak80-vs-718h",
+            "contentHash": "5b9d50492cc75007bae696e48b388241da956d776e5175bce4f64ff07660071b"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:s136-vs-nak80-mold-steel",
+            "claimKey": "v714.whitepaper.s136-vs-nak80-mold-steel"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "b34c66c93e92d04466b8d6f5964e655b7f30878aeee3921fc17c498fb47ed197"
+  },
+  "seo": {
+    "longTailQueries": [
+      "s136 vs nak80 mold steel: corrosion resistance, polishability, machining and tool life",
+      "S136 versus NAK80 mold steel design guide",
+      "S136 versus NAK80 mold steel DFM",
+      "S136 versus NAK80 mold steel best practices",
+      "S136 versus NAK80 mold steel design rules",
+      "S136 versus NAK80 mold steel engineering guide",
+      "S136 versus NAK80 mold steel comparison",
+      "S136 versus NAK80 mold steel properties",
+      "S136 versus NAK80 mold steel hardness",
+      "S136 versus NAK80 mold steel polishability",
+      "S136 versus NAK80 mold steel corrosion resistance",
+      "S136 versus NAK80 mold steel mold life",
+      "S136 versus NAK80 mold steel injection mold steel selection",
+      "corrosion resistance in S136 versus NAK80 mold steel",
+      "polishability in S136 versus NAK80 mold steel",
+      "hardness in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel machinability",
+      "machinability in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel surface finish",
+      "surface finish in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel wear",
+      "wear in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel tool life",
+      "tool life in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel material environment",
+      "material environment in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel corrosion",
+      "how to prevent corrosion in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel surface degradation",
+      "how to prevent surface degradation in S136 versus NAK80 mold steel",
+      "how to prevent wear in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel polishing defects",
+      "how to prevent polishing defects in S136 versus NAK80 mold steel",
+      "S136 versus NAK80 mold steel dimensional instability",
+      "how to prevent dimensional instability in S136 versus NAK80 mold steel"
+    ],
+    "relatedTopics": [
+      "conformal-cooling-injection-mold",
+      "injection-molding-parting-line-design"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

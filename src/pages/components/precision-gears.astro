@@ -1,0 +1,216 @@
+---
+/**
+ * src/pages/components/precision-gears.astro
+ * 👑 NEXMOLD POM (Acetal/Delrin) 精密塑料齿轮注塑详情页 (Components 节点)
+ * 1. 架构定位：展示 POM 低摩擦、耐磨损、DIN 3967 高精度渐开线齿轮注塑与 DFM 模具规范
+ * 2. 视觉规范：100% 钛白极简风 (#FAFAFA / #FFFFFF) + 德系深蓝 (#0F2B5B) + 亮橙 (#EA580C)
+ * 3. GEO / SEO：Quick Answer, Gear Tolerance Table, JSON-LD Schema
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const title = "Precision Plastic Injection Molded Gears (POM/Delrin) | NEXMOLD";
+const description = "Custom plastic gear injection molding using POM Acetal and Nylon. High wear resistance, DIN 3967 gear accuracy, low friction noise, and ISO 2768-m compliance.";
+
+// GEO JSON-LD Schema
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Precision POM Plastic Gear Injection Molding Engineering Standards",
+  "description": description,
+  "author": {
+    "@type": "Organization",
+    "name": "NEXMOLD Precision Manufacturing"
+  }
+};
+---
+
+<MainLayout title={title} description={description} lang="en">
+  <Header lang="en" />
+
+  <main class="bg-[#FAFAFA] text-[#0F2B5B] font-sans py-[clamp(3rem,6vw,6rem)] select-none">
+    <div class="max-w-[1650px] mx-auto px-4 sm:px-8">
+      
+      <!-- 1. 面包屑导航 -->
+      <nav class="flex items-center space-x-2 text-xs font-mono text-[#0F2B5B]/50 uppercase tracking-widest mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#EA580C] transition-colors">Home</a>
+        <span>/</span>
+        <a href="/products" class="hover:text-[#EA580C] transition-colors">Products</a>
+        <span>/</span>
+        <span class="text-[#EA580C] font-black">Precision Gears</span>
+      </nav>
+
+      <!-- 👑 2. GEO Quick Answer 核心框 (Featured Snippet 抢占) -->
+      <section class="border-l-4 border-[#EA580C] pl-6 max-w-4xl mb-12">
+        <span class="text-[#EA580C] font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+          PRECISION_COMPONENTS // POM_DELRIN_PLASTIC_GEARS
+        </span>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans uppercase tracking-tighter leading-[0.95] italic mt-2 mb-4 text-[#0F2B5B]">
+          Custom Precision POM Plastic<br/>
+          <span class="text-[#EA580C]">Gear Injection Molding</span>
+        </h1>
+        <p class="text-[#0F2B5B]/80 text-sm sm:text-base font-bold font-sans leading-relaxed max-w-3xl">
+          <strong>Quick Answer:</strong> Precision plastic gear injection molding requires high dimensional stability, low coefficient of friction (0.15–0.25), and superior fatigue resistance. Utilizing <strong>POM (Acetal / Delrin)</strong> or <strong>Nylon 66</strong>, NEXMOLD manufactures spur, helical, bevel, and internal ring gears achieving <strong>DIN 3967 Class 8–10 accuracy</strong>. Shrinkage compensation is engineered directly into wire-cut EDM cavity inserts to prevent pitch circle eccentricity and gear mesh noise.
+        </p>
+      </section>
+
+      <!-- 3. 50/50 图文与规格参数面板 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+        
+        <!-- 左侧：制造指标卡片 -->
+        <div class="lg:col-span-7 bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-8 shadow-lg space-y-6">
+          <h2 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4">
+            Plastic Gear Molding Technical Specifications
+          </h2>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Gear Accuracy Standard</span>
+              <strong class="text-sm font-black text-[#EA580C]">DIN 3967 Class 8 - 10</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Primary Resin</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">POM (Acetal) / PA66</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Friction Coefficient</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">0.15 - 0.25 (Dry)</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Cavity Shrinkage Allowance</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">1.8% - 2.2% Non-Isotropic</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Tooling Insert Wire-EDM</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">Makino High-Precision Wire</strong>
+            </div>
+            <div class="p-3 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+              <span class="text-[#0F2B5B]/60 block uppercase text-[10px]">Inspection Metrology</span>
+              <strong class="text-sm font-black text-[#0F2B5B]">Zeiss CMM Tooth Inspection</strong>
+            </div>
+          </div>
+
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl font-mono text-[11px] text-[#0F2B5B]/80 leading-relaxed">
+            <strong>Shrinkage Compensation in Gear Profiles:</strong> POM resin shrinks up to 2.2% upon cooling, which alters the tooth involute curvature. NEXMOLD utilizes 2D true involute tooth expansion models during wire-EDM mold insert cutting to ensure precise gear pitch diameter after full crystalline cooling.
+          </div>
+        </div>
+
+        <!-- 右侧：CTA 与知识网链卡片 -->
+        <div class="lg:col-span-5 bg-[#0F2B5B] text-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-mono font-black text-[#EA580C] uppercase tracking-widest block mb-2">GEAR_DFM_&_TOOLING_QUOTE</span>
+            <h3 class="text-2xl font-[1000] uppercase italic">Need Gear Mesh & Tooth Moldflow Evaluation?</h3>
+            <p class="text-xs text-white/80 font-sans mt-2 leading-relaxed">
+              Upload your 3D gear CAD geometry (.STEP) for a 24-hour evaluation covering gate count for concentricity, wall uniformity, and shrinkage distortion risks.
+            </p>
+
+            <div class="mt-6 space-y-3 font-mono text-xs">
+              <a href="/resources/calculators/shrinkage-calculator" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Calculate POM Non-Isotropic Shrinkage →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">CALCULATOR</span>
+              </a>
+              <a href="/quality/zeiss-cmm-inspection" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg block text-white transition-colors flex items-center justify-between">
+                <span>Inspect Zeiss CMM Tooth Audit →</span>
+                <span class="text-[10px] text-[#EA580C] font-bold">QUALITY</span>
+              </a>
+            </div>
+          </div>
+
+          <button id="gear-rfq-trigger" type="button" class="mt-8 bg-[#EA580C] hover:bg-[#d94e05] text-white font-mono font-black text-xs py-4 rounded-lg uppercase tracking-widest transition-all duration-300 shadow-md cursor-pointer">
+            Request Gear DFM & Quote →
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 👑 4. GEO 结构化表格：常用塑料齿轮树脂对比 -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg mb-16">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Gear Material Selection & Performance Matrix
+        </h3>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="bg-[#0F2B5B] text-white">
+                <th class="p-3 border border-[#0F2B5B]">Resin Grade</th>
+                <th class="p-3 border border-[#0F2B5B]">Tensile Strength</th>
+                <th class="p-3 border border-[#0F2B5B]">Dry Friction Coeff.</th>
+                <th class="p-3 border border-[#0F2B5B] text-[#EA580C]">Primary Advantage</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#0F2B5B]/10 text-[#0F2B5B]">
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold text-[#EA580C]">POM (Acetal / Delrin)</td>
+                <td class="p-3 font-bold">68 MPa</td>
+                <td class="p-3">0.18 - 0.22</td>
+                <td class="p-3">Low Water Absorption, High Fatigue Life, Smooth Noise Reduction</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">Nylon 66 (PA66) Unfilled</td>
+                <td class="p-3 font-bold">82 MPa</td>
+                <td class="p-3">0.25 - 0.30</td>
+                <td class="p-3">High Shock Load Absorption & Impact Resistance</td>
+              </tr>
+              <tr class="bg-[#FAFAFA]">
+                <td class="p-3 font-bold">PA66 + 30% Glass Fiber</td>
+                <td class="p-3 font-bold">175 MPa</td>
+                <td class="p-3">0.35 - 0.40</td>
+                <td class="p-3">Maximum Mechanical Torque & High Operating Temp (150°C)</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold">PEEK High-Temp Gear Grade</td>
+                <td class="p-3 font-bold">100 MPa</td>
+                <td class="p-3">0.20 - 0.25</td>
+                <td class="p-3">Extreme Operating Temp (260°C) & Harsh Chemical Contact</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. 常见问题 FAQ -->
+      <section class="bg-white border-2 border-[#0F2B5B]/15 rounded-2xl p-6 sm:p-10 shadow-lg">
+        <h3 class="text-xl font-[1000] font-sans uppercase italic text-[#0F2B5B] border-b-2 border-[#0F2B5B]/15 pb-4 mb-6">
+          Precision Plastic Gear Molding FAQs
+        </h3>
+
+        <div class="space-y-4 font-sans text-xs sm:text-sm text-[#0F2B5B]">
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> How do you gate a plastic spur gear to prevent pitch runout (eccentricity)?</h4>
+            <p class="text-[#0F2B5B]/80 leading-relaxed">Gating a gear from a single edge causes non-uniform flow and egg-shaped warpage. NEXMOLD utilizes diaphragm gating or multi-point symmetrical pin gates on the gear hub face, ensuring balanced radial flow toward the tooth tips.</p>
+          </div>
+          <div class="p-4 bg-[#FAFAFA] border border-[#0F2B5B]/10 rounded-xl">
+            <h4 class="font-mono font-bold text-sm text-[#0F2B5B] mb-2"><span class="text-[#EA580C]">Q:</span> Why are POM gears preferred over metal gears in kitchen and home appliances?</h4>
+            <p class="text-[#0F2B5B]/80 leading-relaxed">POM gears require zero external lubrication, reducing gear train operating noise by up to 15 dB while offering resistance to food acids and cleaning detergents, achieving long service life at a fraction of metal gear cost.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <LeadModal lang="en" />
+  <EcosystemFooter lang="en" />
+</MainLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+<script>
+  function setupGearEvents() {
+    const btn = document.getElementById('gear-rfq-trigger');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof (window as any).NEXMOLD_OPEN_LEAD_MODAL === 'function') {
+          (window as any).NEXMOLD_OPEN_LEAD_MODAL();
+        } else {
+          document.dispatchEvent(new CustomEvent('open-lead-modal'));
+        }
+      };
+    }
+  }
+  document.addEventListener('astro:page-load', setupGearEvents);
+</script>

@@ -1,0 +1,75 @@
+﻿---
+// @ts-nocheck
+import Header from "../../../components/Header.astro";
+import Footer from "../../../components/Footer.astro";
+import KnowledgeArticle from "../../../components/KnowledgeArticle.astro";
+import { knowledgeArticles } from "../../../data/knowledge";
+
+export function getStaticPaths() {
+  return knowledgeArticles.map((article) => ({
+    params: {
+      category: article.categorySlug || article.category,
+      slug: article.slug
+    },
+    props: {
+      article
+    }
+  }));
+}
+
+const { article } = Astro.props;
+const { slug, category } = Astro.params;
+
+// 馃殌 缁堟瀬鏅鸿兘瀹归敊鍏滃簳锛?
+// 1. 鍏堢簿纭尮閰?slug
+// 2. 濡傛灉鑿滃崟閾炬帴鍐欓敊浜嗘病鍖归厤鍒帮紝灏濊瘯閫氳繃 includes 妯＄硦鍖归厤
+// 3. 濡傛灉杩樻槸鎵句笉鍒帮紝闄嶇骇杩斿洖鐭ヨ瘑搴撻椤碉紝缁濅笉鎶?404 宕╂簝
+let currentArticle = article || knowledgeArticles.find((item) => item.slug === slug);
+
+if (!currentArticle && slug) {
+  currentArticle = knowledgeArticles.find((item) => 
+    item.slug.includes(slug) || slug.includes(item.slug)
+  );
+}
+
+if (!currentArticle) {
+  return Astro.redirect('/knowledge-hub/');
+}
+
+// 鏄犲皠鐩稿叧鏂囩珷
+const related = currentArticle.relatedSlugs
+  ? currentArticle.relatedSlugs
+      .map((s) => knowledgeArticles.find((item) => item.slug === s))
+      .filter(Boolean)
+  : [];
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>{currentArticle.title} | NEXMOLD</title>
+  <meta name="description" content={currentArticle.description} />
+
+  <link rel="canonical" href={`https://www.nxmold.com/knowledge-hub/${currentArticle.categorySlug || currentArticle.category}/${currentArticle.slug}/`} />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content={`${currentArticle.title} | NEXMOLD`} />
+  <meta property="og:description" content={currentArticle.description} />
+  <meta property="og:url" content={`https://www.nxmold.com/knowledge-hub/${currentArticle.categorySlug || currentArticle.category}/${currentArticle.slug}/`} />
+
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+</head>
+
+<body>
+  <Header />
+
+  <main>
+    <KnowledgeArticle article={currentArticle} related={related} />
+  </main>
+
+  <Footer />
+</body>
+</html>

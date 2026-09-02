@@ -1,0 +1,12 @@
+﻿{
+    "schema":  "nexmold.v7.14.release-package.v1",
+    "epoch":  "20260902T033838Z-32572-3e44656b",
+    "payload":  "dist/",
+    "fileCount":  277,
+    "htmlCount":  153,
+    "v714ArticleCount":  20,
+    "v714HubCount":  1,
+    "officialHtmlSetSha256":  "d6c7438c7d31a192f1de4d95578db1f3434739042f6de1c6154ce09598a8d71a",
+    "releaseManifest":  "release-metadata/manifest.json",
+    "htmlManifest":  "release-metadata/html-manifest.json"
+}

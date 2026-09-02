@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-sink-marks-causes-solutions",
+  "targetSlug": "injection-molding-sink-marks-causes-solutions",
+  "sourceArticleSlug": "sink-marks-causes-solutions",
+  "slug": "injection-molding-sink-marks-causes-solutions",
+  "lineage": {
+    "pageId": "v714:injection-molding-sink-marks-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-sink-marks-causes-solutions/",
+    "evidenceIds": [
+      "knowledge:sink-marks-causes-solutions"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-sink-marks-causes-solutions"
+    ],
+    "sourceArtifactHash": "e260b0158826b486e7c20ae8e7680cb299b90070706a428d249fed98731a0e30"
+  },
+  "sourceArtifactHash": "e260b0158826b486e7c20ae8e7680cb299b90070706a428d249fed98731a0e30",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-sink-marks-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-sink-marks-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-sink-marks-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:sink-marks-causes-solutions",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#sink-marks-causes-solutions",
+            "contentHash": "sink-marks-causes-solutions:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-sink-marks-causes-solutions",
+            "claimKey": "batch01.injection-molding-sink-marks-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "e260b0158826b486e7c20ae8e7680cb299b90070706a428d249fed98731a0e30"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

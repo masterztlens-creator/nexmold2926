@@ -1,0 +1,2847 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import fs from "node:fs";
+import path from "node:path";
+import {
+  runRuntimePublicationGate,
+} from "../../../regional/v714-runtime-publication-gate.ts";
+import type { RegionalPublishArtifact } from "../../../regional/types.ts";
+import type {
+  PublicationMetadata,
+  PublicationReport,
+  PublicationReportItem,
+} from "../../../regional/v714-runtime-publication-gate.ts";
+
+export const prerender = true;
+
+/**
+ * ============================================================
+ * NEXMOLD V7.14
+ * Regional Publish Artifact -> Publication Gate -> Projection
+ *
+ * Route:
+ *   /industries/v714/[slug]/
+ *
+ * HARD RULES:
+ *   1. This page NEVER generates content.
+ *   2. This page NEVER modifies factory output.
+ *   3. This page NEVER modifies existing site content.
+ *   4. This page NEVER consumes historical batch-01.
+ *   5. This page NEVER bypasses Publication Gate.
+ *   6. Unauthorized artifacts DO NOT become Astro pages.
+ *   7. Page projection re-runs the Publication Gate independently.
+ *
+ * Production source:
+ *   .nexmold/content-factory/batch-01-v3/
+ *
+ * Factory contract:
+ *   nexmold.v7.14.article-contract.v2
+ *
+ * Pipeline:
+ *
+ *   Evidence
+ *      ->
+ *   Semantic
+ *      ->
+ *   Eligibility / Regional Compiler
+ *      ->
+ *   RegionalPublishArtifact
+ *      ->
+ *   V7.14 Article Contract
+ *      ->
+ *   Immutable Markdown + Metadata
+ *      ->
+ *   Publication Gate
+ *      ->
+ *   Astro Projection
+ * ============================================================
+ */
+
+interface WhitePaperFrontmatter {
+  title?: string;
+  description?: string;
+  category?: string;
+  slug?: string;
+  directAnswer?: string;
+  excerpt?: string;
+  author?: string;
+  datePublished?: string;
+  dateModified?: string;
+  canonical?: string;
+  seoKeywords?: string | string[];
+  keywords?: string | string[];
+  [key: string]: unknown;
+}
+
+interface WhitePaperSection {
+  id: string;
+  title: string;
+  level: 2 | 3 | 4;
+}
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface ParsedWhitePaper {
+  frontmatter: WhitePaperFrontmatter;
+  body: string;
+  sections: WhitePaperSection[];
+  faq: FAQItem[];
+}
+
+/* ============================================================
+   CONSTANTS
+   ============================================================ */
+
+const ROOT = process.cwd();
+
+const FACTORY_DIR = path.join(
+  ROOT,
+  ".nexmold",
+  "content-factory",
+  "batch-01-v3",
+);
+
+const REPORT_FILE = path.join(
+  FACTORY_DIR,
+  "production-report.json",
+);
+
+const PUBLIC_ROUTE_PREFIX = "/industries/v714/";
+
+const SITE_ORIGIN = "https://www.nexmold.com";
+
+const EXPECTED_METADATA_SCHEMA =
+  "nexmold.v7.14.article-contract.v2";
+
+const EXPECTED_PRODUCER_VERSION =
+  "v714-article-producer";
+
+const EXPECTED_REPORT_STATUSES = new Set([
+  "PRODUCED",
+  "EXISTING_OUTPUT_VALID",
+]);
+
+/* ============================================================
+   SAFE JSON — V7.14 PRODUCTION LOADER
+   ============================================================ */
+
+/**
+ * Read-only, deterministic, fail-closed JSON loader.
+ * Missing, empty, or malformed files return null.
+ */
+function loadPublicationJson(file: string): unknown {
+  try {
+    if (!fs.existsSync(file)) {
+      return null;
+    }
+
+    const raw = fs.readFileSync(file, "utf8");
+
+    if (!raw.trim()) {
+      return null;
+    }
+
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/* ============================================================
+   TYPE GUARDS
+   ============================================================ */
+
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+
+/* ============================================================
+   ESCAPING
+   ============================================================ */
+
+function escapeHtml(
+  value: string,
+): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* ============================================================
+   HEADING SLUG
+   ============================================================ */
+
+function slugifyHeading(
+  value: string,
+): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[`*_~]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/* ============================================================
+   SCALAR PARSER
+   ============================================================ */
+
+function parseScalar(
+  value: string,
+): unknown {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  if (
+    (trimmed.startsWith('"') &&
+      trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") &&
+      trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+
+  if (trimmed === "true") {
+    return true;
+  }
+
+  if (trimmed === "false") {
+    return false;
+  }
+
+  if (trimmed === "null") {
+    return null;
+  }
+
+  if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+
+  if (
+    trimmed.startsWith("[") &&
+    trimmed.endsWith("]")
+  ) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return trimmed;
+    }
+  }
+
+  return trimmed;
+}
+
+/* ============================================================
+   FRONTMATTER
+   ============================================================ */
+
+function parseFrontmatter(
+  raw: string,
+): {
+  frontmatter: WhitePaperFrontmatter;
+  body: string;
+} {
+  const match = raw.match(
+    /^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n?([\s\S]*)$/,
+  );
+
+  if (!match) {
+    return {
+      frontmatter: {},
+      body: raw,
+    };
+  }
+
+  const frontmatter: WhitePaperFrontmatter = {};
+
+  for (
+    const line of match[1].split(/\r?\n/)
+  ) {
+    const trimmed = line.trim();
+
+    if (
+      !trimmed ||
+      trimmed.startsWith("#")
+    ) {
+      continue;
+    }
+
+    const separator =
+      trimmed.indexOf(":");
+
+    if (separator <= 0) {
+      continue;
+    }
+
+    const key = trimmed
+      .slice(0, separator)
+      .trim();
+
+    const value = trimmed
+      .slice(separator + 1)
+      .trim();
+
+    frontmatter[key] =
+      parseScalar(value);
+  }
+
+  return {
+    frontmatter,
+    body: match[2],
+  };
+}
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+
+function extractFaq(
+  body: string,
+): {
+  body: string;
+  faq: FAQItem[];
+} {
+  const faqHeading = body.match(
+    /^##\s+(?:FAQ|Frequently Asked Questions)\s*$/im,
+  );
+
+  if (
+    !faqHeading ||
+    faqHeading.index === undefined
+  ) {
+    return {
+      body,
+      faq: [],
+    };
+  }
+
+  const start =
+    faqHeading.index;
+
+  const beforeFaq =
+    body.slice(0, start);
+
+  const afterHeading =
+    body.slice(
+      start + faqHeading[0].length,
+    );
+
+  const nextH2 =
+    afterHeading.search(
+      /^##\s+/m,
+    );
+
+  const faqBlock =
+    nextH2 >= 0
+      ? afterHeading.slice(
+          0,
+          nextH2,
+        )
+      : afterHeading;
+
+  const remaining =
+    nextH2 >= 0
+      ? beforeFaq +
+        afterHeading.slice(nextH2)
+      : beforeFaq;
+
+  const faq: FAQItem[] = [];
+
+  const questionMatches = [
+    ...faqBlock.matchAll(
+      /^###\s+(.+?)\s*$/gm,
+    ),
+  ];
+
+  for (
+    let index = 0;
+    index <
+    questionMatches.length;
+    index += 1
+  ) {
+    const current =
+      questionMatches[index];
+
+    const answerStart =
+      (current.index ?? 0) +
+      current[0].length;
+
+    const answerEnd =
+      index + 1 <
+      questionMatches.length
+        ? (
+            questionMatches[
+              index + 1
+            ].index ??
+            faqBlock.length
+          )
+        : faqBlock.length;
+
+    const answer =
+      faqBlock
+        .slice(
+          answerStart,
+          answerEnd,
+        )
+        .trim();
+
+    const question =
+      current[1]?.trim() ?? "";
+
+    if (
+      !question ||
+      !answer
+    ) {
+      continue;
+    }
+
+    faq.push({
+      question,
+      answer,
+    });
+  }
+
+  return {
+    body: remaining.trim(),
+    faq,
+  };
+}
+
+/* ============================================================
+   SECTION EXTRACTION
+   ============================================================ */
+
+function parseSections(
+  body: string,
+): WhitePaperSection[] {
+  const sections: WhitePaperSection[] = [];
+
+  const usedIds =
+    new Set<string>();
+
+  const matches =
+    body.matchAll(
+      /^(#{2,4})\s+(.+?)\s*$/gm,
+    );
+
+  for (
+    const match of matches
+  ) {
+    const level =
+      match[1].length === 2
+        ? 2
+        : match[1].length === 3
+          ? 3
+          : 4;
+
+    const title =
+      match[2]
+        .replace(
+          /[`*_~]/g,
+          "",
+        )
+        .trim();
+
+    if (!title) {
+      continue;
+    }
+
+    let id =
+      slugifyHeading(title);
+
+    if (!id) {
+      id =
+        `section-${sections.length + 1}`;
+    }
+
+    let uniqueId = id;
+    let suffix = 2;
+
+    while (
+      usedIds.has(uniqueId)
+    ) {
+      uniqueId =
+        `${id}-${suffix}`;
+      suffix += 1;
+    }
+
+    usedIds.add(uniqueId);
+
+    sections.push({
+      id: uniqueId,
+      title,
+      level,
+    });
+  }
+
+  return sections;
+}
+
+/* ============================================================
+   INLINE MARKDOWN
+   ============================================================ */
+
+function inlineMarkdown(
+  value: string,
+): string {
+  let result =
+    escapeHtml(value);
+
+  result =
+    result.replace(
+      /`([^`]+)`/g,
+      "<code>$1</code>",
+    );
+
+  result =
+    result.replace(
+      /\*\*([^\*]+)\*\*/g,
+      "<strong>$1</strong>",
+    );
+
+  result =
+    result.replace(
+      /__([^_]+)__/g,
+      "<strong>$1</strong>",
+    );
+
+  result =
+    result.replace(
+      /\*([^\*]+)\*/g,
+      "<em>$1</em>",
+    );
+
+  result =
+    result.replace(
+      /_([^_]+)_/g,
+      "<em>$1</em>",
+    );
+
+  result =
+    result.replace(
+      /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+      (
+        _match,
+        label,
+        url,
+      ) => {
+        const safeUrl =
+          String(url);
+
+        if (
+          !/^https?:\/\//i.test(
+            safeUrl,
+          ) &&
+          !safeUrl.startsWith("/")
+        ) {
+          return String(label);
+        }
+
+        return `<a href="${escapeHtml(
+          safeUrl,
+        )}">${String(
+          label,
+        )}</a>`;
+      },
+    );
+
+  return result;
+}
+
+/* ============================================================
+   MARKDOWN RENDERER
+   ============================================================ */
+
+function renderMarkdown(
+  markdown: string,
+): string {
+  const lines =
+    markdown
+      .replace(
+        /\r\n/g,
+        "\n",
+      )
+      .split("\n");
+
+  const output: string[] = [];
+
+  let paragraph: string[] = [];
+
+  let listType:
+    | "ul"
+    | "ol"
+    | null = null;
+
+  let listItems: string[] = [];
+
+  let inCodeBlock = false;
+
+  let codeLanguage = "";
+
+  let codeLines: string[] = [];
+
+  let inTable = false;
+
+  let tableHeader: string[] = [];
+
+  let tableRows: string[][] = [];
+
+  let sectionIndex = 0;
+
+  const usedIds =
+    new Set<string>();
+
+  const flushParagraph =
+    () => {
+      if (
+        !paragraph.length
+      ) {
+        return;
+      }
+
+      const text =
+        paragraph
+          .join(" ")
+          .trim();
+
+      if (text) {
+        output.push(
+          `<p>${inlineMarkdown(
+            text,
+          )}</p>`,
+        );
+      }
+
+      paragraph = [];
+    };
+
+  const flushList =
+    () => {
+      if (
+        !listType ||
+        !listItems.length
+      ) {
+        listType = null;
+        listItems = [];
+        return;
+      }
+
+      output.push(
+        `<${listType}>${listItems
+          .map(
+            (item) =>
+              `<li>${inlineMarkdown(
+                item,
+              )}</li>`,
+          )
+          .join("")}</${listType}>`,
+      );
+
+      listType = null;
+      listItems = [];
+    };
+
+  const flushTable =
+    () => {
+      if (
+        !inTable ||
+        !tableHeader.length
+      ) {
+        inTable = false;
+        tableHeader = [];
+        tableRows = [];
+        return;
+      }
+
+      const headerHtml =
+        tableHeader
+          .map(
+            (cell) =>
+              `<th>${inlineMarkdown(
+                cell.trim(),
+              )}</th>`,
+          )
+          .join("");
+
+      const rowsHtml =
+        tableRows
+          .map(
+            (row) =>
+              `<tr>${row
+                .map(
+                  (cell) =>
+                    `<td>${inlineMarkdown(
+                      cell.trim(),
+                    )}</td>`,
+                )
+                .join("")}</tr>`,
+          )
+          .join("");
+
+      output.push(`
+        <div class="wp-table-wrap">
+          <table class="wp-table">
+            <thead>
+              <tr>${headerHtml}</tr>
+            </thead>
+            ${
+              rowsHtml
+                ? `<tbody>${rowsHtml}</tbody>`
+                : ""
+            }
+          </table>
+        </div>
+      `);
+
+      inTable = false;
+      tableHeader = [];
+      tableRows = [];
+    };
+
+  const flushCode =
+    () => {
+      if (!inCodeBlock) {
+        return;
+      }
+
+      output.push(`
+        <div class="wp-code">
+          ${
+            codeLanguage
+              ? `<div class="wp-code-label">${escapeHtml(
+                  codeLanguage,
+                )}</div>`
+              : ""
+          }
+          <pre><code>${escapeHtml(
+            codeLines.join("\n"),
+          )}</code></pre>
+        </div>
+      `);
+
+      inCodeBlock = false;
+      codeLanguage = "";
+      codeLines = [];
+    };
+
+  const flushAll =
+    () => {
+      flushParagraph();
+      flushList();
+      flushTable();
+    };
+
+  for (
+    let index = 0;
+    index < lines.length;
+    index += 1
+  ) {
+    const rawLine =
+      lines[index];
+
+    const line =
+      rawLine.trim();
+
+    if (
+      line.startsWith("```")
+    ) {
+      flushAll();
+
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeLanguage =
+          line
+            .slice(3)
+            .trim();
+      } else {
+        flushCode();
+      }
+
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(
+        rawLine,
+      );
+      continue;
+    }
+
+    if (
+      !line &&
+      !inTable
+    ) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    if (
+      line.startsWith("|") &&
+      line.endsWith("|")
+    ) {
+      flushParagraph();
+      flushList();
+
+      const cells =
+        line
+          .slice(1, -1)
+          .split("|")
+          .map(
+            (cell) =>
+              cell.trim(),
+          );
+
+      const nextLine =
+        lines[index + 1]?.trim() ??
+        "";
+
+      const separatorCells =
+        nextLine.startsWith("|") &&
+        nextLine.endsWith("|")
+          ? nextLine
+              .slice(1, -1)
+              .split("|")
+              .map(
+                (cell) =>
+                  /^:?-{3,}:?$/.test(
+                    cell.trim(),
+                  ),
+              )
+          : [];
+
+      if (
+        !inTable &&
+        separatorCells.length ===
+          cells.length &&
+        separatorCells.every(
+          Boolean,
+        )
+      ) {
+        inTable = true;
+        tableHeader = cells;
+        index += 1;
+        continue;
+      }
+
+      if (inTable) {
+        tableRows.push(cells);
+        continue;
+      }
+    }
+
+    if (
+      /^#{2,4}\s+/.test(line)
+    ) {
+      flushAll();
+
+      const headingMatch =
+        line.match(
+          /^(#{2,4})\s+(.+)$/,
+        );
+
+      if (!headingMatch) {
+        continue;
+      }
+
+      const hashes =
+        headingMatch[1];
+
+      const headingText =
+        headingMatch[2].trim();
+
+      let headingId =
+        slugifyHeading(
+          headingText,
+        );
+
+      if (!headingId) {
+        headingId =
+          `section-${sectionIndex + 1}`;
+      }
+
+      let uniqueId =
+        headingId;
+
+      let suffix = 2;
+
+      while (
+        usedIds.has(uniqueId)
+      ) {
+        uniqueId =
+          `${headingId}-${suffix}`;
+        suffix += 1;
+      }
+
+      usedIds.add(uniqueId);
+      sectionIndex += 1;
+
+      const level =
+        hashes.length;
+
+      output.push(
+        `<h${level} id="${escapeHtml(
+          uniqueId,
+        )}">${inlineMarkdown(
+          headingText,
+        )}</h${level}>`,
+      );
+
+      continue;
+    }
+
+    if (
+      /^[-*+]\s+/.test(line)
+    ) {
+      flushParagraph();
+      flushTable();
+
+      if (
+        listType !== "ul"
+      ) {
+        flushList();
+        listType = "ul";
+      }
+
+      listItems.push(
+        line.replace(
+          /^[-*+]\s+/,
+          "",
+        ),
+      );
+
+      continue;
+    }
+
+    if (
+      /^\d+\.\s+/.test(line)
+    ) {
+      flushParagraph();
+      flushTable();
+
+      if (
+        listType !== "ol"
+      ) {
+        flushList();
+        listType = "ol";
+      }
+
+      listItems.push(
+        line.replace(
+          /^\d+\.\s+/,
+          "",
+        ),
+      );
+
+      continue;
+    }
+
+    if (
+      line.startsWith("> ")
+    ) {
+      flushAll();
+
+      output.push(
+        `<blockquote>${inlineMarkdown(
+          line.slice(2),
+        )}</blockquote>`,
+      );
+
+      continue;
+    }
+
+    if (
+      /^---+$/.test(line)
+    ) {
+      flushAll();
+
+      output.push(
+        "<hr />",
+      );
+
+      continue;
+    }
+
+    paragraph.push(line);
+  }
+
+  flushCode();
+  flushAll();
+
+  return output.join("\n");
+}
+
+/* ============================================================
+   PARSED ARTICLE
+   ============================================================ */
+
+function parseWhitePaper(
+  markdown: string,
+): ParsedWhitePaper {
+  const parsed =
+    parseFrontmatter(
+      markdown,
+    );
+
+  const faqParsed =
+    extractFaq(
+      parsed.body,
+    );
+
+  return {
+    frontmatter:
+      parsed.frontmatter,
+    body:
+      faqParsed.body,
+    sections:
+      parseSections(
+        faqParsed.body,
+      ),
+    faq:
+      faqParsed.faq,
+  };
+}
+
+/* ============================================================
+   FACTORY REPORT INDEX
+   ============================================================ */
+
+const report =
+  loadPublicationJson(
+    REPORT_FILE,
+  ) as PublicationReport | null;
+
+const reportBySlug =
+  new Map<string, PublicationReportItem>();
+
+if (Array.isArray(report?.results)) {
+  for (const item of report.results) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const reportItem =
+      item as PublicationReportItem;
+
+    const reportSlug = String(
+      reportItem.slug ??
+        reportItem.targetSlug ??
+        "",
+    ).trim();
+
+    if (!reportSlug) {
+      continue;
+    }
+
+    reportBySlug.set(
+      reportSlug,
+      reportItem,
+    );
+  }
+}
+
+/* ============================================================
+   STATIC PATHS
+   ============================================================ */
+
+export function getStaticPaths() {
+  const factoryDir = path.join(
+    process.cwd(),
+    ".nexmold",
+    "content-factory",
+    "batch-01-v3",
+  );
+
+  const reportFile = path.join(
+    factoryDir,
+    "production-report.json",
+  );
+
+  if (!fs.existsSync(factoryDir)) {
+    return [];
+  }
+
+  if (!fs.existsSync(reportFile)) {
+    return [];
+  }
+
+  let staticReport: PublicationReport | null = null;
+
+  try {
+    staticReport = JSON.parse(
+      fs.readFileSync(
+        reportFile,
+        "utf8",
+      ),
+    ) as PublicationReport;
+  } catch {
+    return [];
+  }
+
+  const staticReportBySlug =
+    new Map<string, PublicationReportItem>();
+
+  if (Array.isArray(staticReport?.results)) {
+    for (const item of staticReport.results) {
+      if (!item || typeof item !== "object") {
+        continue;
+      }
+
+      const reportItem =
+        item as PublicationReportItem;
+
+      const reportSlug = String(
+        reportItem.slug ??
+          reportItem.targetSlug ??
+          "",
+      ).trim();
+
+      if (reportSlug) {
+        staticReportBySlug.set(
+          reportSlug,
+          reportItem,
+        );
+      }
+    }
+  }
+
+  const files =
+    fs
+      .readdirSync(factoryDir)
+      .filter(
+        (file: string) =>
+          file.endsWith(".md") &&
+          file !== "production-report.md",
+      )
+      .sort();
+
+  const paths: Array<{
+    params: { slug: string };
+    props: {
+      markdown: string;
+      metadata: PublicationMetadata;
+      reportItem: PublicationReportItem;
+    };
+  }> = [];
+
+  for (const file of files) {
+    const slug = file.replace(/\.md$/, "");
+
+    if (!slug) {
+      continue;
+    }
+
+    const markdown = fs.readFileSync(
+      path.join(factoryDir, file),
+      "utf8",
+    );
+
+    const metadataFile = path.join(
+      factoryDir,
+      `${slug}.json`,
+    );
+
+    if (!fs.existsSync(metadataFile)) {
+      continue;
+    }
+
+    let metadata: PublicationMetadata;
+
+    try {
+      metadata = JSON.parse(
+        fs.readFileSync(
+          metadataFile,
+          "utf8",
+        ),
+      ) as PublicationMetadata;
+    } catch {
+      continue;
+    }
+
+    const reportItem =
+      staticReportBySlug.get(slug) ??
+      null;
+
+    const gate =
+      runRuntimePublicationGate(
+        metadata,
+        reportItem,
+        slug,
+      );
+
+    if (!gate.ok) {
+      continue;
+    }
+
+    paths.push({
+      params: { slug },
+      props: {
+        markdown,
+        metadata: gate.metadata,
+        reportItem: gate.reportItem,
+      },
+    });
+  }
+
+  return paths;
+}
+
+/* ============================================================
+   PAGE PROJECTION INPUT
+   ============================================================ */
+
+const markdown =
+  Astro.props.markdown as
+    | string
+    | undefined;
+
+const metadata =
+  Astro.props.metadata as
+    | PublicationMetadata
+    | undefined;
+
+const passedReportItem =
+  Astro.props.reportItem as
+    | PublicationReportItem
+    | undefined;
+
+const slug =
+  String(
+    Astro.params.slug ??
+      "",
+  ).trim();
+
+if (!slug) {
+  throw new Error(
+    "V7.14 PUBLICATION GATE BLOCKED: EMPTY_SLUG",
+  );
+}
+
+if (!markdown) {
+  throw new Error(
+    `V7.14 white paper not found: ${slug}`,
+  );
+}
+
+const pageMarkdown: string = markdown;
+
+/*
+ * Re-run the Gate during actual page projection.
+ *
+ * getStaticPaths is NOT trusted as the sole security boundary.
+ */
+const pageReportItem =
+  passedReportItem ??
+  reportBySlug.get(
+    slug,
+  ) ??
+  null;
+
+const pageGate =
+  runRuntimePublicationGate(
+    metadata ?? null,
+    pageReportItem,
+    slug,
+  );
+
+if (!pageGate.ok) {
+  throw new Error(
+    `V7.14 PUBLICATION GATE BLOCKED: ${slug}: ${pageGate.reason}`,
+  );
+}
+
+const artifact: RegionalPublishArtifact =
+  pageGate.artifact;
+const validatedMetadata: PublicationMetadata =
+  pageGate.metadata;
+
+const validatedReportItem =
+  pageGate.reportItem;
+
+const persistedArtifact =
+  validatedMetadata.artifact;
+
+const parsed =
+  parseWhitePaper(
+    pageMarkdown,
+  );
+
+const frontmatter =
+  parsed.frontmatter;
+
+/* ============================================================
+   FRONTMATTER PROJECTION
+   ============================================================ */
+
+const title =
+  String(
+    frontmatter.title ??
+      slug
+        .replace(
+          /-/g,
+          " ",
+        )
+        .replace(
+          /\b\w/g,
+          (char) =>
+            char.toUpperCase(),
+        ),
+  ).trim();
+
+const description =
+  String(
+    frontmatter.description ??
+      frontmatter.excerpt ??
+      "NEXMOLD V7.14 engineering white paper.",
+  ).trim();
+
+const category =
+  String(
+    frontmatter.category ??
+      "Injection Molding Engineering",
+  ).trim();
+
+const directAnswer =
+  String(
+    frontmatter.directAnswer ??
+      "",
+  ).trim();
+
+const author =
+  String(
+    frontmatter.author ??
+      "NEXMOLD Engineering",
+  ).trim();
+
+const datePublished =
+  String(
+    frontmatter.datePublished ??
+      "",
+  ).trim();
+
+const dateModified =
+  String(
+    frontmatter.dateModified ??
+      "",
+  ).trim();
+
+const rawKeywords =
+  frontmatter.seoKeywords ??
+  frontmatter.keywords ??
+  "";
+
+const keywords: string[] =
+  Array.isArray(rawKeywords)
+    ? rawKeywords.map((item: string) => item.trim()).filter(Boolean)
+    : String(rawKeywords)
+        .split(",")
+        .map((item: string) => item.trim())
+        .filter(Boolean);
+
+/* ============================================================
+   VERIFIED PROJECTION VALUES
+   ============================================================ */
+
+const canonicalUrl =
+  String(
+    artifact.canonicalUrl,
+  );
+
+const pageTitle =
+  `${title} | NEXMOLD`;
+
+const html =
+  renderMarkdown(
+    parsed.body,
+  );
+
+const hasToc =
+  parsed.sections.length >
+  0;
+
+const articleWordCount =
+  parsed.body
+    .replace(
+      /[#>*`|_-]/g,
+      " ",
+    )
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+
+const evidenceCount =
+  persistedArtifact?.evidence
+    ?.evidence?.length ??
+  0;
+
+const semanticClaimCount =
+  persistedArtifact?.evidence
+    ?.semanticClaims
+    ?.length ??
+  0;
+
+const bindingCount =
+  persistedArtifact?.bindings
+    ?.length ??
+  0;
+
+const publicationStatus =
+  "AUTHORIZED";
+
+const sourceArtifactHash =
+  String(
+    artifact.pageContentHash ??
+      "",
+  );
+
+const factoryRun =
+  String(
+    validatedMetadata.factoryRun ??
+      "",
+  );
+
+const articleId =
+  String(
+    validatedMetadata.articleId ??
+      "",
+  );
+
+const producerVersion =
+  String(
+    validatedMetadata.producerVersion ??
+      "",
+  );
+
+const metadataSchema =
+  String(
+    validatedMetadata.schema ??
+      "",
+  );
+
+const reportStatus =
+  String(
+    validatedReportItem?.status ??
+      "",
+  );
+
+const route =
+  String(
+    validatedMetadata.route ??
+      "",
+  );
+
+const sourceArticleSlug =
+  String(
+    validatedMetadata.sourceArticleSlug ??
+      "",
+  );
+
+const hreflangCount =
+  Array.isArray(
+    artifact.hreflangSet,
+  )
+    ? artifact.hreflangSet.length
+    : 0;
+
+/* ============================================================
+   PUBLIC HTML LINEAGE
+   ============================================================
+
+   The browser-facing document exposes only values that have
+   already passed the V7.14 runtime Publication Gate. The route
+   projection contract defines route.contentHash as identical to
+   RegionalPublishArtifact.pageContentHash, so both identifiers
+   intentionally point to the same verified content hash.
+*/
+const lineageJson = JSON.stringify({
+  schema: "nexmold.v7.14.html-lineage.v1",
+  route,
+  routeHash: sourceArtifactHash,
+  artifactHash: artifact.pageContentHash,
+  canonicalUrl,
+  publicationStatus,
+  factoryRun,
+  articleId,
+  producerVersion,
+  metadataSchema,
+});
+
+---
+
+<MainLayout
+  description={description}
+  title={pageTitle}
+  canonical={canonicalUrl}
+>
+  <script
+    is:inline
+    type="application/json"
+    id="v714-publication-lineage"
+    set:html={lineageJson}
+  />
+
+  <main class="wp-page">
+
+    <!-- ======================================================
+         WHITE PAPER HERO
+         ====================================================== -->
+
+    <section class="wp-hero">
+      <div class="wp-container wp-hero-grid">
+
+        <div class="wp-hero-main">
+
+          <div class="wp-eyebrow">
+            NEXMOLD V7.14 · ENGINEERING WHITE PAPER
+          </div>
+
+          <div class="wp-category">
+            {category}
+          </div>
+
+          <h1>{title}</h1>
+
+          <p class="wp-lead">
+            {description}
+          </p>
+
+          {
+            directAnswer && (
+              <div class="wp-answer">
+                <div class="wp-answer-label">
+                  Engineering Answer
+                </div>
+
+                <div class="wp-answer-body">
+                  {directAnswer}
+                </div>
+              </div>
+            )
+          }
+
+          <div class="wp-meta">
+
+            <span>
+              By {author}
+            </span>
+
+            {
+              datePublished && (
+                <span>
+                  Published {datePublished}
+                </span>
+              )
+            }
+
+            {
+              dateModified && (
+                <span>
+                  Updated {dateModified}
+                </span>
+              )
+            }
+
+            <span>
+              {articleWordCount.toLocaleString()}+ words
+            </span>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================
+             VERIFIED PUBLICATION INTEGRITY
+             ================================================== -->
+
+        <aside class="wp-hero-side">
+
+          <div class="wp-integrity-card">
+
+            <div class="wp-integrity-title">
+              V7.14 Publication Integrity
+            </div>
+
+            <div class="wp-integrity-status">
+              <span class="wp-status-dot"></span>
+              <strong>AUTHORIZED</strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Regional Artifact</span>
+              <strong>Verified</strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Publication Gate</span>
+              <strong>{publicationStatus}</strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Evidence</span>
+              <strong>
+                {evidenceCount} bound
+              </strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Semantic Claims</span>
+              <strong>
+                {semanticClaimCount} bound
+              </strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Claim Bindings</span>
+              <strong>
+                {bindingCount}
+              </strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Locale</span>
+              <strong>
+                en-US
+              </strong>
+            </div>
+
+            <div class="wp-integrity-row">
+              <span>Hreflang Entries</span>
+              <strong>
+                {hreflangCount}
+              </strong>
+            </div>
+
+          </div>
+
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ARTICLE BODY
+         ====================================================== -->
+
+    <section class="wp-reading">
+      <div class="wp-container wp-layout">
+
+        <!-- ==================================================
+             LEFT: ARTICLE
+             ================================================== -->
+
+        <article class="wp-article">
+
+          <!-- EXECUTIVE SUMMARY -->
+
+          <section class="wp-summary">
+
+            <div class="wp-section-label">
+              EXECUTIVE SUMMARY
+            </div>
+
+            <h2>
+              What This White Paper Covers
+            </h2>
+
+            <p>
+              This engineering white paper examines
+              <strong>{title}</strong>
+              from the perspective of injection mold
+              design, injection molding process control,
+              manufacturability, tooling risk, part quality,
+              and production scalability.
+            </p>
+
+            {
+              directAnswer && (
+                <p>
+                  {directAnswer}
+                </p>
+              )
+            }
+
+          </section>
+
+          <!-- TOPIC COVERAGE -->
+
+          {
+            keywords.length > 0 && (
+              <section class="wp-topic-map">
+
+                <div class="wp-section-label">
+                  TOPIC COVERAGE
+                </div>
+
+                <h2>
+                  Engineering Topics Covered
+                </h2>
+
+                <div class="wp-keyword-grid">
+                  {
+                    keywords.map(
+                      (
+                        keyword: string,
+                      ) => (
+                        <span class="wp-keyword">
+                          {keyword}
+                        </span>
+                      ),
+                    )
+                  }
+                </div>
+
+              </section>
+            )
+          }
+
+          <!-- TABLE OF CONTENTS -->
+
+          {
+            hasToc && (
+              <nav
+                class="wp-toc"
+                aria-label="White paper contents"
+              >
+
+                <div class="wp-section-label">
+                  CONTENTS
+                </div>
+
+                <h2>
+                  Engineering Contents
+                </h2>
+
+                <ol>
+                  {
+                    parsed.sections.map(
+                      (
+                        section: WhitePaperSection,
+                      ) => (
+                        <li
+                          class:list={{
+                            "wp-toc-h3":
+                              section.level === 3,
+                            "wp-toc-h4":
+                              section.level === 4,
+                          }}
+                        >
+                          <a
+                            href={`#${section.id}`}
+                          >
+                            {section.title}
+                          </a>
+                        </li>
+                      ),
+                    )
+                  }
+                </ol>
+
+              </nav>
+            )
+          }
+
+          <!-- MAIN WHITE PAPER -->
+
+          <div
+            class="wp-content"
+            set:html={html}
+          />
+
+          <!-- FAQ -->
+
+          {
+            parsed.faq.length > 0 && (
+              <section
+                class="wp-faq"
+                id="faq"
+              >
+
+                <div class="wp-section-label">
+                  FAQ
+                </div>
+
+                <h2>
+                  Frequently Asked Questions
+                </h2>
+
+                {
+                  parsed.faq.map(
+                    (
+                      item: FAQItem,
+                    ) => (
+                      <details class="wp-faq-item">
+
+                        <summary>
+                          {item.question}
+                        </summary>
+
+                        <div
+                          class="wp-faq-answer"
+                          set:html={
+                            renderMarkdown(
+                              item.answer,
+                            )
+                          }
+                        />
+
+                      </details>
+                    ),
+                  )
+                }
+
+              </section>
+            )
+          }
+
+          <!-- ==================================================
+               ARTICLE CTA PROJECTION
+
+               This CTA is presentation-layer projection only.
+               It does NOT participate in RegionalPublishArtifact
+               creation and therefore does not mutate or redefine
+               artifact.pageContentHash.
+               ================================================== -->
+
+          <section
+            class="wp-article-cta"
+            id="v714-article-cta"
+            aria-labelledby="v714-article-cta-title"
+          >
+
+            <div class="wp-article-cta-copy">
+
+              <div class="wp-section-label">
+                FROM ENGINEERING TO PRODUCTION
+              </div>
+
+              <h2 id="v714-article-cta-title">
+                Ready to Validate Your Injection Mold Design?
+              </h2>
+
+              <p>
+                Send your CAD files, drawings, material requirements,
+                and annual volume for project-specific DFM feedback,
+                tooling review, and an injection molding quote.
+              </p>
+
+            </div>
+
+            <div class="wp-article-cta-actions">
+
+              <a
+                class="wp-article-cta-primary"
+                href={`/free-dfm-analysis/?source=v714-article-cta&topic=${slug}`}
+              >
+                Get 24h DFM &amp; Quote →
+              </a>
+
+              <a
+                class="wp-article-cta-secondary"
+                href="/contact/"
+              >
+                Contact Engineering
+              </a>
+
+            </div>
+
+          </section>
+
+          <!-- ==================================================
+               ARTICLE FOOTER / PROVENANCE
+               ================================================== -->
+
+          <footer class="wp-footer">
+
+            <div class="wp-footer-integrity">
+
+              <strong>
+                NEXMOLD V7.14
+              </strong>
+
+              <span>
+                Evidence → Claim → Firewall →
+                Publication Gate
+              </span>
+
+              <span>
+                Artifact Hash:
+                {sourceArtifactHash}
+              </span>
+
+              <span>
+                Article ID:
+                {articleId}
+              </span>
+
+            </div>
+
+            <a
+              href="/industries/v714/"
+              class="wp-back"
+            >
+              ← Back to V7.14 White Papers
+            </a>
+
+          </footer>
+
+        </article>
+
+        <!-- ==================================================
+             RIGHT: STICKY READING RAIL
+             ================================================== -->
+
+        <aside class="wp-rail">
+
+          {
+            hasToc && (
+              <div class="wp-rail-card">
+
+                <div class="wp-rail-label">
+                  ON THIS PAGE
+                </div>
+
+                <nav>
+                  {
+                    parsed.sections
+                      .slice(0, 12)
+                      .map(
+                        (
+                          section: WhitePaperSection,
+                        ) => (
+                          <a
+                            class:list={{
+                              "rail-h3":
+                                section.level === 3,
+                              "rail-h4":
+                                section.level === 4,
+                            }}
+                            href={`#${section.id}`}
+                          >
+                            {section.title}
+                          </a>
+                        ),
+                      )
+                  }
+                </nav>
+
+              </div>
+            )
+          }
+
+          <!-- VERIFIED PROVENANCE CARD -->
+
+          <div class="wp-rail-card wp-rail-provenance">
+
+            <div class="wp-rail-label">
+              PUBLICATION PROVENANCE
+            </div>
+
+            <div class="wp-provenance-row">
+              <span>Schema</span>
+              <strong>
+                {metadataSchema}
+              </strong>
+            </div>
+
+            <div class="wp-provenance-row">
+              <span>Producer</span>
+              <strong>
+                {producerVersion}
+              </strong>
+            </div>
+
+            <div class="wp-provenance-row">
+              <span>Factory Run</span>
+              <strong>
+                {factoryRun}
+              </strong>
+            </div>
+
+            <div class="wp-provenance-row">
+              <span>Report Status</span>
+              <strong>
+                {reportStatus}
+              </strong>
+            </div>
+
+            <div class="wp-provenance-row">
+              <span>Route</span>
+              <strong>
+                {route}
+              </strong>
+            </div>
+
+            {
+              sourceArticleSlug && (
+                <div class="wp-provenance-row">
+                  <span>Source Article</span>
+                  <strong>
+                    {sourceArticleSlug}
+                  </strong>
+                </div>
+              )
+            }
+
+          </div>
+
+          <!-- PRODUCTION SAFETY -->
+
+          <div class="wp-rail-card wp-rail-authority">
+
+            <div class="wp-rail-label">
+              PRODUCTION SAFETY
+            </div>
+
+            <div class="wp-authority-line">
+              <span class="wp-check">✓</span>
+              Regional Artifact authorized
+            </div>
+
+            <div class="wp-authority-line">
+              <span class="wp-check">✓</span>
+              Automatic publication disabled
+            </div>
+
+            <div class="wp-authority-line">
+              <span class="wp-check">✓</span>
+              Existing site content unchanged
+            </div>
+
+            <div class="wp-authority-line">
+              <span class="wp-check">✓</span>
+              Historical batch-01 unchanged
+            </div>
+
+          </div>
+
+        </aside>
+
+      </div>
+    </section>
+
+  </main>
+</MainLayout>
+
+<style>
+  /* ==========================================================
+     PAGE
+     ========================================================== */
+
+  .wp-page {
+    background: #ffffff;
+    color: #111827;
+  }
+
+  .wp-container {
+    width: min(
+      1220px,
+      calc(100% - 48px)
+    );
+    margin: 0 auto;
+  }
+
+  /* ==========================================================
+     HERO
+     ========================================================== */
+
+  .wp-hero {
+    border-bottom: 1px solid #e5e7eb;
+    background:
+      linear-gradient(
+        180deg,
+        #f9fafb 0%,
+        #ffffff 100%
+      );
+    padding: 92px 0 78px;
+  }
+
+  .wp-hero-grid {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      300px;
+    gap: 70px;
+    align-items: start;
+  }
+
+  .wp-eyebrow,
+  .wp-section-label,
+  .wp-rail-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #ff5722;
+  }
+
+  .wp-category {
+    margin-top: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4b5563;
+  }
+
+  .wp-hero h1 {
+    max-width: 980px;
+    margin: 14px 0 24px;
+    font-size:
+      clamp(
+        42px,
+        5.6vw,
+        72px
+      );
+    line-height: 1.03;
+    letter-spacing: -.045em;
+    font-weight: 800;
+  }
+
+  .wp-lead {
+    max-width: 850px;
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.72;
+    color: #4b5563;
+  }
+
+  .wp-answer {
+    max-width: 850px;
+    margin-top: 34px;
+    padding: 24px 26px;
+    border-left: 4px solid #ff5722;
+    background: #f9fafb;
+  }
+
+  .wp-answer-label {
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #ff5722;
+  }
+
+  .wp-answer-body {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+
+  .wp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px 24px;
+    margin-top: 30px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6b7280;
+  }
+
+  /* ==========================================================
+     INTEGRITY CARD
+     ========================================================== */
+
+  .wp-integrity-card {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    padding: 24px;
+  }
+
+  .wp-integrity-title {
+    margin-bottom: 14px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #111827;
+  }
+
+  .wp-integrity-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: #111827;
+  }
+
+  .wp-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #111827;
+  }
+
+  .wp-integrity-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 0;
+    border-top: 1px solid #f3f4f6;
+    font-size: 11px;
+  }
+
+  .wp-integrity-row span {
+    color: #6b7280;
+  }
+
+  .wp-integrity-row strong {
+    max-width: 165px;
+    color: #111827;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  /* ==========================================================
+     READING AREA
+     ========================================================== */
+
+  .wp-reading {
+    padding: 72px 0 120px;
+  }
+
+  .wp-layout {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 850px)
+      300px;
+    gap: 72px;
+    align-items: start;
+  }
+
+  .wp-article {
+    min-width: 0;
+  }
+
+  /* ==========================================================
+     SUMMARY / TOC
+     ========================================================== */
+
+  .wp-summary,
+  .wp-topic-map,
+  .wp-toc {
+    margin-bottom: 58px;
+    padding-bottom: 52px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .wp-summary h2,
+  .wp-topic-map h2,
+  .wp-toc h2,
+  .wp-faq h2 {
+    margin: 10px 0 20px;
+    font-size: 30px;
+    line-height: 1.25;
+    letter-spacing: -.025em;
+  }
+
+  .wp-summary p {
+    margin: 0 0 20px;
+    font-size: 18px;
+    line-height: 1.82;
+    color: #374151;
+  }
+
+  /* ==========================================================
+     KEYWORDS
+     ========================================================== */
+
+  .wp-keyword-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .wp-keyword {
+    display: inline-flex;
+    padding: 7px 10px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #374151;
+  }
+
+  /* ==========================================================
+     TOC
+     ========================================================== */
+
+  .wp-toc ol {
+    margin: 0;
+    padding-left: 22px;
+  }
+
+  .wp-toc li {
+    margin: 8px 0;
+    padding-left: 4px;
+  }
+
+  .wp-toc li.wp-toc-h3 {
+    margin-left: 18px;
+    font-size: 14px;
+  }
+
+  .wp-toc li.wp-toc-h4 {
+    margin-left: 34px;
+    font-size: 13px;
+  }
+
+  .wp-toc a {
+    color: #374151;
+    text-decoration: none;
+    line-height: 1.5;
+  }
+
+  .wp-toc a:hover {
+    color: #ff5722;
+  }
+
+  /* ==========================================================
+     MARKDOWN CONTENT
+     ========================================================== */
+
+  .wp-content {
+    font-size: 17px;
+    line-height: 1.85;
+    color: #1f2937;
+  }
+
+  .wp-content :global(h2) {
+    margin: 66px 0 22px;
+    padding-top: 12px;
+    font-size: 34px;
+    line-height: 1.22;
+    letter-spacing: -.03em;
+    color: #111827;
+    scroll-margin-top: 100px;
+  }
+
+  .wp-content :global(h3) {
+    margin: 44px 0 16px;
+    font-size: 24px;
+    line-height: 1.3;
+    letter-spacing: -.02em;
+    color: #111827;
+    scroll-margin-top: 100px;
+  }
+
+  .wp-content :global(h4) {
+    margin: 34px 0 12px;
+    font-size: 19px;
+    line-height: 1.4;
+    color: #111827;
+    scroll-margin-top: 100px;
+  }
+
+  .wp-content :global(p) {
+    margin: 0 0 23px;
+  }
+
+  .wp-content :global(strong) {
+    color: #111827;
+    font-weight: 750;
+  }
+
+  .wp-content :global(em) {
+    color: #374151;
+  }
+
+  .wp-content :global(a) {
+    color: #c2410c;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .wp-content :global(a:hover) {
+    color: #ff5722;
+  }
+
+  .wp-content :global(ul),
+  .wp-content :global(ol) {
+    margin: 0 0 28px;
+    padding-left: 28px;
+  }
+
+  .wp-content :global(li) {
+    margin-bottom: 10px;
+    padding-left: 3px;
+  }
+
+  .wp-content :global(blockquote) {
+    margin: 32px 0;
+    padding: 22px 26px;
+    border-left: 4px solid #d1d5db;
+    background: #f9fafb;
+    color: #4b5563;
+  }
+
+  .wp-content :global(hr) {
+    margin: 54px 0;
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .wp-content :global(code) {
+    padding: 2px 5px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: .88em;
+  }
+
+  /* ==========================================================
+     TABLE
+     ========================================================== */
+
+  .wp-table-wrap {
+    width: 100%;
+    margin: 34px 0;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+  }
+
+  .wp-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .wp-table th,
+  .wp-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .wp-table th:last-child,
+  .wp-table td:last-child {
+    border-right: 0;
+  }
+
+  .wp-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .wp-table th {
+    background: #f9fafb;
+    color: #111827;
+    font-weight: 800;
+  }
+
+  .wp-table td {
+    color: #374151;
+  }
+
+  /* ==========================================================
+     CODE
+     ========================================================== */
+
+  .wp-code {
+    margin: 34px 0;
+    overflow: hidden;
+    border: 1px solid #1f2937;
+    background: #111827;
+  }
+
+  .wp-code-label {
+    padding: 8px 14px;
+    border-bottom: 1px solid #374151;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  .wp-code pre {
+    margin: 0;
+    padding: 22px;
+    overflow-x: auto;
+  }
+
+  .wp-code code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #e5e7eb;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  /* ==========================================================
+     FAQ
+     ========================================================== */
+
+  .wp-faq {
+    margin-top: 78px;
+    padding-top: 55px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .wp-faq-item {
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .wp-faq-item:last-child {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .wp-faq-item summary {
+    cursor: pointer;
+    padding: 21px 0;
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.5;
+    color: #111827;
+  }
+
+  .wp-faq-item summary::marker {
+    color: #ff5722;
+  }
+
+  .wp-faq-answer {
+    padding: 0 0 22px;
+    color: #4b5563;
+  }
+
+  .wp-faq-answer :global(p) {
+    margin: 0 0 16px;
+  }
+
+  /* ==========================================================
+     RIGHT RAIL
+     ========================================================== */
+
+  .wp-rail {
+    position: sticky;
+    top: 32px;
+  }
+
+  .wp-rail-card {
+    margin-bottom: 20px;
+    padding: 21px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+  }
+
+  .wp-rail-card nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+  }
+
+  .wp-rail-card nav a {
+    padding: 8px 0;
+    border-top: 1px solid #f3f4f6;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #4b5563;
+    text-decoration: none;
+  }
+
+  .wp-rail-card nav a:hover {
+    color: #ff5722;
+  }
+
+  .wp-rail-card nav a.rail-h3 {
+    padding-left: 12px;
+    font-size: 11px;
+  }
+
+  .wp-rail-card nav a.rail-h4 {
+    padding-left: 22px;
+    font-size: 11px;
+  }
+
+  /* ==========================================================
+     PROVENANCE
+     ========================================================== */
+
+  .wp-rail-provenance {
+    background: #f9fafb;
+  }
+
+  .wp-provenance-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .wp-provenance-row span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .wp-provenance-row strong {
+    font-size: 11px;
+    line-height: 1.45;
+    color: #111827;
+    overflow-wrap: anywhere;
+  }
+
+  /* ==========================================================
+     PRODUCTION SAFETY
+     ========================================================== */
+
+  .wp-authority {
+    background: #f9fafb;
+  }
+
+  .wp-authority-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid #e5e7eb;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #374151;
+  }
+
+  .wp-check {
+    flex: 0 0 auto;
+    font-weight: 900;
+    color: #111827;
+  }
+
+  /* ==========================================================
+     ARTICLE CTA
+     ========================================================== */
+
+  .wp-article-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 34px;
+    align-items: center;
+    margin-top: 64px;
+    padding: 34px;
+    border: 1px solid #d1d5db;
+    background: #111827;
+    color: #ffffff;
+  }
+
+  .wp-article-cta .wp-section-label {
+    margin-bottom: 10px;
+  }
+
+  .wp-article-cta h2 {
+    margin: 0;
+    max-width: 720px;
+    font-size: clamp(28px, 3.2vw, 42px);
+    line-height: 1.12;
+    letter-spacing: -.025em;
+    color: #ffffff;
+  }
+
+  .wp-article-cta p {
+    max-width: 720px;
+    margin: 15px 0 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #d1d5db;
+  }
+
+  .wp-article-cta-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 210px;
+  }
+
+  .wp-article-cta-primary,
+  .wp-article-cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    transition: transform .18s ease, background-color .18s ease, color .18s ease, border-color .18s ease;
+  }
+
+  .wp-article-cta-primary {
+    background: #ff5722;
+    color: #ffffff;
+  }
+
+  .wp-article-cta-primary:hover {
+    background: #e64a19;
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  .wp-article-cta-secondary {
+    border-color: #4b5563;
+    background: transparent;
+    color: #ffffff;
+  }
+
+  .wp-article-cta-secondary:hover {
+    border-color: #9ca3af;
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  /* ==========================================================
+     FOOTER
+     ========================================================== */
+
+  .wp-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-top: 75px;
+    padding-top: 28px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .wp-footer-integrity {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 680px;
+    font-size: 11px;
+  }
+
+  .wp-footer-integrity strong {
+    color: #111827;
+  }
+
+  .wp-footer-integrity span {
+    color: #6b7280;
+    overflow-wrap: anywhere;
+  }
+
+  .wp-back {
+    font-size: 13px;
+    font-weight: 750;
+    color: #111827;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .wp-back:hover {
+    color: #ff5722;
+  }
+
+  /* ==========================================================
+     RESPONSIVE
+     ========================================================== */
+
+  @media (max-width: 1050px) {
+    .wp-hero-grid {
+      grid-template-columns: 1fr;
+      gap: 35px;
+    }
+
+    .wp-integrity-card {
+      max-width: 500px;
+    }
+
+    .wp-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .wp-rail {
+      display: none;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .wp-container {
+      width: calc(100% - 28px);
+    }
+
+    .wp-hero {
+      padding: 65px 0 55px;
+    }
+
+    .wp-reading {
+      padding: 50px 0 80px;
+    }
+
+    .wp-hero h1 {
+      font-size: 40px;
+    }
+
+    .wp-lead {
+      font-size: 17px;
+    }
+
+    .wp-content {
+      font-size: 16px;
+      line-height: 1.78;
+    }
+
+    .wp-content :global(h2) {
+      margin-top: 50px;
+      font-size: 29px;
+    }
+
+    .wp-content :global(h3) {
+      margin-top: 35px;
+      font-size: 22px;
+    }
+
+    .wp-article-cta {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 26px 22px;
+    }
+
+    .wp-article-cta-actions {
+      width: 100%;
+    }
+
+    .wp-footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .wp-back {
+      white-space: normal;
+    }
+  }
+</style>  

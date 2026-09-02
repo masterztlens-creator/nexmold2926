@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-weld-lines-causes-solutions",
+  "targetSlug": "injection-molding-weld-lines-causes-solutions",
+  "sourceArticleSlug": "weld-lines-knit-lines",
+  "slug": "injection-molding-weld-lines-causes-solutions",
+  "lineage": {
+    "pageId": "v714:injection-molding-weld-lines-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-weld-lines-causes-solutions/",
+    "evidenceIds": [
+      "knowledge:weld-lines-knit-lines"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-weld-lines-causes-solutions"
+    ],
+    "sourceArtifactHash": "1fd66ea9cdc9cb08292f818f5bb87bff29681d88d903259f6d8c2f207a0b809b"
+  },
+  "sourceArtifactHash": "1fd66ea9cdc9cb08292f818f5bb87bff29681d88d903259f6d8c2f207a0b809b",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-weld-lines-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-weld-lines-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-weld-lines-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:weld-lines-knit-lines",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#weld-lines-knit-lines",
+            "contentHash": "weld-lines-knit-lines:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-weld-lines-causes-solutions",
+            "claimKey": "batch01.injection-molding-weld-lines-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "1fd66ea9cdc9cb08292f818f5bb87bff29681d88d903259f6d8c2f207a0b809b"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

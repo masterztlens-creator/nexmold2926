@@ -1,0 +1,106 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:injection-molding-rib-design",
+  "targetSlug": "injection-molding-rib-design",
+  "route": "/industries/v714/injection-molding-rib-design/",
+  "sourceArticleSlug": "rib-boss-gusset-design",
+  "sourceArticle": {
+    "slug": "rib-boss-gusset-design",
+    "title": "Rib, Boss and Gusset Design for Injection Molding"
+  },
+  "sourceArtifactHash": "105b18b8226c78e693bdbbe996655b20e7df24a96e53a7fc13f38236276534d5",
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-rib-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-rib-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-rib-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "9700e8436bb8e8bf59b2d36bec95d46656074475b8a5f32f177c3946b5a39b85"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-rib-design",
+            "claimKey": "v714.whitepaper.injection-molding-rib-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "105b18b8226c78e693bdbbe996655b20e7df24a96e53a7fc13f38236276534d5"
+  },
+  "seo": {
+    "longTailQueries": [
+      "injection molding rib design: structural reinforcement without sink marks",
+      "injection molded ribs design guide",
+      "injection molded ribs DFM",
+      "injection molded ribs best practices",
+      "injection molded ribs design rules",
+      "injection molded ribs engineering guide",
+      "injection molded ribs thickness ratio",
+      "injection molded ribs sink mark prevention",
+      "injection molded ribs draft angle",
+      "injection molded ribs plastic enclosure",
+      "injection molded ribs structural ribs",
+      "injection molded ribs ABS",
+      "injection molded ribs PP",
+      "injection molded ribs PA66",
+      "injection molded ribs rib thickness",
+      "rib thickness in injection molded ribs",
+      "injection molded ribs rib height",
+      "rib height in injection molded ribs",
+      "injection molded ribs rib draft",
+      "rib draft in injection molded ribs",
+      "injection molded ribs rib-to-wall ratio",
+      "rib-to-wall ratio in injection molded ribs",
+      "injection molded ribs rib intersection",
+      "rib intersection in injection molded ribs",
+      "injection molded ribs material shrinkage",
+      "material shrinkage in injection molded ribs",
+      "injection molded ribs ejection direction",
+      "ejection direction in injection molded ribs",
+      "injection molded ribs load direction",
+      "load direction in injection molded ribs",
+      "injection molded ribs sink marks",
+      "how to prevent sink marks in injection molded ribs",
+      "injection molded ribs warpage",
+      "how to prevent warpage in injection molded ribs",
+      "injection molded ribs short fill",
+      "how to prevent short fill in injection molded ribs",
+      "injection molded ribs ejection damage",
+      "how to prevent ejection damage in injection molded ribs",
+      "injection molded ribs rib breakage",
+      "how to prevent rib breakage in injection molded ribs",
+      "injection molded ribs stress concentration",
+      "how to prevent stress concentration in injection molded ribs"
+    ],
+    "relatedTopics": [
+      "injection-molding-wall-thickness-design",
+      "injection-molding-boss-design",
+      "injection-molding-corner-radius"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

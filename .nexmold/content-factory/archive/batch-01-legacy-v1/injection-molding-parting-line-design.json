@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-parting-line-design",
+  "targetSlug": "injection-molding-parting-line-design",
+  "sourceArticleSlug": "parting-line-design",
+  "slug": "injection-molding-parting-line-design",
+  "lineage": {
+    "pageId": "v714:injection-molding-parting-line-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-parting-line-design/",
+    "evidenceIds": [
+      "knowledge:parting-line-design"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-parting-line-design"
+    ],
+    "sourceArtifactHash": "2898578f7bb8a9b57cae3128f82a502f2031bbd4bbb2e6245f7c323f298d8ff9"
+  },
+  "sourceArtifactHash": "2898578f7bb8a9b57cae3128f82a502f2031bbd4bbb2e6245f7c323f298d8ff9",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-parting-line-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-parting-line-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-parting-line-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:parting-line-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#parting-line-design",
+            "contentHash": "parting-line-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-parting-line-design",
+            "claimKey": "batch01.injection-molding-parting-line-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "2898578f7bb8a9b57cae3128f82a502f2031bbd4bbb2e6245f7c323f298d8ff9"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "schema": "nexmold.v7.14.article-contract.v2",
+  "producerVersion": "v714-article-producer",
+  "factoryRun": "batch-01-v3",
+  "articleId": "v714:whitepaper:injection-molding-boss-design",
+  "targetSlug": "injection-molding-boss-design",
+  "route": "/industries/v714/injection-molding-boss-design/",
+  "sourceArticleSlug": "rib-boss-gusset-design",
+  "sourceArticle": {
+    "slug": "rib-boss-gusset-design",
+    "title": "Rib, Boss and Gusset Design for Injection Molding"
+  },
+  "sourceArtifactHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2",
+  "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+  "publicationAuthorization": {
+    "eligibility": {
+      "pageId": "v714:whitepaper:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "rib-boss-gusset-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-boss-design",
+            "claimKey": "v714.whitepaper.injection-molding-boss-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "firewall": {
+      "ok": true,
+      "checkedClaims": 1,
+      "checkedEvidence": 1
+    }
+  },
+  "artifact": {
+    "pageId": "v714:whitepaper:injection-molding-boss-design",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:rib-boss-gusset-design",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+            "contentHash": "rib-boss-gusset-design:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:injection-molding-boss-design",
+            "claimKey": "v714.whitepaper.injection-molding-boss-design"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2"
+  },
+  "articleContract": {
+    "schema": "nexmold.v7.14.article-contract.v1",
+    "articleId": "v714:whitepaper:injection-molding-boss-design",
+    "title": "Rib, Boss and Gusset Design for Injection Molding",
+    "slug": "injection-molding-boss-design",
+    "category": "DFM & Tolerances",
+    "categorySlug": "dfm-tolerances",
+    "description": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.",
+    "directAnswer": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.",
+    "keyTakeaways": [
+      "Core thick features and transition gradually.",
+      "Review mold pull direction early.",
+      "Validate critical features against the actual resin and tool."
+    ],
+    "content": [
+      {
+        "heading": "Executive Summary",
+        "content": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### Engineering Answer\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### Key Engineering Variables\n\n• Core thick features and transition gradually.\n• Review mold pull direction early.\n• Validate critical features against the actual resin and tool.\n\n### DFM Decision Path\n\nReview geometry and mold pull direction first; then evaluate wall transitions, draft, ribs/bosses, parting line, gating, venting and ejection. Resolve design-for-manufacturing conflicts before steel is cut.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Direct Engineering Answer",
+        "content": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Engineering Fundamentals",
+        "content": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\nThe engineering outcome is governed by the interaction between part geometry, material behavior, mold architecture, process conditions, and manufacturing constraints.\n\nMaterial selection must be evaluated together with geometry, processing behavior, thermal behavior, dimensional requirements, and production requirements.\n\nProcess behavior is coupled to geometry, material, mold design, and machine conditions.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Design Criteria",
+        "content": "### DFM Decision Path\n\nReview geometry and mold pull direction first; then evaluate wall transitions, draft, ribs/bosses, parting line, gating, venting and ejection. Resolve design-for-manufacturing conflicts before steel is cut.\n\n### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Recommended Specifications",
+        "content": "No numeric specification is promoted by Producer v2 unless it is explicitly present in the authorized source material. Engineering values must remain traceable to their underlying evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Engineering Decision Matrix",
+        "content": "The following decision matrix organizes the principal engineering variables that should be reviewed for Rib, Boss and Gusset Design for Injection Molding.\n\n#\n\n#\n\n#\n\n \n\nR\n\ni\n\nb\n\n,\n\n \n\nB\n\no\n\ns\n\ns\n\n \n\na\n\nn\n\nd\n\n \n\nG\n\nu\n\ns\n\ns\n\ne\n\nt\n\n \n\nD\n\ne\n\ns\n\ni\n\ng\n\nn\n\n \n\nf\n\no\n\nr\n\n \n\nI\n\nn\n\nj\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n \n\nM\n\no\n\nl\n\nd\n\ni\n\nn\n\ng\n\n \n\n—\n\n \n\nE\n\nn\n\ng\n\ni\n\nn\n\ne\n\ne\n\nr\n\ni\n\nn\n\ng\n\n \n\nD\n\ne\n\nc\n\ni\n\ns\n\ni\n\no\n\nn\n\n \n\nM\n\na\n\nt\n\nr\n\ni\n\nx\n\n\n\n\n\n\n\n|\n\n \n\nD\n\ne\n\nc\n\ni\n\ns\n\ni\n\no\n\nn\n\n \n\nA\n\nr\n\ne\n\na\n\n \n\n|\n\n \n\nE\n\nn\n\ng\n\ni\n\nn\n\ne\n\ne\n\nr\n\ni\n\nn\n\ng\n\n \n\nR\n\ne\n\nv\n\ni\n\ne\n\nw\n\n \n\n|\n\n \n\nP\n\nr\n\ni\n\nm\n\na\n\nr\n\ny\n\n \n\nR\n\ni\n\ns\n\nk\n\n \n\n|\n\n\n\n\n|\n\n \n\n-\n\n-\n\n-\n\n \n\n|\n\n \n\n-\n\n-\n\n-\n\n \n\n|\n\n \n\n-\n\n-\n\n-\n\n \n\n|\n\n\n\n\n|\n\n \n\nG\n\ne\n\no\n\nm\n\ne\n\nt\n\nr\n\ny\n\n \n\n|\n\n \n\nR\n\ne\n\nv\n\ni\n\ne\n\nw\n\n \n\nf\n\ne\n\na\n\nt\n\nu\n\nr\n\ne\n\n \n\ns\n\ni\n\nz\n\ne\n\n,\n\n \n\nt\n\nr\n\na\n\nn\n\ns\n\ni\n\nt\n\ni\n\no\n\nn\n\ns\n\n,\n\n \n\na\n\nc\n\nc\n\ne\n\ns\n\ns\n\ni\n\nb\n\ni\n\nl\n\ni\n\nt\n\ny\n\n \n\na\n\nn\n\nd\n\n \n\nm\n\na\n\nn\n\nu\n\nf\n\na\n\nc\n\nt\n\nu\n\nr\n\na\n\nb\n\ni\n\nl\n\ni\n\nt\n\ny\n\n \n\n|\n\n \n\nD\n\ni\n\nm\n\ne\n\nn\n\ns\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\n/\n\n \n\nt\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\n/\n\n \n\nm\n\no\n\nl\n\nd\n\ni\n\nn\n\ng\n\n \n\nr\n\ni\n\ns\n\nk\n\n \n\n|\n\n\n\n\n|\n\n \n\nM\n\na\n\nt\n\ne\n\nr\n\ni\n\na\n\nl\n\n \n\n|\n\n \n\nE\n\nv\n\na\n\nl\n\nu\n\na\n\nt\n\ne\n\n \n\nr\n\ne\n\ns\n\ni\n\nn\n\n \n\nb\n\ne\n\nh\n\na\n\nv\n\ni\n\no\n\nr\n\n \n\na\n\ng\n\na\n\ni\n\nn\n\ns\n\nt\n\n \n\nf\n\nu\n\nn\n\nc\n\nt\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\na\n\nn\n\nd\n\n \n\np\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\n \n\nr\n\ne\n\nq\n\nu\n\ni\n\nr\n\ne\n\nm\n\ne\n\nn\n\nt\n\ns\n\n \n\n|\n\n \n\nP\n\ne\n\nr\n\nf\n\no\n\nr\n\nm\n\na\n\nn\n\nc\n\ne\n\n \n\n/\n\n \n\np\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\ni\n\nn\n\ng\n\n \n\n/\n\n \n\nd\n\ni\n\nm\n\ne\n\nn\n\ns\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\nr\n\ni\n\ns\n\nk\n\n \n\n|\n\n\n\n\n|\n\n \n\nT\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\n|\n\n \n\nE\n\nv\n\na\n\nl\n\nu\n\na\n\nt\n\ne\n\n \n\nc\n\na\n\nv\n\ni\n\nt\n\ny\n\n,\n\n \n\nc\n\no\n\nr\n\ne\n\n,\n\n \n\np\n\na\n\nr\n\nt\n\ni\n\nn\n\ng\n\n,\n\n \n\ne\n\nj\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n \n\na\n\nn\n\nd\n\n \n\nc\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\na\n\nr\n\nc\n\nh\n\ni\n\nt\n\ne\n\nc\n\nt\n\nu\n\nr\n\ne\n\n \n\n|\n\n \n\nT\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\nc\n\no\n\nm\n\np\n\nl\n\ne\n\nx\n\ni\n\nt\n\ny\n\n \n\n/\n\n \n\nc\n\ny\n\nc\n\nl\n\ne\n\n \n\n/\n\n \n\nm\n\na\n\ni\n\nn\n\nt\n\ne\n\nn\n\na\n\nn\n\nc\n\ne\n\n \n\nr\n\ni\n\ns\n\nk\n\n \n\n|\n\n\n\n\n|\n\n \n\nP\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\n \n\n|\n\n \n\nE\n\nv\n\na\n\nl\n\nu\n\na\n\nt\n\ne\n\n \n\nf\n\ni\n\nl\n\nl\n\ni\n\nn\n\ng\n\n,\n\n \n\np\n\na\n\nc\n\nk\n\ni\n\nn\n\ng\n\n,\n\n \n\nc\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\na\n\nn\n\nd\n\n \n\nc\n\ny\n\nc\n\nl\n\ne\n\n \n\nb\n\ne\n\nh\n\na\n\nv\n\ni\n\no\n\nr\n\n \n\n|\n\n \n\nP\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\n \n\ns\n\nt\n\na\n\nb\n\ni\n\nl\n\ni\n\nt\n\ny\n\n \n\n/\n\n \n\nq\n\nu\n\na\n\nl\n\ni\n\nt\n\ny\n\n \n\nr\n\ni\n\ns\n\nk\n\n \n\n|\n\n\n\n\n|\n\n \n\nD\n\ne\n\nf\n\ne\n\nc\n\nt\n\n \n\nc\n\no\n\nn\n\nt\n\nr\n\no\n\nl\n\n \n\n|\n\n \n\nC\n\no\n\nn\n\nn\n\ne\n\nc\n\nt\n\n \n\nd\n\ne\n\nf\n\ne\n\nc\n\nt\n\n \n\nm\n\ne\n\nc\n\nh\n\na\n\nn\n\ni\n\ns\n\nm\n\n \n\nt\n\no\n\n \n\ng\n\ne\n\no\n\nm\n\ne\n\nt\n\nr\n\ny\n\n,\n\n \n\nt\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\na\n\nn\n\nd\n\n \n\np\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\n \n\n|\n\n \n\nY\n\ni\n\ne\n\nl\n\nd\n\n \n\n/\n\n \n\nc\n\no\n\ns\n\nm\n\ne\n\nt\n\ni\n\nc\n\n \n\n/\n\n \n\nd\n\ni\n\nm\n\ne\n\nn\n\ns\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\nr\n\ni\n\ns\n\nk\n\n \n\n|",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Failure Modes and Root Causes",
+        "content": "### Engineering Answer\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Troubleshooting and Corrective Action",
+        "content": "Troubleshooting Rib, Boss and Gusset Design for Injection Molding should follow a mechanism-first diagnostic sequence.\n\n1. Confirm the observed defect or dimensional deviation.\n2. Separate geometry-related causes from tooling and process causes.\n3. Verify the material specification and processing assumptions.\n4. Inspect the relevant mold architecture and cooling / ejection conditions.\n5. Change the smallest number of variables necessary to isolate the dominant mechanism.\n6. Validate the corrective action against dimensional, cosmetic and functional requirements.\n7. Confirm that the corrective action addresses the physical defect mechanism rather than only its visual symptom.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Tooling Considerations",
+        "content": "### Engineering Answer\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### Key Engineering Variables\n\n• Core thick features and transition gradually.\n• Review mold pull direction early.\n• Validate critical features against the actual resin and tool.\n\n### DFM Decision Path\n\nReview geometry and mold pull direction first; then evaluate wall transitions, draft, ribs/bosses, parting line, gating, venting and ejection. Resolve design-for-manufacturing conflicts before steel is cut.\n\n### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Material Considerations",
+        "content": "### Key Engineering Variables\n\n• Core thick features and transition gradually.\n• Review mold pull direction early.\n• Validate critical features against the actual resin and tool.\n\n### DFM Decision Path\n\nReview geometry and mold pull direction first; then evaluate wall transitions, draft, ribs/bosses, parting line, gating, venting and ejection. Resolve design-for-manufacturing conflicts before steel is cut.\n\n### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Injection Molding Process Considerations",
+        "content": "### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "DFM Implications",
+        "content": "DFM review should translate the design requirement into a moldable, inspectable and repeatable production configuration.\n\n### Key Engineering Variables\n\n• Core thick features and transition gradually.\n• Review mold pull direction early.\n• Validate critical features against the actual resin and tool.\n\n### DFM Decision Path\n\nReview geometry and mold pull direction first; then evaluate wall transitions, draft, ribs/bosses, parting line, gating, venting and ejection. Resolve design-for-manufacturing conflicts before steel is cut.\n\n### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Quality and Validation",
+        "content": "### Production Validation\n\nUse supplier material data and drawing requirements as inputs. Confirm the production-intent mold, resin, machine and inspection method; validate critical dimensions and cosmetic requirements with documented samples and capability evidence.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Engineering Trade-offs",
+        "content": "Geometry optimization can improve functional performance while increasing tooling or molding complexity.\n\nMaterial performance improvements can introduce processing, cost or dimensional trade-offs.\n\nAdditional tooling mechanisms can solve difficult geometry but increase tool cost, maintenance requirements and potential failure points.\n\nCycle-time reduction must be balanced against cooling adequacy, dimensional stability and quality requirements.\n\nCorrecting a defect at the process level may be less robust than eliminating its underlying geometric or tooling cause.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Engineering Implementation Checklist",
+        "content": "Use this checklist before design release, tooling release and production approval.\n\n-\n\n \n\nD\n\ne\n\nf\n\ni\n\nn\n\ne\n\n \n\nt\n\nh\n\ne\n\n \n\nf\n\nu\n\nn\n\nc\n\nt\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\nr\n\ne\n\nq\n\nu\n\ni\n\nr\n\ne\n\nm\n\ne\n\nn\n\nt\n\n \n\nf\n\no\n\nr\n\n \n\nR\n\ni\n\nb\n\n,\n\n \n\nB\n\no\n\ns\n\ns\n\n \n\na\n\nn\n\nd\n\n \n\nG\n\nu\n\ns\n\ns\n\ne\n\nt\n\n \n\nD\n\ne\n\ns\n\ni\n\ng\n\nn\n\n \n\nf\n\no\n\nr\n\n \n\nI\n\nn\n\nj\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n \n\nM\n\no\n\nl\n\nd\n\ni\n\nn\n\ng\n\n.\n\n\n\n\n-\n\n \n\nC\n\no\n\nn\n\nf\n\ni\n\nr\n\nm\n\n \n\nm\n\na\n\nt\n\ne\n\nr\n\ni\n\na\n\nl\n\n \n\na\n\ns\n\ns\n\nu\n\nm\n\np\n\nt\n\ni\n\no\n\nn\n\ns\n\n.\n\n\n\n\n-\n\n \n\nR\n\ne\n\nv\n\ni\n\ne\n\nw\n\n \n\ng\n\ne\n\no\n\nm\n\ne\n\nt\n\nr\n\ny\n\n \n\nf\n\no\n\nr\n\n \n\nm\n\na\n\nn\n\nu\n\nf\n\na\n\nc\n\nt\n\nu\n\nr\n\na\n\nb\n\ni\n\nl\n\ni\n\nt\n\ny\n\n.\n\n\n\n\n-\n\n \n\nR\n\ne\n\nv\n\ni\n\ne\n\nw\n\n \n\nm\n\no\n\nl\n\nd\n\n \n\na\n\nr\n\nc\n\nh\n\ni\n\nt\n\ne\n\nc\n\nt\n\nu\n\nr\n\ne\n\n \n\nb\n\ne\n\nf\n\no\n\nr\n\ne\n\n \n\nt\n\no\n\no\n\nl\n\n \n\nr\n\ne\n\nl\n\ne\n\na\n\ns\n\ne\n\n.\n\n\n\n\n-\n\n \n\nC\n\no\n\nn\n\nf\n\ni\n\nr\n\nm\n\n \n\np\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\n \n\na\n\ns\n\ns\n\nu\n\nm\n\np\n\nt\n\ni\n\no\n\nn\n\ns\n\n.\n\n\n\n\n-\n\n \n\nI\n\nd\n\ne\n\nn\n\nt\n\ni\n\nf\n\ny\n\n \n\nc\n\nr\n\ni\n\nt\n\ni\n\nc\n\na\n\nl\n\n-\n\nt\n\no\n\n-\n\nq\n\nu\n\na\n\nl\n\ni\n\nt\n\ny\n\n \n\nc\n\nh\n\na\n\nr\n\na\n\nc\n\nt\n\ne\n\nr\n\ni\n\ns\n\nt\n\ni\n\nc\n\ns\n\n.\n\n\n\n\n-\n\n \n\nD\n\ne\n\nf\n\ni\n\nn\n\ne\n\n \n\ni\n\nn\n\ns\n\np\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n \n\n/\n\n \n\nv\n\na\n\nl\n\ni\n\nd\n\na\n\nt\n\ni\n\no\n\nn\n\n \n\nr\n\ne\n\nq\n\nu\n\ni\n\nr\n\ne\n\nm\n\ne\n\nn\n\nt\n\ns\n\n.\n\n\n\n\n-\n\n \n\nR\n\ne\n\nv\n\ni\n\ne\n\nw\n\n \n\nc\n\no\n\ns\n\nt\n\n,\n\n \n\nc\n\ny\n\nc\n\nl\n\ne\n\n-\n\nt\n\ni\n\nm\n\ne\n\n \n\na\n\nn\n\nd\n\n \n\nt\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\nt\n\nr\n\na\n\nd\n\ne\n\n-\n\no\n\nf\n\nf\n\ns\n\n.\n\n\n\n\n-\n\n \n\nV\n\na\n\nl\n\ni\n\nd\n\na\n\nt\n\ne\n\n \n\nt\n\nh\n\ne\n\n \n\nf\n\ni\n\nn\n\na\n\nl\n\n \n\nd\n\ne\n\ns\n\ni\n\ng\n\nn\n\n \n\na\n\ng\n\na\n\ni\n\nn\n\ns\n\nt\n\n \n\nt\n\nh\n\ne\n\n \n\ni\n\nn\n\nt\n\ne\n\nn\n\nd\n\ne\n\nd\n\n \n\np\n\nr\n\no\n\nd\n\nu\n\nc\n\nt\n\ni\n\no\n\nn\n\n \n\ne\n\nn\n\nv\n\ni\n\nr\n\no\n\nn\n\nm\n\ne\n\nn\n\nt\n\n.\n\n\n\n\n-\n\n \n\nI\n\nd\n\ne\n\nn\n\nt\n\ni\n\nf\n\ny\n\n \n\nl\n\ni\n\nk\n\ne\n\nl\n\ny\n\n \n\nd\n\ne\n\nf\n\ne\n\nc\n\nt\n\n \n\nm\n\ne\n\nc\n\nh\n\na\n\nn\n\ni\n\ns\n\nm\n\ns\n\n \n\na\n\nn\n\nd\n\n \n\np\n\nr\n\ne\n\nv\n\ne\n\nn\n\nt\n\ni\n\nv\n\ne\n\n \n\nc\n\no\n\nn\n\nt\n\nr\n\no\n\nl\n\ns\n\n.\n\n\n\n\n-\n\n \n\nC\n\no\n\nn\n\nf\n\ni\n\nr\n\nm\n\n \n\nt\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\na\n\nc\n\nc\n\ne\n\ns\n\ns\n\ni\n\nb\n\ni\n\nl\n\ni\n\nt\n\ny\n\n,\n\n \n\ne\n\nj\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n,\n\n \n\nc\n\no\n\no\n\nl\n\ni\n\nn\n\ng\n\n \n\na\n\nn\n\nd\n\n \n\nm\n\na\n\ni\n\nn\n\nt\n\ne\n\nn\n\na\n\nn\n\nc\n\ne\n\n \n\nr\n\ne\n\nq\n\nu\n\ni\n\nr\n\ne\n\nm\n\ne\n\nn\n\nt\n\ns\n\n.\n\n\n\n\n-\n\n \n\nC\n\no\n\nn\n\nf\n\ni\n\nr\n\nm\n\n \n\nm\n\na\n\nt\n\ne\n\nr\n\ni\n\na\n\nl\n\n \n\ng\n\nr\n\na\n\nd\n\ne\n\n,\n\n \n\np\n\nr\n\no\n\nc\n\ne\n\ns\n\ns\n\ni\n\nn\n\ng\n\n \n\nr\n\ne\n\nq\n\nu\n\ni\n\nr\n\ne\n\nm\n\ne\n\nn\n\nt\n\ns\n\n \n\na\n\nn\n\nd\n\n \n\nd\n\ni\n\nm\n\ne\n\nn\n\ns\n\ni\n\no\n\nn\n\na\n\nl\n\n \n\nb\n\ne\n\nh\n\na\n\nv\n\ni\n\no\n\nr\n\n.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Frequently Asked Engineering Questions",
+        "content": "### What is the most important consideration for Rib, Boss and Gusset Design for Injection Molding?\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### What is the main engineering issue addressed by Rib, Boss and Gusset Design for Injection Molding?\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### What inputs are required to make a reliable rib boss gusset design decision?\n\nAt minimum, review part geometry, resin grade, tooling architecture, production volume, critical tolerances, cosmetic requirements and the intended inspection method.\n\n### Can a generic rule replace production validation for rib boss gusset design?\n\nNo. Generic ranges are starting points. Final limits depend on the exact resin grade, geometry, mold, machine, process window and inspection method.\n\n### How should rib boss gusset design be validated for production?\n\nValidate with production-intent tooling, the specified resin, representative machine conditions and a defined inspection method; use measured samples and capability evidence for critical characteristics.\n\n### What should a buyer provide when sourcing rib boss gusset design?\n\nProvide CAD or drawings, material grade, annual volume, critical tolerances, cosmetic requirements, packaging requirements and any required standards or validation documentation.\n\n### What is Rib, Boss and Gusset Design for Injection Molding?\n\nRibs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical.\n\n### Can a generic rule replace production validation?\n\nNo. General engineering ranges are starting points. Final limits depend on the resin grade, geometry, mold, machine, inspection method and customer requirements.",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Related Engineering Topics",
+        "content": "- Plastic Wall Thickness Design — Related injection-molding engineering topic — /industries/v714/plastic-wall-thickness-design/\n- Draft Angle Injection Molding — Related injection-molding engineering topic — /industries/v714/draft-angle-injection-molding/\n- Injection Molding Undercuts — Related injection-molding engineering topic — /industries/v714/injection-molding-undercuts/\n- What Is Injection Molding — Related injection-molding engineering topic — /industries/v714/what-is-injection-molding/",
+        "type": "white-paper"
+      },
+      {
+        "heading": "Evidence and Claim Lineage",
+        "content": "Source article: rib-boss-gusset-design\n\nTarget white paper: injection-molding-boss-design\n\nCanonical URL: https://www.nexmold.com/industries/v714/injection-molding-boss-design/\n\nSource artifact hash: 6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2\n\nEvidence references: 1\n\nSemantic claims: 1\n\n-\n\n \n\nE\n\nv\n\ni\n\nd\n\ne\n\nn\n\nc\n\ne\n\n \n\nI\n\nD\n\n:\n\n \n\nk\n\nn\n\no\n\nw\n\nl\n\ne\n\nd\n\ng\n\ne\n\n:\n\nr\n\ni\n\nb\n\n-\n\nb\n\no\n\ns\n\ns\n\n-\n\ng\n\nu\n\ns\n\ns\n\ne\n\nt\n\n-\n\nd\n\ne\n\ns\n\ni\n\ng\n\nn\n\n\n\n\n-\n\n \n\nS\n\ne\n\nm\n\na\n\nn\n\nt\n\ni\n\nc\n\n \n\nC\n\nl\n\na\n\ni\n\nm\n\n \n\nI\n\nD\n\n:\n\n \n\nc\n\nl\n\na\n\ni\n\nm\n\n:\n\nv\n\n7\n\n1\n\n4\n\n:\n\nw\n\nh\n\ni\n\nt\n\ne\n\np\n\na\n\np\n\ne\n\nr\n\n:\n\ni\n\nn\n\nj\n\ne\n\nc\n\nt\n\ni\n\no\n\nn\n\n-\n\nm\n\no\n\nl\n\nd\n\ni\n\nn\n\ng\n\n-\n\nb\n\no\n\ns\n\ns\n\n-\n\nd\n\ne\n\ns\n\ni\n\ng\n\nn",
+        "type": "white-paper"
+      }
+    ],
+    "faq": [
+      {
+        "question": "What is the most important consideration for Rib, Boss and Gusset Design for Injection Molding?",
+        "answer": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical."
+      },
+      {
+        "question": "What is the main engineering issue addressed by Rib, Boss and Gusset Design for Injection Molding?",
+        "answer": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical."
+      },
+      {
+        "question": "What inputs are required to make a reliable rib boss gusset design decision?",
+        "answer": "At minimum, review part geometry, resin grade, tooling architecture, production volume, critical tolerances, cosmetic requirements and the intended inspection method."
+      },
+      {
+        "question": "Can a generic rule replace production validation for rib boss gusset design?",
+        "answer": "No. Generic ranges are starting points. Final limits depend on the exact resin grade, geometry, mold, machine, process window and inspection method."
+      },
+      {
+        "question": "How should rib boss gusset design be validated for production?",
+        "answer": "Validate with production-intent tooling, the specified resin, representative machine conditions and a defined inspection method; use measured samples and capability evidence for critical characteristics."
+      },
+      {
+        "question": "What should a buyer provide when sourcing rib boss gusset design?",
+        "answer": "Provide CAD or drawings, material grade, annual volume, critical tolerances, cosmetic requirements, packaging requirements and any required standards or validation documentation."
+      },
+      {
+        "question": "What is Rib, Boss and Gusset Design for Injection Molding?",
+        "answer": "Ribs and bosses should add stiffness without creating thick masses that sink or warp; core them and blend transitions where practical."
+      },
+      {
+        "question": "Can a generic rule replace production validation?",
+        "answer": "No. General engineering ranges are starting points. Final limits depend on the resin grade, geometry, mold, machine, inspection method and customer requirements."
+      }
+    ],
+    "seoKeywords": [
+      "rib, boss and gusset design for injection molding",
+      "injection molding",
+      "plastic injection molding",
+      "mold design",
+      "DFM",
+      "rib boss gusset design guide",
+      "rib boss gusset design design guidelines",
+      "rib boss gusset design best practices",
+      "rib boss gusset design manufacturing",
+      "rib boss gusset design engineering",
+      "rib boss gusset design for injection molded parts",
+      "rib boss gusset design injection molding design guide",
+      "rib boss gusset design cost and tooling considerations",
+      "rib boss gusset design problems and solutions",
+      "rib boss gusset design manufacturer",
+      "rib boss gusset design DFM checklist",
+      "rib boss gusset design tolerances and validation",
+      "rib boss gusset design for production",
+      "best practices for rib boss gusset design",
+      "rib boss gusset design vs alternative",
+      "rib boss gusset design engineering requirements",
+      "rib boss gusset design for manufacturers",
+      "What is rib, boss and gusset design for injection molding?",
+      "What are the key considerations for rib, boss and gusset design for injection molding?",
+      "How is rib, boss and gusset design for injection molding used in production?",
+      "How do you validate rib, boss and gusset design for injection molding?",
+      "What problems are commonly associated with rib, boss and gusset design for injection molding?",
+      "When should a manufacturer review rib, boss and gusset design for injection molding?"
+    ],
+    "lineage": {
+      "pageId": "v714:whitepaper:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+      "evidenceIds": [
+        "knowledge:rib-boss-gusset-design"
+      ],
+      "semanticClaimIds": [
+        "claim:v714:whitepaper:injection-molding-boss-design"
+      ],
+      "sourceArtifactHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2"
+    },
+    "sourceArtifact": {
+      "pageId": "v714:whitepaper:injection-molding-boss-design",
+      "locale": "en-US",
+      "region": "US",
+      "canonicalUrl": "https://www.nexmold.com/industries/v714/injection-molding-boss-design/",
+      "hreflangSet": [
+        "en-US"
+      ],
+      "seoEligibility": {
+        "pageId": "v714:whitepaper:injection-molding-boss-design",
+        "locale": "en-US",
+        "region": "US",
+        "applicability": "APPLICABLE",
+        "compliance": "VERIFIED",
+        "evidence": {
+          "evidence": [
+            {
+              "id": "knowledge:rib-boss-gusset-design",
+              "sourceType": "knowledge-base",
+              "sourceLocator": "src/data/knowledge.ts#rib-boss-gusset-design",
+              "contentHash": "rib-boss-gusset-design:2026-08-23"
+            }
+          ],
+          "semanticClaims": [
+            {
+              "id": "claim:v714:whitepaper:injection-molding-boss-design",
+              "claimKey": "v714.whitepaper.injection-molding-boss-design"
+            }
+          ],
+          "completeness": "COMPLETE"
+        },
+        "status": "ELIGIBLE",
+        "reasonCodes": []
+      },
+      "pageContentHash": "6f72d396c66df379318735e942ddee12c3d6c864d996f0f5816acfffdc1a3ec2"
+    }
+  },
+  "production": {
+    "whitePaper": true,
+    "publishedArtifact": true,
+    "automaticPublication": false,
+    "existingSiteContentModified": false,
+    "historicalBatch01Modified": false
+  }
+}

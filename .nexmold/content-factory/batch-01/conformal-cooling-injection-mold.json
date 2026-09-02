@@ -1,0 +1,101 @@
+{
+  "schema": "nexmold.v7.14.white-paper.v2",
+  "producerVersion": "white-paper-v2",
+  "articleId": "v714-whitepaper:conformal-cooling-injection-mold",
+  "targetSlug": "conformal-cooling-injection-mold",
+  "route": "/industries/v714/conformal-cooling-injection-mold/",
+  "sourceArticleSlug": "conformal-cooling",
+  "sourceArticle": {
+    "slug": "conformal-cooling",
+    "title": "Conformal Cooling in Injection Molds"
+  },
+  "sourceArtifactHash": "c9ad4d2445a980a172a8f93f2785ebc702caeae30d115e8071ffb3ed0b8d297a",
+  "artifact": {
+    "pageId": "v714:whitepaper:conformal-cooling-injection-mold",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/industries/v714/conformal-cooling-injection-mold/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:whitepaper:conformal-cooling-injection-mold",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:conformal-cooling",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#conformal-cooling",
+            "contentHash": "6f5e110df86b9039a8b7d4a6c371367ec66a60e0a650e4e30c20f8cabfcbdb75"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:v714:whitepaper:conformal-cooling-injection-mold",
+            "claimKey": "v714.whitepaper.conformal-cooling-injection-mold"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "c9ad4d2445a980a172a8f93f2785ebc702caeae30d115e8071ffb3ed0b8d297a"
+  },
+  "seo": {
+    "longTailQueries": [
+      "conformal cooling in injection molds: thermal design, cycle time and warpage control",
+      "conformal cooling injection mold design guide",
+      "conformal cooling injection mold DFM",
+      "conformal cooling injection mold best practices",
+      "conformal cooling injection mold design rules",
+      "conformal cooling injection mold engineering guide",
+      "conformal cooling injection mold cycle time",
+      "conformal cooling injection mold warpage",
+      "conformal cooling injection mold thermal analysis",
+      "conformal cooling injection mold 3D printed mold",
+      "conformal cooling injection mold cooling channel design",
+      "conformal cooling injection mold channel geometry",
+      "channel geometry in conformal cooling injection mold",
+      "conformal cooling injection mold coolant flow rate",
+      "coolant flow rate in conformal cooling injection mold",
+      "conformal cooling injection mold heat-transfer coefficient",
+      "heat-transfer coefficient in conformal cooling injection mold",
+      "conformal cooling injection mold distance to cavity surface",
+      "distance to cavity surface in conformal cooling injection mold",
+      "conformal cooling injection mold pressure drop",
+      "pressure drop in conformal cooling injection mold",
+      "conformal cooling injection mold mold steel",
+      "mold steel in conformal cooling injection mold",
+      "conformal cooling injection mold part geometry",
+      "part geometry in conformal cooling injection mold",
+      "conformal cooling injection mold cooling uniformity",
+      "cooling uniformity in conformal cooling injection mold",
+      "conformal cooling injection mold hot spots",
+      "how to prevent hot spots in conformal cooling injection mold",
+      "conformal cooling injection mold uneven cooling",
+      "how to prevent uneven cooling in conformal cooling injection mold",
+      "how to prevent warpage in conformal cooling injection mold",
+      "conformal cooling injection mold long cycle time",
+      "how to prevent long cycle time in conformal cooling injection mold",
+      "conformal cooling injection mold coolant leakage",
+      "how to prevent coolant leakage in conformal cooling injection mold",
+      "conformal cooling injection mold pressure loss",
+      "how to prevent pressure loss in conformal cooling injection mold"
+    ],
+    "relatedTopics": [
+      "injection-molding-warpage-causes-solutions",
+      "injection-molding-cycle-time-optimization-guide"
+    ]
+  },
+  "production": {
+    "whitePaper": true,
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

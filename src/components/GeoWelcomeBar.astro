@@ -1,0 +1,109 @@
+---
+/**
+ * GeoWelcomeBar.astro - 鲁棒性流体适配版
+ * 修复：通过在模板中读取 lang 变量（用于初始化显示和 data 注入），消灭 ts(6133) 警告。
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const labels = {
+  en: "LOCAL PROTOCOL ACTIVE",
+  de: "LOKALES PROTOKOLL AKTIVIERT",
+  fr: "PROTOCOLE LOCAL ACTIVÉ",
+  global: "GLOBAL PROTOCOL ACTIVE"
+};
+
+// 🚀 核心修复：确保变量被读取
+const initialLabel = labels[lang] || labels.en;
+---
+
+<div 
+  id="geo-bar" 
+  class="hidden h-[30px] bg-black border-b border-white/5 relative overflow-hidden flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+  data-lang={lang}
+  data-label-en={labels.en}
+  data-label-de={labels.de}
+  data-label-fr={labels.fr}
+  data-label-global={labels.global}
+>
+  <div class="max-w-[1600px] mx-auto px-[clamp(1rem,5vw,2rem)] w-full flex items-center gap-4">
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F97316] opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#F97316]"></span>
+      </span>
+      <span id="geo-status-tag" class="text-[#F97316] font-mono text-[9px] md:text-[10px] tracking-widest uppercase whitespace-nowrap">
+        [{initialLabel}]
+      </span>
+    </div>
+
+    <div id="geo-text" class="text-white/40 font-mono text-[9px] md:text-[10px] tracking-tight uppercase truncate italic">
+      INITIALIZING SECURE CONNECTION...
+    </div>
+  </div>
+  
+  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent -translate-x-full animate-scan pointer-events-none"></div>
+</div>
+
+<script>
+  function initRobustGeo() {
+    const geoBar = document.getElementById('geo-bar');
+    const geoTag = document.getElementById('geo-status-tag');
+    const geoText = document.getElementById('geo-text');
+    if (!geoBar || !geoTag || !geoText) return;
+
+    const data = (geoBar as HTMLElement).dataset;
+    const lang = navigator.language.toLowerCase();
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const debug = urlParams.get('debug_geo');
+
+    const regions = {
+      GERMANIC: () => debug === 'de' || lang.startsWith('de') || tz.includes('berlin') || tz.includes('zurich') || tz.includes('vienna'),
+      FRENCH: () => debug === 'fr' || lang.startsWith('fr') || tz.includes('paris') || tz.includes('brussels'),
+      ANGLO: () => debug === 'us' || lang.startsWith('en') || tz.includes('america') || tz.includes('london') || tz.includes('sydney') || tz.includes('toronto')
+    };
+
+    let tag = data.labelEn;
+    let msg = "Optimized DFM routing active for Global industrial partners.";
+
+    if (regions.GERMANIC()) {
+      tag = data.labelDe;
+      msg = "Engineering support node: Active for DACH region industrial standards.";
+    } 
+    else if (regions.FRENCH()) {
+      tag = data.labelFr;
+      msg = "Protocol d'ingénierie activé pour la région Europe de l'Ouest.";
+    }
+    else if (regions.ANGLO()) {
+      tag = data.labelEn;
+      msg = tz.includes('london') 
+        ? "Technical logistics optimized for UK & EMEA manufacturing nodes."
+        : "Direct supply chain optimization enabled for North American partners.";
+    } else {
+      tag = data.labelGlobal;
+      msg = "Multi-material molding analysis active for Global nodes.";
+    }
+
+    if(geoTag) geoTag.innerText = `[${tag}]`;
+    if(geoText) geoText.innerText = msg;
+    geoBar.classList.remove('hidden');
+  }
+
+  initRobustGeo();
+  document.addEventListener('astro:after-swap', initRobustGeo);
+</script>
+
+<style>
+  @keyframes scan { 100% { transform: translateX(100%); } }
+  .animate-scan { animation: scan 4s linear infinite; }
+  #geo-bar { 
+    z-index: 1001; 
+    position: relative;
+    backdrop-filter: blur(10px);
+  }
+</style>

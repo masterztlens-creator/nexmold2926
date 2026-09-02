@@ -1,0 +1,6 @@
+{
+  "schema": "nexmold.v7.14.adversarial-manifest.v1",
+  "objective": "zero-bypass publication boundary",
+  "successMetric": "Public Artifact = 0 when any mandatory gate is blocked",
+  "harness": "tests/adversarial/run-harness.mjs"
+}

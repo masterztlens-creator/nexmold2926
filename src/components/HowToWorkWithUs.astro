@@ -1,0 +1,207 @@
+---
+/**
+ * HowToWorkWithUs.astro - 4 步极速合作流程 (工业控制台色调与字形满载版)
+ * 1. 色调升级：钛白 (#FAFAFA) 底衬 + 强对比工业深蓝 (#0F2B5B) 边框骨架 + 亮橙 (#EA580C) 激活点
+ * 2. 字体升级：主标题 1:1 对齐强粗斜体 (font-[1000] font-sans italic uppercase tracking-tighter)
+ * 3. 细节满载：等宽 Mono 字体数显角标 + 工业微网格底纹 + 强实体边界
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+}
+
+const { lang = 'en' } = Astro.props;
+
+const i18n: Record<string, any> = {
+  en: {
+    badge: "TRANSPARENT PROCESS",
+    title: "HOW TO WORK WITH US",
+    subtitle: "From 3D CAD upload to rapid T1 tooling and automated mass production. Four streamlined steps to accelerate your physical component supply chain.",
+    
+    step1_title: "1. Upload CAD Geometry",
+    step1_desc: "Select custom injection molding or tooling and upload your 3D CAD file (.STEP, .STP, .IGS).",
+
+    step2_title: "2. Receive 24H DFM & Quote",
+    step2_desc: "Our engineering team issues a complete moldability evaluation, gate analysis & guaranteed pricing within 24 hours.",
+
+    step3_title: "3. Tooling & Manufacturing",
+    step3_desc: "Upon order confirmation, automated CNC mold cutting and Haitian press setup begin immediately.",
+
+    step4_title: "4. Rapid Delivery & Shipping",
+    step4_desc: "T1 samples or mass production parts are quality audited via CMM and shipped via Air Express or DDP Ocean Freight.",
+
+    cta_btn: "START YOUR PROJECT NOW →"
+  },
+  de: {
+    badge: "TRANSPARENTER ARBEITSABLAUF",
+    title: "SO ARBEITEN SIE MIT UNS",
+    subtitle: "Vom 3D-CAD-Upload bis zu T1-Werkzeugen und der Serienfertigung.",
+    
+    step1_title: "1. CAD-Datei hochladen",
+    step1_desc: "Wählen Sie das Verfahren und laden Sie Ihre 3D-CAD-Datei (.STEP, .STP) hoch.",
+
+    step2_title: "2. DFM & Angebot erhalten",
+    step2_desc: "Innerhalb von 24 Stunden senden wir Ihnen eine DFM-Analyse und Festpreise.",
+
+    step3_title: "3. Werkzeugbau & Fertigung",
+    step3_desc: "Nach Bestätigung beginnen CNC-Fräsung und Einrichtung der Spritzgießpressen.",
+
+    step4_title: "4. Qualitätssicherung & Versand",
+    step4_desc: "T1-Muster oder Serienbauteile werden per CMM geprüft und schnell geliefert.",
+
+    cta_btn: "PROJEKT JETZT STARTEN →"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="bg-[#FAFAFA] text-[#0F2B5B] py-20 sm:py-24 border-b-2 border-[#0F2B5B]/15 relative select-none" id="how-it-works">
+  
+  <!-- 工厂微网格纹理底纹 (增加工业背景密度) -->
+  <div class="absolute inset-0 pointer-events-none opacity-[0.03]" 
+       style="background-image: linear-gradient(#0F2B5B 1.5px, transparent 1.5px), linear-gradient(90deg, #0F2B5B 1.5px, transparent 1.5px); background-size: 40px 40px;"
+       aria-hidden="true">
+  </div>
+
+  <div class="max-w-[1650px] mx-auto px-4 sm:px-8 relative z-10">
+    
+    <!-- 🎯 1. 强视觉对比主标题区 (font-[1000] font-sans italic uppercase) -->
+    <div class="max-w-4xl mx-auto text-center mb-16 space-y-3">
+      <div class="inline-flex items-center gap-2 bg-[#0F2B5B] text-white px-3.5 py-1 rounded-xs shadow-md">
+        <span class="w-2 h-2 rounded-full bg-[#EA580C] animate-ping"></span>
+        <span class="font-mono text-[10px] font-black uppercase tracking-widest text-[#EA580C]">
+          {t.badge}
+        </span>
+      </div>
+
+      <h2 class="text-3xl sm:text-5xl lg:text-6xl font-[1000] font-sans text-[#0F2B5B] italic uppercase tracking-tighter leading-[0.95]">
+        {t.title}
+      </h2>
+
+      <p class="text-xs sm:text-base font-bold font-sans text-[#0F2B5B]/80 leading-relaxed max-w-2xl mx-auto pt-2">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- ⚙️ 2. 4 列高密度数控卡片矩阵 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      
+      <!-- 🔷 步骤 1 -->
+      <div class="bg-white p-6 sm:p-8 rounded-xl border-2 border-[#0F2B5B]/15 hover:border-[#EA580C] transition-all duration-300 shadow-md hover:shadow-xl group relative flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-2xl font-[1000] text-[#EA580C]">01</span>
+            <div class="w-12 h-12 rounded-lg bg-[#FAFAFA] border border-[#0F2B5B]/15 flex items-center justify-center text-[#0F2B5B] group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-black uppercase italic text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors leading-tight">
+            {t.step1_title}
+          </h3>
+
+          <p class="text-[#0F2B5B]/80 text-xs font-sans font-bold leading-relaxed">
+            {t.step1_desc}
+          </p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[#0F2B5B]/10 font-mono text-[10px] font-black text-[#0F2B5B]/40 uppercase tracking-wider">
+          SUPPORTED: .STEP / .STP / .IGS
+        </div>
+      </div>
+
+      <!-- 🔷 步骤 2 -->
+      <div class="bg-white p-6 sm:p-8 rounded-xl border-2 border-[#0F2B5B]/15 hover:border-[#EA580C] transition-all duration-300 shadow-md hover:shadow-xl group relative flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-2xl font-[1000] text-[#0F2B5B]">02</span>
+            <div class="w-12 h-12 rounded-lg bg-[#FAFAFA] border border-[#0F2B5B]/15 flex items-center justify-center text-[#0F2B5B] group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-black uppercase italic text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors leading-tight">
+            {t.step2_title}
+          </h3>
+
+          <p class="text-[#0F2B5B]/80 text-xs font-sans font-bold leading-relaxed">
+            {t.step2_desc}
+          </p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[#0F2B5B]/10 font-mono text-[10px] font-black text-[#EA580C] uppercase tracking-wider">
+          24-HOUR GUARANTEED TURNAROUND
+        </div>
+      </div>
+
+      <!-- 🔷 步骤 3 -->
+      <div class="bg-white p-6 sm:p-8 rounded-xl border-2 border-[#0F2B5B]/15 hover:border-[#EA580C] transition-all duration-300 shadow-md hover:shadow-xl group relative flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-2xl font-[1000] text-[#0F2B5B]">03</span>
+            <div class="w-12 h-12 rounded-lg bg-[#FAFAFA] border border-[#0F2B5B]/15 flex items-center justify-center text-[#0F2B5B] group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-black uppercase italic text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors leading-tight">
+            {t.step3_title}
+          </h3>
+
+          <p class="text-[#0F2B5B]/80 text-xs font-sans font-bold leading-relaxed">
+            {t.step3_desc}
+          </p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[#0F2B5B]/10 font-mono text-[10px] font-black text-[#0F2B5B]/40 uppercase tracking-wider">
+          90T – 1200T AUTOMATED PRESSES
+        </div>
+      </div>
+
+      <!-- 🔷 步骤 4 -->
+      <div class="bg-white p-6 sm:p-8 rounded-xl border-2 border-[#0F2B5B]/15 hover:border-[#EA580C] transition-all duration-300 shadow-md hover:shadow-xl group relative flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-2xl font-[1000] text-[#0F2B5B]">04</span>
+            <div class="w-12 h-12 rounded-lg bg-[#FAFAFA] border border-[#0F2B5B]/15 flex items-center justify-center text-[#0F2B5B] group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-black uppercase italic text-[#0F2B5B] group-hover:text-[#EA580C] transition-colors leading-tight">
+            {t.step4_title}
+          </h3>
+
+          <p class="text-[#0F2B5B]/80 text-xs font-sans font-bold leading-relaxed">
+            {t.step4_desc}
+          </p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[#0F2B5B]/10 font-mono text-[10px] font-black text-[#0F2B5B]/40 uppercase tracking-wider">
+          ZEISS CMM FAI + DDP FREIGHT
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 🚀 3. 居中 NEXMOLD 霸气亮橙 CTA 按钮 -->
+    <div class="text-center pt-2">
+      <a 
+        href="#rfq"
+        class="inline-flex items-center justify-center gap-3 bg-[#EA580C] hover:bg-[#d94e05] text-white font-sans font-[1000] text-sm sm:text-base px-10 py-4.5 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 uppercase tracking-wider border-2 border-white/30 transform hover:-translate-y-1"
+      >
+        <span>{t.cta_btn}</span>
+      </a>
+    </div>
+
+  </div>
+</section>

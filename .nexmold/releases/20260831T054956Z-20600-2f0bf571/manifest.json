@@ -1,0 +1,123 @@
+{
+  "schema": "nexmold.v7.14.release-manifest.v1",
+  "status": "VERIFIED",
+  "epoch": "20260831T054956Z-20600-2f0bf571",
+  "startedAt": "2026-08-31T05:49:56.723Z",
+  "finishedAt": "2026-08-31T05:50:16.328Z",
+  "projectRoot": "E:\\nexmold",
+  "dist": "E:\\nexmold\\dist",
+  "buildCommand": "npx astro build",
+  "typecheckCommand": "npx astro check",
+  "testCommand": "node --experimental-strip-types tests/contracts/v714-contracts.mjs",
+  "healthUrl": null,
+  "htmlManifest": "releases/20260831T054956Z-20600-2f0bf571/html-manifest.json",
+  "htmlSetSha256": "9ea5e4104a6c49dedb02c7c6662ff203df5d54caee1daa0b5d03216bb29edc5d",
+  "htmlCount": 149,
+  "gates": [
+    {
+      "label": "GLOBAL_KILL_SWITCH",
+      "status": "PASS",
+      "detail": "OFF"
+    },
+    {
+      "label": "PRECHECK",
+      "status": "PASS",
+      "detail": "Required project structure present."
+    },
+    {
+      "label": "V714_CORE_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "V714_REGIONAL_PRODUCTION_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "ROUTE_CONFLICT_GATE",
+      "status": "PASS",
+      "detail": "Route conflict gate completed successfully."
+    },
+    {
+      "label": "TYPE_CONTRACTS",
+      "status": "PASS",
+      "detail": "Type contracts verified."
+    },
+    {
+      "label": "CONTRACT_TESTS",
+      "status": "PASS",
+      "detail": "Configured test suite passed."
+    },
+    {
+      "label": "V714_ARTICLE_FACTORY",
+      "status": "PASS",
+      "detail": "V7.14 article factory completed before Astro build."
+    },
+    {
+      "label": "EPOCH",
+      "status": "PASS",
+      "detail": "Build epoch 20260831T054956Z-20600-2f0bf571 created."
+    },
+    {
+      "label": "BUILD",
+      "status": "PASS",
+      "detail": "Production static build completed."
+    },
+    {
+      "label": "HTML_MANIFEST",
+      "status": "PASS",
+      "detail": "Recorded 149 HTML artifacts; setSha256=9ea5e4104a6c49dedb02c7c6662ff203df5d54caee1daa0b5d03216bb29edc5d"
+    },
+    {
+      "label": "ARTIFACT_SECRETS",
+      "status": "PASS",
+      "detail": "No forbidden secret/config artifacts found in dist."
+    },
+    {
+      "label": "HTML_INTEGRITY",
+      "status": "PASS",
+      "detail": "Validated 149 rendered HTML files."
+    },
+    {
+      "label": "GLOBAL_HTML_SET_EQUALITY",
+      "status": "SKIPPED",
+      "detail": "No expected HTML manifest configured. Current set is recorded but equality is not asserted."
+    },
+    {
+      "label": "STATIC_SMOKE",
+      "status": "PASS",
+      "detail": "Validated 6 local route artifacts."
+    },
+    {
+      "label": "CDN_HEALTH",
+      "status": "SKIPPED",
+      "detail": "NEXMOLD_HEALTH_URL not configured; no remote health claim was made."
+    },
+    {
+      "label": "RUNTIME_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "SITEMAP_GATE",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    },
+    {
+      "label": "RELEASE_PREFLIGHT",
+      "status": "PASS",
+      "detail": "Gate completed successfully."
+    }
+  ],
+  "productionWiring": {
+    "version": "V7.14",
+    "coreGate": "scripts/v714-core-gate.mjs#runV714CoreGate",
+    "regionalProductionGate": "scripts/v714-regional-gate.mjs#runV714RegionalGate",
+    "canonicalChain": "Evidence -> Claim -> Eligibility -> Firewall -> RegionalPublishArtifact -> PublicationGate -> Projection",
+    "routeConflictGate": "scripts/route-conflict-check.mjs",
+    "runtimeGate": "scripts/runtime-gate.mjs#runRuntimeGate",
+    "sitemapGate": "scripts/sitemap-gate.mjs#runSitemapGate",
+    "releasePreflight": "scripts/release-preflight.mjs#runReleasePreflight"
+  }
+}

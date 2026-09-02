@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:injection-molding-warpage-causes-solutions",
+  "targetSlug": "injection-molding-warpage-causes-solutions",
+  "sourceArticleSlug": "injection-molding-warpage",
+  "slug": "injection-molding-warpage-causes-solutions",
+  "lineage": {
+    "pageId": "v714:injection-molding-warpage-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-warpage-causes-solutions/",
+    "evidenceIds": [
+      "knowledge:injection-molding-warpage"
+    ],
+    "semanticClaimIds": [
+      "claim:injection-molding-warpage-causes-solutions"
+    ],
+    "sourceArtifactHash": "7067f4495d73e25a1d05e441c44087f1288cd32e216a7d04ec5268980883e3a8"
+  },
+  "sourceArtifactHash": "7067f4495d73e25a1d05e441c44087f1288cd32e216a7d04ec5268980883e3a8",
+  "sourceArtifact": {
+    "pageId": "v714:injection-molding-warpage-causes-solutions",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/injection-molding-warpage-causes-solutions/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:injection-molding-warpage-causes-solutions",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:injection-molding-warpage",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#injection-molding-warpage",
+            "contentHash": "injection-molding-warpage:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:injection-molding-warpage-causes-solutions",
+            "claimKey": "batch01.injection-molding-warpage-causes-solutions"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "7067f4495d73e25a1d05e441c44087f1288cd32e216a7d04ec5268980883e3a8"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

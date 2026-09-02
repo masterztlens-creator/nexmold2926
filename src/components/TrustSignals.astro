@@ -1,0 +1,157 @@
+---
+/**
+ * TrustSignals.astro - 极致流体重构版
+ * 1. 采用线性插值逻辑，实现标题与间距从手机到桌面的丝滑缩放。
+ * 2. 彻底移除硬编码的固定像素，全面改用 clamp() 函数适配中型屏幕 (如 Nest Hub)。
+ * 3. 增强类型系统并解决多语言环境下（如法语/德语长词）的卡片高度对齐问题。
+ * 4. 商业要素升级：全线加入原厂材质证明 (MTR) 条款、环保与细分医疗食品级材料追溯保证。
+ */
+
+interface Cert {
+  name: string;
+  desc: string;
+  detail: string;
+}
+
+interface I18nContent {
+  tag: string;
+  title_1: string;
+  title_2: string;
+  aria_label: string;
+  certs: Cert[];
+}
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en', location = "Global" } = Astro.props;
+
+const i18n: Record<string, I18nContent> = {
+  en: {
+    tag: "Global Compliance",
+    title_1: "Quality",
+    title_2: "Certified",
+    aria_label: "NEXMOLD International Certifications and Compliance Standards",
+    certs: [
+      { name: "ISO 9001:2015", desc: "Quality System Traceability", detail: `Full engineering data logging and material tracking compliance for ${location} partners.` },
+      { name: "Material MTR", desc: "100% Genuine Polymers", detail: "Every shipment accompanied by original Mill Test Certificates (MTR) and real-time resin data sheets." },
+      { name: "FDA & Food-Grade", desc: "Niche Compliance Standards", detail: "Certified protocols for medical bio-compatibility and food-grade anti-hydrolysis appliances." },
+      { name: "RoHS & REACH", desc: "Environmental Safeguards", detail: "Full environmental compliance verification and documented chain of custody." }
+    ]
+  },
+  de: {
+    tag: "Globale Compliance",
+    title_1: "Qualitäts",
+    title_2: "Zertifiziert",
+    aria_label: "NEXMOLD Internationale Zertifizierungen und Konformitätsstandards",
+    certs: [
+      { name: "ISO 9001:2015", desc: "Rückverfolgbarkeit des Qualitätssystems", detail: `Vollständige Protokollierung der Konstruktionsdaten und Materialverfolgung für Partner in ${location}.` },
+      { name: "Material MTR", desc: "100% Echte Polymere", detail: "Jede Lieferung wird von originalen Werksprüfzeugnissen (MTR) und Harzdatenblättern begleitet." },
+      { name: "FDA & Lebensmittelqualität", desc: "Nischen-Compliance-Standards", detail: "Zertifizierte Protokolle für medizinische Biokompatibilität und hydrolysebeständige Haushaltsgeräte." },
+      { name: "RoHS & REACH", desc: "Umweltschutzmaßnahmen", detail: "Vollständige Überprüfung der Umweltkonformität und dokumentierte Kontrollkette." }
+    ]
+  },
+  fr: {
+    tag: "Conformité Globale",
+    title_1: "Qualité",
+    title_2: "Certifiée",
+    aria_label: "Certifications internationales et normes de conformité NEXMOLD",
+    certs: [
+      { name: "ISO 9001:2015", desc: "Traçabilité du Système Qualité", detail: `Enregistrement complet des données techniques et suivi des matériaux pour les partenaires de ${location}.` },
+      { name: "MTR Matériau", desc: "Polymères 100% Authentiques", detail: "Chaque expédition est accompagnée des certificats d'essai d'usine (MTR) d'origine." },
+      { name: "FDA & Qualité Alimentaire", desc: "Normes de Conformité Spécifiques", detail: "Protocoles certifiés pour la biocompatibilité médicale et les appareils anti-hydrolyse de qualité alimentaire." },
+      { name: "RoHS & REACH", desc: "Garanties Environnementales", detail: "Vérification complète de la conformité environnementale et chaîne de détention documentée." }
+    ]
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section 
+  class="relative bg-[#0B1221] overflow-hidden border-b border-white/5" 
+  id="trust-signals" 
+  aria-labelledby="signals-title"
+>
+  <div class="absolute inset-0 pointer-events-none select-none opacity-[0.03]" aria-hidden="true">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full border border-white/20 animate-pulse"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] rounded-full border border-white/10"></div>
+  </div>
+
+  <div class="max-w-[1440px] mx-auto px-[clamp(1.5rem,5vw,6rem)] py-[clamp(5rem,10vw,12rem)] relative z-10">
+    
+    <header class="mb-[clamp(3rem,8vw,6rem)]" data-aos="fade-right">
+      <div class="flex items-center space-x-4 mb-6">
+        <div class="w-[clamp(2rem,5vw,3rem)] h-[2px] bg-[#F97316]"></div>
+        <span class="text-[#F97316] font-bold uppercase tracking-[0.5em] text-[clamp(0.6rem,1vw,0.75rem)]">{t.tag}</span>
+      </div>
+      <h2 
+        id="signals-title" 
+        class="text-[clamp(3rem,8vw,8rem)] font-[1000] text-white uppercase tracking-tighter italic leading-[0.85]"
+      >
+        {t.title_1} <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/10">{t.title_2}</span>
+      </h2>
+    </header>
+
+    <div 
+      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[clamp(1rem,2vw,2rem)]" 
+      aria-label={t.aria_label}
+    >
+      {t.certs.map((cert, index) => (
+        <article 
+          class="group relative p-[clamp(1.5rem,3vw,3rem)] bg-white/[0.02] border border-white/5 hover:border-[#F97316]/40 transition-all duration-700 flex flex-col h-full overflow-hidden"
+          data-aos="fade-up"
+          data-aos-delay={index * 100}
+        >
+          <div class="absolute inset-0 bg-gradient-to-br from-[#F97316]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true"></div>
+          
+          <div class="w-[clamp(2.5rem,4vw,3.5rem)] h-[clamp(2.5rem,4vw,3.5rem)] mb-[clamp(2rem,5vw,3rem)] relative shrink-0">
+             <div class="absolute inset-0 border border-white/10 group-hover:border-[#F97316]/30 transition-colors rotate-45" aria-hidden="true"></div>
+             <div class="absolute inset-0 flex items-center justify-center text-white/30 group-hover:text-[#F97316] transition-colors">
+                <svg class="w-1/2 h-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+             </div>
+          </div>
+
+          <div class="relative z-10 flex flex-col h-full">
+            <h3 class="text-[clamp(1.25rem,2vw,1.75rem)] font-black text-white uppercase tracking-tight mb-4 group-hover:text-[#F97316] transition-colors leading-none italic">
+              {cert.name}
+            </h3>
+            
+            <p class="text-[#94A3B8] text-[clamp(0.8rem,1vw,0.9rem)] font-light leading-relaxed mb-8 italic flex-grow">
+              {cert.desc}
+            </p>
+            
+            <div class="pt-6 border-t border-white/5 mt-auto">
+              <p class="text-white/20 text-[9px] uppercase tracking-widest group-hover:text-white/40 transition-colors leading-tight">
+                {cert.detail}
+              </p>
+            </div>
+          </div>
+
+          <div class="absolute bottom-0 left-0 h-[2px] bg-[#F97316] w-0 group-hover:w-full transition-all duration-1000 ease-in-out"></div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  #trust-signals {
+    contain: layout paint;
+  }
+
+  h3, h2 {
+    text-wrap: balance;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .group {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+</style>

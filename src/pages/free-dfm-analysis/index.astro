@@ -1,0 +1,535 @@
+---
+/**
+ * src/pages/free-dfm-analysis/index.astro
+ * NEXMOLD - 独立商业转化落地页 (方案 A: 根目录部署)
+ * 定位: 全站 SEO/GEO 流量与商业询盘的终极承接点
+ * 架构: 无 Tailwind，纯 Scoped CSS，极致响应式与转化 UI
+ */
+
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+
+const title = "Free Injection Molding DFM Analysis | NxMold";
+const description = "Upload your 3D CAD file (.STP/.STEP) for a free design for manufacturability (DFM) review. Get expert engineering feedback on wall thickness, draft, parting lines, and tooling risks.";
+const siteUrl = "https://www.nxmold.com";
+const canonical = `${siteUrl}/free-dfm-analysis/`;
+
+const workflow = [
+  { step: "01", title: "CAD Review", desc: "Our Dongguan engineering team reviews your part geometry." },
+  { step: "02", title: "DFM Analysis", desc: "Identify manufacturing risks, sink marks, and tooling complexity." },
+  { step: "03", title: "Actionable Feedback", desc: "Receive specific recommendations for draft, wall thickness, and gating." },
+  { step: "04", title: "Tooling Strategy", desc: "Determine mold architecture optimized for small-to-medium volume runs." },
+  { step: "05", title: "Production Quote", desc: "Get accurate, transparent pricing to move directly into production." }
+];
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: title,
+  description: description,
+  url: canonical,
+  potentialAction: {
+    "@type": "Action",
+    name: "Request DFM Analysis",
+    target: `${canonical}#upload`
+  }
+};
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+
+  <!-- 预加载系统字体 -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+  </style>
+
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+</head>
+
+<body>
+  <Header />
+
+  <main>
+    <!-- =========================================================
+         BREADCRUMB
+    ========================================================== -->
+    <div class="breadcrumb-wrap">
+      <div class="container breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <strong>Free DFM Analysis</strong>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         HERO / UPLOAD CTA (包含黑客级 DFM Mockup)
+    ========================================================== -->
+    <section class="conversion-hero">
+      <div class="container hero-grid">
+        
+        <!-- 左侧：文案与上传框 -->
+        <div class="hero-copy">
+          <span class="eyebrow">
+            <span class="eyebrow-dot"></span>
+            ENGINEERING SERVICE // 24H SLA
+          </span>
+
+          <h1>
+            Free Injection Molding
+            <strong>DFM Analysis</strong>
+          </h1>
+
+          <p class="hero-intro">
+            Upload your 3D CAD file and receive comprehensive engineering feedback on manufacturability, tooling risks, draft angles, wall thickness, parting lines, and potential molding defects before cutting steel.
+          </p>
+
+          <div class="upload-box" id="upload">
+            <div class="upload-header">
+              <strong>Secure CAD Upload</strong>
+              <span>Confidential & NDA Protected</span>
+            </div>
+            <div class="upload-area">
+              <div class="upload-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              </div>
+              <strong>Drag & drop your 3D models here</strong>
+              <span>Supported formats: .STEP, .STP, .IGES, .X_T</span>
+              
+              <a href="#rfq-form" class="btn btn-primary mt-4">
+                Select Files to Upload
+                <span>→</span>
+              </a>
+            </div>
+            <div class="upload-footer">
+              <span class="secure-badge">
+                <i>✓</i> SSL Encrypted Transfer
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：高级 DFM 报告 Mockup 终端 -->
+        <div class="hero-visual">
+          <div class="mockup-panel">
+            <div class="mockup-header">
+              <div class="mac-dots"><i></i><i></i><i></i></div>
+              <span>NXM_ENGINEERING_CORE.exe</span>
+            </div>
+            
+            <div class="mockup-body">
+              <div class="terminal-text mb-4">
+                <span class="text-emerald">root@nxmold:~$</span> executing geometry analysis...<br/>
+                <span class="text-slate">[SYSTEM] PART: Industrial_Housing_v2.step</span><br/>
+                <span class="text-slate">[SYSTEM] MATERIAL: PC+ABS (UL94 V-0)</span>
+              </div>
+
+              <div class="report-meta">
+                <div>
+                  <small>PROJECT ID</small>
+                  <strong>NXM-2026-A1</strong>
+                </div>
+                <div>
+                  <small>VOLUME TARGET</small>
+                  <strong>Small-to-Medium</strong>
+                </div>
+                <div>
+                  <small>STATUS</small>
+                  <strong class="text-alert">REVIEW REQUIRED</strong>
+                </div>
+              </div>
+
+              <div class="diagnostic-list">
+                <div class="diag-item warning">
+                  <div class="diag-icon">!</div>
+                  <div class="diag-content">
+                    <strong>01. WALL THICKNESS</strong>
+                    <p>Non-uniform sections detected (1.2mm to 4.5mm). High risk of sink marks and warpage.</p>
+                  </div>
+                </div>
+
+                <div class="diag-item action">
+                  <div class="diag-icon">↻</div>
+                  <div class="diag-content">
+                    <!-- 使用 &lt; 完美转义小于号，防 Astro 报错 -->
+                    <strong>02. DRAFT ANGLE</strong>
+                    <p>Core features possess &lt; 0.5° draft. Recommend minimum 1.5° for selected SPI finish.</p>
+                  </div>
+                </div>
+
+                <div class="diag-item info">
+                  <div class="diag-icon">i</div>
+                  <div class="diag-content">
+                    <strong>03. UNDERCUTS</strong>
+                    <p>Hydraulic side-action slider required on the Y-axis. Tooling complexity increased.</p>
+                  </div>
+                </div>
+
+                <div class="diag-item success">
+                  <div class="diag-icon">✓</div>
+                  <div class="diag-content">
+                    <strong>04. GATE LOCATION</strong>
+                    <p>Edge gate recommended at thickest section. Flow simulation indicates balanced fill.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================
+         WHAT TO EXPECT (WORKFLOW)
+    ========================================================== -->
+    <section class="workflow-section">
+      <div class="container">
+        
+        <div class="section-heading text-center">
+          <span class="section-kicker mx-auto">TRANSPARENT PROCESS</span>
+          <h2>What happens after you upload?</h2>
+          <p class="mx-auto mt-4">A streamlined engineering review designed to move your project from CAD to production without delays.</p>
+        </div>
+
+        <div class="workflow-grid">
+          {workflow.map((item, index) => (
+            <div class="workflow-step">
+              <div class="step-number">{item.step}</div>
+              <div class="step-content">
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+              </div>
+              {index < workflow.length - 1 && <div class="step-connector"></div>}
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CHECKLIST (WHY NEXMOLD)
+    ========================================================== -->
+    <section class="checklist-section">
+      <div class="container">
+        <div class="checklist-panel">
+          <div class="checklist-copy">
+            <span class="section-kicker">COMPREHENSIVE REVIEW</span>
+            <h2>Typical DFM review covers:</h2>
+            <p>Our engineering team evaluates every aspect of your part geometry to ensure it is optimized for high-yield, defect-free injection molding.</p>
+            <div class="trust-marks mt-8">
+              <span><strong>100%</strong> In-House Tooling</span>
+              <span><strong>ISO 9001</strong> Certified</span>
+            </div>
+          </div>
+
+          <div class="checklist-grid">
+            <div class="check-item"><i>✓</i> Part manufacturability</div>
+            <div class="check-item"><i>✓</i> Draft angles analysis</div>
+            <div class="check-item"><i>✓</i> Nominal wall thickness</div>
+            <div class="check-item"><i>✓</i> Undercuts & side actions</div>
+            <div class="check-item"><i>✓</i> Parting line placement</div>
+            <div class="check-item"><i>✓</i> Gate location & sizing</div>
+            <div class="check-item"><i>✓</i> Ejection pin layout</div>
+            <div class="check-item"><i>✓</i> Cost-reduction opportunities</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Footer />
+</body>
+</html>
+
+<style>
+  /* =========================================================
+     GLOBAL & RESET (Scoped to this file to prevent leaks)
+  ========================================================== */
+  :global(*) {
+    box-sizing: border-box;
+  }
+  :global(html) {
+    scroll-behavior: smooth;
+  }
+  :global(body) {
+    margin: 0;
+    background: #FFFFFF;
+    color: #0F2B5B;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    width: min(1240px, calc(100% - 48px));
+    margin-inline: auto;
+  }
+
+  .mt-4 { margin-top: 16px; }
+  .mt-8 { margin-top: 32px; }
+  .mb-4 { margin-bottom: 16px; }
+  .text-center { text-align: center; }
+  .mx-auto { margin-inline: auto; }
+
+  /* BREADCRUMB */
+  .breadcrumb-wrap {
+    border-bottom: 1px solid #e7ebf0;
+    background: #FFFFFF;
+  }
+  .breadcrumb {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #8390a3;
+  }
+  .breadcrumb a { color: #53647d; text-decoration: none; transition: color 0.2s; }
+  .breadcrumb a:hover { color: #EA580C; }
+  .breadcrumb strong { color: #EA580C; }
+
+  /* TYPOGRAPHY */
+  .eyebrow, .section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #EA580C;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .16em;
+    font-weight: 800;
+  }
+  .eyebrow-dot {
+    width: 7px; height: 7px; background: #EA580C; border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1);
+  }
+  .section-heading h2 {
+    margin: 15px 0 0; font-size: 42px; letter-spacing: -.04em; color: #0F2B5B; font-weight: 900;
+  }
+  .section-heading p {
+    max-width: 600px; color: #6c7a8e; font-size: 16px; line-height: 1.75;
+  }
+
+  /* BUTTONS */
+  .btn {
+    min-height: 50px; padding: 0 24px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    text-decoration: none; font-size: 12px; letter-spacing: .1em;
+    text-transform: uppercase; font-weight: 800; transition: all 0.2s ease;
+    border: none; cursor: pointer; border-radius: 4px;
+  }
+  .btn-primary {
+    background: #EA580C; color: #FFFFFF;
+    box-shadow: 0 10px 28px rgba(234, 88, 12, 0.2);
+  }
+  .btn-primary:hover { background: #0F2B5B; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(15, 43, 91, 0.2); }
+
+  /* =========================================================
+     HERO & UPLOAD SECTION
+  ========================================================== */
+  .conversion-hero {
+    padding: 80px 0 100px;
+    background: linear-gradient(135deg, #f7f9fc 0%, #FFFFFF 100%);
+    border-bottom: 1px solid #e4e9ef;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Background Mesh */
+  .conversion-hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(15, 43, 91, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .hero-grid {
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 60px; align-items: center; position: relative; z-index: 10;
+  }
+  
+  .hero-copy h1 {
+    margin: 24px 0; font-size: clamp(40px, 5vw, 64px); line-height: 1.05; letter-spacing: -.04em; color: #0F2B5B; font-weight: 900;
+  }
+  .hero-copy h1 strong { display: block; color: #EA580C; }
+  .hero-intro {
+    max-width: 600px; margin: 0 0 40px; color: #596a83; font-size: 16px; line-height: 1.75;
+  }
+
+  /* Upload Box */
+  .upload-box {
+    background: #FFFFFF; border: 1px solid #dce2e9; border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(15, 43, 91, 0.08); overflow: hidden;
+  }
+  .upload-header {
+    background: #0F2B5B; color: #FFFFFF; padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .upload-header strong { font-size: 14px; letter-spacing: .05em; font-weight: 700; }
+  .upload-header span { font-size: 10px; color: #8ea0ba; letter-spacing: .1em; text-transform: uppercase; font-family: monospace; }
+  
+  .upload-area {
+    padding: 50px 30px; text-align: center;
+    border: 2px dashed #ccd4df; margin: 24px; border-radius: 8px;
+    background: #fbfcfd; transition: all 0.2s ease;
+  }
+  .upload-area:hover { border-color: #EA580C; background: #fffaf8; }
+  .upload-icon { width: 48px; height: 48px; margin: 0 auto 16px; color: #a4b2c4; }
+  .upload-area strong { display: block; font-size: 18px; color: #0F2B5B; margin-bottom: 8px; font-weight: 800; }
+  .upload-area span { display: block; font-size: 12px; color: #718096; }
+  
+  .upload-footer {
+    padding: 16px 24px; border-top: 1px solid #e4e8ee; background: #fafbfc;
+  }
+  .secure-badge {
+    display: flex; align-items: center; gap: 8px; font-size: 11px; color: #6b788b; font-weight: 600;
+  }
+  .secure-badge i {
+    width: 16px; height: 16px; background: #71d1ad; color: #FFFFFF; font-style: normal;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px;
+  }
+
+  /* =========================================================
+     MOCKUP PANEL (TERMINAL DESIGN)
+  ========================================================== */
+  .mockup-panel {
+    background: #FFFFFF; border: 1px solid #dce2e9; border-radius: 12px;
+    box-shadow: 0 30px 60px rgba(15, 43, 91, 0.15); overflow: hidden;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    transition: transform 0.5s ease;
+  }
+  .mockup-panel:hover {
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+  }
+
+  .mockup-header {
+    background: #0F2B5B; padding: 14px 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .mac-dots { display: flex; gap: 6px; }
+  .mac-dots i { width: 10px; height: 10px; border-radius: 50%; }
+  .mac-dots i:nth-child(1) { background: #ff5f56; }
+  .mac-dots i:nth-child(2) { background: #ffbd2e; }
+  .mac-dots i:nth-child(3) { background: #27c93f; }
+  .mockup-header span { font-family: monospace; font-size: 11px; color: #FFFFFF; font-weight: 600; opacity: 0.8; }
+  
+  .mockup-body { padding: 24px; background: #f8fafc; }
+  
+  .terminal-text { font-family: monospace; font-size: 12px; line-height: 1.6; }
+  .text-emerald { color: #10b981; font-weight: bold; }
+  .text-slate { color: #64748b; }
+
+  .report-meta {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    padding-bottom: 20px; border-bottom: 1px solid #e4e8ee; margin-bottom: 20px;
+  }
+  .report-meta small { display: block; font-size: 9px; color: #8c98aa; letter-spacing: .1em; margin-bottom: 4px; font-family: monospace; }
+  .report-meta strong { font-size: 12px; color: #0F2B5B; font-weight: 800; }
+  .text-alert { color: #EA580C !important; }
+
+  .diagnostic-list { display: flex; flex-direction: column; gap: 12px; }
+  .diag-item {
+    display: flex; gap: 16px; padding: 16px; border-radius: 8px; border: 1px solid #e4e8ee; background: #FFFFFF;
+    transition: transform 0.2s ease;
+  }
+  .diag-item:hover { transform: translateX(4px); }
+  .diag-icon {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+  }
+  .diag-content strong { display: block; font-size: 11px; letter-spacing: .05em; margin-bottom: 4px; font-weight: 800; }
+  .diag-content p { margin: 0; font-size: 12px; color: #596a83; line-height: 1.5; }
+
+  /* Status Colors */
+  .warning { border-color: #fbd38d; border-left: 4px solid #ed8936; }
+  .warning .diag-icon { background: #fffaf0; color: #ed8936; }
+  .warning strong { color: #c05621; }
+
+  .action { border-color: #fed7d7; border-left: 4px solid #f56565; }
+  .action .diag-icon { background: #fff5f5; color: #f56565; }
+  .action strong { color: #c53030; }
+
+  .info { border-color: #bee3f8; border-left: 4px solid #4299e1; }
+  .info .diag-icon { background: #ebf8ff; color: #4299e1; }
+  .info strong { color: #2b6cb0; }
+
+  .success { border-color: #c6f6d5; border-left: 4px solid #48bb78; }
+  .success .diag-icon { background: #f0fff4; color: #48bb78; }
+  .success strong { color: #2f855a; }
+
+  /* =========================================================
+     WORKFLOW SECTION
+  ========================================================== */
+  .workflow-section { padding: 100px 0; background: #FFFFFF; border-bottom: 1px solid #e4e9ef; }
+  .workflow-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-top: 60px;
+  }
+  .workflow-step { position: relative; }
+  .step-number {
+    width: 48px; height: 48px; border-radius: 50%; border: 2px solid #EA580C;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: #EA580C; background: #FFFFFF; margin-bottom: 20px; z-index: 2; position: relative;
+  }
+  .step-connector {
+    position: absolute; top: 24px; left: 48px; right: -20px; height: 2px;
+    background: #e4e8ee; z-index: 1;
+  }
+  .step-content h3 { margin: 0 0 10px; font-size: 16px; color: #0F2B5B; font-weight: 800; }
+  .step-content p { margin: 0; font-size: 13px; color: #6b788b; line-height: 1.6; }
+
+  /* =========================================================
+     CHECKLIST SECTION
+  ========================================================== */
+  .checklist-section { padding: 100px 0; background: #f7f9fb; }
+  .checklist-panel {
+    display: grid; grid-template-columns: 1fr 1fr; background: #0F2B5B; color: #FFFFFF; border-radius: 12px; overflow: hidden;
+  }
+  .checklist-copy { padding: 60px; }
+  .checklist-copy h2 { margin: 20px 0; font-size: 36px; line-height: 1.1; letter-spacing: -.03em; font-weight: 900; }
+  .checklist-copy p { color: #afbdcf; font-size: 15px; line-height: 1.75; margin-bottom: 0;}
+  .trust-marks { display: flex; gap: 24px; }
+  .trust-marks span { font-size: 13px; color: #FFFFFF; display: flex; flex-direction: column; gap: 4px; }
+  .trust-marks strong { font-size: 24px; color: #EA580C; font-weight: 900; }
+  
+  .checklist-grid {
+    padding: 60px; background: rgba(255,255,255,.05);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-content: center;
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; letter-spacing: .02em;
+  }
+  .check-item i {
+    color: #EA580C; font-style: normal; font-weight: 900;
+  }
+
+  /* =========================================================
+     RESPONSIVE
+  ========================================================== */
+  @media (max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 60px; }
+    .hero-copy { max-width: 700px; margin: 0 auto; text-align: center; }
+    .hero-intro { margin: 0 auto 40px; }
+    .mockup-panel { transform: none; max-width: 600px; margin: 0 auto; }
+    .workflow-grid { grid-template-columns: 1fr; gap: 40px; }
+    .step-connector { display: none; }
+    .workflow-step { display: flex; gap: 24px; align-items: flex-start; }
+    .step-number { margin-bottom: 0; flex-shrink: 0; }
+    .checklist-panel { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .hero-copy h1 { font-size: 42px; }
+    .checklist-copy, .checklist-grid { padding: 40px 24px; }
+    .checklist-grid { grid-template-columns: 1fr; }
+    .report-meta { grid-template-columns: 1fr; gap: 12px; }
+  }
+</style>

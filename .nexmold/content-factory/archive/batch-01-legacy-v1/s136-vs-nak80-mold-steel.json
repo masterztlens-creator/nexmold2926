@@ -1,0 +1,62 @@
+{
+  "schema": "nexmold.v7.14.article-factory-artifact.v1",
+  "articleId": "v714:s136-vs-nak80-mold-steel",
+  "targetSlug": "s136-vs-nak80-mold-steel",
+  "sourceArticleSlug": "s136-vs-nak80-vs-718h",
+  "slug": "s136-vs-nak80-mold-steel",
+  "lineage": {
+    "pageId": "v714:s136-vs-nak80-mold-steel",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/s136-vs-nak80-mold-steel/",
+    "evidenceIds": [
+      "knowledge:s136-vs-nak80-vs-718h"
+    ],
+    "semanticClaimIds": [
+      "claim:s136-vs-nak80-mold-steel"
+    ],
+    "sourceArtifactHash": "0caee55b5d96079d9a008a43e62e1e6166bf1868ce16f69045c0891a3e4147e1"
+  },
+  "sourceArtifactHash": "0caee55b5d96079d9a008a43e62e1e6166bf1868ce16f69045c0891a3e4147e1",
+  "sourceArtifact": {
+    "pageId": "v714:s136-vs-nak80-mold-steel",
+    "locale": "en-US",
+    "region": "US",
+    "canonicalUrl": "https://www.nexmold.com/knowledge/s136-vs-nak80-mold-steel/",
+    "hreflangSet": [
+      "en-US"
+    ],
+    "seoEligibility": {
+      "pageId": "v714:s136-vs-nak80-mold-steel",
+      "locale": "en-US",
+      "region": "US",
+      "applicability": "APPLICABLE",
+      "compliance": "VERIFIED",
+      "evidence": {
+        "evidence": [
+          {
+            "id": "knowledge:s136-vs-nak80-vs-718h",
+            "sourceType": "knowledge-base",
+            "sourceLocator": "src/data/knowledge.ts#s136-vs-nak80-vs-718h",
+            "contentHash": "s136-vs-nak80-vs-718h:2026-08-23"
+          }
+        ],
+        "semanticClaims": [
+          {
+            "id": "claim:s136-vs-nak80-mold-steel",
+            "claimKey": "batch01.s136-vs-nak80-mold-steel"
+          }
+        ],
+        "completeness": "COMPLETE"
+      },
+      "status": "ELIGIBLE",
+      "reasonCodes": []
+    },
+    "pageContentHash": "0caee55b5d96079d9a008a43e62e1e6166bf1868ce16f69045c0891a3e4147e1"
+  },
+  "production": {
+    "published": true,
+    "automaticPublication": false,
+    "existingContentModified": false
+  }
+}

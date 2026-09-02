@@ -1,0 +1,121 @@
+{
+  "schema": "nexmold.v7.14.release-manifest.v1",
+  "status": "VERIFIED",
+  "epoch": "20260830T030729Z-26296-ff594fc4",
+  "startedAt": "2026-08-30T03:07:29.946Z",
+  "finishedAt": "2026-08-30T03:07:49.189Z",
+  "projectRoot": "E:\\nexmold",
+  "dist": "E:\\nexmold\\dist",
+  "buildCommand": "npx astro build",
+  "typecheckCommand": "npx astro check",
+  "testCommand": "node --experimental-strip-types tests/contracts/v714-contracts.mjs",
+  "healthUrl": null,
+  "htmlManifest": "releases/20260830T030729Z-26296-ff594fc4/html-manifest.json",
+  "htmlSetSha256": "fb122a85d3ebc76c163e0edcd207dac0a4d1d829caab0b90479d310fba038531",
+  "htmlCount": 132,
+  "preBuildGatePolicy": "V7.14-fail-closed",
+  "canonicalGates": {
+    "runtime": "scripts\\runtime-gate.mjs",
+    "sitemap": "scripts\\sitemap-gate.mjs",
+    "releasePreflight": "scripts\\release-preflight.mjs",
+    "routeConflict": "scripts\\route-conflict-check.mjs",
+    "core": "scripts\\v714-core-gate.mjs"
+  },
+  "gates": [
+    {
+      "label": "GLOBAL_KILL_SWITCH",
+      "status": "PASS",
+      "detail": "OFF"
+    },
+    {
+      "label": "PRECHECK",
+      "status": "PASS",
+      "detail": "Required project structure present."
+    },
+    {
+      "label": "GATE_FILE_PRECHECK",
+      "status": "PASS",
+      "detail": "Validated 5 canonical V7.14 gate files."
+    },
+    {
+      "label": "RUNTIME_GATE",
+      "status": "PASS",
+      "detail": "Canonical runtime gate passed."
+    },
+    {
+      "label": "SITEMAP_GATE",
+      "status": "PASS",
+      "detail": "Canonical sitemap gate passed."
+    },
+    {
+      "label": "RELEASE_PREFLIGHT",
+      "status": "PASS",
+      "detail": "Canonical release preflight passed."
+    },
+    {
+      "label": "ROUTE_CONFLICT_GATE",
+      "status": "PASS",
+      "detail": "Canonical route conflict gate passed."
+    },
+    {
+      "label": "V714_CORE_GATE",
+      "status": "PASS",
+      "detail": "Canonical V7.14 core gate passed."
+    },
+    {
+      "label": "V7.14_GATES",
+      "status": "PASS",
+      "detail": "All mandatory V7.14 pre-build gates passed."
+    },
+    {
+      "label": "TYPE_CONTRACTS",
+      "status": "PASS",
+      "detail": "Type contracts verified."
+    },
+    {
+      "label": "CONTRACT_TESTS",
+      "status": "PASS",
+      "detail": "Configured contract test suite passed."
+    },
+    {
+      "label": "EPOCH",
+      "status": "PASS",
+      "detail": "Build epoch 20260830T030729Z-26296-ff594fc4 created."
+    },
+    {
+      "label": "BUILD",
+      "status": "PASS",
+      "detail": "Production static build completed."
+    },
+    {
+      "label": "HTML_MANIFEST",
+      "status": "PASS",
+      "detail": "Recorded 132 HTML artifacts; setSha256=fb122a85d3ebc76c163e0edcd207dac0a4d1d829caab0b90479d310fba038531"
+    },
+    {
+      "label": "ARTIFACT_SECRETS",
+      "status": "PASS",
+      "detail": "No forbidden secret/config artifacts found in dist."
+    },
+    {
+      "label": "HTML_INTEGRITY",
+      "status": "PASS",
+      "detail": "Validated 132 rendered HTML files."
+    },
+    {
+      "label": "GLOBAL_HTML_SET_EQUALITY",
+      "status": "SKIPPED",
+      "detail": "No expected HTML manifest configured. Current artifact set was hashed and recorded, but equality cannot be asserted."
+    },
+    {
+      "label": "STATIC_SMOKE",
+      "status": "PASS",
+      "detail": "Validated 5 local route artifacts."
+    },
+    {
+      "label": "CDN_HEALTH",
+      "status": "SKIPPED",
+      "detail": "NEXMOLD_HEALTH_URL not configured. No remote health claim was made."
+    }
+  ]
+}

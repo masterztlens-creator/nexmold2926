@@ -1,0 +1,158 @@
+---
+import '../styles/global.css';
+
+/**
+ * MainLayout.astro - NEXMOLD 全球数字制造网络标准布局
+ * 1. 纯粹配色：工业深蓝 (#0F2B5B) + 工业高亮橙 (#EA580C) + 纯白 (#FFFFFF)
+ * 2. 彻底移除内部 <footer>，避免与 EcosystemFooter 发生二次渲染重叠 Bug
+ * 3. 字体与全站 1:1 姿态对齐修整，增加开发环境安全防护
+ */
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+  material?: string; 
+  industry?: string;
+}
+
+const { 
+  title, 
+  description, 
+  canonical,
+  lang = 'en', 
+  location = "North America & Europe",
+  material = "Custom Engineering Polymer",
+  industry = "OEM / Industrial Applications"
+} = Astro.props;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": title,
+  "description": description,
+  ...(canonical ? {
+    "url": canonical,
+    "@id": `${canonical}#webpage`,
+  } : {}),
+  "inLanguage": lang,
+};
+---
+
+<!DOCTYPE html>
+<html lang={lang} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonical && (
+      <link rel="canonical" href={canonical} />
+    )}
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <meta name="geo.region" content={location} />
+    <meta name="target_market" content={location} />
+
+    <meta name="factory-capabilities" content="High-Precision Tooling Network, Haitian 90T-1200T Automated Injection Fleet, 24H DFM & Moldflow, ISO 2768-m Mold Engineering" />
+    <meta name="logistics-hub" content="Direct Ocean Express & Air Forwarding via Yantian Hub (FCL/LCL/DDP) to North America & Europe" />
+
+    <style is:global>
+      :root { 
+        --industrial-blue: #0F2B5B;   /* 1. 德系工业深蓝 */
+        --industrial-orange: #EA580C; /* 2. 重工高亮橙 */
+        --pure-white: #FFFFFF;        /* 3. 纯白 */
+        
+        --accent: var(--industrial-orange);
+        --accent-hover: #C2410C;
+      }
+      
+      html { 
+        background-color: #FFFFFF !important; 
+        color: #0F2B5B !important; 
+        scroll-behavior: smooth; 
+        -webkit-font-smoothing: antialiased; 
+        -moz-osx-font-smoothing: grayscale;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+      }
+      
+      body { 
+        margin: 0; 
+        padding: 0; 
+        overflow-x: hidden; 
+        background-color: #FFFFFF !important;
+      }
+
+      /* 统一强粗体标题字形辅助 */
+      .font-industrial-title {
+        font-family: system-ui, -apple-system, sans-serif;
+        font-weight: 1000;
+        font-style: italic;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+      }
+
+      [data-aos] {
+        pointer-events: none; 
+      }
+      .aos-animate {
+        pointer-events: auto; 
+      }
+    </style>
+  </head>
+  <body class="bg-white text-[#0F2B5B] antialiased min-h-screen flex flex-col select-none">
+    
+    <!-- 🏭 顶层全球制造网络通告栏 -->
+    <div id="factory-announcement-bar" class="w-full bg-[#0F2B5B] text-white text-xs py-2 px-4 border-b border-white/10 z-30 min-h-[36px] flex items-center select-none">
+      <div class="w-full max-w-[1600px] mx-auto flex flex-wrap justify-between items-center gap-2 px-[clamp(1.5rem,5vw,4rem)] font-mono">
+        <div class="flex items-center gap-4">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 bg-[#EA580C] rounded-full inline-block animate-pulse"></span>
+            <strong>Fleet Capacity:</strong> High-Precision Automated Servo Fleet (90T - 1200T)
+          </span>
+          <span class="hidden md:inline text-white/30">|</span>
+          <span class="hidden md:inline">
+            <strong>Toolroom Standard:</strong> ASSAB S136, NAK80, DIN 16742 Precision Audit
+          </span>
+        </div>
+        <div class="text-[#EA580C] font-black text-right hidden sm:block">
+          🚢 Global Ocean Express: Direct FCL/LCL DDP Freight to {location}
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎯 主内容区 -->
+    <div class="w-full flex flex-col flex-grow relative">
+      <main class="flex-grow">
+        <slot />
+      </main>
+    </div>
+
+    <!-- ⚠️ 此处已彻底清空原 <footer>...</footer> 内容，仅靠页面级 <EcosystemFooter /> 统一收尾 -->
+
+    <script>
+      declare global { 
+        interface Window { AOS: any; } 
+      }
+      
+      import AOS from 'aos';
+      import 'aos/dist/aos.css';
+
+      const initAOS = () => { 
+        AOS.init({ 
+          duration: 1000,
+          once: true,
+          easing: 'ease-out-back',
+          offset: 120
+        }); 
+      };
+
+      initAOS();
+      document.addEventListener('astro:after-swap', initAOS);
+    </script>
+  </body>
+</html>

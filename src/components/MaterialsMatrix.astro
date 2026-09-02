@@ -1,0 +1,611 @@
+---
+// src/components/MaterialsMatrix.astro
+/**
+ * 👑 MaterialsMatrix.astro - 百万级分发·物理语义与表面工艺全满编终极版
+ * 🌟 核心升级：
+ * 1. 材料面板全对齐：38 种工程树脂卡片下方，每一个都 100% 满编列出 3 个真实重工业零部件入口[cite: 1]。
+ * 2. 纹理面板全面重构：彻底消灭敷衍的死名词！将 SPI, VDI 3400, Mold-Tech 表面工艺扩展为包含粗糙度（Ra）、钢材硬度（HRC）与真实工业落点的全息矩阵[cite: 1]。
+ */
+
+interface Props {
+  lang?: 'en' | 'de' | 'fr';
+  location?: string;
+}
+
+const { lang = 'en', location = "Global Market" } = Astro.props;
+
+// 🧠 38种重工业最全树脂矩阵与利基映射线（每个品类严格满编 3 个真实工业零部件）[cite: 1]
+const materialsList = [
+  { 
+    "slug": "peek", 
+    "name": "PEEK (Polyetheretherketone)", 
+    "meltTemp": "385°C - 400°C", 
+    "moldTemp": "160°C - 190°C",
+    "targetedIndustries": [
+      { "industrySlug": "medical-consumables", "componentSlug": "surgical-trays", "componentName": "Surgical Tooling Trays" },
+      { "industrySlug": "biotech-labware", "componentSlug": "precision-sequencing-cell-cradles", "componentName": "Sequencing Cell Cradles" },
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "oem-microfluidic-cartridges", "componentName": "IVD Microfluidic Cartridges" }
+    ]
+  },
+  { 
+    "slug": "polycarbonate", 
+    "name": "Polycarbonate (PC)", 
+    "meltTemp": "280°C - 310°C", 
+    "moldTemp": "80°C - 110°C",
+    "targetedIndustries": [
+      { "industrySlug": "countertop-ice-makers", "componentSlug": "anti-leak-water-tank", "componentName": "Anti-Leak Water Tanks" },
+      { "industrySlug": "vertical-farming", "componentSlug": "hydroponic-housing", "componentName": "LED Hydroponic Housings" },
+      { "industrySlug": "ophthalmic-lens", "componentSlug": "custom-optical-test-cuvettes", "componentName": "Optical Test Cuvettes" }
+    ]
+  },
+  { 
+    "slug": "nylon66", 
+    "name": "Nylon 66 (PA66 + 30% GF)", 
+    "meltTemp": "260°C - 290°C", 
+    "moldTemp": "80°C - 90°C",
+    "targetedIndustries": [
+      { "industrySlug": "ev-powertrain", "componentSlug": "high-voltage-busbar-insulators", "componentName": "Busbar Molded Insulators" },
+      { "industrySlug": "hydraulic-valve-gear", "componentSlug": "precision-involute-gears", "componentName": "Precision Involute Gears" },
+      { "industrySlug": "premium-appliance", "componentSlug": "high-retention-snap-clips", "componentName": "High-Retention Snap Clips" }
+    ]
+  },
+  { 
+    "slug": "ultem", 
+    "name": "Ultem PEI (Polyetherimide)", 
+    "meltTemp": "340°C - 380°C", 
+    "moldTemp": "140°C - 160°C",
+    "targetedIndustries": [
+      { "industrySlug": "aerospace-avionics", "componentSlug": "custom-radar-enclosures", "componentName": "Radar Shielded Enclosures" },
+      { "industrySlug": "military-uav", "componentSlug": "high-tolerance-alignment-brackets", "componentName": "UAV Alignment Brackets" },
+      { "industrySlug": "satellite-subsystem", "componentSlug": "satellite-joint-caps", "componentName": "Satellite Joint Caps" }
+    ]
+  },
+  { 
+    "slug": "pom", 
+    "name": "POM (Polyoxymethylene / Acetal)", 
+    "meltTemp": "190°C - 210°C", 
+    "moldTemp": "80°C - 105°C",
+    "targetedIndustries": [
+      { "industrySlug": "countertop-ice-makers", "componentSlug": "precision-valve-bodies", "componentName": "Solenoid Valve Bodies" },
+      { "industrySlug": "fluidic-control", "componentSlug": "heavy-duty-quick-connect-fittings", "componentName": "Quick-Connect Fittings" },
+      { "industrySlug": "vending-automation", "componentSlug": "balanced-flow-impellers", "componentName": "Vending Flow Impellers" }
+    ]
+  },
+  { 
+    "slug": "abs", 
+    "name": "ABS (Acrylonitrile Butadiene Styrene)", 
+    "meltTemp": "210°C - 240°C", 
+    "moldTemp": "50°C - 70°C",
+    "targetedIndustries": [
+      { "industrySlug": "smart-home-security", "componentSlug": "custom-hermetic-enclosures", "componentName": "Security Enclosures" },
+      { "industrySlug": "kitchen-appliance-oem", "componentSlug": "high-gloss-bezel-rings", "componentName": "Appliance Bezel Rings" },
+      { "industrySlug": "premium-appliance", "componentSlug": "high-gloss-piano-shell-caps", "componentName": "Gloss Exterior Caps" }
+    ]
+  },
+  { 
+    "slug": "abs-pc", 
+    "name": "PC + ABS Blend", 
+    "meltTemp": "240°C - 270°C", 
+    "moldTemp": "60°C - 80°C",
+    "targetedIndustries": [
+      { "industrySlug": "premium-appliance", "componentSlug": "high-gloss-piano-shell-caps", "componentName": "High-Gloss Cosmetic Shells" },
+      { "industrySlug": "smart-home-security", "componentSlug": "custom-hermetic-enclosures", "componentName": "Hermetic Access Covers" },
+      { "industrySlug": "kitchen-appliance-oem", "componentSlug": "high-gloss-bezel-rings", "componentName": "Bezel Transition Rings" }
+    ]
+  },
+  { 
+    "slug": "pps", 
+    "name": "PPS (Polyphenylene Sulfide + 40% GF)", 
+    "meltTemp": "310°C - 330°C", 
+    "moldTemp": "130°C - 150°C",
+    "targetedIndustries": [
+      { "industrySlug": "vertical-farming", "componentSlug": "hydroponic-housing", "componentName": "Agro-Grid Framing Modules" },
+      { "industrySlug": "thermal-management", "componentSlug": "balanced-flow-impellers", "componentName": "Centrifugal Pump Impellers" },
+      { "industrySlug": "ev-powertrain", "componentSlug": "high-voltage-busbar-insulators", "componentName": "Thermal Busbar Blocks" }
+    ]
+  },
+  { 
+    "slug": "pmma", 
+    "name": "PMMA (Acrylic / Plexiglass)", 
+    "meltTemp": "220°C - 250°C", 
+    "moldTemp": "60°C - 80°C",
+    "targetedIndustries": [
+      { "industrySlug": "ophthalmic-lens", "componentSlug": "custom-optical-test-cuvettes", "componentName": "Optical Test Cuvettes" },
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "microfluidic-cartridges", "componentName": "High-Transmittance Cartridges" },
+      { "industrySlug": "biotech-labware", "componentSlug": "precision-sequencing-cell-cradles", "componentName": "Clear Diagnostic Trays" }
+    ]
+  },
+  { 
+    "slug": "pp", 
+    "name": "PP (Polypropylene)", 
+    "meltTemp": "200°C - 240°C", 
+    "moldTemp": "40°C - 60°C",
+    "targetedIndustries": [
+      { "industrySlug": "kitchen-appliance-oem", "componentSlug": "custom-sealed-access-covers", "componentName": "Food-Grade Access Covers" },
+      { "industrySlug": "industrial-filtration", "componentSlug": "filter-retainer-cages", "componentName": "Filter Retainer Cages" },
+      { "industrySlug": "countertop-ice-makers", "componentSlug": "anti-leak-water-tank", "componentName": "PP Commodity Reservoirs" }
+    ]
+  },
+  { 
+    "slug": "pbt", 
+    "name": "PBT (Polybutylene Terephthalate)", 
+    "meltTemp": "240°C - 260°C", 
+    "moldTemp": "60°C - 80°C",
+    "targetedIndustries": [
+      { "industrySlug": "high-voltage-busbar", "componentSlug": "precision-connectors", "componentName": "Multi-Pin Connectors" },
+      { "industrySlug": "power-inverter", "componentSlug": "alignment-brackets", "componentName": "Terminal Structural Blocks" },
+      { "industrySlug": "charging-station", "componentSlug": "heavy-duty-power-plugs", "componentName": "Power Interface Shrouds" }
+    ]
+  },
+  { 
+    "slug": "pbt-gf", 
+    "name": "PBT + 30% GF", 
+    "meltTemp": "250°C - 270°C", 
+    "moldTemp": "70°C - 90°C",
+    "targetedIndustries": [
+      { "industrySlug": "power-inverter", "componentSlug": "alignment-brackets", "componentName": "Inverter Structural Brackets" },
+      { "industrySlug": "ev-powertrain", "componentSlug": "high-voltage-busbar-insulators", "componentName": "Reinforced Busbar Racks" },
+      { "industrySlug": "charging-station", "componentSlug": "heavy-duty-power-plugs", "componentName": "GF-Rigid Charging Shells" }
+    ]
+  },
+  { 
+    "slug": "psu", 
+    "name": "PSU (Polysulfone)", 
+    "meltTemp": "340°C - 360°C", 
+    "moldTemp": "120°C - 140°C",
+    "targetedIndustries": [
+      { "industrySlug": "bioreactor-tech", "componentSlug": "fluidic-path-adapters", "componentName": "Bioreactor Fluidic Adapters" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "fluidic-manifolds", "componentName": "Medical Dosing Manifolds" },
+      { "industrySlug": "dialysis-system", "componentSlug": "fluidic-path-adapters", "componentName": "Dialysis Connectors" }
+    ]
+  },
+  { 
+    "slug": "ppsu", 
+    "name": "PPSU (Polyphenylsulfone)", 
+    "meltTemp": "360°C - 390°C", 
+    "moldTemp": "140°C - 160°C",
+    "targetedIndustries": [
+      { "industrySlug": "medical-consumables", "componentSlug": "fluidic-manifolds", "componentName": "Autoclave Fluid Manifolds" },
+      { "industrySlug": "biotech-labware", "componentSlug": "precision-sequencing-cell-cradles", "componentName": "Sanitary Labware Trays" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "precision-valve-bodies", "componentName": "High-Purity Valve Blocks" }
+    ]
+  },
+  { 
+    "slug": "tpe", 
+    "name": "TPE (Thermoplastic Elastomer)", 
+    "meltTemp": "180°C - 210°C", 
+    "moldTemp": "20°C - 40°C",
+    "targetedIndustries": [
+      { "industrySlug": "sanitary-ware-flow", "componentSlug": "overmolded-sealed-gaskets", "componentName": "Dual-Shot Sealed Gaskets" },
+      { "industrySlug": "smart-home-security", "componentSlug": "custom-hermetic-enclosures", "componentName": "Overmolded Weather Seals" },
+      { "industrySlug": "premium-appliance", "componentSlug": "high-retention-snap-clips", "componentName": "Flexible Anti-Vibe Dampeners" }
+    ]
+  },
+  { 
+    "slug": "tpu", 
+    "name": "TPU (Thermoplastic Polyurethane)", 
+    "meltTemp": "190°C - 220°C", 
+    "moldTemp": "30°C - 50°C",
+    "targetedIndustries": [
+      { "industrySlug": "vending-automation", "componentSlug": "protective-joint-caps", "componentName": "Friction Joint Caps" },
+      { "industrySlug": "industrial-filtration", "componentSlug": "filter-retainer-cages", "componentName": "High-Abrasion Scraper Seals" },
+      { "industrySlug": "agv-drive-wheel-treads", "componentSlug": "heavy-duty-quick-connect-fittings", "componentName": "AGV Drive Wheel Rings" }
+    ]
+  },
+  { 
+    "slug": "pvdf", 
+    "name": "PVDF (Polyvinylidene Fluoride)", 
+    "meltTemp": "230°C - 250°C", 
+    "moldTemp": "70°C - 90°C",
+    "targetedIndustries": [
+      { "industrySlug": "chemical-refinery", "componentSlug": "pressurized-process-pipe-flanges", "componentName": "Chemical Pipe Flanges" },
+      { "industrySlug": "industrial-filtration", "componentSlug": "heavy-wall-filter-vessels", "componentName": "Acid Filter Housings" },
+      { "industrySlug": "water-purification", "componentSlug": "fluidic-manifolds", "componentName": "Deionized Fluid Manifolds" }
+    ]
+  },
+  { 
+    "slug": "lcp", 
+    "name": "LCP (Liquid Crystal Polymer)", 
+    "meltTemp": "320°C - 350°C", 
+    "moldTemp": "100°C - 120°C",
+    "targetedIndustries": [
+      { "industrySlug": "microelectronics-assembly", "componentSlug": "micro-pitch-connectors", "componentName": "Micro-Pitch Connectors" },
+      { "industrySlug": "semiconductor-handling", "componentSlug": "wafer-logistics-carriers", "componentName": "High-Frequency IC Sockets" },
+      { "industrySlug": "fiber-optics-telecom", "componentSlug": "precision-valve-bodies", "componentName": "Optoelectronic Sub-Plates" }
+    ]
+  },
+  { 
+    "slug": "pa6", 
+    "name": "Nylon 6 (Polyamide 6)", 
+    "meltTemp": "230°C - 250°C", 
+    "moldTemp": "60°C - 80°C",
+    "targetedIndustries": [
+      { "industrySlug": "automotive-mechanical", "componentSlug": "rigid-machine-anchor-bases", "componentName": "Structural Anchor Bases" },
+      { "industrySlug": "hydraulic-valve-gear", "componentSlug": "precision-involute-gears", "componentName": "Heavy Wear Spur Gears" },
+      { "industrySlug": "industrial-filtration", "componentSlug": "alignment-brackets", "componentName": "High-Load Mounting Rings" }
+    ]
+  },
+  { 
+    "slug": "pa12", 
+    "name": "Nylon 12 (Polyamide 12)", 
+    "meltTemp": "240°C - 270°C", 
+    "moldTemp": "70°C - 90°C",
+    "targetedIndustries": [
+      { "industrySlug": "gas-sampling-tech", "componentSlug": "ultra-pure-micro-flow-tubes", "componentName": "Micro Flow Tubes" },
+      { "industrySlug": "fluidic-control", "componentSlug": "heavy-duty-quick-connect-fittings", "componentName": "Pneumatic Control Couplings" },
+      { "industrySlug": "petroleum-downhole", "componentSlug": "fluidic-manifolds", "componentName": "High-Pressure Gas Liners" }
+    ]
+  },
+  { 
+    "slug": "pet", 
+    "name": "PET (Polyethylene Terephthalate)", 
+    "meltTemp": "260°C - 280°C", 
+    "moldTemp": "70°C - 100°C",
+    "targetedIndustries": [
+      { "industrySlug": "clinical-chemistry", "componentSlug": "optical-test-cuvettes", "componentName": "Diagnostic Cuvettes" },
+      { "industrySlug": "medical-consumables", "componentSlug": "structural-trays", "componentName": "Rigid Specimen Holders" },
+      { "industrySlug": "biotech-labware", "componentSlug": "microfluidic-cartridges", "componentName": "Clear Analytical Trays" }
+    ]
+  },
+  { 
+    "slug": "pet-gf", 
+    "name": "PET + 30% GF", 
+    "meltTemp": "270°C - 290°C", 
+    "moldTemp": "80°C - 110°C",
+    "targetedIndustries": [
+      { "industrySlug": "charging-station", "componentSlug": "heavy-duty-power-plugs", "componentName": "Terminal Power Plugs" },
+      { "industrySlug": "power-inverter", "componentSlug": "alignment-brackets", "componentName": "High-Voltage Enclosures" },
+      { "industrySlug": "solar-photovoltaic", "componentSlug": "high-voltage-busbar-insulators", "componentName": "PV Structural Spacers" }
+    ]
+  },
+  { 
+    "slug": "ldpe", 
+    "name": "LDPE (Low Density Polyethylene)", 
+    "meltTemp": "160°C - 190°C", 
+    "moldTemp": "30°C - 50°C",
+    "targetedIndustries": [
+      { "industrySlug": "medical-consumables", "componentSlug": "protective-joint-caps", "componentName": "Flexible Equipment Caps" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "custom-sealed-access-covers", "componentName": "Pliable Dropper Shrouds" },
+      { "industrySlug": "blood-management", "componentSlug": "fluidic-path-adapters", "componentName": "Soft Intravenous Valves" }
+    ]
+  },
+  { 
+    "slug": "hdpe", 
+    "name": "HDPE (High Density Polyethylene)", 
+    "meltTemp": "180°C - 220°C", 
+    "moldTemp": "30°C - 60°C",
+    "targetedIndustries": [
+      { "industrySlug": "water-purification", "componentSlug": "quick-connect-fittings", "componentName": "Water Path Fittings" },
+      { "industrySlug": "reverse-osmosis-hydro", "componentSlug": "fluidic-manifolds", "componentName": "Desalination End-Plugs" },
+      { "industrySlug": "sanitary-ware-flow", "componentSlug": "precision-valve-bodies", "componentName": "Drain Flow Shunts" }
+    ]
+  },
+  { 
+    "slug": "asa", 
+    "name": "ASA (Acrylonitrile Styrene Acrylate)", 
+    "meltTemp": "220°C - 250°C", 
+    "moldTemp": "50°C - 80°C",
+    "targetedIndustries": [
+      { "industrySlug": "smart-home-security", "componentSlug": "outdoor-radar-covers", "componentName": "Weatherproof Covers" },
+      { "industrySlug": "charging-station", "componentSlug": "heavy-duty-power-plugs", "componentName": "Outdoor Pillar Enclosures" },
+      { "industrySlug": "solar-photovoltaic", "componentSlug": "alignment-brackets", "componentName": "UV-Proof Tracker Spacers" }
+    ]
+  },
+  { 
+    "slug": "san", 
+    "name": "SAN (Styrene Acrylonitrile)", 
+    "meltTemp": "200°C - 230°C", 
+    "moldTemp": "40°C - 70°C",
+    "targetedIndustries": [
+      { "industrySlug": "clinical-analytical", "componentSlug": "optical-test-cuvettes", "componentName": "Analytical Cuvettes" },
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "microfluidic-cartridges", "componentName": "Clear Fluid Transits" },
+      { "industrySlug": "premium-appliance", "componentSlug": "anti-leak-water-tank", "componentName": "Transparent Visual Blenders" }
+    ]
+  },
+  { 
+    "slug": "pla", 
+    "name": "PLA (Polylactic Acid Bio-Polymer)", 
+    "meltTemp": "190°C - 210°C", 
+    "moldTemp": "40°C - 60°C",
+    "targetedIndustries": [
+      { "industrySlug": "biotech-labware", "componentSlug": "structural-trays", "componentName": "Bio-Degradable Trays" },
+      { "industrySlug": "medical-consumable", "componentSlug": "protective-joint-caps", "componentName": "Disposable Surgical Locks" },
+      { "industrySlug": "vertical-farming", "componentSlug": "hydroponic-housing", "componentName": "Eco-Agro Growth Pods" }
+    ]
+  },
+  { 
+    "slug": "pai", 
+    "name": "Torlon PAI (Polyamide-imide)", 
+    "meltTemp": "350°C - 370°C", 
+    "moldTemp": "170°C - 200°C",
+    "targetedIndustries": [
+      { "industrySlug": "aerospace-avionics", "componentSlug": "precision-gears", "componentName": "High-Torque Aero Gears" },
+      { "industrySlug": "jet-engine-part", "componentSlug": "alignment-brackets", "componentName": "Thrust Thrust Washers" },
+      { "industrySlug": "satellite-subsystem", "componentSlug": "custom-radar-enclosures", "componentName": "Orbital Bus Bushings" }
+    ]
+  },
+  { 
+    "slug": "pbi", 
+    "name": "PBI (Polybenzimidazole High-Spec)", 
+    "meltTemp": "420°C - 450°C", 
+    "moldTemp": "200°C - 220°C",
+    "targetedIndustries": [
+      { "industrySlug": "semiconductor-handling", "componentSlug": "wafer-logistics-carriers", "componentName": "High-Heat Wafer Carriers" },
+      { "industrySlug": "wafer-fabrication", "componentSlug": "precision-valve-bodies", "componentName": "Plasma Etch Ring Blocks" },
+      { "industrySlug": "lithography-equipment", "componentSlug": "alignment-brackets", "componentName": "Laser Isolation Spacers" }
+    ]
+  },
+  { 
+    "slug": "ptfe", 
+    "name": "Modified PTFE (Fluoropolymer Blend)", 
+    "meltTemp": "330°C - 350°C", 
+    "moldTemp": "100°C - 130°C",
+    "targetedIndustries": [
+      { "industrySlug": "chemical-refinery", "componentSlug": "fluidic-manifolds", "componentName": "Corrosive Path Manifolds" },
+      { "industrySlug": "gas-sampling-tech", "componentSlug": "precision-valve-bodies", "componentName": "Cryogenic Valve Seats" },
+      { "industrySlug": "desalination-plant", "componentSlug": "heavy-duty-quick-connect-fittings", "componentName": "Frictionless Slider Seals" }
+    ]
+  },
+  { 
+    "slug": "ps", 
+    "name": "GPPS (General Purpose Polystyrene)", 
+    "meltTemp": "180°C - 210°C", 
+    "moldTemp": "30°C - 50°C",
+    "targetedIndustries": [
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "optical-test-cuvettes", "componentName": "Clear Test Cuvettes" },
+      { "industrySlug": "biotech-labware", "componentSlug": "structural-trays", "componentName": "Multi-Well Assay Plates" },
+      { "industrySlug": "clinical-chemistry", "componentSlug": "microfluidic-cartridges", "componentName": "Disposable Labware Modules" }
+    ]
+  },
+  { 
+    "slug": "hips", 
+    "name": "HIPS (High Impact Polystyrene)", 
+    "meltTemp": "190°C - 230°C", 
+    "moldTemp": "30°C - 50°C",
+    "targetedIndustries": [
+      { "industrySlug": "premium-appliance", "componentSlug": "sealed-access-covers", "componentName": "Structural Covers" },
+      { "industrySlug": "kitchen-appliance-oem", "componentSlug": "high-gloss-bezel-rings", "componentName": "Refrigeration Wall Liners" },
+      { "industrySlug": "vending-automation", "componentSlug": "protective-joint-caps", "componentName": "Chassis Framework Inserts" }
+    ]
+  },
+  { 
+    "slug": "pes", 
+    "name": "PES (Polyethersulfone)", 
+    "meltTemp": "340°C - 380°C", 
+    "moldTemp": "140°C - 160°C",
+    "targetedIndustries": [
+      { "industrySlug": "dialysis-system", "componentSlug": "fluidic-path-adapters", "componentName": "Dialysis Fluid Adapters" },
+      { "industrySlug": "anesthesia-circuit", "componentSlug": "fluidic-manifolds", "componentName": "Respirator Flow Plugs" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "precision-valve-bodies", "componentName": "High-Temp Syringe Hubs" }
+    ]
+  },
+  { 
+    "slug": "pvk", 
+    "name": "PVK / PEEK+Carbon Fiber (CF30)", 
+    "meltTemp": "390°C - 410°C", 
+    "moldTemp": "170°C - 200°C",
+    "targetedIndustries": [
+      { "industrySlug": "military-uav", "componentSlug": "alignment-brackets", "componentName": "Carbon-Reinforced Mounts" },
+      { "industrySlug": "commercial-drone", "componentSlug": "precision-gears", "componentName": "Drone High-RPM Rotors" },
+      { "industrySlug": "aerospace-avionics", "componentSlug": "custom-hermetic-enclosures", "componentName": "Structural Aero Linkages" }
+    ]
+  },
+  { 
+    "slug": "petg", 
+    "name": "PETG (Polyethylene Terephthalate Glycol)", 
+    "meltTemp": "220°C - 250°C", 
+    "moldTemp": "40°C - 60°C",
+    "targetedIndustries": [
+      { "industrySlug": "medical-consumables", "componentSlug": "structural-trays", "componentName": "Clear Medical Trays" },
+      { "industrySlug": "wound-care-npwt", "componentSlug": "custom-hermetic-enclosures", "componentName": "Vacuum Exudate Canisters" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "protective-joint-caps", "componentName": "Rigid Sterilization Caps" }
+    ]
+  },
+  { 
+    "slug": "cop", 
+    "name": "COP (Cyclo Olefin Polymer / Zeonex)", 
+    "meltTemp": "270°C - 300°C", 
+    "moldTemp": "80°C - 110°C",
+    "targetedIndustries": [
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "microfluidic-cartridges", "componentName": "Zeonex Spectro Cartridges" },
+      { "industrySlug": "ophthalmic-lens", "componentSlug": "custom-optical-test-cuvettes", "componentName": "Optical Grade Cuvettes" },
+      { "industrySlug": "clinical-analytical", "componentSlug": "ultra-pure-micro-flow-tubes", "componentName": "UV-Transmissible Cells" }
+    ]
+  },
+  { 
+    "slug": "coc", 
+    "name": "COC (Cyclo Olefin Copolymer / Topas)", 
+    "meltTemp": "260°C - 290°C", 
+    "moldTemp": "70°C - 100°C",
+    "targetedIndustries": [
+      { "industrySlug": "biotech-labware", "componentSlug": "micro-aperture-nozzles", "componentName": "Topas Micro Nozzles" },
+      { "industrySlug": "in-vitro-diagnostic", "componentSlug": "microfluidic-cartridges", "componentName": "High-Fidelity Flow Disks" },
+      { "industrySlug": "pharmaceutical-delivery", "componentSlug": "ultra-pure-micro-flow-tubes", "componentName": "Prefilled Prefilled Syrels" }
+    ]
+  },
+  { 
+    "slug": "pvc-rigid", 
+    "name": "Rigid PVC (Polyvinyl Chloride)", 
+    "meltTemp": "180°C - 200°C", 
+    "moldTemp": "30°C - 50°C",
+    "targetedIndustries": [
+      { "industrySlug": "sanitary-ware-flow", "componentSlug": "precision-valve-bodies", "componentName": "Rigid Flow Valve Bodies" },
+      { "industrySlug": "water-purification", "componentSlug": "heavy-duty-quick-connect-fittings", "componentName": "Water Distribution Hubs" },
+      { "industrySlug": "reverse-osmosis-hydro", "componentSlug": "fluidic-path-adapters", "componentName": "RO Pressure Vessel Caps" }
+    ]
+  }
+];
+
+const geoSuppliers = {
+  en: "SABIC, DuPont, ExxonMobil",
+  de: "BASF, Covestro, Lanxess",
+  fr: "Arkema, Solvay, TotalEnergies"
+};
+
+// 🎨 彻底重构的重工业全息表面工艺数据库（拒绝敷衍，填充硬核参数！）[cite: 1]
+const standardFinishes = [
+  { name: "SPI A-1", cat: "Super Diamond Polish", spec: "Ra 0.012 µm Surface Smoothness", steel: "S136 Mirror Steel (HRC 52-54)", desc: "Optically clear structures. Enforced for countertop ice maker reservoirs and clinical cuvettes to eliminate optical refraction." },
+  { name: "SPI A-2", cat: "High Diamond Polish", spec: "Ra 0.025 µm Grade Reflection", steel: "NAK80 High-Polish (HRC 38-42)", desc: "Premium high-gloss cosmetic exteriors. Engineered for smart home enclosures and piano-black kitchen shells." },
+  { name: "VDI 3400 Ref 12", cat: "Micro EDM Texture", spec: "Ra 0.40 µm Fine Spark Grain", steel: "H13 Tough Hardened (HRC 48-52)", desc: "Ultra-fine industrial spark finish. Optimizes mechanical grip and prevents cosmetic friction markings during tool stripping." },
+  { name: "VDI 3400 Ref 24", cat: "Medium EDM Texture", spec: "Ra 1.60 µm Heavy Duty Spark", steel: "718H Pre-Hardened (HRC 32-36)", desc: "High-friction matte texture. Deployed on agro-grid hydroponic modules to resist biofilm accumulation and handle chemical fertilizers." },
+  { name: "MT-11010", cat: "Mold-Tech Laser Grain", spec: "0.035mm Depth Precision Grain", steel: "S136 Standard (HRC 48-50)", desc: "Premium automotive-grade stipple texture. Hides sink markings over thick internal bosses and prevents fingerprint marks." },
+  { name: "MT-11040", cat: "Mold-Tech Leather Geometric", spec: "0.075mm Embossed Depth Pattern", steel: "H13 Tough Hardened (HRC 50-52)", desc: "Heavy tactical textured finish. Applied to structural machinery anchor bases and military drone casings for high impact scraping defense." },
+  { name: "SPI B-1", cat: "600 Grit Paper Finish", spec: "Ra 0.050 µm Fine Semigloss", steel: "P20 Economy Steel (HRC 28-32)", desc: "Smooth matte technical surface. Designed for functional internal fluidic manifolds and non-cosmetic component brackets." },
+  { name: "SPI C-1", cat: "600 Stone Sandblast", spec: "Ra 0.350 µm True Industrial Matte", steel: "718H Standard (HRC 32-34)", desc: "Flat sandblast profile. Ideal for sub-micron diagnostic microfluidic channels to encourage proper surface capillary flow adhesion." }
+];
+
+const i18n = {
+  en: {
+    tag: "Technical_Library // Spec_Matrix",
+    title_1: "Engineering",
+    title_2: "Standards",
+    tabs: ["Materials Matrix", "Surfaces Matrix"], 
+    aria_tabs: ["View specialized material grades", "View industrial surface textures"],
+    material_desc: `High-performance polymer processing validated for ${geoSuppliers.en}.`,
+    finish_desc: "Surface specifications compliant with global SPI, VDI 3400, and Mold-Tech laser standards.",
+    segment_label: "// Targeted Segment NPI Solutions:"
+  },
+  de: {
+    tag: "Technische_Bib // Spez_Matrix",
+    title_1: "Technische",
+    title_2: "Standards",
+    tabs: ["Werkstoff-Matrix", "Oberflächen-Matrix"],
+    aria_tabs: ["Spezialisierte Materialqualitäten anzeigen", "Industrielle Oberflächentexturen anzeigen"],
+    material_desc: `Hochleistungspolymer-Verarbeitung validiert für ${geoSuppliers.de}.`,
+    finish_desc: "Oberflächenspezifikationen konform mit globalen SPI-, VDI 3400- und Mold-Tech-Laserstandards.",
+    segment_label: "// Zielgruppenspezifische NPI-Lösungen:"
+  },
+  fr: {
+    tag: "Bibliothèque // Spec_Matrice",
+    title_1: "Normes",
+    title_2: "D'Ingénierie",
+    tabs: ["Matrice des Matériaux", "Matrice des Surfaces"],
+    aria_tabs: ["Voir les nuances de matériaux", "Voir les textures de surface"],
+    material_desc: `Transformation de polymères validée pour ${geoSuppliers.fr}.`,
+    finish_desc: "Spécifications de surface conformes aux normes mondiales SPI, VDI 3400 et Mold-Tech laser.",
+    segment_label: "// Solutions NPI par Segment Ciblé:"
+  }
+};
+
+const t = i18n[lang] || i18n.en;
+---
+
+<section class="relative bg-[#0B1221] py-[clamp(4rem,10vw,12rem)] border-b border-white/5 overflow-hidden" id="materials-matrix" aria-labelledby="matrix-title" data-location={location}>
+  <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#F97316 0.5px, transparent 0.5px); background-size: 30px 30px;" aria-hidden="true"></div>
+
+  <div class="max-w-[1400px] mx-auto px-[clamp(1.5rem,5vw,8rem)] relative z-10">
+    <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-12 mb-[clamp(4rem,6vw,6rem)]" data-aos="fade-up">
+      <div>
+        <p class="text-[#F97316] font-mono text-[10px] uppercase tracking-[0.5em] mb-6">// {t.tag} ({location})</p>
+        <h2 id="matrix-title" class="font-[1000] text-white uppercase tracking-tighter italic leading-[0.9] text-[clamp(3rem,7vw,8.5rem)]">
+          <span class="inline-word mr-[clamp(0.5rem,2vw,1.5rem)]">{t.title_1}</span>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/10">{t.title_2}</span>
+        </h2>
+      </div>
+      
+      <div class="flex p-1 bg-white/5 border border-white/10 rounded-sm w-full lg:w-auto overflow-x-auto" role="tablist">
+        {t.tabs.map((tab, idx) => (
+          <button role="tab" aria-selected={idx === 0 ? "true" : "false"} aria-controls={`panel-${idx}`} aria-label={t.aria_tabs[idx]} class:list={["flex-1 lg:flex-none px-6 lg:px-10 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-500 whitespace-nowrap cursor-pointer", idx === 0 ? "bg-[#F97316] text-[#0B1221]" : "text-white/40 hover:text-white"]} data-matrix-trigger={idx}>
+            {tab}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="relative min-h-[450px]">
+      <!-- 面板 0：38 种最全特种树脂大盘（专属利基按需轰炸）[cite: 1] -->
+      <div id="panel-0" role="tabpanel" class="matrix-panel active transition-all duration-700" data-matrix-panel="0">
+        <div class="flex items-center space-x-4 mb-12 opacity-60 italic text-[#94A3B8]">
+           <span class="w-8 h-px bg-[#F97316]"></span>
+           <p class="text-[clamp(0.75rem,1.5vw,0.875rem)] font-light">{t.material_desc}</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {materialsList.map((mat: any) => (
+            <div class="group p-[clamp(1.5rem,3vw,2.5rem)] border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] hover:border-[#F97316]/40 transition-all duration-500 relative flex flex-col justify-between">
+              <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F97316]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div>
+                <span class="text-[8px] text-[#F97316] font-mono uppercase block mb-6 tracking-widest opacity-60">RESIN::{mat.slug.toUpperCase()}</span>
+                <h4 class="text-[clamp(1.25rem,2vw,1.5rem)] font-black text-white mb-4 group-hover:text-[#F97316] transition-colors leading-none italic">
+                  {mat.name.includes('(') ? mat.name.split(' ')[0] : mat.name}
+                </h4>
+                <p class="text-white/40 text-[10px] font-mono uppercase tracking-wide mb-8">Melt: {mat.meltTemp} | Mold: {mat.moldTemp}</p>
+              </div>
+
+              <div class="pt-6 border-t border-white/5 mt-auto space-y-2.5">
+                <span class="text-[8px] font-mono text-white/30 tracking-wider block uppercase">{t.segment_label}</span>
+                {mat.targetedIndustries?.map((ind: any) => (
+                  <a href={`/${mat.slug}/${ind.industrySlug}/${ind.componentSlug}`} class="flex items-center justify-between bg-[#0B1221] border border-white/5 px-4 py-3 rounded text-[11px] font-mono text-white/70 hover:text-white hover:border-[#F97316]/40 hover:bg-[#F97316]/5 transition-all group/link">
+                    <span class="font-medium truncate pr-2">{ind.componentName}</span>
+                    <span class="text-[#F97316] transform group-hover/link:translate-x-1 transition-transform">&rarr;</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- 👑 面板 1：硬核表面工艺大盘（彻底消灭敷衍，填充重工业规格！）[cite: 1] -->
+      <div id="panel-1" role="tabpanel" class="matrix-panel absolute top-0 left-0 w-full opacity-0 pointer-events-none transition-all duration-700" data-matrix-panel="1">
+        <div class="flex items-center space-x-4 mb-12 opacity-60 italic text-[#94A3B8]">
+           <span class="w-8 h-px bg-[#F97316]"></span>
+           <p class="text-[clamp(0.75rem,1.5vw,0.875rem)] font-light">{t.finish_desc}</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {standardFinishes.map((item) => (
+            <div class="group p-[clamp(1.5rem,3vw,2.5rem)] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[#F97316]/40 transition-all duration-500 relative flex flex-col justify-between">
+              <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F97316]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div>
+                <span class="text-[8px] text-[#F97316] font-mono uppercase block mb-6 tracking-widest opacity-60">{item.cat}</span>
+                <h4 class="text-[clamp(1.25rem,2vw,1.5rem)] font-black text-white mb-2 group-hover:text-[#F97316] transition-colors leading-none italic">{item.name}</h4>
+                <p class="text-white/40 text-[10px] font-mono uppercase tracking-wide mb-6">{item.spec}</p>
+                <p class="text-white/60 text-xs leading-relaxed font-light mb-8">{item.desc}</p>
+              </div>
+              <div class="pt-6 border-t border-white/5 mt-auto">
+                <span class="text-[8px] font-mono text-white/30 tracking-wider block uppercase mb-1">Recommended Cavity Steel:</span>
+                <p class="text-[10px] text-[#F97316] font-mono uppercase tracking-widest font-bold italic">{item.steel}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function setupMatrix() {
+    const triggers = document.querySelectorAll('[data-matrix-trigger]');
+    const panels = document.querySelectorAll('[data-matrix-panel]');
+    if(!triggers.length || !panels.length) return;
+
+    triggers.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-matrix-trigger');
+        triggers.forEach(b => {
+          b.classList.remove('bg-[#F97316]', 'text-[#0B1221]');
+          b.classList.add('text-white/40');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('bg-[#F97316]', 'text-[#0B1221]');
+        btn.classList.remove('text-white/40');
+        btn.setAttribute('aria-selected', 'true');
+
+        panels.forEach(p => {
+          (p as HTMLElement).classList.add('opacity-0', 'pointer-events-none', 'absolute');
+        });
+        const activePanel = document.querySelector(`[data-matrix-panel="${id}"]`) as HTMLElement;
+        if (activePanel) activePanel.classList.remove('opacity-0', 'pointer-events-none', 'absolute');
+      });
+    });
+  }
+  setupMatrix();
+  document.addEventListener('astro:page-load', setupMatrix);
+  document.addEventListener('astro:after-swap', setupMatrix);
+</script>
+
+<style>
+  .inline-word { display: inline-block; white-space: nowrap; }
+  h2 { overflow-wrap: normal; word-break: normal; }
+</style>
