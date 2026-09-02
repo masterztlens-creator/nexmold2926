@@ -1,10 +1,6 @@
-﻿/**
- * NEXMOLD V7.13 鈥?Regional Compiler Contract Layer
- *
- * Phase 1 / Step 01
- *
- * RegionalCompileInput explicitly carries the already-resolved
- * applicability/compliance facts required by the eligibility phase.
+/**
+ * NEXMOLD V7.14 — Regional Compiler Contract Layer
+ * Production contract: Evidence -> Semantic -> Eligibility -> Artifact -> Projection.
  */
 
 export type Locale = "en-US" | "en-GB" | "de-DE";
@@ -14,31 +10,12 @@ export type PageId = string & { readonly __brand: "PageId" };
 export type CanonicalUrl = string & { readonly __brand: "CanonicalUrl" };
 export type ContentHash = string & { readonly __brand: "ContentHash" };
 export type EvidenceId = string & { readonly __brand: "EvidenceId" };
-export type SemanticClaimId = string & {
-  readonly __brand: "SemanticClaimId";
-};
+export type SemanticClaimId = string & { readonly __brand: "SemanticClaimId" };
 
-export type RegionalApplicability =
-  | "APPLICABLE"
-  | "NOT_APPLICABLE"
-  | "UNKNOWN";
-
-export type ComplianceClaim =
-  | "VERIFIED"
-  | "NOT_VERIFIED"
-  | "REQUIRES_REVIEW"
-  | "UNKNOWN";
-
-export type EvidenceCompleteness =
-  | "COMPLETE"
-  | "INCOMPLETE"
-  | "UNKNOWN";
-
-export type RegionalEligibilityStatus =
-  | "ELIGIBLE"
-  | "BLOCKED"
-  | "NOT_APPLICABLE"
-  | "REQUIRES_REVIEW";
+export type RegionalApplicability = "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+export type ComplianceClaim = "VERIFIED" | "NOT_VERIFIED" | "REQUIRES_REVIEW" | "UNKNOWN";
+export type EvidenceCompleteness = "COMPLETE" | "INCOMPLETE" | "UNKNOWN";
+export type RegionalEligibilityStatus = "ELIGIBLE" | "BLOCKED" | "NOT_APPLICABLE" | "REQUIRES_REVIEW";
 
 export interface EvidenceRef {
   readonly id: EvidenceId;
@@ -58,6 +35,11 @@ export interface RegionalEvidenceSnapshot {
   readonly completeness: EvidenceCompleteness;
 }
 
+export interface ClaimEvidenceBinding {
+  readonly claim: SemanticClaimRef;
+  readonly evidenceIds: readonly EvidenceId[];
+}
+
 export interface RegionalEligibilityDecisionBase {
   readonly pageId: PageId;
   readonly locale: Locale;
@@ -69,31 +51,21 @@ export interface RegionalEligibilityDecisionBase {
   readonly reasonCodes: readonly string[];
 }
 
-export interface EligibleRegionalDecision
-  extends RegionalEligibilityDecisionBase {
+export interface EligibleRegionalDecision extends RegionalEligibilityDecisionBase {
   readonly status: "ELIGIBLE";
   readonly applicability: "APPLICABLE";
   readonly compliance: "VERIFIED";
-  readonly evidence: RegionalEvidenceSnapshot & {
-    readonly completeness: "COMPLETE";
-  };
+  readonly evidence: RegionalEvidenceSnapshot & { readonly completeness: "COMPLETE" };
 }
 
-export interface BlockedRegionalDecision
-  extends RegionalEligibilityDecisionBase {
+export interface BlockedRegionalDecision extends RegionalEligibilityDecisionBase {
   readonly status: "BLOCKED";
-  readonly applicability: RegionalApplicability;
-  readonly compliance: ComplianceClaim;
 }
-
-export interface NotApplicableRegionalDecision
-  extends RegionalEligibilityDecisionBase {
+export interface NotApplicableRegionalDecision extends RegionalEligibilityDecisionBase {
   readonly status: "NOT_APPLICABLE";
   readonly applicability: "NOT_APPLICABLE";
 }
-
-export interface ReviewRequiredRegionalDecision
-  extends RegionalEligibilityDecisionBase {
+export interface ReviewRequiredRegionalDecision extends RegionalEligibilityDecisionBase {
   readonly status: "REQUIRES_REVIEW";
   readonly compliance: "REQUIRES_REVIEW" | "UNKNOWN";
 }
@@ -129,6 +101,10 @@ export interface RegionalPublishArtifact {
   readonly canonicalUrl: CanonicalUrl;
   readonly hreflangSet: readonly Locale[];
   readonly seoEligibility: EligibleRegionalDecision;
+  /** Authoritative evidence snapshot carried into publication. */
+  readonly evidence: RegionalEvidenceSnapshot;
+  /** Authoritative one-to-one claim -> evidence bindings. */
+  readonly bindings: readonly ClaimEvidenceBinding[];
   readonly pageContentHash: ContentHash;
 }
 
@@ -147,7 +123,6 @@ export interface HreflangEdge {
   readonly targetLocale: Locale;
   readonly targetCanonicalUrl: CanonicalUrl;
 }
-
 export interface HreflangProjection {
   readonly pageId: PageId;
   readonly edges: readonly HreflangEdge[];
@@ -157,14 +132,8 @@ export interface RegionalCompileInput {
   readonly pageId: PageId;
   readonly locale: Locale;
   readonly region: Region;
-
-  /**
-   * Already-resolved facts from the upstream semantic phase.
-   * Eligibility MUST consume these facts; it MUST NOT infer them.
-   */
   readonly applicability: RegionalApplicability;
   readonly compliance: ComplianceClaim;
-
   readonly semantic: RegionalSemanticProjection;
   readonly evidence: RegionalEvidenceSnapshot;
 }
@@ -180,7 +149,3 @@ export type UnknownApplicabilityMustBlock = true;
 export type ReviewRequiredMustBlock = true;
 export type NotApplicableMustNotPublish = true;
 export type ArtifactIsSingleProjectionSource = true;
-
-
-
-
