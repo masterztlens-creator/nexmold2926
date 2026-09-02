@@ -45,16 +45,24 @@ export const V714PublicationGateReason = Object.freeze({
   ARTIFACT_HREFLANG_EMPTY: "V714_ARTIFACT_HREFLANG_EMPTY",
   ARTIFACT_HASH_INVALID: "V714_ARTIFACT_HASH_INVALID",
   ARTIFACT_ELIGIBILITY_MISMATCH: "V714_ARTIFACT_ELIGIBILITY_MISMATCH",
-  ARTIFACT_CLAIM_LINEAGE_INVALID: "V714_ARTIFACT_CLAIM_LINEAGE_INVALID",
-  ARTIFACT_EVIDENCE_LINEAGE_INVALID: "V714_ARTIFACT_EVIDENCE_LINEAGE_INVALID",
+  ARTIFACT_CLAIM_LINEAGE_INVALID:
+    "V714_ARTIFACT_CLAIM_LINEAGE_INVALID",
+  ARTIFACT_EVIDENCE_LINEAGE_INVALID:
+    "V714_ARTIFACT_EVIDENCE_LINEAGE_INVALID",
 } as const);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
+
 function nonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
+
 function nonEmptyArray(value: unknown): value is readonly unknown[] {
   return Array.isArray(value) && value.length > 0;
 }
@@ -63,45 +71,110 @@ export function validateRegionalPublishArtifactRuntime(
   artifact: unknown,
 ): artifact is RegionalPublishArtifact {
   if (!isRecord(artifact)) return false;
+
   if (!nonEmptyString(artifact.pageId)) return false;
   if (!nonEmptyString(artifact.locale)) return false;
   if (!nonEmptyString(artifact.region)) return false;
   if (!nonEmptyString(artifact.canonicalUrl)) return false;
   if (!nonEmptyArray(artifact.hreflangSet)) return false;
+
   if (!nonEmptyString(artifact.pageContentHash)) return false;
   if (!/^[a-f0-9]{64}$/i.test(artifact.pageContentHash)) return false;
-  if (artifact.contractVersion !== "V7.14-PUBLISH-ARTIFACT-3") return false;
+
+  if (
+    artifact.contractVersion !==
+    "V7.14-PUBLISH-ARTIFACT-3"
+  ) {
+    return false;
+  }
+
   if (!isRecord(artifact.seoEligibility)) return false;
   if (!isRecord(artifact.evidence)) return false;
-  if (!Array.isArray(artifact.evidence.evidence)) return false;
-  if (!Array.isArray(artifact.evidence.semanticClaims)) return false;
-  if (artifact.evidence.completeness !== "COMPLETE") return false;
-  if (!Array.isArray(artifact.bindings)) return false;
-  if (artifact.bindings.length !== artifact.evidence.semanticClaims.length) return false;
+
+  if (!Array.isArray(artifact.evidence.evidence)) {
+    return false;
+  }
+
+  if (!Array.isArray(artifact.evidence.semanticClaims)) {
+    return false;
+  }
+
+  if (artifact.evidence.completeness !== "COMPLETE") {
+    return false;
+  }
+
+  if (!Array.isArray(artifact.bindings)) {
+    return false;
+  }
+
+  if (
+    artifact.bindings.length !==
+    artifact.evidence.semanticClaims.length
+  ) {
+    return false;
+  }
 
   const claimIds = artifact.evidence.semanticClaims.map((claim) =>
     isRecord(claim) ? String(claim.id ?? "") : "",
   );
-  if (claimIds.some((id) => !id) || new Set(claimIds).size !== claimIds.length) return false;
+
+  if (
+    claimIds.some((id) => !id) ||
+    new Set(claimIds).size !== claimIds.length
+  ) {
+    return false;
+  }
 
   const evidenceIds = new Set(
     artifact.evidence.evidence.map((item) =>
       isRecord(item) ? String(item.id ?? "") : "",
     ),
   );
-  if (evidenceIds.has("") || evidenceIds.size !== artifact.evidence.evidence.length) return false;
+
+  if (
+    evidenceIds.has("") ||
+    evidenceIds.size !== artifact.evidence.evidence.length
+  ) {
+    return false;
+  }
 
   const bound = new Set<string>();
+
   for (const rawBinding of artifact.bindings) {
-    if (!isRecord(rawBinding) || !isRecord(rawBinding.claim)) return false;
-    const claimId = String(rawBinding.claim.id ?? "");
-    if (!claimIds.includes(claimId) || bound.has(claimId)) return false;
-    if (!Array.isArray(rawBinding.evidenceIds) || rawBinding.evidenceIds.length === 0) return false;
-    for (const evidenceId of rawBinding.evidenceIds) {
-      if (!evidenceIds.has(String(evidenceId))) return false;
+    if (
+      !isRecord(rawBinding) ||
+      !isRecord(rawBinding.claim)
+    ) {
+      return false;
     }
+
+    const claimId = String(
+      rawBinding.claim.id ?? "",
+    );
+
+    if (
+      !claimIds.includes(claimId) ||
+      bound.has(claimId)
+    ) {
+      return false;
+    }
+
+    if (
+      !Array.isArray(rawBinding.evidenceIds) ||
+      rawBinding.evidenceIds.length === 0
+    ) {
+      return false;
+    }
+
+    for (const evidenceId of rawBinding.evidenceIds) {
+      if (!evidenceIds.has(String(evidenceId))) {
+        return false;
+      }
+    }
+
     bound.add(claimId);
   }
+
   return claimIds.every((id) => bound.has(id));
 }
 
@@ -110,9 +183,34 @@ function identityReasons(
   eligibility: RegionalEligibilityDecision,
 ): string[] {
   const reasons: string[] = [];
-  if (artifact.pageId !== eligibility.pageId) reasons.push(V714PublicationGateReason.ARTIFACT_PAGE_ID_MISMATCH);
-  if (artifact.locale !== eligibility.locale) reasons.push(V714PublicationGateReason.ARTIFACT_LOCALE_MISMATCH);
-  if (artifact.region !== eligibility.region) reasons.push(V714PublicationGateReason.ARTIFACT_REGION_MISMATCH);
+
+  if (
+    artifact.pageId !==
+    eligibility.pageId
+  ) {
+    reasons.push(
+      V714PublicationGateReason.ARTIFACT_PAGE_ID_MISMATCH,
+    );
+  }
+
+  if (
+    artifact.locale !==
+    eligibility.locale
+  ) {
+    reasons.push(
+      V714PublicationGateReason.ARTIFACT_LOCALE_MISMATCH,
+    );
+  }
+
+  if (
+    artifact.region !==
+    eligibility.region
+  ) {
+    reasons.push(
+      V714PublicationGateReason.ARTIFACT_REGION_MISMATCH,
+    );
+  }
+
   return reasons;
 }
 
@@ -121,6 +219,7 @@ function eligibilityReasons(
   eligibility: EligibleRegionalDecision,
 ): string[] {
   const embedded = artifact.seoEligibility;
+
   if (
     embedded.pageId !== eligibility.pageId ||
     embedded.locale !== eligibility.locale ||
@@ -128,10 +227,14 @@ function eligibilityReasons(
     embedded.status !== eligibility.status ||
     embedded.applicability !== eligibility.applicability ||
     embedded.compliance !== eligibility.compliance ||
-    embedded.evidence.completeness !== eligibility.evidence.completeness
+    embedded.evidence.completeness !==
+      eligibility.evidence.completeness
   ) {
-    return [V714PublicationGateReason.ARTIFACT_ELIGIBILITY_MISMATCH];
+    return [
+      V714PublicationGateReason.ARTIFACT_ELIGIBILITY_MISMATCH,
+    ];
   }
+
   return [];
 }
 
@@ -140,31 +243,128 @@ export function runPublicationGate(
 ): V714PublicationGateResult {
   const reasons: string[] = [];
 
-  if (!input.firewall?.ok) reasons.push(V714PublicationGateReason.FIREWALL_NOT_PASSED);
+  if (!input.firewall?.ok) {
+    reasons.push(
+      V714PublicationGateReason.FIREWALL_NOT_PASSED,
+    );
+  }
 
   const eligibility = input.eligibility;
+
   if (eligibility.status !== "ELIGIBLE") {
-    reasons.push(`${V714PublicationGateReason.ELIGIBILITY_NOT_ELIGIBLE}:${eligibility.status}`);
+    reasons.push(
+      `${V714PublicationGateReason.ELIGIBILITY_NOT_ELIGIBLE}:${eligibility.status}`,
+    );
   }
-  if (eligibility.applicability !== "APPLICABLE") reasons.push(V714PublicationGateReason.APPLICABILITY_NOT_APPLICABLE);
-  if (eligibility.compliance !== "VERIFIED") reasons.push(V714PublicationGateReason.COMPLIANCE_NOT_VERIFIED);
-  if (eligibility.evidence.completeness !== "COMPLETE") reasons.push(V714PublicationGateReason.EVIDENCE_NOT_COMPLETE);
+
+  if (
+    eligibility.applicability !==
+    "APPLICABLE"
+  ) {
+    reasons.push(
+      V714PublicationGateReason.APPLICABILITY_NOT_APPLICABLE,
+    );
+  }
+
+  if (
+    eligibility.compliance !==
+    "VERIFIED"
+  ) {
+    reasons.push(
+      V714PublicationGateReason.COMPLIANCE_NOT_VERIFIED,
+    );
+  }
+
+  if (
+    eligibility.evidence.completeness !==
+    "COMPLETE"
+  ) {
+    reasons.push(
+      V714PublicationGateReason.EVIDENCE_NOT_COMPLETE,
+    );
+  }
 
   if (input.artifact === null) {
-    reasons.push(V714PublicationGateReason.ARTIFACT_ABSENT);
-  } else if (!validateRegionalPublishArtifactRuntime(input.artifact)) {
-    reasons.push(V714PublicationGateReason.ARTIFACT_INVALID);
+    reasons.push(
+      V714PublicationGateReason.ARTIFACT_ABSENT,
+    );
+  } else if (
+    !validateRegionalPublishArtifactRuntime(
+      input.artifact,
+    )
+  ) {
+    reasons.push(
+      V714PublicationGateReason.ARTIFACT_INVALID,
+    );
   } else {
-    reasons.push(...identityReasons(input.artifact, eligibility));
-    reasons.push(...eligibilityReasons(input.artifact, eligibility));
-    if (!nonEmptyString(input.artifact.canonicalUrl)) reasons.push(V714PublicationGateReason.ARTIFACT_CANONICAL_MISSING);
-    if (!nonEmptyArray(input.artifact.hreflangSet)) reasons.push(V714PublicationGateReason.ARTIFACT_HREFLANG_EMPTY);
-    if (!/^[a-f0-9]{64}$/i.test(input.artifact.pageContentHash)) reasons.push(V714PublicationGateReason.ARTIFACT_HASH_INVALID);
+    reasons.push(
+      ...identityReasons(
+        input.artifact,
+        eligibility,
+      ),
+    );
+
+    /*
+     * IMPORTANT:
+     *
+     * RegionalEligibilityDecision is a discriminated union.
+     * eligibilityReasons() intentionally accepts only
+     * EligibleRegionalDecision.
+     *
+     * Narrow the union explicitly before calling the helper.
+     * Non-eligible states remain fail-closed because the
+     * ELIGIBILITY_NOT_ELIGIBLE reason was already recorded above.
+     */
+    if (eligibility.status === "ELIGIBLE") {
+      reasons.push(
+        ...eligibilityReasons(
+          input.artifact,
+          eligibility,
+        ),
+      );
+    }
+
+    if (
+      !nonEmptyString(
+        input.artifact.canonicalUrl,
+      )
+    ) {
+      reasons.push(
+        V714PublicationGateReason.ARTIFACT_CANONICAL_MISSING,
+      );
+    }
+
+    if (
+      !nonEmptyArray(
+        input.artifact.hreflangSet,
+      )
+    ) {
+      reasons.push(
+        V714PublicationGateReason.ARTIFACT_HREFLANG_EMPTY,
+      );
+    }
+
+    if (
+      !/^[a-f0-9]{64}$/i.test(
+        input.artifact.pageContentHash,
+      )
+    ) {
+      reasons.push(
+        V714PublicationGateReason.ARTIFACT_HASH_INVALID,
+      );
+    }
   }
 
   if (reasons.length > 0) {
-    return { ok: false, reasonCodes: [...new Set(reasons)] };
+    return {
+      ok: false,
+      reasonCodes: [...new Set(reasons)],
+    };
   }
 
-  return { ok: true, artifact: input.artifact as RegionalPublishArtifact };
+  return {
+    ok: true,
+    artifact:
+      input.artifact as RegionalPublishArtifact,
+  };
 }
