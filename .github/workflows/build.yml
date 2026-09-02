@@ -2,7 +2,7 @@ name: Astro Build CI
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 支持网页手动触发CI
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,11 +17,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install deps (npm ci锁定依赖)
-        run: npm ci
+        run: |
+          npm config set registry https://registry.npmmirror.com
+          npm ci
 
       - name: Astro类型检查 astro check
         run: npx astro check
