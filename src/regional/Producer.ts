@@ -35,6 +35,9 @@ function validateProducerInput(input:V714ProducerInput):string[]{
     if(!locales.includes(String(input.compileInput.locale)))r.push("V715_PRODUCER_HREFLANG_SOURCE_LOCALE_MISSING");
   }
   if(input.canonicalByLocale instanceof Map){
+    const declared=new Set(Array.isArray(input.hreflangSet)?input.hreflangSet.map(String):[]);
+    const actual=[...input.canonicalByLocale.keys()].map(String);
+    if(actual.length!==declared.size||actual.some(locale=>!declared.has(locale)))r.push("V715_PRODUCER_CANONICAL_MAP_SET_MISMATCH");
     if(nonEmptyString(input.compileInput.locale) && input.canonicalByLocale.get(input.compileInput.locale)!==input.canonicalUrl){
       r.push("V715_PRODUCER_SOURCE_CANONICAL_MISMATCH");
     }
