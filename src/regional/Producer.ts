@@ -13,9 +13,73 @@ export interface V714ProducerInput {
 export interface V714ProducerBlocked { readonly published:false; readonly result:null; readonly reasonCodes:readonly string[]; }
 export interface V714ProducerPublished { readonly published:true; readonly result:V714RegionalCompilerPublished["result"]; }
 export type V714ProducerResult = V714ProducerPublished | V714ProducerBlocked;
+
 function nonEmptyString(value:unknown):value is string{return typeof value==="string"&&value.trim().length>0;}
 function isRecord(value:unknown):value is Record<string,unknown>{return typeof value==="object"&&value!==null&&!Array.isArray(value);}
-function validateProducerInput(input:V714ProducerInput):string[]{const r:string[]=[];if(!isRecord(input))return ["V714_PRODUCER_INPUT_INVALID"];if(!isRecord(input.compileInput))return ["V714_PRODUCER_COMPILE_INPUT_INVALID"];if(!nonEmptyString(input.compileInput.pageId))r.push("V714_PRODUCER_PAGE_ID_INVALID");if(!nonEmptyString(input.compileInput.locale))r.push("V714_PRODUCER_LOCALE_INVALID");if(!nonEmptyString(input.compileInput.region))r.push("V714_PRODUCER_REGION_INVALID");if(!nonEmptyString(input.canonicalUrl))r.push("V714_PRODUCER_CANONICAL_URL_INVALID");if(!Array.isArray(input.bindings))r.push("V714_PRODUCER_BINDINGS_INVALID");if(!Array.isArray(input.hreflangSet)||input.hreflangSet.length===0)r.push("V714_PRODUCER_HREFLANG_SET_INVALID");if(!(input.canonicalByLocale instanceof Map))r.push("V714_PRODUCER_CANONICAL_MAP_INVALID");return r;}
-function validateEvidenceBoundary(input:V714ProducerInput):string[]{const r:string[]=[];const c=input.compileInput;if(!isRecord(c.evidence)){r.push("V714_PRODUCER_EVIDENCE_INVALID");return r;}if(!Array.isArray(c.evidence.evidence))r.push("V714_PRODUCER_EVIDENCE_INVALID");if(!Array.isArray(c.evidence.semanticClaims))r.push("V714_PRODUCER_DECLARED_CLAIMS_INVALID");if(!Array.isArray(c.semantic.semanticClaimIds))r.push("V714_PRODUCER_SEMANTIC_CLAIMS_INVALID");if(Array.isArray(c.evidence.evidence)&&c.evidence.evidence.length===0)r.push("V714_PRODUCER_EVIDENCE_ZERO");if(Array.isArray(c.evidence.semanticClaims)&&c.evidence.semanticClaims.length===0)r.push("V714_PRODUCER_DECLARED_CLAIMS_ZERO");if(Array.isArray(c.semantic.semanticClaimIds)&&c.semantic.semanticClaimIds.length===0)r.push("V714_PRODUCER_SEMANTIC_CLAIMS_ZERO");if(Array.isArray(c.evidence.semanticClaims)&&Array.isArray(c.semantic.semanticClaimIds)){const d=c.evidence.semanticClaims.map(x=>String(x.id));const q=c.semantic.semanticClaimIds.map(String);if(d.length!==q.length||d.some(id=>!q.includes(id)))r.push("V714_PRODUCER_SEMANTIC_CLAIM_DECLARATION_MISMATCH");}if(!Array.isArray(input.bindings))return [...new Set(r.concat("V714_PRODUCER_BINDINGS_INVALID"))];const e=new Set(Array.isArray(c.evidence.evidence)?c.evidence.evidence.map(x=>String(x.id)):[]);const b=new Set<string>();for(const binding of input.bindings){const id=String(binding.claim.id);if(b.has(id))r.push(`V714_PRODUCER_DUPLICATE_CLAIM_BINDING:${id}`);b.add(id);if(!Array.isArray(binding.evidenceIds)||binding.evidenceIds.length===0){r.push(`V714_PRODUCER_BINDING_WITHOUT_EVIDENCE:${id}`);continue;}for(const evidenceId of binding.evidenceIds)if(!e.has(String(evidenceId)))r.push(`V714_PRODUCER_EVIDENCE_UNRESOLVED:${String(evidenceId)}`);}if(Array.isArray(c.semantic.semanticClaimIds))for(const id of c.semantic.semanticClaimIds)if(!b.has(String(id)))r.push(`V714_PRODUCER_CLAIM_UNBOUND:${String(id)}`);return [...new Set(r)];}
-export function produceRegionalPage(input:V714ProducerInput):V714ProducerResult{const a=validateProducerInput(input);if(a.length)return{published:false,result:null,reasonCodes:a};const b=validateEvidenceBoundary(input);if(b.length)return{published:false,result:null,reasonCodes:b};const compilerInput:V714RegionalCompilerInput={compileInput:input.compileInput,bindings:input.bindings,canonicalUrl:input.canonicalUrl,hreflangSet:input.hreflangSet,canonicalByLocale:input.canonicalByLocale};const result=compileRegionalPage(compilerInput);if(!result.published)return{published:false,result:null,reasonCodes:result.reasonCodes};return{published:true,result:result.result};}
+
+function validateProducerInput(input:V714ProducerInput):string[]{
+  const r:string[]=[];
+  if(!isRecord(input))return ["V714_PRODUCER_INPUT_INVALID"];
+  if(!isRecord(input.compileInput))return ["V714_PRODUCER_COMPILE_INPUT_INVALID"];
+  if(!nonEmptyString(input.compileInput.pageId))r.push("V714_PRODUCER_PAGE_ID_INVALID");
+  if(!nonEmptyString(input.compileInput.locale))r.push("V714_PRODUCER_LOCALE_INVALID");
+  if(!nonEmptyString(input.compileInput.region))r.push("V714_PRODUCER_REGION_INVALID");
+  if(!nonEmptyString(input.canonicalUrl))r.push("V714_PRODUCER_CANONICAL_URL_INVALID");
+  if(!Array.isArray(input.bindings))r.push("V714_PRODUCER_BINDINGS_INVALID");
+  if(!Array.isArray(input.hreflangSet)||input.hreflangSet.length===0)r.push("V714_PRODUCER_HREFLANG_SET_INVALID");
+  if(!(input.canonicalByLocale instanceof Map))r.push("V714_PRODUCER_CANONICAL_MAP_INVALID");
+
+  if(Array.isArray(input.hreflangSet)){
+    const locales=input.hreflangSet.map(String);
+    if(new Set(locales).size!==locales.length)r.push("V715_PRODUCER_HREFLANG_SET_DUPLICATE");
+    if(!locales.includes(String(input.compileInput.locale)))r.push("V715_PRODUCER_HREFLANG_SOURCE_LOCALE_MISSING");
+  }
+  if(input.canonicalByLocale instanceof Map){
+    if(nonEmptyString(input.compileInput.locale) && input.canonicalByLocale.get(input.compileInput.locale)!==input.canonicalUrl){
+      r.push("V715_PRODUCER_SOURCE_CANONICAL_MISMATCH");
+    }
+    if(Array.isArray(input.hreflangSet)){
+      for(const locale of input.hreflangSet){
+        const url=input.canonicalByLocale.get(locale);
+        if(!nonEmptyString(url))r.push(`V715_PRODUCER_HREFLANG_CANONICAL_MISSING:${String(locale)}`);
+      }
+    }
+  }
+  return [...new Set(r)];
+}
+
+function validateEvidenceBoundary(input:V714ProducerInput):string[]{
+  const r:string[]=[];const c=input.compileInput;
+  if(!isRecord(c.evidence)){r.push("V714_PRODUCER_EVIDENCE_INVALID");return r;}
+  if(!Array.isArray(c.evidence.evidence))r.push("V714_PRODUCER_EVIDENCE_INVALID");
+  if(!Array.isArray(c.evidence.semanticClaims))r.push("V714_PRODUCER_DECLARED_CLAIMS_INVALID");
+  if(!Array.isArray(c.semantic.semanticClaimIds))r.push("V714_PRODUCER_SEMANTIC_CLAIMS_INVALID");
+  if(Array.isArray(c.evidence.evidence)&&c.evidence.evidence.length===0)r.push("V714_PRODUCER_EVIDENCE_ZERO");
+  if(Array.isArray(c.evidence.semanticClaims)&&c.evidence.semanticClaims.length===0)r.push("V714_PRODUCER_DECLARED_CLAIMS_ZERO");
+  if(Array.isArray(c.semantic.semanticClaimIds)&&c.semantic.semanticClaimIds.length===0)r.push("V714_PRODUCER_SEMANTIC_CLAIMS_ZERO");
+  if(Array.isArray(c.evidence.semanticClaims)&&Array.isArray(c.semantic.semanticClaimIds)){
+    const d=c.evidence.semanticClaims.map(x=>String(x.id));const q=c.semantic.semanticClaimIds.map(String);
+    if(d.length!==q.length||d.some(id=>!q.includes(id)))r.push("V714_PRODUCER_SEMANTIC_CLAIM_DECLARATION_MISMATCH");
+  }
+  if(!Array.isArray(input.bindings))return [...new Set(r.concat("V714_PRODUCER_BINDINGS_INVALID"))];
+  const e=new Set(Array.isArray(c.evidence.evidence)?c.evidence.evidence.map(x=>String(x.id)):[]);
+  const b=new Set<string>();
+  for(const binding of input.bindings){
+    const id=String(binding.claim.id);
+    if(b.has(id))r.push(`V714_PRODUCER_DUPLICATE_CLAIM_BINDING:${id}`);b.add(id);
+    if(!Array.isArray(binding.evidenceIds)||binding.evidenceIds.length===0){r.push(`V714_PRODUCER_BINDING_WITHOUT_EVIDENCE:${id}`);continue;}
+    for(const evidenceId of binding.evidenceIds)if(!e.has(String(evidenceId)))r.push(`V714_PRODUCER_EVIDENCE_UNRESOLVED:${String(evidenceId)}`);
+  }
+  if(Array.isArray(c.semantic.semanticClaimIds))for(const id of c.semantic.semanticClaimIds)if(!b.has(String(id)))r.push(`V714_PRODUCER_CLAIM_UNBOUND:${String(id)}`);
+  return [...new Set(r)];
+}
+
+export function produceRegionalPage(input:V714ProducerInput):V714ProducerResult{
+  const a=validateProducerInput(input);if(a.length)return{published:false,result:null,reasonCodes:a};
+  const b=validateEvidenceBoundary(input);if(b.length)return{published:false,result:null,reasonCodes:b};
+  const compilerInput:V714RegionalCompilerInput={compileInput:input.compileInput,bindings:input.bindings,canonicalUrl:input.canonicalUrl,hreflangSet:input.hreflangSet,canonicalByLocale:input.canonicalByLocale};
+  const result=compileRegionalPage(compilerInput);
+  if(!result.published)return{published:false,result:null,reasonCodes:result.reasonCodes};
+  return{published:true,result:result.result};
+}
 export const runV714Producer=produceRegionalPage;
