@@ -35,12 +35,7 @@ export function createPublicationArtifact(i: PublicationInput): Readonly<Publica
     title: i.title.trim(),
     body: i.body.trim(),
     contentFingerprint: fp,
-    lineage: [...i.lineage, {
-      type: "ELIGIBILITY",
-      id: i.eligibility.aggregateId,
-      version: i.eligibility.version,
-      fingerprint: i.eligibility.fingerprint,
-    }],
+    lineage: [...i.lineage],
     eligibilityRecordId: i.eligibility.recordId,
     policyId: i.policyId,
     policyFingerprint: policyLink.fingerprint,
