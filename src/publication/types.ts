@@ -1,0 +1,23 @@
+import type { Fingerprint } from "../domain/primitives.js";
+import type { FoundationRecord, LineageLink } from "../foundation/types.js";
+
+export interface PublicationArtifact {
+  readonly id: string;
+  readonly subjectId: string;
+  readonly title: string;
+  readonly body: string;
+  readonly contentFingerprint: Fingerprint;
+  readonly lineage: readonly LineageLink[];
+  readonly eligibilityRecordId: string;
+  readonly policyId: string;
+  readonly policyFingerprint: Fingerprint;
+}
+
+export interface PublicationInput {
+  readonly subjectId: string;
+  readonly title: string;
+  readonly body: string;
+  readonly eligibility: FoundationRecord;
+  readonly policyId: string;
+  readonly lineage: readonly LineageLink[];
+}
