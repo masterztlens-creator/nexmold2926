@@ -3,32 +3,25 @@ name: NEXMOLD V8-04 Rule Policy Gate
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - "src/v8/**"
-      - "tests/v8/**"
-      - "tsconfig.v8.json"
-      - "package.json"
-      - ".github/workflows/v8-04.yml"
+      - 'src/v8/**'
+      - 'tests/v8/**'
+      - '.github/workflows/v8-04.yml'
+      - 'tsconfig.v8.json'
 
 permissions:
   contents: read
 
-concurrency:
-  group: v8-04-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  v8-04-gate:
+  v8-04:
     name: V8-04 Rule Policy Gate
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source with parent commit
+      - name: Checkout source with full history for manifest ancestry
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -73,6 +66,11 @@ jobs:
 
           BASE="129ce1fc45b2f13473033b940b318233ead97eac"
 
+          if ! git cat-file -e "${BASE}^{commit}"; then
+            echo "V8-04-BASE-COMMIT-MISSING FAIL"
+            exit 1
+          fi
+
           EXPECTED=(
             ".github/workflows/v8-04.yml"
             "src/v8/foundation/state-machine.ts"
@@ -99,41 +97,3 @@ jobs:
           echo "V8-04-CHANGED-FILE-MANIFEST PASS"
           echo "Changed files:"
           cat /tmp/v8-04-expected.txt
-
-      - name: GATE 06 — package only changed V8-04 files
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          rm -rf release-v8-04
-          mkdir -p release-v8-04
-
-          while IFS= read -r file; do
-            mkdir -p "release-v8-04/$(dirname "$file")"
-            cp "$file" "release-v8-04/$file"
-          done < /tmp/v8-04-expected.txt
-
-          cd release-v8-04
-          zip -qr ../NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip .
-          cd ..
-
-          test -s NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip
-
-      - name: GATE 07 — artifact scope verification
-        shell: bash
-        run: |
-          set -euo pipefail
-          unzip -Z1 NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip | sed '/^$/d' | sort > /tmp/v8-04-zip.txt
-          sed 's#^#release-v8-04/#' /tmp/v8-04-expected.txt | sort > /tmp/v8-04-expected-zip.txt
-          if ! diff -u /tmp/v8-04-expected-zip.txt /tmp/v8-04-zip.txt; then
-            echo "V8-04-ARTIFACT-SCOPE FAIL"
-            exit 1
-          fi
-          echo "V8-04-ARTIFACT-SCOPE PASS"
-
-      - name: Upload V8-04 PASS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS
-          path: NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip
-          if-no-files-found: error
