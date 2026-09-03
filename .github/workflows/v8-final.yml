@@ -1,17 +1,30 @@
 name: NEXMOLD V8 Final Gate
+
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/v8/**','tests/v8/**','scripts/v8-final-gate.mjs','tsconfig.v8.json','package.json','.github/workflows/v8-final.yml']
+    paths:
+      - 'src/v8/**'
+      - 'tests/v8/**'
+      - 'scripts/v8-final-gate.mjs'
+      - 'tsconfig.v8.json'
+      - '.github/workflows/v8-final.yml'
+
 permissions:
   contents: read
+
 jobs:
   v8-final:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-node@v4
-        with: {node-version: 22.12.0, cache: npm}
-      - run: npm install --no-save --no-package-lock typescript@6.0.3
-      - run: npm run v8:verify
+        with:
+          node-version: 22.12.0
+      - name: Install V8 compiler only
+        run: npm install --no-save --no-package-lock typescript@6.0.3
+      - name: V8 Final Gate
+        run: node scripts/v8-final-gate.mjs
