@@ -17,8 +17,7 @@ function setup() {
   fs.sealSnapshot(snap.aggregateId, aud, why);
   const ev = fs.ingestEvidence({ sourceId: src.id, snapshotId: snap.aggregateId, locator: "#draft", excerpt: "Draft angle >= 1 degree", ingestion: "INGESTED", capturedAt: snap.payload.capturedAt }, ing, why);
   fs.auditEvidence(ev.aggregateId, aud, why);
-  const knowledge = V.createKnowledge({ proposition: "Draft angle should be at least 1 degree", claimIds: [], status: "APPROVED" });
-  return { store, fs, src, snap, ev, knowledge };
+  return { store, fs, src, snap, ev };
 }
 
 test("evidence gate rejects duplicate references and snapshot/source mismatch", () => {
