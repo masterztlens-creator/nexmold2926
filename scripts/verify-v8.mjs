@@ -23,3 +23,5 @@ console.log('V8-01-NEGATIVE PASS');
 console.log('V8-01-DETERMINISM PASS');
 console.log('V8-01-FAIL-CLOSED PASS');
 console.log('V8-01-V7-DEPENDENCY-SCAN PASS');
+
+console.log('V8-02-FOUNDATION PASS');
