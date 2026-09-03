@@ -2,9 +2,7 @@
   "name": "nexmold-v2",
   "type": "module",
   "version": "0.0.1",
-  "engines": {
-    "node": ">=22.12.0"
-  },
+  "engines": {"node": ">=22.12.0"},
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -13,8 +11,10 @@
     "v714:adversarial": "node tests/adversarial/run-harness.mjs",
     "v714:preflight": "node scripts/release-preflight.mjs",
     "v714:build": "node build-orchestrator.mjs",
-    "v714:secure": "npm run v714:contracts && npm run v714:adversarial && npm run v714:regional && npm run v714:build",
+    "v714:secure": "npm run v714:contracts && npm run v714:adversarial && npm run v714:regional && npm run v715:integration && npm run v714:build",
     "v714:contracts": "node --experimental-strip-types tests/contracts/v714-contracts.mjs",
+    "v715:contracts": "node --experimental-strip-types tests/contracts/v715-integration.mjs",
+    "v715:integration": "node --experimental-strip-types scripts/v715-integration-gate.mjs",
     "verify:secure": "npm run v714:secure",
     "release:preflight": "npm run v714:preflight",
     "v714:regional": "node --experimental-strip-types scripts/v714-regional-gate.mjs",

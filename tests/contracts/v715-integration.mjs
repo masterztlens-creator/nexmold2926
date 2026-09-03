@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-/** V7.15 contract regression: verifies integration with V7.14, not a replacement stack. */
+/** V7.15 contract regression: tests the real Producer boundary and release preflight. */
 import assert from "node:assert/strict";
+import { runV714Producer } from "../../src/regional/Producer.ts";
 import { evaluateRegionalEligibility } from "../../src/regional/eligibility.ts";
-import { compileRegionalPage } from "../../src/regional/regionalCompiler.ts";
+import { runRegionalReleasePreflight } from "../../src/regional/releasePreflight.ts";
 
 const base = {
   pageId: "v715-contract",
@@ -18,7 +19,7 @@ const base = {
   },
 };
 
-const compilerInput = {
+const input = {
   compileInput: base,
   bindings: [{ claim: { id: "claim:v715", claimKey: "v715.contract" }, evidenceIds: ["evidence:v715"] }],
   canonicalUrl: "https://example.com/v715-contract/",
@@ -27,12 +28,14 @@ const compilerInput = {
 };
 
 const expected = evaluateRegionalEligibility(base);
-const actual = compileRegionalPage(compilerInput);
 assert.equal(expected.status, "ELIGIBLE");
-assert.equal(actual.published, true);
-assert.equal(actual.result.eligibility.status, expected.status);
-assert.equal(actual.result.artifact.contractVersion, "V7.14-PUBLISH-ARTIFACT-3");
-assert.equal(actual.result.route.artifact, actual.result.artifact);
+
+const published = runV714Producer(input);
+assert.equal(published.published, true);
+assert.ok(published.result.artifact);
+assert.equal(published.result.artifact.contractVersion, "V7.14-PUBLISH-ARTIFACT-3");
+assert.equal(published.result.route.artifact, published.result.artifact);
+assert.equal(runRegionalReleasePreflight(published.result).passed, true);
 
 for (const mutation of [
   { applicability: "UNKNOWN" },
@@ -40,12 +43,9 @@ for (const mutation of [
   { compliance: "REQUIRES_REVIEW" },
   { compliance: "NOT_VERIFIED" },
 ]) {
-  const input = { ...compilerInput, compileInput: { ...base, ...mutation } };
-  const result = compileRegionalPage(input);
+  const result = runV714Producer({ ...input, compileInput: { ...base, ...mutation } });
   assert.equal(result.published, false);
-  assert.equal(result.result.artifact, null);
-  assert.equal(result.result.route, null);
-  assert.equal(result.result.hreflang, null);
+  assert.equal(result.result, null);
 }
 
-console.log(JSON.stringify({ schema: "nexmold.v7.15.integration-tests.v1", passed: true }, null, 2));
+console.log(JSON.stringify({ schema: "nexmold.v7.15.integration-tests.v2", passed: true }, null, 2));

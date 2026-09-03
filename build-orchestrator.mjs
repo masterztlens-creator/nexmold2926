@@ -6,6 +6,7 @@
  *   PRECHECK
  *   -> CORE GATE
  *   -> REGIONAL PRODUCTION GATE
+ *   -> V7.15 INTEGRATION GATE
  *   -> TYPECHECK
  *   -> CONTRACT TESTS
  *   -> ARTICLE FACTORY
@@ -38,7 +39,8 @@ const BUILD_LOG = path.join(RELEASE_DIR, "build.log");
 
 const BUILD_COMMAND = process.env.NEXMOLD_BUILD_COMMAND ?? "npx astro build";
 const TYPECHECK_COMMAND = process.env.NEXMOLD_TYPECHECK_COMMAND ?? "npx astro check";
-const TEST_COMMAND = process.env.NEXMOLD_TEST_COMMAND ?? "node --experimental-strip-types tests/contracts/v714-contracts.mjs && node --experimental-strip-types tests/contracts/v714-regression.mjs";
+const TEST_COMMAND = process.env.NEXMOLD_TEST_COMMAND ??
+  "node --experimental-strip-types tests/contracts/v714-contracts.mjs && node --experimental-strip-types tests/contracts/v714-regression.mjs && node --experimental-strip-types tests/contracts/v715-integration.mjs";
 const ARTICLE_FACTORY_COMMAND = process.env.NEXMOLD_V714_ARTICLE_FACTORY_COMMAND ??
   "node --experimental-strip-types scripts/v714-article-factory.mjs";
 const CLEAN_DIST = !["0", "false", "no", "off"].includes(
@@ -51,6 +53,7 @@ const KILL_SWITCH = ["1", "true", "yes", "on"].includes(
 const GATES = Object.freeze({
   core: ["scripts/v714-core-gate.mjs", "runV714CoreGate"],
   regional: ["scripts/v714-regional-gate.mjs", "runV714RegionalGate"],
+  v715: ["scripts/v715-integration-gate.mjs", "runV715IntegrationGate"],
   runtime: ["scripts/runtime-gate.mjs", "runRuntimeGate"],
   sitemap: ["scripts/sitemap-gate.mjs", "runSitemapGate"],
   release: ["scripts/release-preflight.mjs", "runReleasePreflight"],
@@ -306,6 +309,9 @@ async function main() {
   section("V7.14_REGIONAL_PRODUCTION_GATE");
   await runExportedGate(...GATES.regional, "V714_REGIONAL_PRODUCTION_GATE");
 
+  section("V7.15_INTEGRATION_GATE");
+  await runExportedGate(...GATES.v715, "V715_INTEGRATION_GATE");
+
   section("AUDIT");
   await runCommand(TYPECHECK_COMMAND, "TYPECHECK");
   pass("TYPE_CONTRACTS", "astro check passed.");
@@ -356,6 +362,8 @@ async function main() {
     htmlCount: manifest.count,
     htmlSetSha256: manifest.setSha256,
     canonicalChain: [
+      "V7.15Contract",
+      "V7.15Integration",
       "Evidence",
       "Claim",
       "Eligibility",
@@ -391,7 +399,7 @@ async function main() {
   });
 
   section("RELEASE");
-  console.log("[NEXMOLD][V7.14] FROZEN & VERIFIED");
+  console.log("[NEXMOLD][V7.15] FROZEN & VERIFIED");
   console.log(`Release epoch : ${epoch}`);
   console.log(`HTML artifacts: ${manifest.count}`);
   console.log(`HTML set hash : ${manifest.setSha256}`);
