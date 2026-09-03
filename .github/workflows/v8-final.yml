@@ -10,6 +10,7 @@ on:
       - 'scripts/v8-final-gate.mjs'
       - 'tsconfig.v8.json'
       - '.github/workflows/v8-final.yml'
+      - '.github/workflows/v8-04.yml'
 
 permissions:
   contents: read
@@ -20,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22.12.0
