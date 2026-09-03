@@ -1,31 +1,40 @@
 name: NEXMOLD V8-04 Rule Policy Gate
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/v8/**'
-      - 'tests/v8/**'
-      - 'tsconfig.v8.json'
-      - 'package.json'
-      - '.github/workflows/v8-04.yml'
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "tests/v8/**"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - ".github/workflows/v8-04.yml"
 
 permissions:
   contents: read
+
+concurrency:
+  group: v8-04-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   v8-04-gate:
     name: V8-04 Rule Policy Gate
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout source
+      - name: Checkout source with parent commit
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22.12.0
+          cache: npm
 
       - name: Install TypeScript compiler
         run: npm install --no-save --no-package-lock typescript@6.0.3
@@ -33,35 +42,93 @@ jobs:
       - name: GATE 01 — V8 compile
         run: npm run v8:compile
 
-      - name: GATE 02 — V8 existing regression suite
-        run: node --test tests/v8/**/*.test.mjs
+      - name: GATE 02 — V8 regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' TEST_FILES < <(find tests/v8 -type f -name '*.test.mjs' -print0 | sort -z)
+          if [ "${#TEST_FILES[@]}" -eq 0 ]; then
+            echo "No V8 test files found."
+            exit 1
+          fi
+          node --test "${TEST_FILES[@]}"
 
       - name: GATE 03 — V8-04 Rule Policy contracts
         run: node tests/v8/governance/v8-04-rule-policy.test.mjs
 
-      - name: GATE 04 — V8-04 V7 dependency scan
+      - name: GATE 04 — V8 clean-room dependency scan
+        shell: bash
         run: |
-          if grep -R -nE 'from ["'"'].*(v7|regional)|from ["'"'].*src/regional|require\([^)]*v7' src/v8/governance src/v8/foundation; then
-            echo 'V8-04-V7-DEPENDENCY FAIL'
+          set -euo pipefail
+          if git grep -nEi 'src/regional|/regional/|from ["'"']\.\.?/.*v7|from ["'"'].*v7/' -- src/v8; then
+            echo "V8-04-V7-DEPENDENCY FAIL"
             exit 1
           fi
-          echo 'V8-04-V7-DEPENDENCY PASS'
+          echo "V8-04-V7-DEPENDENCY PASS"
 
-      - name: GATE 05 — package artifact
+      - name: GATE 05 — changed-file manifest integrity
+        shell: bash
         run: |
+          set -euo pipefail
+
+          BASE="129ce1fc45b2f13473033b940b318233ead97eac"
+
+          EXPECTED=(
+            ".github/workflows/v8-04.yml"
+            "src/v8/foundation/state-machine.ts"
+            "src/v8/foundation/store.ts"
+            "src/v8/foundation/types.ts"
+            "src/v8/governance/index.ts"
+            "src/v8/governance/policy.ts"
+            "src/v8/governance/rule-policy-governance.ts"
+            "src/v8/governance/rule.ts"
+            "tests/v8/governance/v8-04-rule-policy.test.mjs"
+          )
+
+          ACTUAL=$(git diff --name-only "$BASE" HEAD | sort)
+          printf '%s\n' "$ACTUAL" > /tmp/v8-04-actual.txt
+          printf '%s\n' "${EXPECTED[@]}" | sort > /tmp/v8-04-expected.txt
+
+          if ! diff -u /tmp/v8-04-expected.txt /tmp/v8-04-actual.txt; then
+            echo "V8-04-CHANGED-FILE-MANIFEST FAIL"
+            echo "The artifact scope does not exactly match the V8-04 changed-file set."
+            exit 1
+          fi
+
+          echo "V8-04-CHANGED-FILE-MANIFEST PASS"
+          echo "Changed files:"
+          cat /tmp/v8-04-expected.txt
+
+      - name: GATE 06 — package only changed V8-04 files
+        shell: bash
+        run: |
+          set -euo pipefail
+
           rm -rf release-v8-04
-          mkdir -p release-v8-04/src/v8/foundation release-v8-04/src/v8/governance release-v8-04/tests/v8/governance release-v8-04/docs
-          cp src/v8/foundation/types.ts release-v8-04/src/v8/foundation/types.ts
-          cp src/v8/foundation/state-machine.ts release-v8-04/src/v8/foundation/state-machine.ts
-          cp src/v8/foundation/store.ts release-v8-04/src/v8/foundation/store.ts
-          cp src/v8/governance/rule.ts release-v8-04/src/v8/governance/rule.ts
-          cp src/v8/governance/policy.ts release-v8-04/src/v8/governance/policy.ts
-          cp src/v8/governance/rule-policy-governance.ts release-v8-04/src/v8/governance/rule-policy-governance.ts
-          cp src/v8/governance/index.ts release-v8-04/src/v8/governance/index.ts
-          cp tests/v8/governance/v8-04-rule-policy.test.mjs release-v8-04/tests/v8/governance/v8-04-rule-policy.test.mjs
-          cp docs/V8-04-RULE-POLICY-GOVERNANCE.md release-v8-04/docs/V8-04-RULE-POLICY-GOVERNANCE.md
-          cp MANIFEST-V8-04.txt release-v8-04/MANIFEST-V8-04.txt
-          zip -qr NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip release-v8-04
+          mkdir -p release-v8-04
+
+          while IFS= read -r file; do
+            mkdir -p "release-v8-04/$(dirname "$file")"
+            cp "$file" "release-v8-04/$file"
+          done < /tmp/v8-04-expected.txt
+
+          cd release-v8-04
+          zip -qr ../NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip .
+          cd ..
+
+          test -s NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip
+
+      - name: GATE 07 — artifact scope verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -Z1 NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip | sed '/^$/d' | sort > /tmp/v8-04-zip.txt
+          sed 's#^#release-v8-04/#' /tmp/v8-04-expected.txt | sort > /tmp/v8-04-expected-zip.txt
+          if ! diff -u /tmp/v8-04-expected-zip.txt /tmp/v8-04-zip.txt; then
+            echo "V8-04-ARTIFACT-SCOPE FAIL"
+            exit 1
+          fi
+          echo "V8-04-ARTIFACT-SCOPE PASS"
 
       - name: Upload V8-04 PASS artifact
         uses: actions/upload-artifact@v4
