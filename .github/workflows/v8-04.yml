@@ -1,0 +1,71 @@
+name: NEXMOLD V8-04 Rule Policy Gate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/v8/**'
+      - 'tests/v8/**'
+      - 'tsconfig.v8.json'
+      - 'package.json'
+      - '.github/workflows/v8-04.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v8-04-gate:
+    name: V8-04 Rule Policy Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+
+      - name: Install TypeScript compiler
+        run: npm install --no-save --no-package-lock typescript@6.0.3
+
+      - name: GATE 01 — V8 compile
+        run: npm run v8:compile
+
+      - name: GATE 02 — V8 existing regression suite
+        run: node --test tests/v8/**/*.test.mjs
+
+      - name: GATE 03 — V8-04 Rule Policy contracts
+        run: node tests/v8/governance/v8-04-rule-policy.test.mjs
+
+      - name: GATE 04 — V8-04 V7 dependency scan
+        run: |
+          if grep -R -nE 'from ["'"'].*(v7|regional)|from ["'"'].*src/regional|require\([^)]*v7' src/v8/governance src/v8/foundation; then
+            echo 'V8-04-V7-DEPENDENCY FAIL'
+            exit 1
+          fi
+          echo 'V8-04-V7-DEPENDENCY PASS'
+
+      - name: GATE 05 — package artifact
+        run: |
+          rm -rf release-v8-04
+          mkdir -p release-v8-04/src/v8/foundation release-v8-04/src/v8/governance release-v8-04/tests/v8/governance release-v8-04/docs
+          cp src/v8/foundation/types.ts release-v8-04/src/v8/foundation/types.ts
+          cp src/v8/foundation/state-machine.ts release-v8-04/src/v8/foundation/state-machine.ts
+          cp src/v8/foundation/store.ts release-v8-04/src/v8/foundation/store.ts
+          cp src/v8/governance/rule.ts release-v8-04/src/v8/governance/rule.ts
+          cp src/v8/governance/policy.ts release-v8-04/src/v8/governance/policy.ts
+          cp src/v8/governance/rule-policy-governance.ts release-v8-04/src/v8/governance/rule-policy-governance.ts
+          cp src/v8/governance/index.ts release-v8-04/src/v8/governance/index.ts
+          cp tests/v8/governance/v8-04-rule-policy.test.mjs release-v8-04/tests/v8/governance/v8-04-rule-policy.test.mjs
+          cp docs/V8-04-RULE-POLICY-GOVERNANCE.md release-v8-04/docs/V8-04-RULE-POLICY-GOVERNANCE.md
+          cp MANIFEST-V8-04.txt release-v8-04/MANIFEST-V8-04.txt
+          zip -qr NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip release-v8-04
+
+      - name: Upload V8-04 PASS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS
+          path: NEXMOLD-V8-04-RULE-POLICY-GOVERNANCE-WORKFLOW-PASS.zip
+          if-no-files-found: error
