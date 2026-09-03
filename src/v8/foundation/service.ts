@@ -3,8 +3,9 @@ import { invariant, immutable } from "../constitution/invariants.js";
 import { createSource, type Source } from "../domain/source.js";
 import { createEvidence, type Evidence } from "../domain/evidence.js";
 import { createClaim, type Claim } from "../domain/claim.js";
+import { createKnowledge, type Knowledge } from "../domain/knowledge.js";
 import { contentFingerprint } from "./hash.js";
-import type { AuditActor, ClaimPayload, EvidencePayload, FoundationRecord, FoundationStore, LineageLink, SnapshotPayload } from "./types.js";
+import type { AuditActor, ClaimPayload, EvidencePayload, FoundationRecord, FoundationStore, KnowledgePayload, LineageLink, SnapshotPayload } from "./types.js";
 
 export interface SnapshotInput {
   readonly source: Source;
@@ -75,6 +76,7 @@ export class FoundationService {
 
   createClaim(claim: Claim, actor: AuditActor, reason = "claim verification"): FoundationRecord<ClaimPayload> {
     const payload = createClaim(claim);
+    invariant(payload.status === "VERIFIED", "V8_FOUNDATION_CLAIM_NOT_VERIFIED", "Foundation only persists claims that have passed verification.");
     const evidenceRecords = payload.evidenceIds.map(id => this.store.get<EvidencePayload>("EVIDENCE", id));
     invariant(evidenceRecords.every(r => r !== null && r.state === "AUDITED"), "V8_FOUNDATION_CLAIM_EVIDENCE_NOT_AUDITED", "A claim may only be persisted when every cited evidence record is AUDITED.");
     const auditedEvidence = evidenceRecords.filter((r): r is FoundationRecord<EvidencePayload> => r !== null);
@@ -85,6 +87,21 @@ export class FoundationService {
     }
     const uniqueLineage = Array.from(new Map(lineage.map(link => [`${link.type}:${link.id}:${link.version}`, link])).values());
     return this.store.append({ aggregateType: "CLAIM", aggregateId: payload.id, version: 1, state: "VERIFIED", payload: { statement: payload.statement, evidenceIds: payload.evidenceIds }, lineage: uniqueLineage, actor, reason });
+  }
+
+  createKnowledge(knowledge: Knowledge, actor: AuditActor, reason = "knowledge approval"): FoundationRecord<KnowledgePayload> {
+    const payload = createKnowledge(knowledge);
+    invariant(payload.status === "APPROVED", "V8_FOUNDATION_KNOWLEDGE_NOT_APPROVED", "Foundation only persists approved knowledge.");
+    const claimRecords = payload.claimIds.map(id => this.store.get<ClaimPayload>("CLAIM", id));
+    invariant(claimRecords.every(r => r !== null && r.state === "VERIFIED"), "V8_FOUNDATION_KNOWLEDGE_CLAIM_NOT_VERIFIED", "Knowledge may only be persisted from verified claims.");
+    const lineage: LineageLink[] = [];
+    for (const record of claimRecords) {
+      if (!record) continue;
+      for (const link of record.lineage) lineage.push(link);
+      lineage.push({ type: "CLAIM", id: record.aggregateId, version: record.version, fingerprint: record.fingerprint });
+    }
+    const uniqueLineage = Array.from(new Map(lineage.map(link => [`${link.type}:${link.id}:${link.version}`, link])).values());
+    return this.store.append({ aggregateType: "KNOWLEDGE", aggregateId: payload.id, version: 1, state: "VERIFIED", payload: { proposition: payload.proposition, claimIds: payload.claimIds }, lineage: uniqueLineage, actor, reason });
   }
 
   get storeView(): FoundationStore { return this.store; }

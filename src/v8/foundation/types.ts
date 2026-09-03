@@ -1,6 +1,6 @@
 import type { ClaimId, EvidenceId, Fingerprint, SourceId } from "../domain/primitives.js";
 
-export type AggregateType = "SOURCE" | "SNAPSHOT" | "EVIDENCE" | "CLAIM";
+export type AggregateType = "SOURCE" | "SNAPSHOT" | "EVIDENCE" | "CLAIM" | "KNOWLEDGE";
 export type FoundationState =
   | "REGISTERED"
   | "CAPTURED"
@@ -60,6 +60,11 @@ export interface EvidencePayload {
 export interface ClaimPayload {
   readonly statement: string;
   readonly evidenceIds: readonly EvidenceId[];
+}
+
+export interface KnowledgePayload {
+  readonly proposition: string;
+  readonly claimIds: readonly ClaimId[];
 }
 
 export interface FoundationStore {

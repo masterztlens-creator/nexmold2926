@@ -22,7 +22,7 @@ export class InMemoryFoundationStore implements FoundationStore {
   append<T>(input: Omit<FoundationRecord<T>, "recordId" | "fingerprint" | "recordedAt" | "previousFingerprint"> & { readonly recordedAt?: string }): FoundationRecord<T> {
     invariant(input.version >= 1 && Number.isInteger(input.version), "V8_FOUNDATION_VERSION_INVALID", "Version must be a positive integer.");
     assertKnownState(input.state);
-    invariant(["SOURCE", "SNAPSHOT", "EVIDENCE", "CLAIM"].includes(input.aggregateType), "V8_FOUNDATION_AGGREGATE_INVALID", `Unknown aggregate type: ${input.aggregateType}.`);
+    invariant(["SOURCE", "SNAPSHOT", "EVIDENCE", "CLAIM", "KNOWLEDGE"].includes(input.aggregateType), "V8_FOUNDATION_AGGREGATE_INVALID", `Unknown aggregate type: ${input.aggregateType}.`);
     nonEmpty(input.aggregateId, "aggregateId");
     nonEmpty(input.reason, "reason");
     invariant(input.actor !== undefined && typeof input.actor.id === "string" && input.actor.id.trim().length > 0, "V8_FOUNDATION_AUDIT_ACTOR_REQUIRED", "Audit actor id is required.");
