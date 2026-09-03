@@ -25,7 +25,7 @@ export class RulePolicyGovernance {
     const current = this.store.get("RULE", ruleId);
     invariant(current !== null, "V8_RULE_NOT_FOUND", `Rule ${ruleId} not found.`);
     invariant(current.state === "PROPOSED", "V8_RULE_NOT_PROPOSABLE", "Only PROPOSED rules may be approved.");
-    this.assertApprovedKnowledge(current.payload as Rule);
+    this.assertApprovedKnowledge((current.payload as Rule).knowledgeIds);
     return this.store.append({ aggregateType: "RULE", aggregateId: ruleId, version: current.version + 1, state: "APPROVED", payload: createRule({ ...(current.payload as Rule), status: "APPROVED" }), lineage: current.lineage, actor, reason });
   }
 
