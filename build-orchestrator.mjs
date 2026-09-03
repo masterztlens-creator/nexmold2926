@@ -13,6 +13,7 @@
  *   -> ROUTE CONFLICT GATE
  *   -> CLEAN BUILD
  *   -> ARTIFACT AUDIT
+ *   -> V8-09 PRODUCTION INTEGRATION
  *   -> RUNTIME GATE
  *   -> SITEMAP GATE
  *   -> RELEASE PREFLIGHT
@@ -220,6 +221,23 @@ async function runCommand(command, label) {
   });
 }
 
+async function runV8ProductionGate() {
+  const gate = path.join(ROOT, "scripts", "v8-production-gate.mjs");
+  if (!fs.existsSync(gate)) fail("V8_09_PRODUCTION_INTEGRATION", "scripts/v8-production-gate.mjs missing");
+
+  const manifestPath = path.join(RELEASE_DIR, "html-manifest.json");
+  if (!fs.existsSync(DIST)) fail("V8_09_PRODUCTION_INTEGRATION", "dist directory missing");
+  if (!fs.existsSync(manifestPath)) {
+    fail("V8_09_PRODUCTION_INTEGRATION", `HTML manifest missing: ${path.relative(ROOT, manifestPath)}`);
+  }
+
+  await runCommand(
+    `node ${JSON.stringify(gate)}`,
+    "V8_09_PRODUCTION_INTEGRATION",
+  );
+  pass("V8_09_PRODUCTION_INTEGRATION", "Real dist + HTML manifest passed V8 Production Boundary.");
+}
+
 function auditDist() {
   if (!fs.existsSync(DIST)) fail("BUILD", "dist directory missing after build");
 
@@ -346,6 +364,9 @@ async function main() {
   auditForbiddenArtifacts();
   auditSmokeRoutes();
 
+  section("V8_09_PRODUCTION_INTEGRATION");
+  await runV8ProductionGate();
+
   section("V7.14_POST_BUILD_GATES");
   await runExportedGate(...GATES.runtime, "RUNTIME_GATE");
   await runExportedGate(...GATES.sitemap, "SITEMAP_GATE");
@@ -371,6 +392,7 @@ async function main() {
       "RegionalPublishArtifact",
       "PublicationGate",
       "Projection",
+      "V8ProductionBoundary",
       "ArticleProducer",
       "ArticleRenderer",
       "ArticleFactory",
