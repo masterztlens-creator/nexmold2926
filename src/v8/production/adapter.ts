@@ -1,9 +1,29 @@
 import { immutable, invariant } from "../constitution/invariants.js";
+import { contentFingerprint } from "../foundation/hash.js";
 import { assertReleaseReady } from "../release/gate.js";
 import type { V8ProductionInput, V8ProductionManifest } from "./types.js";
 
 function canonicalPaths(paths: readonly string[]): string[] {
   return [...new Set(paths.map((value) => value.trim()).filter(Boolean))].sort();
+}
+
+function assertCanonicalReleaseIdentity(input: V8ProductionInput): void {
+  const expectedFingerprint = contentFingerprint({
+    projectionId: input.release.projectionId,
+    projectionFingerprint: input.release.projectionFingerprint,
+    manifest: canonicalPaths(input.release.manifest),
+  });
+
+  invariant(
+    input.release.fingerprint === expectedFingerprint,
+    "V8_PRODUCTION_RELEASE_FINGERPRINT_MISMATCH",
+    "Production release fingerprint does not match its canonical payload.",
+  );
+  invariant(
+    input.release.id === `release:${expectedFingerprint}`,
+    "V8_PRODUCTION_RELEASE_ID_MISMATCH",
+    "Production release id does not match its canonical fingerprint.",
+  );
 }
 
 export function createProductionManifest(
@@ -25,7 +45,9 @@ export function createProductionManifest(
     "V8_PRODUCTION_MANIFEST_MISMATCH",
     "Production release manifest does not match expected generated paths.");
 
+  assertCanonicalReleaseIdentity(input);
   assertReleaseReady(input.release);
+
   return immutable({
     schema: "nexmold.v8.production-manifest.v1",
     releaseId: input.release.id,
@@ -48,5 +70,18 @@ export function assertProductionManifest(
   const paths = canonicalPaths(manifest.manifest);
   invariant(paths.length === manifest.manifest.length && paths.every((value, index) => value === manifest.manifest[index]),
     "V8_PRODUCTION_MANIFEST_NOT_CANONICAL", "Production manifest paths are not canonical.");
+
+  const expectedReleaseFingerprint = contentFingerprint({
+    projectionId: manifest.projectionId,
+    projectionFingerprint: manifest.projectionFingerprint,
+    manifest: paths,
+  });
+  invariant(
+    manifest.releaseFingerprint === expectedReleaseFingerprint &&
+      manifest.releaseId === `release:${expectedReleaseFingerprint}`,
+    "V8_PRODUCTION_RELEASE_IDENTITY_INVALID",
+    "Production manifest release identity is not canonical.",
+  );
+
   return immutable({ passed: true, releaseId: manifest.releaseId });
 }

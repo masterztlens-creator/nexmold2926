@@ -34,12 +34,16 @@ function scan(dir) {
 scan(src);
 if (bad.length) throw new Error(`V8_FINAL_CLEAN_ROOM_FAIL: ${bad.join(", ")}`);
 
-const required = ["constitution","domain","foundation","governance","semantic","evidence","eligibility","publication","projection","release"];
+const required = ["constitution","domain","foundation","governance","semantic","evidence","eligibility","publication","projection","release","production"];
 for (const layer of required) {
   if (!statSync(join(src, layer)).isDirectory()) throw new Error(`V8_FINAL_LAYER_MISSING: ${layer}`);
 }
+
+run(process.execPath, [join(root, "scripts/v8-production-gate.mjs")]);
+
 console.log("V8 FINAL GATE PASS");
-console.log("V8-00..V8-08 source layers: PASS");
+console.log("V8-00..V8-09 source layers: PASS");
 console.log("Compile: PASS");
 console.log("Runtime contracts: PASS");
 console.log("Clean room: PASS");
+console.log("V8-09 Production Boundary: PASS");
