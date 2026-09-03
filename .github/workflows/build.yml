@@ -1,9 +1,9 @@
 name: NEXMOLD V7.14 Production Gate Matrix
 
-#on:
-#  push:
-#    branches: [ main ]
-#  workflow_dispatch:
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,6 +12,7 @@ jobs:
   v714-gate-matrix:
     name: V7.14 Gate Matrix
     runs-on: ubuntu-latest
+    if: false  # 新增这一行，永久不运行此job
 
     steps:
       - name: Checkout source
