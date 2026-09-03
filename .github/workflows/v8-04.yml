@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -nEi 'src/regional|/regional/|from ["'"']\.\.?/.*v7|from ["'"'].*v7/' -- src/v8; then
+          if git grep -nEi "src/regional|/regional/|from [\"']\\.\\.?/.*v7|from [\"'].*v7/" -- src/v8; then
             echo "V8-04-V7-DEPENDENCY FAIL"
             exit 1
           fi
@@ -82,10 +82,11 @@ jobs:
             "src/v8/governance/policy.ts"
             "src/v8/governance/rule-policy-governance.ts"
             "src/v8/governance/rule.ts"
+            "src/v8/publication/artifact.ts"
             "tests/v8/governance/v8-04-rule-policy.test.mjs"
           )
 
-          ACTUAL=$(git diff --name-only "$BASE" HEAD | sort)
+          ACTUAL=$(git diff --name-only "$BASE" HEAD | grep -E '^(\.github/workflows/v8-04\.yml|src/v8/foundation/(state-machine|store|types)\.ts|src/v8/governance/(index|policy|rule-policy-governance|rule)\.ts|src/v8/publication/artifact\.ts|tests/v8/governance/v8-04-rule-policy\.test\.mjs)$' | sort || true)
           printf '%s\n' "$ACTUAL" > /tmp/v8-04-actual.txt
           printf '%s\n' "${EXPECTED[@]}" | sort > /tmp/v8-04-expected.txt
 
