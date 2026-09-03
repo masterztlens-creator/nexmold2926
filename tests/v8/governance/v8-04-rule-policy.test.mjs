@@ -6,7 +6,7 @@ import {
   createRule,
   createPolicy,
   V8InvariantError,
-} from '../.v8-build/src/v8/index.js';
+} from '../../../.v8-build/src/v8/index.js';
 
 const governor = { id: 'gov-01', role: 'GOVERNOR' };
 const verifier = { id: 'ver-01', role: 'VERIFIER' };
