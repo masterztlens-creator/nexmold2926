@@ -1,7 +1,1 @@
-import { immutable } from "../constitution/invariants.js";
-import { contextId, nonEmpty, scopeId, type ContextId, type ScopeId } from "./primitives.js";
-export interface Context { readonly id: ContextId; readonly scopeId: ScopeId; readonly purpose: string; readonly variables: Readonly<Record<string, string>>; }
-export function createContext(input: Omit<Context, "id"> & { id?: string }): Readonly<Context> {
-  const variables = Object.fromEntries(Object.entries(input.variables).sort(([a],[b]) => a.localeCompare(b)));
-  return immutable({ id: contextId(input.id ?? `${input.scopeId}:${input.purpose}`), scopeId: scopeId(input.scopeId), purpose: nonEmpty(input.purpose, "context.purpose"), variables: immutable(variables) });
-}
+import {immutable} from "../constitution/invariants.js";import {contextId,nonEmpty,scopeId,type ContextId,type ScopeId} from "./primitives.js";export interface Context{id:ContextId;scopeId:ScopeId;purpose:string;variables:Readonly<Record<string,string>>;}export function createContext(i:Omit<Context,"id">&{id?:string}):Readonly<Context>{const variables=Object.fromEntries(Object.entries(i.variables).sort(([a],[b])=>a.localeCompare(b)));return immutable({id:contextId(i.id??`${i.scopeId}:${i.purpose}`),scopeId:scopeId(i.scopeId),purpose:nonEmpty(i.purpose,"context.purpose"),variables:immutable(variables)});}

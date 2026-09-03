@@ -1,29 +1,10 @@
-import { nonEmpty } from "../domain/primitives.js";
-import { contentFingerprint } from "./hash.js";
-import { immutable, invariant } from "../constitution/invariants.js";
-import { assertKnownState, assertTransition } from "./state-machine.js";
-import type { AggregateType, FoundationRecord, FoundationState, FoundationStore } from "./types.js";
-
-function deepFreeze<T>(value:T):T { if(value&&typeof value==="object"&&!Object.isFrozen(value)){Object.freeze(value);for(const child of Object.values(value as Record<string,unknown>))deepFreeze(child);}return value;}
-function cloneRecord<T>(record:FoundationRecord<T>):FoundationRecord<T>{return immutable(deepFreeze({...record,lineage:[...record.lineage]}));}
-
-export class InMemoryFoundationStore implements FoundationStore {
- private readonly records:FoundationRecord[]=[];
- append<T>(input:Omit<FoundationRecord<T>,"recordId"|"fingerprint"|"recordedAt"|"previousFingerprint">&{readonly recordedAt?:string}):FoundationRecord<T>{
-  invariant(input.version>=1&&Number.isInteger(input.version),"V8_FOUNDATION_VERSION_INVALID","Version must be a positive integer."); assertKnownState(input.state);
-  invariant(["SOURCE","SNAPSHOT","EVIDENCE","CLAIM","KNOWLEDGE","RULE","POLICY"].includes(input.aggregateType),"V8_FOUNDATION_AGGREGATE_INVALID",`Unknown aggregate type: ${input.aggregateType}.`);
-  nonEmpty(input.aggregateId,"aggregateId"); nonEmpty(input.reason,"reason");
-  invariant(input.actor!==undefined&&typeof input.actor.id==="string"&&input.actor.id.trim().length>0,"V8_FOUNDATION_AUDIT_ACTOR_REQUIRED","Audit actor id is required.");
-  invariant(["SYSTEM","INGESTOR","AUDITOR","VERIFIER","GOVERNOR"].includes(input.actor.role),"V8_FOUNDATION_AUDIT_ROLE_INVALID","Audit actor role is invalid.");
-  invariant(input.lineage.every(link=>link.version>=1),"V8_FOUNDATION_LINEAGE_INVALID","Lineage versions must be positive.");
-  const previous=this.get(input.aggregateType,input.aggregateId);
-  if(previous){invariant(input.version===previous.version+1,"V8_FOUNDATION_VERSION_GAP","Aggregate versions must be contiguous.");assertTransition(previous.state,input.state);}else invariant(input.version===1,"V8_FOUNDATION_FIRST_VERSION","A new aggregate must start at version 1.");
-  const recordedAt=input.recordedAt??new Date().toISOString(); const previousFingerprint=previous?.fingerprint??null;
-  const body={aggregateType:input.aggregateType,aggregateId:input.aggregateId,version:input.version,state:input.state,payload:input.payload,lineage:input.lineage,previousFingerprint,actor:input.actor,reason:input.reason,recordedAt};
-  const fingerprint=contentFingerprint(body); const record=immutable({recordId:`${input.aggregateType}:${input.aggregateId}:${input.version}`,...body,fingerprint}) as FoundationRecord<T>; this.records.push(record as FoundationRecord); return cloneRecord(record);
- }
- get<T>(aggregateType:AggregateType,aggregateId:string,version?:number):FoundationRecord<T>|null{const matches=this.records.filter(r=>r.aggregateType===aggregateType&&r.aggregateId===aggregateId);if(!matches.length)return null;const record=version===undefined?matches[matches.length-1]:matches.find(r=>r.version===version);return record?cloneRecord(record as FoundationRecord<T>):null;}
- history(aggregateType:AggregateType,aggregateId:string):readonly FoundationRecord[]{return this.records.filter(r=>r.aggregateType===aggregateType&&r.aggregateId===aggregateId).map(cloneRecord);}
- auditTrail():readonly FoundationRecord[]{return this.records.map(cloneRecord);}
- verifyChain():void{const grouped=new Map<string,FoundationRecord[]>();for(const record of this.records){const key=`${record.aggregateType}:${record.aggregateId}`;const list=grouped.get(key)??[];list.push(record);grouped.set(key,list);}for(const list of grouped.values()){for(let i=0;i<list.length;i++){const record=list[i];const expectedPrevious=i===0?null:list[i-1].fingerprint;invariant(record.previousFingerprint===expectedPrevious,"V8_FOUNDATION_CHAIN_BROKEN",`${record.recordId} previous fingerprint mismatch.`);const {fingerprint:actual,...withoutFingerprint}=record;invariant(contentFingerprint(withoutFingerprint)===actual,"V8_FOUNDATION_FINGERPRINT_MISMATCH",`${record.recordId} fingerprint mismatch.`);}}}
+import {immutable,invariant} from "../constitution/invariants.js";import {nonEmpty} from "../domain/primitives.js";import {contentFingerprint} from "./hash.js";import {assertKnownState,assertTransition} from "./state-machine.js";import type {AggregateType,FoundationRecord,FoundationState,FoundationStore} from "./types.js";
+const TYPES=new Set<AggregateType>(["SOURCE","SNAPSHOT","EVIDENCE","CLAIM","KNOWLEDGE","RULE","POLICY","ELIGIBILITY","PUBLICATION","PROJECTION","RELEASE"]);
+function clone<T>(r:FoundationRecord<T>):FoundationRecord<T>{return immutable({...r,lineage:[...r.lineage]});}
+export class InMemoryFoundationStore implements FoundationStore{private readonly records:FoundationRecord[]=[];
+ append<T>(i:Omit<FoundationRecord<T>,"recordId"|"fingerprint"|"recordedAt"|"previousFingerprint">&{recordedAt?:string}):FoundationRecord<T>{invariant(Number.isInteger(i.version)&&i.version>0,"V8_FOUNDATION_VERSION_INVALID","Version must be a positive integer.");assertKnownState(i.state);invariant(TYPES.has(i.aggregateType),"V8_FOUNDATION_AGGREGATE_INVALID",`Unknown aggregate type: ${i.aggregateType}.`);nonEmpty(i.aggregateId,"aggregateId");nonEmpty(i.reason,"reason");invariant(typeof i.actor?.id==="string"&&i.actor.id.trim().length>0,"V8_FOUNDATION_AUDIT_ACTOR_REQUIRED","Audit actor id is required.");invariant(["SYSTEM","INGESTOR","AUDITOR","VERIFIER","GOVERNOR"].includes(i.actor.role),"V8_FOUNDATION_AUDIT_ROLE_INVALID","Audit actor role is invalid.");invariant(i.lineage.every(l=>Number.isInteger(l.version)&&l.version>0&&l.id.length>0&&l.fingerprint.length>0),"V8_FOUNDATION_LINEAGE_INVALID","Invalid lineage link.");const prev=this.get(i.aggregateType,i.aggregateId);if(prev){invariant(i.version===prev.version+1,"V8_FOUNDATION_VERSION_GAP","Aggregate versions must be contiguous.");assertTransition(prev.state,i.state);}else invariant(i.version===1,"V8_FOUNDATION_FIRST_VERSION","A new aggregate must start at version 1.");const recordedAt=i.recordedAt??new Date().toISOString();const previousFingerprint=prev?.fingerprint??null;const body={aggregateType:i.aggregateType,aggregateId:i.aggregateId,version:i.version,state:i.state,payload:i.payload,lineage:i.lineage,previousFingerprint,actor:i.actor,reason:i.reason,recordedAt};const record=immutable({recordId:`${i.aggregateType}:${i.aggregateId}:${i.version}`,...body,fingerprint:contentFingerprint(body)}) as FoundationRecord<T>;this.records.push(record);return clone(record);}
+ get<T>(t:AggregateType,id:string,v?:number){const a=this.records.filter(r=>r.aggregateType===t&&r.aggregateId===id);if(!a.length)return null;const r=v===undefined?a[a.length-1]:a.find(x=>x.version===v);return r?clone(r as FoundationRecord<T>):null;}
+ history(t:AggregateType,id:string){return this.records.filter(r=>r.aggregateType===t&&r.aggregateId===id).map(clone);}
+ auditTrail(){return this.records.map(clone);}
+ verifyChain(){const groups=new Map<string,FoundationRecord[]>();for(const r of this.records){const k=`${r.aggregateType}:${r.aggregateId}`;const a=groups.get(k)??[];a.push(r);groups.set(k,a);}for(const a of groups.values())for(let n=0;n<a.length;n++){const r=a[n];invariant(r.previousFingerprint===(n? a[n-1].fingerprint:null),"V8_FOUNDATION_CHAIN_BROKEN",`${r.recordId} previous fingerprint mismatch.`);const {recordId,fingerprint,...body}=r;void recordId;invariant(contentFingerprint(body)===fingerprint,"V8_FOUNDATION_FINGERPRINT_MISMATCH",`${r.recordId} fingerprint mismatch.`);}}
 }

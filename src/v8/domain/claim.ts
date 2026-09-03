@@ -1,20 +1,3 @@
-import { immutable, invariant, requireKnown } from "../constitution/invariants.js";
-import { claimId, evidenceId, nonEmpty, stableFingerprint, type ClaimId, type EvidenceId, type Fingerprint } from "./primitives.js";
-
-export type ClaimStatus = "VERIFIED" | "REJECTED" | "REQUIRES_REVIEW" | "UNKNOWN";
-
-export interface Claim {
-  readonly id: ClaimId;
-  readonly statement: string;
-  readonly evidenceIds: readonly EvidenceId[];
-  readonly status: Exclude<ClaimStatus, "UNKNOWN">;
-  readonly fingerprint: Fingerprint;
-}
-
-export function createClaim(input: Omit<Claim, "id" | "fingerprint"> & { id?: string }): Readonly<Claim> {
-  const status = requireKnown(input.status, "V8_CLAIM_UNKNOWN", "claim.status");
-  invariant(input.evidenceIds.length > 0, "V8_CLAIM_NO_EVIDENCE", "A claim must cite at least one evidence record.");
-  const evidenceIds = immutable([...new Set(input.evidenceIds.map(evidenceId))].sort());
-  const fp = stableFingerprint({ statement: input.statement, evidenceIds, status });
-  return immutable({ id: claimId(input.id ?? `claim:${fp}`), statement: nonEmpty(input.statement, "claim.statement"), evidenceIds, status, fingerprint: fp });
-}
+import {immutable,invariant,requireKnown} from "../constitution/invariants.js";import {claimId,evidenceId,nonEmpty,type ClaimId,type EvidenceId,type Fingerprint} from "./primitives.js";import {contentFingerprint} from "../foundation/hash.js";
+export type ClaimStatus="VERIFIED"|"REJECTED"|"REQUIRES_REVIEW"|"UNKNOWN";export interface Claim{id:ClaimId;statement:string;evidenceIds:readonly EvidenceId[];status:Exclude<ClaimStatus,"UNKNOWN">;fingerprint:Fingerprint;}
+export function createClaim(i:Omit<Claim,"id"|"fingerprint">&{id?:string}):Readonly<Claim>{const status=requireKnown(i.status,"V8_CLAIM_UNKNOWN","claim.status");invariant(i.evidenceIds.length>0,"V8_CLAIM_NO_EVIDENCE","A claim must cite at least one evidence record.");const evidenceIds=immutable([...new Set(i.evidenceIds.map(evidenceId))].sort());const statement=nonEmpty(i.statement,"claim.statement");const fp=contentFingerprint({statement,evidenceIds,status});return immutable({id:claimId(i.id??`claim:${fp}`),statement,evidenceIds,status,fingerprint:fp});}

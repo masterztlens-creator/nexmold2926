@@ -1,11 +1,1 @@
-export * from "./primitives.js";
-export * from "./source.js";
-export * from "./evidence.js";
-export * from "./claim.js";
-export * from "./entity.js";
-export * from "./knowledge.js";
-export * from "./scope.js";
-export * from "./context.js";
-export * from "./problem.js";
-export * from "./decision.js";
-export * from "./content.js";
+export * from "./primitives.js";export * from "./source.js";export * from "./evidence.js";export * from "./claim.js";export * from "./entity.js";export * from "./knowledge.js";export * from "./scope.js";export * from "./context.js";export * from "./problem.js";export * from "./decision.js";export * from "./content.js";

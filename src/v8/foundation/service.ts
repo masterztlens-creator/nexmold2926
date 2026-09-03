@@ -1,108 +1,11 @@
-import { nonEmpty } from "../domain/primitives.js";
-import { invariant, immutable } from "../constitution/invariants.js";
-import { createSource, type Source } from "../domain/source.js";
-import { createEvidence, type Evidence } from "../domain/evidence.js";
-import { createClaim, type Claim } from "../domain/claim.js";
-import { createKnowledge, type Knowledge } from "../domain/knowledge.js";
-import { contentFingerprint } from "./hash.js";
-import type { AuditActor, ClaimPayload, EvidencePayload, FoundationRecord, FoundationStore, KnowledgePayload, LineageLink, SnapshotPayload } from "./types.js";
-
-export interface SnapshotInput {
-  readonly source: Source;
-  readonly capturedAt: string;
-  readonly locator: string;
-  readonly content?: string;
-  readonly metadataOnly: boolean;
-}
-
-export class FoundationService {
-  constructor(private readonly store: FoundationStore) {}
-
-  registerSource(source: Source, actor: AuditActor, reason = "source registration"): FoundationRecord<Source> {
-    const payload = createSource(source);
-    return this.store.append({ aggregateType: "SOURCE", aggregateId: payload.id, version: 1, state: "REGISTERED", payload, lineage: [], actor, reason });
-  }
-
-  captureSnapshot(input: SnapshotInput, actor: AuditActor, reason = "snapshot capture"): FoundationRecord<SnapshotPayload> {
-    nonEmpty(input.capturedAt, "snapshot.capturedAt");
-    nonEmpty(input.locator, "snapshot.locator");
-    if (input.metadataOnly) invariant(input.content === undefined, "V8_FOUNDATION_METADATA_PAYLOAD_FORBIDDEN", "Metadata-only sources cannot persist payload.");
-    const payload: SnapshotPayload = immutable({
-      sourceId: input.source.id,
-      capturedAt: input.capturedAt,
-      locator: input.locator.trim(),
-      contentHash: contentFingerprint(input.content ?? { locator: input.locator, capturedAt: input.capturedAt }),
-      ...(input.content === undefined ? {} : { payload: input.content }),
-      metadataOnly: input.metadataOnly,
-    });
-    const snapshotId = `snapshot:${input.source.id}:${payload.contentHash}`;
-    const sourceRecord = this.store.get<Source>("SOURCE", input.source.id);
-    if (sourceRecord === null) throw new Error(`V8_FOUNDATION_SOURCE_NOT_REGISTERED: Source ${input.source.id} is not registered.`);
-    const lineage: LineageLink[] = [{ type: "SOURCE", id: sourceRecord.aggregateId, version: sourceRecord.version, fingerprint: sourceRecord.fingerprint }];
-    return this.store.append({ aggregateType: "SNAPSHOT", aggregateId: snapshotId, version: 1, state: "CAPTURED", payload, lineage, actor, reason });
-  }
-
-  sealSnapshot(snapshotId: string, actor: AuditActor, reason = "snapshot sealed"): FoundationRecord<SnapshotPayload> {
-    const current = this.store.get<SnapshotPayload>("SNAPSHOT", snapshotId);
-    if (current === null) throw new Error(`V8_FOUNDATION_SNAPSHOT_NOT_FOUND: Snapshot ${snapshotId} not found.`);
-    return this.store.append({ aggregateType: "SNAPSHOT", aggregateId: snapshotId, version: current.version + 1, state: "SEALED", payload: current.payload, lineage: current.lineage, actor, reason });
-  }
-
-  ingestEvidence(input: Omit<Evidence, "id"> & { id?: string; snapshotId: string }, actor: AuditActor, reason = "evidence ingestion"): FoundationRecord<EvidencePayload> {
-    const snapshot = this.store.get<SnapshotPayload>("SNAPSHOT", input.snapshotId);
-    if (snapshot === null || snapshot.state !== "SEALED") throw new Error("V8_FOUNDATION_SNAPSHOT_NOT_SEALED: Evidence may only be ingested from a sealed snapshot.");
-    const evidence = createEvidence(input);
-    const payload: EvidencePayload = immutable({
-      sourceId: evidence.sourceId,
-      snapshotId: input.snapshotId,
-      locator: evidence.locator,
-      excerpt: evidence.excerpt,
-      evidenceHash: contentFingerprint({ excerpt: evidence.excerpt, locator: evidence.locator, snapshot: snapshot.fingerprint }),
-      capturedAt: evidence.capturedAt,
-    });
-    const lineage: LineageLink[] = [
-      ...snapshot.lineage,
-      { type: "SNAPSHOT", id: snapshot.aggregateId, version: snapshot.version, fingerprint: snapshot.fingerprint },
-    ];
-    return this.store.append({ aggregateType: "EVIDENCE", aggregateId: evidence.id, version: 1, state: "INGESTED", payload, lineage, actor, reason });
-  }
-
-  auditEvidence(evidenceId: string, actor: AuditActor, reason = "evidence audit"): FoundationRecord<EvidencePayload> {
-    const current = this.store.get<EvidencePayload>("EVIDENCE", evidenceId);
-    if (current === null) throw new Error(`V8_FOUNDATION_EVIDENCE_NOT_FOUND: Evidence ${evidenceId} not found.`);
-    invariant(current.state === "INGESTED" || current.state === "REQUIRES_REVIEW", "V8_FOUNDATION_EVIDENCE_NOT_AUDITABLE", "Evidence is not in an auditable state.");
-    return this.store.append({ aggregateType: "EVIDENCE", aggregateId: evidenceId, version: current.version + 1, state: "AUDITED", payload: current.payload, lineage: current.lineage, actor, reason });
-  }
-
-  createClaim(claim: Claim, actor: AuditActor, reason = "claim verification"): FoundationRecord<ClaimPayload> {
-    const payload = createClaim(claim);
-    invariant(payload.status === "VERIFIED", "V8_FOUNDATION_CLAIM_NOT_VERIFIED", "Foundation only persists claims that have passed verification.");
-    const evidenceRecords = payload.evidenceIds.map(id => this.store.get<EvidencePayload>("EVIDENCE", id));
-    invariant(evidenceRecords.every(r => r !== null && r.state === "AUDITED"), "V8_FOUNDATION_CLAIM_EVIDENCE_NOT_AUDITED", "A claim may only be persisted when every cited evidence record is AUDITED.");
-    const auditedEvidence = evidenceRecords.filter((r): r is FoundationRecord<EvidencePayload> => r !== null);
-    const lineage: LineageLink[] = [];
-    for (const record of auditedEvidence) {
-      for (const link of record.lineage) lineage.push(link);
-      lineage.push({ type: "EVIDENCE", id: record.aggregateId, version: record.version, fingerprint: record.fingerprint });
-    }
-    const uniqueLineage = Array.from(new Map(lineage.map(link => [`${link.type}:${link.id}:${link.version}`, link])).values());
-    return this.store.append({ aggregateType: "CLAIM", aggregateId: payload.id, version: 1, state: "VERIFIED", payload: { statement: payload.statement, evidenceIds: payload.evidenceIds }, lineage: uniqueLineage, actor, reason });
-  }
-
-  createKnowledge(knowledge: Knowledge, actor: AuditActor, reason = "knowledge approval"): FoundationRecord<KnowledgePayload> {
-    const payload = createKnowledge(knowledge);
-    invariant(payload.status === "APPROVED", "V8_FOUNDATION_KNOWLEDGE_NOT_APPROVED", "Foundation only persists approved knowledge.");
-    const claimRecords = payload.claimIds.map(id => this.store.get<ClaimPayload>("CLAIM", id));
-    invariant(claimRecords.every(r => r !== null && r.state === "VERIFIED"), "V8_FOUNDATION_KNOWLEDGE_CLAIM_NOT_VERIFIED", "Knowledge may only be persisted from verified claims.");
-    const lineage: LineageLink[] = [];
-    for (const record of claimRecords) {
-      if (!record) continue;
-      for (const link of record.lineage) lineage.push(link);
-      lineage.push({ type: "CLAIM", id: record.aggregateId, version: record.version, fingerprint: record.fingerprint });
-    }
-    const uniqueLineage = Array.from(new Map(lineage.map(link => [`${link.type}:${link.id}:${link.version}`, link])).values());
-    return this.store.append({ aggregateType: "KNOWLEDGE", aggregateId: payload.id, version: 1, state: "VERIFIED", payload: { proposition: payload.proposition, claimIds: payload.claimIds }, lineage: uniqueLineage, actor, reason });
-  }
-
-  get storeView(): FoundationStore { return this.store; }
+import {immutable,invariant} from "../constitution/invariants.js";import {nonEmpty} from "../domain/primitives.js";import {createSource,type Source} from "../domain/source.js";import {createEvidence,type Evidence} from "../domain/evidence.js";import {createClaim,type Claim} from "../domain/claim.js";import {createKnowledge,type Knowledge} from "../domain/knowledge.js";import {contentFingerprint} from "./hash.js";import type {AuditActor,ClaimPayload,EvidencePayload,FoundationRecord,FoundationStore,KnowledgePayload,LineageLink,SnapshotPayload} from "./types.js";
+export interface SnapshotInput{readonly source:Source;readonly capturedAt:string;readonly locator:string;readonly content?:string;readonly metadataOnly:boolean;}
+export class FoundationService{constructor(private readonly store:FoundationStore){}get storeView(){return this.store;}
+ registerSource(s:Source,a:AuditActor,reason="source registration"){const p=createSource(s);return this.store.append({aggregateType:"SOURCE",aggregateId:p.id,version:1,state:"REGISTERED",payload:p,lineage:[],actor:a,reason});}
+ captureSnapshot(i:SnapshotInput,a:AuditActor,reason="snapshot capture"){nonEmpty(i.capturedAt,"snapshot.capturedAt");nonEmpty(i.locator,"snapshot.locator");if(i.metadataOnly)invariant(i.content===undefined,"V8_FOUNDATION_METADATA_PAYLOAD_FORBIDDEN","Metadata-only sources cannot persist payload.");const sr=this.store.get<Source>("SOURCE",i.source.id);invariant(sr!==null,"V8_FOUNDATION_SOURCE_NOT_REGISTERED",`Source ${i.source.id} is not registered.`);const p=immutable({sourceId:i.source.id,capturedAt:i.capturedAt,locator:i.locator.trim(),contentHash:contentFingerprint(i.content??{locator:i.locator,capturedAt:i.capturedAt}),...(i.content===undefined?{}:{payload:i.content}),metadataOnly:i.metadataOnly});const id=`snapshot:${i.source.id}:${p.contentHash}`;return this.store.append({aggregateType:"SNAPSHOT",aggregateId:id,version:1,state:"CAPTURED",payload:p,lineage:[{type:"SOURCE",id:sr.aggregateId,version:sr.version,fingerprint:sr.fingerprint}],actor:a,reason});}
+ sealSnapshot(id:string,a:AuditActor,reason="snapshot sealed"){const c=this.store.get<SnapshotPayload>("SNAPSHOT",id);invariant(c!==null,"V8_FOUNDATION_SNAPSHOT_NOT_FOUND",`Snapshot ${id} not found.`);return this.store.append({aggregateType:"SNAPSHOT",aggregateId:id,version:c.version+1,state:"SEALED",payload:c.payload,lineage:c.lineage,actor:a,reason});}
+ ingestEvidence(i:Omit<Evidence,"id">&{id?:string;snapshotId:string},a:AuditActor,reason="evidence ingestion"){const s=this.store.get<SnapshotPayload>("SNAPSHOT",i.snapshotId);invariant(s!==null&&s.state==="SEALED","V8_FOUNDATION_SNAPSHOT_NOT_SEALED","Evidence may only be ingested from a sealed snapshot.");const e=createEvidence(i);const p:EvidencePayload=immutable({sourceId:e.sourceId,snapshotId:i.snapshotId,locator:e.locator,excerpt:e.excerpt,evidenceHash:contentFingerprint({excerpt:e.excerpt,locator:e.locator,snapshot:s.fingerprint}),capturedAt:e.capturedAt});const lineage:LineageLink[]=[...s.lineage,{type:"SNAPSHOT",id:s.aggregateId,version:s.version,fingerprint:s.fingerprint}];return this.store.append({aggregateType:"EVIDENCE",aggregateId:e.id,version:1,state:"INGESTED",payload:p,lineage,actor:a,reason});}
+ auditEvidence(id:string,a:AuditActor,reason="evidence audit"){const c=this.store.get<EvidencePayload>("EVIDENCE",id);invariant(c!==null,"V8_FOUNDATION_EVIDENCE_NOT_FOUND",`Evidence ${id} not found.`);invariant(c.state==="INGESTED"||c.state==="REQUIRES_REVIEW","V8_FOUNDATION_EVIDENCE_NOT_AUDITABLE","Evidence is not auditable.");return this.store.append({aggregateType:"EVIDENCE",aggregateId:id,version:c.version+1,state:"AUDITED",payload:c.payload,lineage:c.lineage,actor:a,reason});}
+ createClaim(c:Claim,a:AuditActor,reason="claim verification"){const p=createClaim(c);invariant(p.status==="VERIFIED","V8_FOUNDATION_CLAIM_NOT_VERIFIED","Only verified claims can persist.");const er=p.evidenceIds.map(id=>this.store.get<EvidencePayload>("EVIDENCE",id));invariant(er.every(r=>r!==null&&r.state==="AUDITED"),"V8_FOUNDATION_CLAIM_EVIDENCE_NOT_AUDITED","Every cited evidence must be audited.");const lineage:LineageLink[]=[];for(const r of er as FoundationRecord<EvidencePayload>[]){lineage.push(...r.lineage,{type:"EVIDENCE",id:r.aggregateId,version:r.version,fingerprint:r.fingerprint});}const unique=[...new Map(lineage.map(l=>[`${l.type}:${l.id}:${l.version}`,l])).values()];return this.store.append({aggregateType:"CLAIM",aggregateId:p.id,version:1,state:"VERIFIED",payload:{statement:p.statement,evidenceIds:p.evidenceIds},lineage:unique,actor:a,reason});}
+ createKnowledge(k:Knowledge,a:AuditActor,reason="knowledge approval"){const p=createKnowledge(k);invariant(p.status==="APPROVED","V8_FOUNDATION_KNOWLEDGE_NOT_APPROVED","Only approved knowledge can persist.");const cr=p.claimIds.map(id=>this.store.get<ClaimPayload>("CLAIM",id));invariant(cr.every(r=>r!==null&&r.state==="VERIFIED"),"V8_FOUNDATION_KNOWLEDGE_CLAIM_NOT_VERIFIED","Every supporting claim must be verified.");const lineage:LineageLink[]=[];for(const r of cr as FoundationRecord<ClaimPayload>[]){lineage.push(...r.lineage,{type:"CLAIM",id:r.aggregateId,version:r.version,fingerprint:r.fingerprint});}const unique=[...new Map(lineage.map(l=>[`${l.type}:${l.id}:${l.version}`,l])).values()];return this.store.append({aggregateType:"KNOWLEDGE",aggregateId:p.id,version:1,state:"VERIFIED",payload:{proposition:p.proposition,claimIds:p.claimIds},lineage:unique,actor:a,reason});}
 }
