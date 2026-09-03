@@ -16,6 +16,20 @@ export function requireKnown<T extends string>(value: T, code: string, field: st
   return value as Exclude<T, "UNKNOWN">;
 }
 
+/** Constitution-level deep immutability boundary. */
 export function immutable<T extends object>(value: T): Readonly<T> {
-  return Object.freeze(value);
+  const seen = new WeakSet<object>();
+  const freeze = (current: unknown): void => {
+    if (current === null || typeof current !== "object") return;
+    const objectValue = current as object;
+    if (seen.has(objectValue)) return;
+    seen.add(objectValue);
+    for (const key of Reflect.ownKeys(objectValue)) {
+      const descriptor = Object.getOwnPropertyDescriptor(objectValue, key);
+      if (descriptor && "value" in descriptor) freeze(descriptor.value);
+    }
+    Object.freeze(objectValue);
+  };
+  freeze(value);
+  return value as Readonly<T>;
 }
