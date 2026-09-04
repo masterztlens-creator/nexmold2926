@@ -1,0 +1,82 @@
+name: NEXMOLD V8 Next Operational Gate
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - NEXMOLD V8 Final Gate
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  v8-next:
+    name: V8 Next Operational Verification
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Resolve source SHA
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${GITHUB_SHA}"
+          fi
+
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid SHA: $SHA"
+            exit 1
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout exact source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.19.0
+          cache: npm
+
+      - name: Verify LKG package contract
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node -e '
+            const fs = require("node:fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const l = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+
+            if (p.name !== "nexmold-v8-full") process.exit(1);
+            if (p.engines?.node !== ">=22.12.0") process.exit(1);
+            if (p.devDependencies?.typescript !== "6.0.3") process.exit(1);
+            if (l.lockfileVersion !== 3) process.exit(1);
+            if (l.packages?.[""]?.devDependencies?.typescript !== "6.0.3") process.exit(1);
+          '
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Compile V8
+        run: npm run v8:compile
+
+      - name: Run V8 tests
+        run: npm run v8:test
+
+      - name: Run V8 next gate
+        run: npm run v8:next
