@@ -50,4 +50,4 @@ jobs:
         run: node scripts/v8-final-gate.mjs
 
       - name: Real production build + V8-09 integration chain
-        run: node build-orchestrator.mjs
+        run: node --experimental-strip-types build-orchestrator.mjs
