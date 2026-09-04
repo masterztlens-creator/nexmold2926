@@ -85,7 +85,7 @@ export async function runV715IntegrationGate() {
   const produced = producer.runV714Producer(good);
   assert.equal(produced.published, true, "Producer must publish the golden path");
   assert.ok(produced.result);
-  assert.deepEqual(produced.result.artifact, compiled.result.artifact);
+  assert.equal(produced.result.artifact, compiled.result.artifact);
 
   const preflightResult = preflight.runRegionalReleasePreflight(produced.result);
   assert.equal(preflightResult.passed, true, "Regional release preflight must pass published result");
