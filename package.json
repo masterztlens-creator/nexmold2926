@@ -10,9 +10,18 @@
     "v8:test": "npm run v8:compile && node --test tests/v8/**/*.test.mjs",
     "v8:verify": "node scripts/v8-final-gate.mjs",
     "v714:build": "node build-orchestrator.mjs",
-    "v714:regional": "node scripts/v714-regional-gate.mjs"
+    "v714:regional": "node scripts/v714-regional-gate.mjs",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
   },
   "devDependencies": {
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "astro": "6.1.9",
+    "@astrojs/sitemap": "3.7.3",
+    "tailwindcss": "3.4.17",
+    "autoprefixer": "10.4.21",
+    "aos": "2.3.4"
   }
 }
