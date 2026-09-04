@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 test("V8 operational package contract", async () => {
-  const packageJson = await import("../../../../package.json", {
+  const packageJson = await import("../../../package.json", {
     with: { type: "json" }
   });
 
