@@ -1,3 +1,4 @@
+```yaml
 name: NEXMOLD V8 Final Gate
 
 on:
@@ -30,7 +31,10 @@ jobs:
             SHA="${{ github.sha }}"
           fi
 
-          test -n "$SHA"
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ERROR: Invalid source SHA: $SHA"
+            exit 1
+          fi
 
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "V8 source SHA: $SHA"
@@ -46,18 +50,156 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Verify source/runtime prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Runtime ==="
+          node --version
+          npm --version
+
+          echo "=== Required project files ==="
+
+          test -f package.json
+          test -f package-lock.json
+          test -f astro.config.mjs
+          test -f postcss.config.cjs
+          test -f tailwind.config.mjs
+          test -f scripts/v8-final-gate.mjs
+          test -f scripts/v8-production-gate.mjs
+          test -f build-orchestrator.mjs
+
+          echo "Required project files: PASS"
+
+          echo "=== package.json baseline ==="
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const packageJson = JSON.parse(
+            fs.readFileSync('package.json', 'utf8')
+          );
+
+          if (packageJson.name !== 'nexmold-v8-full') {
+            throw new Error(
+              `Unexpected package name: ${packageJson.name}`
+            );
+          }
+
+          if (
+            packageJson.devDependencies?.typescript !== '6.0.3'
+          ) {
+            throw new Error(
+              `Unexpected TypeScript version in package.json: ${
+                packageJson.devDependencies?.typescript
+              }`
+            );
+          }
+
+          console.log('package.json baseline: PASS');
+          NODE
+
+          echo "=== package-lock.json baseline ==="
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const lockfile = JSON.parse(
+            fs.readFileSync('package-lock.json', 'utf8')
+          );
+
+          if (lockfile.lockfileVersion !== 3) {
+            throw new Error(
+              `Unexpected lockfileVersion: ${lockfile.lockfileVersion}`
+            );
+          }
+
+          if (
+            lockfile.packages?.['']?.devDependencies?.typescript !==
+            '6.0.3'
+          ) {
+            throw new Error(
+              'package-lock.json TypeScript baseline mismatch'
+            );
+          }
+
+          console.log('package-lock baseline: PASS');
+          NODE
 
       - name: Install production build toolchain
+        shell: bash
         run: |
-          npm install --no-save --no-package-lock \
+          set -euo pipefail
+
+          npm install \
+            --no-save \
+            --no-package-lock \
             typescript@6.0.3 \
             astro@6.1.9 \
             @astrojs/sitemap \
             tailwindcss@3.4.17 \
-            autoprefixer@10.4.21
+            autoprefixer@10.4.21 \
+            aos@2.3.4
+
+          echo "=== Verify installed production toolchain ==="
+
+          node - <<'NODE'
+          const required = [
+            'typescript',
+            'astro',
+            '@astrojs/sitemap',
+            'tailwindcss',
+            'autoprefixer',
+            'aos',
+          ];
+
+          for (const name of required) {
+            try {
+              const resolved = require.resolve(name);
+              console.log(
+                `dependency ${name}: PASS -> ${resolved}`
+              );
+            } catch (error) {
+              console.error(
+                `dependency ${name}: FAIL`
+              );
+              console.error(error);
+              process.exit(1);
+            }
+          }
+
+          console.log(
+            'Production build toolchain: PASS'
+          );
+          NODE
+
+      - name: Verify critical source imports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f src/layouts/MainLayout.astro
+
+          grep -F "import AOS from 'aos';" \
+            src/layouts/MainLayout.astro
+
+          echo "MainLayout AOS import: PASS"
 
       - name: V8 Final Gate
-        run: node scripts/v8-final-gate.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node scripts/v8-final-gate.mjs
 
       - name: Real production build + V8-09 integration chain
-        run: node --experimental-strip-types build-orchestrator.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --experimental-strip-types \
+            build-orchestrator.mjs
+```
