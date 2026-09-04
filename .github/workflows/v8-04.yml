@@ -8,6 +8,7 @@ on:
       - 'src/v8/**'
       - 'tests/v8/**'
       - '.github/workflows/v8-04.yml'
+      - '.github/workflows/v8-final.yml'
       - 'tsconfig.v8.json'
 
 permissions:
@@ -53,7 +54,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -nEi "src/regional|/regional/|from [\"']\\.\\.?/.*v7|from [\"'].*v7/" -- src/v8; then
+          if git grep -nEi "src/regional|/regional/|from [\"']\.\.?/.*v7|from [\"'].*v7/" -- src/v8; then
             echo "V8-04-V7-DEPENDENCY FAIL"
             exit 1
           fi

@@ -2,30 +2,52 @@ name: NEXMOLD V8 Final Gate
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'src/v8/**'
-      - 'tests/v8/**'
-      - 'scripts/v8-final-gate.mjs'
-      - 'tsconfig.v8.json'
-      - '.github/workflows/v8-final.yml'
-      - '.github/workflows/v8-04.yml'
+  workflow_run:
+    workflows:
+      - NEXMOLD V8-04 Rule Policy Gate
+    types:
+      - completed
 
 permissions:
   contents: read
 
 jobs:
   v8-final:
+    name: V8 Final + Production Integration
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Resolve source SHA
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${{ github.sha }}"
+          fi
+          test -n "$SHA"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "V8 source SHA: $SHA"
+
+      - name: Checkout exact V8-04 source SHA
+        uses: actions/checkout@v4
         with:
+          ref: ${{ steps.source.outputs.sha }}
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22.12.0
-      - name: Install V8 compiler only
-        run: npm install --no-save --no-package-lock typescript@6.0.3
+          cache: npm
+
+      - name: Install production build toolchain
+        run: npm install --no-save --no-package-lock typescript@6.0.3 astro@6.1.9 @astrojs/sitemap
+
       - name: V8 Final Gate
         run: node scripts/v8-final-gate.mjs
+
+      - name: Real production build + V8-09 integration chain
+        run: node build-orchestrator.mjs
