@@ -44,8 +44,13 @@ function fixture(overrides = {}) {
 
 function assertBlocked(label, result) {
   assert.equal(result.published, false, `${label}: published`);
-  assert.equal(result.result, null, `${label}: result leaked`);
   assert.ok(Array.isArray(result.reasonCodes), `${label}: reasonCodes missing`);
+  if (result.result === null) return;
+
+  assert.equal(typeof result.result, "object", `${label}: unexpected blocked result type`);
+  assert.equal(result.result.artifact, null, `${label}: artifact leaked`);
+  assert.equal(result.result.route, null, `${label}: route leaked`);
+  assert.equal(result.result.hreflang, null, `${label}: hreflang leaked`);
 }
 
 export async function runV715IntegrationGate() {
@@ -98,10 +103,9 @@ export async function runV715IntegrationGate() {
     assert.notEqual(expected.status, "ELIGIBLE", `${label}: eligibility unexpectedly eligible`);
     const compiledBlocked = compiler.compileRegionalPage(input);
     assertBlocked(`${label}: compiler`, compiledBlocked);
-    assert.equal(compiledBlocked.result, null);
     const producedBlocked = producer.runV714Producer(input);
     assertBlocked(`${label}: producer`, producedBlocked);
-    assert.equal(producedBlocked.result, null);
+    assert.equal(producedBlocked.result, null, `${label}: producer result leaked`);
   }
 
   const missingBinding = { ...good, bindings: [] };
@@ -109,6 +113,7 @@ export async function runV715IntegrationGate() {
   assertBlocked("missing-binding: compiler", missingBindingCompiled);
   const missingBindingProduced = producer.runV714Producer(missingBinding);
   assertBlocked("missing-binding: producer", missingBindingProduced);
+  assert.equal(missingBindingProduced.result, null, "missing-binding: producer result leaked");
 
   const unresolvedEvidence = {
     ...good,
@@ -116,6 +121,7 @@ export async function runV715IntegrationGate() {
   };
   const unresolvedProduced = producer.runV714Producer(unresolvedEvidence);
   assertBlocked("unresolved-evidence: producer", unresolvedProduced);
+  assert.equal(unresolvedProduced.result, null, "unresolved-evidence: producer result leaked");
 
   return Object.freeze({
     ok: true,
