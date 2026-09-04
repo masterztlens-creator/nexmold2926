@@ -1,7 +1,18 @@
 {
-  "name":"nexmold-v8-full",
-  "private":true,
-  "type":"module",
-  "scripts":{"v8:compile":"tsc -p tsconfig.v8.json","v8:test":"npm run v8:compile && node --test tests/v8/**/*.test.mjs","v8:verify":"node scripts/v8-final-gate.mjs"},
-  "devDependencies":{"typescript":"6.0.3"}
+  "name": "nexmold-v8-full",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "v8:compile": "tsc -p tsconfig.v8.json",
+    "v8:test": "npm run v8:compile && node --test tests/v8/**/*.test.mjs",
+    "v8:verify": "node scripts/v8-final-gate.mjs",
+    "v714:build": "node build-orchestrator.mjs",
+    "v714:regional": "node scripts/v714-regional-gate.mjs"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
 }
