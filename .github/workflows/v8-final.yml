@@ -1,4 +1,3 @@
-```yaml
 name: NEXMOLD V8 Final Gate
 
 on:
@@ -202,4 +201,3 @@ jobs:
 
           node --experimental-strip-types \
             build-orchestrator.mjs
-```

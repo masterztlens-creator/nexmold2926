@@ -85,6 +85,10 @@ export async function runV715IntegrationGate() {
   const produced = producer.runV714Producer(good);
   assert.equal(produced.published, true, "Producer must publish the golden path");
   assert.ok(produced.result);
+
+  // Producer and Compiler intentionally create independent Artifact objects.
+  // Under node:assert/strict, assert.equal() performs reference equality for objects.
+  // The integration contract requires structural equality, not shared object identity.
   assert.deepEqual(produced.result.artifact, compiled.result.artifact);
 
   const preflightResult = preflight.runRegionalReleasePreflight(produced.result);
@@ -117,8 +121,15 @@ export async function runV715IntegrationGate() {
 
   const unresolvedEvidence = {
     ...good,
-    bindings: [{ claim: { id: "claim:v715:integration", claimKey: "v715.integration.fixture" }, evidenceIds: ["evidence:does-not-exist"] }],
+    bindings: [{
+      claim: {
+        id: "claim:v715:integration",
+        claimKey: "v715.integration.fixture"
+      },
+      evidenceIds: ["evidence:does-not-exist"]
+    }],
   };
+
   const unresolvedProduced = producer.runV714Producer(unresolvedEvidence);
   assertBlocked("unresolved-evidence: producer", unresolvedProduced);
   assert.equal(unresolvedProduced.result, null, "unresolved-evidence: producer result leaked");
