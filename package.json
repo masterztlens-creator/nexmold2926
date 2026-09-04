@@ -9,11 +9,6 @@
     "v8:compile": "tsc -p tsconfig.v8.json",
     "v8:test": "npm run v8:compile && node --test tests/v8/**/*.test.mjs",
     "v8:verify": "node scripts/v8-final-gate.mjs",
-    "v8:operational": "node scripts/v8-operational-gate.mjs",
-    "v8:integrity": "node scripts/v8-integrity-gate.mjs",
-    "v8:repro": "node scripts/v8-reproducibility-gate.mjs",
-    "v8:artifact": "node scripts/v8-artifact-gate.mjs",
-    "v8:next": "node scripts/v8-next-gate.mjs",
     "v714:build": "node build-orchestrator.mjs",
     "v714:regional": "node scripts/v714-regional-gate.mjs"
   },
