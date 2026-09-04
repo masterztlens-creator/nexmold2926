@@ -289,18 +289,72 @@ function auditForbiddenArtifacts() {
   pass("ARTIFACT_SECRETS", "No forbidden secret/config files in dist.");
 }
 
+/**
+ * Validate local smoke-test artifacts against the actual static output.
+ *
+ * Important sitemap contract:
+ * Astro's @astrojs/sitemap integration can emit sitemap-index.xml.
+ * Therefore /sitemap.xml must not be converted to:
+ *
+ *   dist/sitemap.xml/index.html
+ *
+ * The smoke test accepts either:
+ *
+ *   dist/sitemap.xml
+ *   dist/sitemap-index.xml
+ *
+ * without changing Astro configuration or the sitemap gate.
+ */
 function auditSmokeRoutes() {
-  const routes = ["/", "/404.html", "/sitemap.xml", "/services/custom-injection-molding", "/knowledge-hub/", "/industries/v714/"];
+  const routes = [
+    "/",
+    "/404.html",
+    "/sitemap.xml",
+    "/services/custom-injection-molding",
+    "/knowledge-hub/",
+    "/industries/v714/",
+  ];
+
   for (const route of routes) {
-    const clean = route.replace(/^\/+/, "");
-    const target =
-      route === "/" ? path.join(DIST, "index.html") :
-      route.endsWith("/") ? path.join(DIST, clean, "index.html") :
-      route.endsWith(".html") ? path.join(DIST, clean) :
-      path.join(DIST, clean, "index.html");
-    if (!fs.existsSync(target)) fail("STATIC_SMOKE", `${route} -> ${path.relative(ROOT, target)}`);
+    let target;
+
+    if (route === "/") {
+      target = path.join(DIST, "index.html");
+    } else if (route === "/sitemap.xml") {
+      const sitemapXml = path.join(DIST, "sitemap.xml");
+      const sitemapIndex = path.join(DIST, "sitemap-index.xml");
+
+      if (fs.existsSync(sitemapXml)) {
+        target = sitemapXml;
+      } else if (fs.existsSync(sitemapIndex)) {
+        target = sitemapIndex;
+      } else {
+        fail(
+          "STATIC_SMOKE",
+          `${route} -> expected ${path.relative(ROOT, sitemapXml)} or ${path.relative(ROOT, sitemapIndex)}`,
+        );
+      }
+    } else {
+      const clean = route.replace(/^\/+/, "");
+
+      target =
+        route.endsWith("/") ? path.join(DIST, clean, "index.html") :
+        route.endsWith(".html") ? path.join(DIST, clean) :
+        path.join(DIST, clean, "index.html");
+    }
+
+    if (!fs.existsSync(target)) {
+      fail(
+        "STATIC_SMOKE",
+        `${route} -> ${path.relative(ROOT, target)}`,
+      );
+    }
   }
-  pass("STATIC_SMOKE", `Validated ${routes.length} local smoke routes.`);
+
+  pass(
+    "STATIC_SMOKE",
+    `Validated ${routes.length} local smoke routes.`,
+  );
 }
 
 async function main() {
