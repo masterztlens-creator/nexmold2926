@@ -1,1 +1,10 @@
-export * from "./types.js";export * from "./hash.js";export * from "./state-machine.js";export * from "./store.js";export * from "./service.js";
+export * from "./types.js";
+export * from "./hash.js";
+export * from "./state-machine.js";
+export * from "./store.js";
+export * from "./service.js";
+export * from "./acquisition.js";
+export * from "./authority-gate.js";
+export * from "./evidence-gate.js";
+export * from "./claim-gate.js";
+export * from "./verification.js";
