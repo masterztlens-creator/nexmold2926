@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FoundationService, InMemoryFoundationStore, JsonlFoundationStore, createSource } from "../../../.v8-build/src/v8/index.js";
+import { FoundationService, InMemoryFoundationStore, JsonlFoundationStore, createSource } from "../../.v8-build/src/v8/index.js";
 
 const actor = { id: "test-system", role: "SYSTEM" };
 const auditor = { id: "test-auditor", role: "AUDITOR" };
