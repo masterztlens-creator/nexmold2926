@@ -1,4 +1,4 @@
-import {
+﻿import {
   immutable,
   invariant,
 } from "../constitution/invariants.js";
@@ -388,6 +388,13 @@ export class FoundationService {
     });
   }
 
+  auditEvidence(
+    id: string,
+    actor: AuditActor,
+    reason = "evidence audit",
+  ) {
+    return this.verifyEvidence(id, actor, reason);
+  }
   verifyEvidence(
     id: string,
     actor: AuditActor,
