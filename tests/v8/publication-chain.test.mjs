@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import * as V from "../../.v8-build/src/v8/index.js";
 
@@ -16,7 +16,7 @@ function setup() {
   const snap = fs.captureSnapshot({ source: src, capturedAt: "2026-01-01T00:00:00Z", locator: src.locator, content: "draft angle >= 1 degree", metadataOnly: false }, ing, why);
   fs.sealSnapshot(snap.aggregateId, aud, why);
   const ev = fs.ingestEvidence({ sourceId: src.id, snapshotId: snap.aggregateId, locator: "#draft", excerpt: "Draft angle >= 1 degree", ingestion: "INGESTED", capturedAt: snap.payload.capturedAt }, ing, why);
-  fs.auditEvidence(ev.aggregateId, aud, why);
+  fs.verifyEvidence(ev.aggregateId, aud, why);
   return { store, fs, src, snap, ev };
 }
 
