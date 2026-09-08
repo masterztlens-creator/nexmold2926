@@ -6,7 +6,11 @@ export function contentFingerprint(value: unknown): Fingerprint {
 }
 
 export function rawBytesFingerprint(bytes: Uint8Array): Fingerprint {
-  return fingerprint(createHash("sha256").update(bytes).digest("hex"));
+  return fingerprint(
+  createHash("sha256")
+    .update(Buffer.from(bytes))
+    .digest("hex"),
+);
 }
 
 export const stableFingerprint = contentFingerprint;

@@ -55,7 +55,9 @@ export async function acquireHttpDocument(
   invariant(!(response!.status >= 300 && response!.status < 400), "V8_ACQUIRE_REDIRECT_LIMIT", "Redirect limit exceeded.");
 
   const bytes = new Uint8Array(await response!.arrayBuffer());
-  const documentHash = createHash("sha256").update(bytes).digest("hex");
+  const documentHash = createHash("sha256")
+  .update(Buffer.from(bytes))
+  .digest("hex");
 
   return Object.freeze({
     requestedUrl: url,
