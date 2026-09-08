@@ -1,4 +1,3 @@
-import type { EvidencePayload } from "../foundation/types.js";
 export type DiscoveryProvider =
   | "SEARCH"
   | "SITEMAP"
@@ -20,8 +19,43 @@ export interface NormalizedDocument {
   contentHash: string;
   normalizedAt: string;
 }
+/**
+ * Research-layer evidence candidate.
+ *
+ * IMPORTANT:
+ * This is intentionally NOT EvidencePayload.
+ *
+ * The research layer only extracts a candidate from an Internet
+ * document. It must not fabricate Foundation identifiers,
+ * snapshot identifiers, evidence hashes, or verification state.
+ *
+ * The downstream V8 Foundation layer is responsible for creating
+ * the actual EvidencePayload and performing audit/verification.
+ */
+export interface ResearchEvidenceCandidate {
+  sourceUrl: string;
+  excerpt: string;
+  locator: string;
+  extractionMethod:
+    | "MANUAL_TRANSCRIPTION"
+    | "TEXT_EXTRACTION"
+    | "TABLE_EXTRACTION"
+    | "OCR";
+  extractionConfidence:
+    | "HIGH"
+    | "MEDIUM"
+    | "LOW";
+  observedAt: string;
+  excerptHash: string;
+}
+/**
+ * Evidence extracted from the research layer.
+ *
+ * This remains a research candidate until it enters the existing
+ * V8 Evidence/Foundation pipeline.
+ */
 export interface EvidenceCandidate {
-  evidence: EvidencePayload;
+  evidence: ResearchEvidenceCandidate;
   sourceUrl: string;
   excerpt: string;
   locator: string;

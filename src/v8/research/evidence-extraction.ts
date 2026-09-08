@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
-import type { EvidenceCandidate, NormalizedDocument } from "./types.js";
+import type {
+  EvidenceCandidate,
+  NormalizedDocument,
+} from "./types.js";
 const ENGINEERING_UNIT_PATTERN =
   /\b\d+(?:\.\d+)?\s?(?:mm|cm|m|in|inch|inches|%|MPa|GPa|°C|C|kg|g|N|kN|psi|bar|s|min|hr|h)\b/gi;
 const ENGINEERING_TERM_PATTERN =
@@ -15,21 +18,50 @@ function hashExcerpt(value: string): string {
     .update(value, "utf8")
     .digest("hex");
 }
-function confidenceForSentence(sentence: string): "MEDIUM" | "LOW" {
-  const hasUnit = ENGINEERING_UNIT_PATTERN.test(sentence);
+function confidenceForSentence(
+  sentence: string,
+): "MEDIUM" | "LOW" {
+  const hasUnit =
+    ENGINEERING_UNIT_PATTERN.test(sentence);
   ENGINEERING_UNIT_PATTERN.lastIndex = 0;
-  const hasEngineeringTerm = ENGINEERING_TERM_PATTERN.test(sentence);
+  const hasEngineeringTerm =
+    ENGINEERING_TERM_PATTERN.test(sentence);
   ENGINEERING_TERM_PATTERN.lastIndex = 0;
-  return hasUnit && hasEngineeringTerm ? "MEDIUM" : "LOW";
+  return hasUnit && hasEngineeringTerm
+    ? "MEDIUM"
+    : "LOW";
 }
+/**
+ * Extract research-layer evidence candidates.
+ *
+ * SECURITY / EPISTEMIC INVARIANT:
+ *
+ * This function does NOT:
+ *   - create a Foundation evidence record
+ *   - assign sourceId
+ *   - assign snapshotId
+ *   - assign verificationStatus
+ *   - assign any verification state
+ *   - call the existing V8 verification API
+ *   - publish anything
+ *
+ * It only identifies potentially useful excerpts from a normalized
+ * Internet document. The existing V8 Foundation/Governance pipeline
+ * remains responsible for constructing and verifying real evidence.
+ */
 export function extractEvidenceCandidates(
   document: NormalizedDocument,
 ): EvidenceCandidate[] {
   const sentences = splitSentences(document.text);
   const candidates: EvidenceCandidate[] = [];
-  for (let index = 0; index < sentences.length; index += 1) {
+  for (
+    let index = 0;
+    index < sentences.length;
+    index += 1
+  ) {
     const sentence = sentences[index];
-    const hasUnit = ENGINEERING_UNIT_PATTERN.test(sentence);
+    const hasUnit =
+      ENGINEERING_UNIT_PATTERN.test(sentence);
     ENGINEERING_UNIT_PATTERN.lastIndex = 0;
     const hasEngineeringTerm =
       ENGINEERING_TERM_PATTERN.test(sentence);
@@ -43,10 +75,12 @@ export function extractEvidenceCandidates(
       sourceUrl: document.finalUrl,
       excerpt,
       locator: `sentence:${index + 1}`,
-      extractionMethod: "TEXT_EXTRACTION",
-      extractionConfidence: confidenceForSentence(sentence),
+      extractionMethod: "TEXT_EXTRACTION" as const,
+      extractionConfidence:
+        confidenceForSentence(sentence),
       observedAt: new Date().toISOString(),
-    } as EvidenceCandidate["evidence"];
+      excerptHash,
+    };
     candidates.push({
       evidence,
       sourceUrl: document.finalUrl,
