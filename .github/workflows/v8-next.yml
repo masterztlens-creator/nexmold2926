@@ -78,5 +78,13 @@ jobs:
       - name: Run V8 tests
         run: npm run v8:test
 
+      - name: Real production build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --experimental-strip-types \
+            build-orchestrator.mjs
+
       - name: Run V8 next gate
         run: npm run v8:next
