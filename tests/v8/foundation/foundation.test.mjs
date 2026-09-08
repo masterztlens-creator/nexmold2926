@@ -1,10 +1,10 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FoundationService, InMemoryFoundationStore, JsonlFoundationStore, createSource } from "../../../.v8-build/src/v8/index.js";
+import { FoundationService, InMemoryFoundationStore, JsonlFoundationStore, createSource } from "../../../src/v8/index.ts";
 
 const actor = { id: "test-system", role: "SYSTEM" };
 const auditor = { id: "test-auditor", role: "AUDITOR" };
@@ -37,7 +37,7 @@ test("Source → Snapshot → Evidence → Claim lineage is enforced", () => {
   assert.throws(() => svc.ingestEvidence({ sourceId: s.id, locator: "p1", excerpt: "fact", ingestion: "INGESTED", capturedAt: snap.recordedAt, snapshotId: snap.aggregateId }, actor), /SNAPSHOT_NOT_SEALED/);
   svc.sealSnapshot(snap.aggregateId, actor);
   const ev = svc.ingestEvidence({ sourceId: s.id, locator: "p1", excerpt: "fact", ingestion: "INGESTED", capturedAt: snap.recordedAt, snapshotId: snap.aggregateId }, actor);
-  svc.auditEvidence(ev.aggregateId, auditor);
+  svc.verifyEvidence(ev.aggregateId, auditor);
   const claim = svc.createClaim({ id: "claim-1", statement: "fact", evidenceIds: [ev.aggregateId], status: "VERIFIED", fingerprint: "ignored" }, auditor);
   assert.equal(claim.state, "VERIFIED");
   assert.equal(claim.lineage[0].type, "SOURCE");

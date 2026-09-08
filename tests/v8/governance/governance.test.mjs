@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { FoundationService, InMemoryFoundationStore, TruthGovernance, createKnowledge, createSource } from "../../../.v8-build/src/v8/index.js";
@@ -14,7 +14,7 @@ function setup() {
   const snapshot = foundation.captureSnapshot({ source, capturedAt:"2026-09-03T00:00:00.000Z", locator:source.locator, content, metadataOnly:false }, system, "capture test snapshot");
   foundation.sealSnapshot(snapshot.aggregateId, auditor, "seal test snapshot");
   const evidence = foundation.ingestEvidence({ sourceId:source.id, snapshotId:snapshot.aggregateId, locator:"section:1", excerpt:content, ingestion:"INGESTED", capturedAt:snapshot.recordedAt }, system, "ingest test evidence");
-  foundation.auditEvidence(evidence.aggregateId, auditor, "audit test evidence"); return { store, foundation, governance, evidence };
+  foundation.verifyEvidence(evidence.aggregateId, auditor, "audit test evidence"); return { store, foundation, governance, evidence };
 }
 test("claim verification requires audited evidence and persists only VERIFIED claims",()=>{const {governance,store,evidence}=setup();const result=governance.verifyClaim({id:"claim:uniform-wall",statement:"Wall thickness should be uniform.",evidenceIds:[evidence.aggregateId],status:"VERIFIED",fingerprint:"ignored"},{actor:verifier,reason:"engineering verification"});assert.equal(result.verdict,"VERIFIED");assert.equal(store.get("CLAIM","claim:uniform-wall")?.state,"VERIFIED");});
 test("UNKNOWN claim status fails closed",()=>{const {governance,evidence}=setup();assert.throws(()=>governance.verifyClaim({statement:"unknown proposition",evidenceIds:[evidence.aggregateId],status:"UNKNOWN",fingerprint:"ignored"},{actor:verifier,reason:"attempt"}),/V8_CLAIM_UNKNOWN/);});
