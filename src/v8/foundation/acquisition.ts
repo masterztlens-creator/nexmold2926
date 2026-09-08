@@ -56,8 +56,8 @@ export async function acquireHttpDocument(
 
   const bytes = new Uint8Array(await response!.arrayBuffer());
   const documentHash = createHash("sha256")
-  .update(Buffer.from(bytes))
-  .digest("hex");
+    .update(bytes as any)
+    .digest("hex");
 
   return Object.freeze({
     requestedUrl: url,
