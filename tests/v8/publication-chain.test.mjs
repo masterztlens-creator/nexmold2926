@@ -11,7 +11,7 @@ const why = "boundary contract";
 function setup() {
   const store = new V.InMemoryFoundationStore();
   const fs = new V.FoundationService(store);
-  const src = V.createSource({ kind: "PUBLIC_WEB", locator: "https://example.test/spec", access: "PAYLOAD_ALLOWED", title: "Spec", version: "1" });
+  const src = V.createSource({ kind: "PUBLIC_WEB", locator: "https://example.test/spec", access: "PAYLOAD_ALLOWED", title: "Spec", version: "1", publisher: "NEXMOLD Test Authority", authority: "ENGINEERING_REFERENCE", canonicalUrl: "https://example.test/spec", retrievedAt: "2026-01-01T00:00:00Z", documentHash: "201bab6b22adc4a70a24298c710121292094cf0f0d63368a574fa35f5e4ed265" });
   fs.registerSource(src, ing, why);
   const snap = fs.captureSnapshot({ source: src, capturedAt: "2026-01-01T00:00:00Z", locator: src.locator, content: "draft angle >= 1 degree", metadataOnly: false }, ing, why);
   fs.sealSnapshot(snap.aggregateId, aud, why);

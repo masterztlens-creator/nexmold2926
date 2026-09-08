@@ -1,4 +1,4 @@
-﻿import {
+import {
   immutable,
   invariant,
 } from "../constitution/invariants.js";
@@ -393,7 +393,84 @@ export class FoundationService {
     actor: AuditActor,
     reason = "evidence audit",
   ) {
-    return this.verifyEvidence(id, actor, reason);
+    const current =
+      this.store.get<EvidencePayload>(
+        "EVIDENCE",
+        id,
+      );
+
+    invariant(
+      current !== null,
+      "V8_FOUNDATION_EVIDENCE_NOT_FOUND",
+      `Evidence ${id} not found.`,
+    );
+
+    invariant(
+      current.state === "INGESTED" ||
+        current.state === "AUDITED" ||
+        current.state === "REQUIRES_REVIEW",
+      "V8_FOUNDATION_EVIDENCE_NOT_AUDITABLE",
+      "Evidence is not auditable.",
+    );
+
+    const source =
+      this.store.get<Source>(
+        "SOURCE",
+        current.payload.sourceId,
+      );
+
+    invariant(
+      source !== null,
+      "V8_FOUNDATION_SOURCE_NOT_FOUND",
+      "Evidence source missing.",
+    );
+
+    const snapshot =
+      this.store.get<SnapshotPayload>(
+        "SNAPSHOT",
+        current.payload.snapshotId,
+      );
+
+    invariant(
+      snapshot !== null &&
+        snapshot.state === "SEALED",
+      "V8_FOUNDATION_SNAPSHOT_NOT_SEALED",
+      "Evidence snapshot is not sealed.",
+    );
+
+    assertEvidenceReady({
+      ...current.payload,
+      id: evidenceId(current.aggregateId),
+      sourceId: current.payload.sourceId,
+      ingestion: "INGESTED",
+    } as Evidence);
+
+    recordVerification(
+      this.store,
+      "EVIDENCE",
+      id,
+      "PASS",
+      [
+        "source exists",
+        "sealed snapshot exists",
+        "exact locator present",
+        "raw excerpt present",
+        "evidence hash bound to snapshot",
+      ],
+      actor,
+      current.payload.evidenceHash,
+    );
+
+    return this.store.append({
+      aggregateType: "EVIDENCE",
+      aggregateId: id,
+      version: current.version + 1,
+      state: "AUDITED",
+      payload: current.payload,
+      lineage: current.lineage,
+      actor,
+      reason,
+    });
   }
   verifyEvidence(
     id: string,
