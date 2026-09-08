@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,14 +9,29 @@ import { FoundationService, InMemoryFoundationStore, JsonlFoundationStore, creat
 const actor = { id: "test-system", role: "SYSTEM" };
 const auditor = { id: "test-auditor", role: "AUDITOR" };
 
-function source() {
-  return createSource({ kind: "PUBLIC_WEB", locator: "https://example.test/spec", access: "PAYLOAD_ALLOWED", title: "Example", version: "1" });
+function fixtureHash(content) {
+  return createHash("sha256").update(JSON.stringify(content), "utf8").digest("hex");
+}
+
+function source(content = "fixture") {
+  return createSource({
+    kind: "PUBLIC_WEB",
+    locator: "https://example.test/spec",
+    access: "PAYLOAD_ALLOWED",
+    title: "Example",
+    version: "1",
+    publisher: "NEXMOLD Test Authority",
+    authority: "ENGINEERING_REFERENCE",
+    canonicalUrl: "https://example.test/spec",
+    retrievedAt: "2026-09-03T00:00:00.000Z",
+    documentHash: fixtureHash(content),
+  });
 }
 
 test("Source → Snapshot → Evidence → Claim lineage is enforced", () => {
   const store = new InMemoryFoundationStore();
   const svc = new FoundationService(store);
-  const s = source();
+  const s = source("fact");
   svc.registerSource(s, actor);
   const snap = svc.captureSnapshot({ source: s, capturedAt: "2026-09-03T00:00:00.000Z", locator: s.locator, content: "fact", metadataOnly: false }, actor);
   assert.throws(() => svc.ingestEvidence({ sourceId: s.id, locator: "p1", excerpt: "fact", ingestion: "INGESTED", capturedAt: snap.recordedAt, snapshotId: snap.aggregateId }, actor), /SNAPSHOT_NOT_SEALED/);
@@ -40,7 +56,7 @@ test("append-only versioning rejects gaps and illegal transitions", () => {
 test("metadata-only Source cannot persist payload", () => {
   const store = new InMemoryFoundationStore();
   const svc = new FoundationService(store);
-  const s = createSource({ kind: "STANDARD_METADATA", locator: "std:123", access: "METADATA_ONLY", title: "Restricted standard", version: "2026" });
+  const s = createSource({ kind: "STANDARD_METADATA", locator: "std:123", access: "METADATA_ONLY", title: "Restricted standard", version: "2026", publisher: "NEXMOLD Test Authority", authority: "AUTHORITATIVE_STANDARD", canonicalUrl: "https://example.test/standard/123", retrievedAt: "2026-09-03T00:00:00.000Z", documentHash: fixtureHash("metadata-only fixture") });
   svc.registerSource(s, actor);
   assert.throws(() => svc.captureSnapshot({ source: s, capturedAt: "2026-09-03T00:00:00.000Z", locator: s.locator, content: "restricted bytes", metadataOnly: true }, actor), /METADATA_PAYLOAD_FORBIDDEN/);
 });
