@@ -23,8 +23,8 @@ export class EvidenceGate {
     for (const r of records.filter(
       (x): x is FoundationRecord<EvidencePayload> => x !== null,
     )) {
-      if (r.state !== "AUDITED") {
-        reasons.push(`Evidence ${r.aggregateId} must be AUDITED.`);
+      if (r.state !== "AUDITED" && r.state !== "VERIFIED") {
+        reasons.push(`Evidence ${r.aggregateId} must be AUDITED or VERIFIED.`);
         continue;
       }
 
