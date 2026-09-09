@@ -39,10 +39,9 @@ jobs:
       - name: Compile V8 acquisition surface
         run: ./node_modules/.bin/tsc -p tsconfig.v8.json
 
-      - name: Compile V8-05 unit tests
-        run: ./node_modules/.bin/tsc -p tsconfig.v8.tests.json
+
       - name: Run existing V8-05 unit tests
-        run: node --test .v8-build/tests/v8/acquisition/acquisition.test.js
+        run: node --test tests/v8/acquisition/acquisition.test.ts
 
       - name: Run real internet acquisition gate
         run: node scripts/v8-05-acquisition-gate.mjs

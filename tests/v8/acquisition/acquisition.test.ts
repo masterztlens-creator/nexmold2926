@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { InMemoryFoundationStore } from "../../../src/v8/foundation/store.js";
-import { ingestFetchedPage } from "../../../src/v8/acquisition/foundation-adapter.js";
-import { extractTextEvidence } from "../../../src/v8/acquisition/source-extractor.js";
+import { InMemoryFoundationStore } from "../../../.v8-build/src/v8/foundation/store.js";
+import { ingestFetchedPage } from "../../../.v8-build/src/v8/acquisition/foundation-adapter.js";
+import { extractTextEvidence } from "../../../.v8-build/src/v8/acquisition/source-extractor.js";
 
 test("V8-05 ingests web page as sealed snapshot and unverified evidence", () => {
   const store = new InMemoryFoundationStore();
