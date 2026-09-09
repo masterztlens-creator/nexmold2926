@@ -1,3 +1,4 @@
+
 export * from "./constitution/rules.js";
 export * from "./constitution/invariants.js";
 export * from "./domain/index.js";
@@ -10,3 +11,4 @@ export * from "./publication/index.js";
 export * from "./projection/index.js";
 export * from "./release/index.js";
 export * from "./production/index.js";
+export * from "./intelligence/index.js";
