@@ -1,5 +1,0 @@
-{
-  "extends": "./tsconfig.v8.json",
-  "include": ["tests/v8/acquisition/**/*.ts"],
-  "exclude": ["node_modules", ".v8-build"]
-}
