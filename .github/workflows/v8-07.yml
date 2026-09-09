@@ -1,25 +1,69 @@
 name: V8-07 Evidence Expansion
+
 on:
   workflow_dispatch:
+
 jobs:
   v8-07:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Diagnose TypeScript executable state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Runtime ==="
+          node --version
+          npm --version
+
+          echo "=== TypeScript package ==="
+          npm ls typescript --depth=0
+
+          echo "=== node_modules/.bin ==="
+          ls -la node_modules/.bin || true
+
+          echo "=== TypeScript package files ==="
+          ls -la node_modules/typescript
+          ls -la node_modules/typescript/bin
+          ls -la node_modules/typescript/lib
+
+          echo "=== Executable existence ==="
+          test -e node_modules/.bin/tsc
+          test -e node_modules/typescript/bin/tsc
+          test -e node_modules/typescript/lib/tsc.js
+
+          echo "=== Executable metadata ==="
+          file node_modules/.bin/tsc || true
+          readlink -f node_modules/.bin/tsc || true
+          head -n 5 node_modules/.bin/tsc || true
+
+          echo "=== TypeScript direct version ==="
+          node ./node_modules/typescript/lib/tsc.js --version
+
       - name: Verify TypeScript 6.0.3
         shell: bash
         run: |
+          set -euo pipefail
+
           node -e "const p=require('./node_modules/typescript/package.json'); if(p.version!=='6.0.3') process.exit(1)"
+
       - name: Compile V8
         run: ./node_modules/.bin/tsc -p tsconfig.v8.json
+
       - name: V8-07 unit tests
         run: node --test tests/v8/evidence-expansion/evidence-expansion.test.ts
+
       - name: V8-07 real internet gate
         env:
           V8_SEARCH_ENDPOINT: ${{ secrets.V8_SEARCH_ENDPOINT }}
