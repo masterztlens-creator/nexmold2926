@@ -1,1 +1,1 @@
-export * from "./intelligence.ts";
+export * from "./intelligence.js";

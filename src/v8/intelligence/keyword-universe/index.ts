@@ -1,1 +1,1 @@
-export * from "./universe.ts";
+export * from "./universe.js";

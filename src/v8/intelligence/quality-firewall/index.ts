@@ -1,1 +1,1 @@
-export * from "./firewall.ts";
+export * from "./firewall.js";

@@ -1,1 +1,1 @@
-export * from "./collision.ts";
+export * from "./collision.js";

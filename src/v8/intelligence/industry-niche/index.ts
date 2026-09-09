@@ -1,1 +1,1 @@
-export * from "./niche.ts";
+export * from "./niche.js";

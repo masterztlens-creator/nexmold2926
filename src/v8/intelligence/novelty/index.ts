@@ -1,1 +1,1 @@
-export * from "./novelty.ts";
+export * from "./novelty.js";

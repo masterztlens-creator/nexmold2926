@@ -1,1 +1,1 @@
-export * from "./intent.ts";
+export * from "./intent.js";

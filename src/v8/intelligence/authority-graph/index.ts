@@ -1,1 +1,1 @@
-export * from "./graph.ts";
+export * from "./graph.js";

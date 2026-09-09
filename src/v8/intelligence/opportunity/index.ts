@@ -1,1 +1,1 @@
-export * from "./score.ts";
+export * from "./score.js";

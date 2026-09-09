@@ -1,1 +1,1 @@
-export * from "./loop.ts";
+export * from "./loop.js";

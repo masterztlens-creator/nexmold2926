@@ -1,6 +1,7 @@
 
-import { rankOpportunities, type Opportunity, type GrowthState } from "../shared.js";
-import { nextGrowthCycle } from "./pipeline.js";
+import type { Opportunity, GrowthState } from "../shared.js";
+import { rankOpportunities } from "../opportunity/score.js";
+import { nextGrowthCycle } from "../pipeline.js";
 export interface GrowthLoopDecision { readonly nextOpportunities: readonly Opportunity[]; readonly publishCandidates: readonly string[]; readonly blocked: readonly string[]; }
 export function runGrowthLoop(state: GrowthState): GrowthLoopDecision {
   const ranked=rankOpportunities(state.opportunities).filter(o=>!state.publishedSlugs.includes(o.keyword.normalized));

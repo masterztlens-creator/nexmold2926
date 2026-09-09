@@ -1,1 +1,1 @@
-export * from "./expansion.ts";
+export * from "./expansion.js";
