@@ -1,0 +1,27 @@
+name: V8-07 Evidence Expansion
+on:
+  workflow_dispatch:
+jobs:
+  v8-07:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify TypeScript 6.0.3
+        shell: bash
+        run: |
+          node -e "const p=require('./node_modules/typescript/package.json'); if(p.version!=='6.0.3') process.exit(1)"
+      - name: Compile V8
+        run: ./node_modules/.bin/tsc -p tsconfig.v8.json
+      - name: V8-07 unit tests
+        run: node --test tests/v8/evidence-expansion/evidence-expansion.test.ts
+      - name: V8-07 real internet gate
+        env:
+          V8_SEARCH_ENDPOINT: ${{ secrets.V8_SEARCH_ENDPOINT }}
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: node scripts/v8-07-evidence-expansion-gate.mjs
