@@ -33,8 +33,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Ensure TypeScript compiler
+        run: npm install --no-save --ignore-scripts typescript@6.0.3 --no-audit --no-fund
+
       - name: Compile V8 acquisition surface
-        run: npx tsc -p tsconfig.v8.json
+        run: ./node_modules/.bin/tsc -p tsconfig.v8.json
 
       - name: Run existing V8-05 unit tests
         run: node --test tests/v8/acquisition/acquisition.test.ts
