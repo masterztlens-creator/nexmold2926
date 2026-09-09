@@ -9,9 +9,9 @@ import { extractTextEvidence } from "../../acquisition/source-extractor.js";
 import type { Opportunity } from "../shared.js";
 import {
   discoverCandidates,
-  type DiscoveryBatch,
+  type DiscoveryInput,
 } from "../web-discovery/discovery.js";
-import type { DiscoveryInput } from "../web-discovery/types.js";
+import type { DiscoveryBatch } from "../web-discovery/types.js";
 import {
   planResearch,
   type ResearchPlan,
