@@ -1,0 +1,43 @@
+name: V8-05 Acquisition Gate
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/v8/acquisition/**'
+      - 'src/v8/foundation/**'
+      - 'src/v8/evidence/**'
+      - 'src/v8/domain/**'
+      - 'tests/v8/acquisition/**'
+      - 'scripts/v8-05-acquisition-gate.mjs'
+      - 'tsconfig.v8.json'
+      - '.github/workflows/v8-05.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  acquisition-gate:
+    name: V8-05 real acquisition gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Compile V8 acquisition surface
+        run: npx tsc -p tsconfig.v8.json
+
+      - name: Run existing V8-05 unit tests
+        run: node --test tests/v8/acquisition/acquisition.test.ts
+
+      - name: Run real internet acquisition gate
+        run: node scripts/v8-05-acquisition-gate.mjs
