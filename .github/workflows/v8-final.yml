@@ -1,90 +1,204 @@
-﻿import assert from "node:assert/strict";
-import test from "node:test";
-import {
-  expandEvidenceFromInternet,
-  rankEvidenceCandidates,
-} from "../../../.v8-build/src/v8/intelligence/evidence-expansion/expansion.js";
-import { InMemoryFoundationStore } from "../../../.v8-build/src/v8/foundation/store.js";
-test("V8-07 ranks candidates without fabricating authority", () => {
-  const ranked = rankEvidenceCandidates("wall thickness", [
-    {
-      url: "https://example.com/a",
-      title: "Wall thickness design",
-      publisher: "example.com",
-      authority: 0,
-      relevance: 0.7,
-      query: "wall thickness",
-    },
-    {
-      url: "https://example.com/b",
-      title: "Other topic",
-      publisher: "example.com",
-      authority: 0,
-      relevance: 0.8,
-      query: "wall thickness",
-    },
-  ]);
-  assert.equal(ranked[0]?.url, "https://example.com/a");
-  assert.equal(ranked[0]?.authority, 0);
-});
-test("V8-07 isolates search and fetch failures", async () => {
-  const store = new InMemoryFoundationStore();
-  const searchProvider = {
-    name: "test-search",
-    async search(query: string) {
-      if (query === "bad") {
-        throw new Error("search failed");
-      }
-      return [
-        {
-          url: "https://example.com/good",
-          title: "Good engineering source",
-          snippet: "engineering evidence",
-        },
-        {
-          url: "https://example.com/good",
-          title: "Duplicate",
-        },
-      ];
-    },
-  };
-  const pageFetcher = {
-    async fetch(url: string) {
-      if (url.endsWith("/good")) {
-        const body =
-          "<html><body>Engineering evidence</body></html>";
-        return {
-          requestedUrl: url,
-          finalUrl: url,
-          redirectChain: [],
-          status: 200,
-          mediaType: "text/html",
-          body,
-          bytes: new TextEncoder().encode(body),
-          fetchedAt: new Date().toISOString(),
-        };
-      }
-      throw new Error("fetch failed");
-    },
-  };
-  const result = await expandEvidenceFromInternet(
-    ["good", "bad"],
-    searchProvider,
-    pageFetcher,
-    store,
-    {
-      actorId: "V8-07-TEST",
-      maxQueries: 2,
-      maxCandidates: 2,
-    },
-  );
-  assert.equal(result.searchErrors.length, 1);
-  assert.equal(result.candidates.length, 1);
-  assert.equal(result.acquisitions.length, 1);
-  assert.equal(result.fetchErrors.length, 0);
-  assert.equal(
-    result.acquisitions[0]?.evidence.evidence.length,
-    1,
-  );
-  store.verifyChain();
-});
+﻿name: NEXMOLD V8 Final Gate
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - NEXMOLD V8-04 Rule Policy Gate
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  v8-final:
+    name: V8 Final + Production Integration
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve source SHA
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${{ github.sha }}"
+          fi
+
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ERROR: Invalid source SHA: $SHA"
+            exit 1
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "V8 source SHA: $SHA"
+
+      - name: Checkout exact V8-04 source SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Verify source/runtime prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Runtime ==="
+          node --version
+          npm --version
+
+          echo "=== Required project files ==="
+
+          test -f package.json
+          test -f package-lock.json
+          test -f astro.config.mjs
+          test -f postcss.config.cjs
+          test -f tailwind.config.mjs
+          test -f scripts/v8-final-gate.mjs
+          test -f scripts/v8-production-gate.mjs
+          test -f build-orchestrator.mjs
+
+          echo "Required project files: PASS"
+
+          echo "=== package.json baseline ==="
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const packageJson = JSON.parse(
+            fs.readFileSync('package.json', 'utf8')
+          );
+
+          if (packageJson.name !== 'nexmold-v8-full') {
+            throw new Error(
+              `Unexpected package name: ${packageJson.name}`
+            );
+          }
+
+          if (
+            packageJson.devDependencies?.typescript !== '6.0.3'
+          ) {
+            throw new Error(
+              `Unexpected TypeScript version in package.json: ${
+                packageJson.devDependencies?.typescript
+              }`
+            );
+          }
+
+          console.log('package.json baseline: PASS');
+          NODE
+
+          echo "=== package-lock.json baseline ==="
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const lockfile = JSON.parse(
+            fs.readFileSync('package-lock.json', 'utf8')
+          );
+
+          if (lockfile.lockfileVersion !== 3) {
+            throw new Error(
+              `Unexpected lockfileVersion: ${lockfile.lockfileVersion}`
+            );
+          }
+
+          if (
+            lockfile.packages?.['']?.devDependencies?.typescript !==
+            '6.0.3'
+          ) {
+            throw new Error(
+              'package-lock.json TypeScript baseline mismatch'
+            );
+          }
+
+          console.log('package-lock baseline: PASS');
+          NODE
+
+      - name: Install production build toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm install \
+            --no-save \
+            --no-package-lock \
+            typescript@6.0.3 \
+            astro@6.1.9 \
+            @astrojs/sitemap \
+            tailwindcss@3.4.17 \
+            autoprefixer@10.4.21 \
+            aos@2.3.4
+
+          echo "=== Verify installed production toolchain ==="
+
+          node - <<'NODE'
+          const required = [
+            'typescript',
+            'astro',
+            '@astrojs/sitemap',
+            'tailwindcss',
+            'autoprefixer',
+            'aos',
+          ];
+
+          for (const name of required) {
+            try {
+              const resolved = require.resolve(name);
+              console.log(
+                `dependency ${name}: PASS -> ${resolved}`
+              );
+            } catch (error) {
+              console.error(
+                `dependency ${name}: FAIL`
+              );
+              console.error(error);
+              process.exit(1);
+            }
+          }
+
+          console.log(
+            'Production build toolchain: PASS'
+          );
+          NODE
+
+      - name: Verify critical source imports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f src/layouts/MainLayout.astro
+
+          grep -F "import AOS from 'aos';" \
+            src/layouts/MainLayout.astro
+
+          echo "MainLayout AOS import: PASS"
+
+      - name: V8 Final Gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node scripts/v8-final-gate.mjs
+
+      - name: Real production build + V8-09 integration chain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --experimental-strip-types \
+            build-orchestrator.mjs
+
