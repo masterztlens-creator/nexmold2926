@@ -1,0 +1,28 @@
+
+V8-06 MINIMAL PACKAGE MANIFEST
+
+BASE SHA: 821773c9f327000857973fff39ae77c91087ee43
+
+PACKAGE PURPOSE:
+Connect validated V8-05 internet acquisition to Opportunity -> Research Planner -> Search -> Discovery -> Fetch -> Evidence.
+
+PACKAGE FILES:
+1. src/v8/intelligence/research-planner/acquisition-runner.ts
+2. src/v8/intelligence/research-planner/index.ts
+3. tests/v8/intelligence/research-planner/acquisition-runner.test.ts
+4. scripts/v8-06-internet-research-gate.mjs
+5. .github/workflows/v8-06.yml
+6. V8-06-SEARCH-CONFIG.md
+7. V8-06-MANIFEST.txt
+
+FROZEN V8-05 CORE:
+src/v8/acquisition/**
+src/v8/foundation/**
+package.json
+package-lock.json
+
+DATA POLICY:
+All production research input must originate from the internet.
+No static engineering dataset is embedded.
+SERP snippets are discovery only.
+Evidence remains INGESTED / UNVERIFIED until explicit audit or verification.
