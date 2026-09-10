@@ -8,8 +8,16 @@ import {
 } from "../foundation/hash.js";
 
 import {
+  fingerprint,
+} from "../domain/primitives.js";
+
+import {
   assertProductionBoundary,
 } from "../production-boundary/index.js";
+
+import type {
+  Fingerprint,
+} from "../domain/primitives.js";
 
 import type {
   ProductionExecutionInput,
@@ -28,16 +36,20 @@ function executionFingerprint(input: {
   readonly releaseId: string;
   readonly releaseFingerprint: string;
   readonly manifest: readonly string[];
-}): string {
-  return contentFingerprint({
-    releaseId: input.releaseId,
-    releaseFingerprint: input.releaseFingerprint,
-    manifest: input.manifest,
-  });
+}): Fingerprint {
+  return fingerprint(
+    contentFingerprint({
+      releaseId: input.releaseId,
+      releaseFingerprint: input.releaseFingerprint,
+      manifest: input.manifest,
+    }),
+  );
 }
 
-function executionId(fingerprint: string): string {
-  return `execution:${fingerprint}`;
+function executionId(
+  value: Fingerprint,
+): string {
+  return `execution:${value}`;
 }
 
 export function executeProduction(
@@ -50,20 +62,24 @@ export function executeProduction(
 
     const manifest = [...boundary.manifest];
 
-    const fingerprint = executionFingerprint({
+    const executionFingerprintValue = executionFingerprint({
       releaseId: boundary.releaseId,
       releaseFingerprint: boundary.fingerprint,
       manifest,
     });
 
+    const releaseFingerprint = fingerprint(
+      boundary.fingerprint,
+    );
+
     return immutable({
       passed: true,
       status: "EXECUTED" as const,
       releaseId: boundary.releaseId,
-      releaseFingerprint: boundary.fingerprint,
+      releaseFingerprint,
       manifest,
-      executionId: executionId(fingerprint),
-      executionFingerprint: fingerprint,
+      executionId: executionId(executionFingerprintValue),
+      executionFingerprint: executionFingerprintValue,
       reasons: [] as readonly string[],
     });
   } catch (error) {
@@ -75,16 +91,17 @@ export function executeProduction(
         : "";
 
     const releaseFingerprint =
-      typeof release?.fingerprint === "string"
-        ? release.fingerprint
-        : "";
+      typeof release?.fingerprint === "string" &&
+      release.fingerprint.length > 0
+        ? fingerprint(release.fingerprint)
+        : fingerprint("0".repeat(64));
 
     const manifest =
       Array.isArray(release?.manifest)
         ? [...release.manifest]
         : [];
 
-    const fingerprint = executionFingerprint({
+    const executionFingerprintValue = executionFingerprint({
       releaseId,
       releaseFingerprint,
       manifest,
@@ -96,8 +113,8 @@ export function executeProduction(
       releaseId,
       releaseFingerprint,
       manifest,
-      executionId: executionId(fingerprint),
-      executionFingerprint: fingerprint,
+      executionId: executionId(executionFingerprintValue),
+      executionFingerprint: executionFingerprintValue,
       reasons: [errorMessage(error)],
     });
   }
