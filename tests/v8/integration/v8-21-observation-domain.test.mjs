@@ -115,8 +115,8 @@ test(
       payload: observation,
       lineage: [],
       actor: {
-        type: "SYSTEM",
         id: "v8-21-test",
+        role: "SYSTEM",
       },
       reason: "observation domain contract",
     });
