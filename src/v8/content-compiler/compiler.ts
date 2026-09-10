@@ -5,7 +5,9 @@ import type {
   FoundationStore,
   LineageLink,
 } from "../foundation/types.js";
+import { decisionId } from "../domain/primitives.js";
 import { createContent, type Content } from "../domain/content.js";
+import { decisionId } from "../domain/primitives.js";
 import { DecisionValidator } from "../decision-validation/validator.js";
 import type {
   ContentCompilerInput,
@@ -198,7 +200,7 @@ export class ContentCompiler {
     );
 
     const content = createContent({
-      decisionId: decision.aggregateId,
+      decisionId: decisionId(decision.aggregateId),
       title,
       body,
     });
