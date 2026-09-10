@@ -20,7 +20,7 @@ function assertCanonicalReleaseIdentity(
   const expectedFingerprint = contentFingerprint({
     projectionId: input.release.projectionId,
     projectionFingerprint: input.release.projectionFingerprint,
-    manifest: canonicalPaths(input.release.manifest),
+    manifest: input.release.manifest,
   });
 
   invariant(
