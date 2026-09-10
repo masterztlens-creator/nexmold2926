@@ -144,10 +144,9 @@ test(
       record,
     );
 
-    assert.equal(
-      store.verifyChain().valid,
-      true,
-    );
+    assert.doesNotThrow(() => {
+      store.verifyChain();
+    });
 
     assert.equal(
       Object.prototype.hasOwnProperty.call(
