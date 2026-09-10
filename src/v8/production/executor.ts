@@ -48,11 +48,11 @@ function executionId(
 export function executeProduction(
   input: V8ProductionInput,
 ): Readonly<V8ProductionExecution> {
-  assertProductionBoundary({
-    release: input.release,
-  });
+const productionManifest = createProductionManifest(input);
 
-  const productionManifest = createProductionManifest(input);
+assertProductionBoundary({
+  release: input.release,
+});
 
   const executionFingerprintValue = executionFingerprint({
     releaseId: productionManifest.releaseId,
