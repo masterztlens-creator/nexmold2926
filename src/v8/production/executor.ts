@@ -8,127 +8,82 @@ import {
 } from "../foundation/hash.js";
 
 import {
-  fingerprint,
-} from "../domain/primitives.js";
-
-import {
   assertProductionBoundary,
 } from "../production-boundary/index.js";
 
-import type {
-  Fingerprint,
-} from "../domain/primitives.js";
+import {
+  createProductionManifest,
+} from "./adapter.js";
 
 import type {
-  ProductionExecutionInput,
-  ProductionExecutionResult,
+  V8ProductionExecution,
+  V8ProductionInput,
 } from "./types.js";
 
-function errorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-}
-
-function executionFingerprint(input: {
-  readonly releaseId: string;
-  readonly releaseFingerprint: string;
-  readonly manifest: readonly string[];
-}): Fingerprint {
-  return fingerprint(
-    contentFingerprint({
-      releaseId: input.releaseId,
-      releaseFingerprint: input.releaseFingerprint,
-      manifest: input.manifest,
-    }),
-  );
+function executionFingerprint(
+  input: Pick<
+    V8ProductionExecution,
+    | "releaseId"
+    | "projectionId"
+    | "releaseFingerprint"
+    | "projectionFingerprint"
+    | "manifest"
+  >,
+): V8ProductionExecution["executionFingerprint"] {
+  return contentFingerprint({
+    releaseId: input.releaseId,
+    projectionId: input.projectionId,
+    releaseFingerprint: input.releaseFingerprint,
+    projectionFingerprint: input.projectionFingerprint,
+    manifest: input.manifest,
+  }) as V8ProductionExecution["executionFingerprint"];
 }
 
 function executionId(
-  value: Fingerprint,
+  value: V8ProductionExecution["executionFingerprint"],
 ): string {
   return `execution:${value}`;
 }
 
 export function executeProduction(
-  input: ProductionExecutionInput,
-): Readonly<ProductionExecutionResult> {
-  try {
-    const boundary = assertProductionBoundary({
-      release: input.release,
-    });
+  input: V8ProductionInput,
+): Readonly<V8ProductionExecution> {
+  assertProductionBoundary({
+    release: input.release,
+  });
 
-    const manifest = [...boundary.manifest];
+  const productionManifest = createProductionManifest(input);
 
-    const executionFingerprintValue = executionFingerprint({
-      releaseId: boundary.releaseId,
-      releaseFingerprint: boundary.fingerprint,
-      manifest,
-    });
+  const executionFingerprintValue = executionFingerprint({
+    releaseId: productionManifest.releaseId,
+    projectionId: productionManifest.projectionId,
+    releaseFingerprint: productionManifest.releaseFingerprint,
+    projectionFingerprint: productionManifest.projectionFingerprint,
+    manifest: productionManifest.manifest,
+  });
 
-    const releaseFingerprint = fingerprint(
-      boundary.fingerprint,
-    );
-
-    return immutable({
-      passed: true,
-      status: "EXECUTED" as const,
-      releaseId: boundary.releaseId,
-      releaseFingerprint,
-      manifest,
-      executionId: executionId(executionFingerprintValue),
-      executionFingerprint: executionFingerprintValue,
-      reasons: [] as readonly string[],
-    });
-  } catch (error) {
-    const release = input.release;
-
-    const releaseId =
-      typeof release?.id === "string"
-        ? release.id
-        : "";
-
-    const releaseFingerprint =
-      typeof release?.fingerprint === "string" &&
-      release.fingerprint.length > 0
-        ? fingerprint(release.fingerprint)
-        : fingerprint("0".repeat(64));
-
-    const manifest =
-      Array.isArray(release?.manifest)
-        ? [...release.manifest]
-        : [];
-
-    const executionFingerprintValue = executionFingerprint({
-      releaseId,
-      releaseFingerprint,
-      manifest,
-    });
-
-    return immutable({
-      passed: false,
-      status: "BLOCKED" as const,
-      releaseId,
-      releaseFingerprint,
-      manifest,
-      executionId: executionId(executionFingerprintValue),
-      executionFingerprint: executionFingerprintValue,
-      reasons: [errorMessage(error)],
-    });
-  }
+  return immutable({
+    schema: "nexmold.v8.production-execution.v1",
+    status: "EXECUTED" as const,
+    releaseId: productionManifest.releaseId,
+    projectionId: productionManifest.projectionId,
+    releaseFingerprint: productionManifest.releaseFingerprint,
+    projectionFingerprint: productionManifest.projectionFingerprint,
+    manifest: productionManifest.manifest,
+    executionId: executionId(executionFingerprintValue),
+    executionFingerprint: executionFingerprintValue,
+  });
 }
 
 export function assertProductionExecution(
-  input: ProductionExecutionInput,
-): Readonly<ProductionExecutionResult> {
+  input: V8ProductionInput,
+): Readonly<V8ProductionExecution> {
   const result = executeProduction(input);
 
   invariant(
-    result.passed,
+    result.status === "EXECUTED",
     "V8_PRODUCTION_EXECUTION_BLOCKED",
-    `Production execution blocked: ${result.reasons.join("; ")}`,
+    "Production execution is not ready.",
   );
 
   return result;
