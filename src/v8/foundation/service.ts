@@ -4,7 +4,16 @@ import {
 } from "../domain/scope.js";import {
   createContext,
   type Context,
-} from "../domain/context.js";import {
+} from "../domain/context.js";
+import {
+  createProblem,
+  type Problem,
+} from "../domain/problem.js";
+import {
+  createDecision as createDecisionDomain,
+  type Decision,
+} from "../domain/decision.js";
+import { ApplicabilityEngine } from "../applicability/engine.js";import {
   immutable,
   invariant,
 } from "../constitution/invariants.js";
@@ -63,6 +72,9 @@ import type {
   FoundationRecord,
   FoundationStore,
   KnowledgePayload,
+  ContextPayload,
+  ProblemPayload,
+  DecisionPayload,
   LineageLink,
   SnapshotPayload,
 } from "./types.js";
@@ -785,7 +797,189 @@ export class FoundationService {
       actor,
       reason,
     });
-  }  createKnowledge(
+  }
+  registerProblem(
+    problem: Problem,
+    actor: AuditActor,
+    reason = "problem registration",
+  ) {
+    const prepared = createProblem(problem);
+    const context = this.store.get(
+      "CONTEXT",
+      prepared.contextId,
+    );
+    invariant(
+      context !== null &&
+        context.state === "REGISTERED",
+      "V8_FOUNDATION_PROBLEM_CONTEXT_NOT_REGISTERED",
+      `Problem context ${prepared.contextId} is not registered.`,
+    );
+    invariant(
+      !this.store.get(
+        "PROBLEM",
+        prepared.id,
+      ),
+      "V8_FOUNDATION_PROBLEM_EXISTS",
+      "Problem identity already exists.",
+    );
+    const payload: ProblemPayload = immutable({
+      contextId: prepared.contextId,
+      question: prepared.question,
+      constraints: prepared.constraints,
+    });
+    const lineage: LineageLink[] = [
+      {
+        type: "CONTEXT",
+        id: context.aggregateId,
+        version: context.version,
+        fingerprint: context.fingerprint,
+      },
+    ];
+    return this.store.append({
+      aggregateType: "PROBLEM",
+      aggregateId: prepared.id,
+      version: 1,
+      state: "REGISTERED",
+      payload,
+      lineage,
+      actor,
+      reason,
+    });
+  }
+  createDecision(
+    decision: Decision,
+    scopeId: string,
+    contextId: string,
+    actor: AuditActor,
+    reason = "decision approval",
+  ) {
+    invariant(
+      decision.status === "APPROVED",
+      "V8_FOUNDATION_DECISION_NOT_APPROVED",
+      "Only approved decisions can persist.",
+    );
+    const problem = this.store.get<ProblemPayload>(
+      "PROBLEM",
+      decision.problemId,
+    );
+    invariant(
+      problem !== null &&
+        problem.state === "REGISTERED",
+      "V8_FOUNDATION_DECISION_PROBLEM_NOT_REGISTERED",
+      `Problem ${decision.problemId} is not registered.`,
+    );
+    invariant(
+      problem.payload.contextId === contextId,
+      "V8_FOUNDATION_DECISION_CONTEXT_MISMATCH",
+      "Decision context does not match Problem context.",
+    );
+    const context = this.store.get<ContextPayload>(
+      "CONTEXT",
+      contextId,
+    );
+    invariant(
+      context !== null &&
+        context.state === "REGISTERED",
+      "V8_FOUNDATION_DECISION_CONTEXT_NOT_REGISTERED",
+      `Context ${contextId} is not registered.`,
+    );
+    invariant(
+      context.payload.scopeId === scopeId,
+      "V8_FOUNDATION_DECISION_SCOPE_MISMATCH",
+      "Decision scope does not match Context scope.",
+    );
+    const scope = this.store.get(
+      "SCOPE",
+      scopeId,
+    );
+    invariant(
+      scope !== null &&
+        scope.state === "REGISTERED",
+      "V8_FOUNDATION_DECISION_SCOPE_NOT_REGISTERED",
+      `Scope ${scopeId} is not registered.`,
+    );
+    const applicability = new ApplicabilityEngine(
+      this.store,
+    );
+    for (const knowledgeId of decision.knowledgeIds) {
+      applicability.assert({
+        knowledgeId,
+        scopeId,
+        contextId,
+      });
+    }
+    const prepared = createDecisionDomain({
+      ...decision,
+      status: "APPROVED",
+    });
+    invariant(
+      !this.store.get(
+        "DECISION",
+        prepared.id,
+      ),
+      "V8_FOUNDATION_DECISION_EXISTS",
+      "Decision identity already exists.",
+    );
+    const knowledgeRecords = prepared.knowledgeIds.map(
+      (knowledgeId) => {
+        const record = this.store.get(
+          "KNOWLEDGE",
+          knowledgeId,
+        );
+        invariant(
+          record !== null &&
+            record.state === "VERIFIED",
+          "V8_FOUNDATION_DECISION_KNOWLEDGE_NOT_VERIFIED",
+          `Decision knowledge ${knowledgeId} must be verified.`,
+        );
+        return record;
+      },
+    );
+    const lineage: LineageLink[] = [
+      {
+        type: "PROBLEM",
+        id: problem.aggregateId,
+        version: problem.version,
+        fingerprint: problem.fingerprint,
+      },
+      ...knowledgeRecords.map((record) => ({
+        type: "KNOWLEDGE" as const,
+        id: record.aggregateId,
+        version: record.version,
+        fingerprint: record.fingerprint,
+      })),
+      {
+        type: "CONTEXT",
+        id: context.aggregateId,
+        version: context.version,
+        fingerprint: context.fingerprint,
+      },
+      {
+        type: "SCOPE",
+        id: scope.aggregateId,
+        version: scope.version,
+        fingerprint: scope.fingerprint,
+      },
+    ];
+    const payload: DecisionPayload = immutable({
+      problemId: prepared.problemId,
+      knowledgeIds: prepared.knowledgeIds,
+      outcome: prepared.outcome,
+      status: "APPROVED",
+      fingerprint: prepared.fingerprint,
+    });
+    return this.store.append({
+      aggregateType: "DECISION",
+      aggregateId: prepared.id,
+      version: 1,
+      state: "APPROVED",
+      payload,
+      lineage,
+      actor,
+      reason,
+    });
+  }
+  createKnowledge(
     knowledge: Knowledge,
     actor: AuditActor,
     reason = "knowledge approval",

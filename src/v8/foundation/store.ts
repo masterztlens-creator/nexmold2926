@@ -1,11 +1,11 @@
-﻿import { immutable, invariant } from "../constitution/invariants.js";
+import { immutable, invariant } from "../constitution/invariants.js";
 import { existsSync, mkdirSync, appendFileSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { nonEmpty } from "../domain/primitives.js";
 import { contentFingerprint } from "./hash.js";
 import { assertKnownState, assertTransition } from "./state-machine.js";
 import type { AggregateType, FoundationRecord, FoundationStore } from "./types.js";
-const TYPES=new Set<AggregateType>(["SOURCE","SNAPSHOT","EVIDENCE","CLAIM","KNOWLEDGE","RULE","POLICY","ELIGIBILITY","SCOPE","CONTEXT","PUBLICATION","PROJECTION","RELEASE","VERIFICATION"]);
+const TYPES=new Set<AggregateType>(["SOURCE","SNAPSHOT","EVIDENCE","CLAIM","KNOWLEDGE","RULE","POLICY","ELIGIBILITY","SCOPE","CONTEXT","PROBLEM","DECISION","PUBLICATION","PROJECTION","RELEASE","VERIFICATION"]);
 function clone<T>(r:FoundationRecord<T>):FoundationRecord<T>{return immutable({...r,lineage:[...r.lineage]});}
 export class JsonlFoundationStore implements FoundationStore{
  private readonly memory=new InMemoryFoundationStore();

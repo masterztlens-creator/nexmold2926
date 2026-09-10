@@ -20,6 +20,8 @@ export type AggregateType =
   | "ELIGIBILITY"
   | "SCOPE"
   | "CONTEXT"
+  | "PROBLEM"
+  | "DECISION"
   | "PUBLICATION"
   | "PROJECTION"
   | "RELEASE"
@@ -193,6 +195,17 @@ export interface ContextPayload {
   readonly scopeId: string;
   readonly purpose: string;
   readonly variables: Readonly<Record<string, string>>;
+}export interface ProblemPayload {
+  readonly contextId: string;
+  readonly question: string;
+  readonly constraints: readonly string[];
+}
+export interface DecisionPayload {
+  readonly problemId: string;
+  readonly knowledgeIds: readonly string[];
+  readonly outcome: string;
+  readonly status: "APPROVED";
+  readonly fingerprint: string;
 }export interface VerificationPayload {
   readonly targetType:
     | "SOURCE"
