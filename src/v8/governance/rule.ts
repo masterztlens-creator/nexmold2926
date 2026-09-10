@@ -1,3 +1,62 @@
-import {immutable,invariant,requireKnown} from "../constitution/invariants.js";import {contentFingerprint} from "../foundation/hash.js";import {nonEmpty,sortedUnique,type Fingerprint} from "../domain/primitives.js";
-export type RuleStatus="PROPOSED"|"APPROVED"|"REJECTED"|"RETIRED"|"UNKNOWN";export type RuleEffect="ALLOW"|"DENY"|"REQUIRE_REVIEW";export interface Rule{id:string;statement:string;knowledgeIds:readonly string[];effect:RuleEffect;status:Exclude<RuleStatus,"UNKNOWN">;fingerprint:Fingerprint;}
-export function createRule(i:Omit<Rule,"id"|"fingerprint">&{id?:string}):Readonly<Rule>{const status=requireKnown(i.status,"V8_RULE_UNKNOWN","rule.status");const statement=nonEmpty(i.statement,"rule.statement");const knowledgeIds=sortedUnique(i.knowledgeIds,"rule.knowledgeIds");invariant(knowledgeIds.length>0,"V8_RULE_NO_KNOWLEDGE","Rule requires knowledge references.");const semantic={statement,knowledgeIds,effect:i.effect};const fp=contentFingerprint(semantic);return immutable({id:i.id??`rule:${fp}`,...semantic,status,fingerprint:fp});}
+import {immutable,invariant,requireKnown} from "../constitution/invariants.js";
+import {contentFingerprint} from "../foundation/hash.js";
+import {nonEmpty,sortedUnique,type Fingerprint} from "../domain/primitives.js";
+
+export type RuleStatus=
+  "PROPOSED"|
+  "APPROVED"|
+  "REJECTED"|
+  "RETIRED"|
+  "UNKNOWN";
+
+export type RuleEffect=
+  "ALLOW"|
+  "DENY"|
+  "REQUIRE_REVIEW";
+
+export interface Rule {
+  id:string;
+  statement:string;
+  knowledgeIds:readonly string[];
+  effect:RuleEffect;
+  status:Exclude<RuleStatus,"UNKNOWN">;
+  fingerprint:Fingerprint;
+}
+
+export function createRule(
+  i:Omit<Rule,"id"|"fingerprint">&{id?:string},
+):Readonly<Rule>{
+  const status=requireKnown(
+    i.status,
+    "V8_RULE_UNKNOWN",
+    "rule.status",
+  );
+
+  const statement=nonEmpty(
+    i.statement,
+    "rule.statement",
+  );
+
+  const knowledgeIds=sortedUnique(i.knowledgeIds);
+
+  invariant(
+    knowledgeIds.length>0,
+    "V8_RULE_NO_KNOWLEDGE",
+    "Rule requires knowledge references.",
+  );
+
+  const semantic={
+    statement,
+    knowledgeIds,
+    effect:i.effect,
+  };
+
+  const fp=contentFingerprint(semantic);
+
+  return immutable({
+    id:i.id??`rule:${fp}`,
+    ...semantic,
+    status,
+    fingerprint:fp,
+  });
+}

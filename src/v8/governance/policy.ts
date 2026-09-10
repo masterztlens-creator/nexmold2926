@@ -1,1 +1,55 @@
-import {immutable,invariant,requireKnown} from "../constitution/invariants.js";import {contentFingerprint} from "../foundation/hash.js";import {nonEmpty,sortedUnique,type Fingerprint} from "../domain/primitives.js";export type PolicyMode="ALL"|"FIRST_MATCH_DENY";export type PolicyStatus="PROPOSED"|"APPROVED"|"REJECTED"|"RETIRED"|"UNKNOWN";export interface Policy{id:string;name:string;ruleIds:readonly string[];mode:PolicyMode;status:Exclude<PolicyStatus,"UNKNOWN">;fingerprint:Fingerprint;}export function createPolicy(i:Omit<Policy,"id"|"fingerprint">&{id?:string}):Readonly<Policy>{const status=requireKnown(i.status,"V8_POLICY_UNKNOWN","policy.status");const name=nonEmpty(i.name,"policy.name");const ruleIds=sortedUnique(i.ruleIds,"policy.ruleIds");invariant(ruleIds.length>0,"V8_POLICY_NO_RULES","Policy requires rules.");const fp=contentFingerprint({name,ruleIds,mode:i.mode});return immutable({id:i.id??`policy:${fp}`,name,ruleIds,mode:i.mode,status,fingerprint:fp});}
+import {immutable,invariant,requireKnown} from "../constitution/invariants.js";
+import {contentFingerprint} from "../foundation/hash.js";
+import {nonEmpty,sortedUnique,type Fingerprint} from "../domain/primitives.js";
+
+export type PolicyMode="ALL"|"FIRST_MATCH_DENY";
+
+export type PolicyStatus=
+  "PROPOSED"|
+  "APPROVED"|
+  "REJECTED"|
+  "RETIRED"|
+  "UNKNOWN";
+
+export interface Policy {
+  id:string;
+  name:string;
+  ruleIds:readonly string[];
+  mode:PolicyMode;
+  status:Exclude<PolicyStatus,"UNKNOWN">;
+  fingerprint:Fingerprint;
+}
+
+export function createPolicy(
+  i:Omit<Policy,"id"|"fingerprint">&{id?:string},
+):Readonly<Policy>{
+  const status=requireKnown(
+    i.status,
+    "V8_POLICY_UNKNOWN",
+    "policy.status",
+  );
+
+  const name=nonEmpty(i.name,"policy.name");
+  const ruleIds=sortedUnique(i.ruleIds);
+
+  invariant(
+    ruleIds.length>0,
+    "V8_POLICY_NO_RULES",
+    "Policy requires rules.",
+  );
+
+  const fp=contentFingerprint({
+    name,
+    ruleIds,
+    mode:i.mode,
+  });
+
+  return immutable({
+    id:i.id??`policy:${fp}`,
+    name,
+    ruleIds,
+    mode:i.mode,
+    status,
+    fingerprint:fp,
+  });
+}
