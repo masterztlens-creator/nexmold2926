@@ -2,7 +2,6 @@ import { immutable, invariant } from "../constitution/invariants.js";
 import { contentFingerprint } from "../foundation/hash.js";
 import { assertReleaseReady } from "../release/gate.js";
 import type {
-  V8ProductionExecution,
   V8ProductionInput,
   V8ProductionManifest,
 } from "./types.js";
@@ -129,61 +128,4 @@ export function assertProductionManifest(
     passed: true,
     releaseId: manifest.releaseId,
   });
-}
-
-function executionFingerprint(
-  input: Pick<
-    V8ProductionExecution,
-    | "releaseId"
-    | "projectionId"
-    | "releaseFingerprint"
-    | "projectionFingerprint"
-    | "manifest"
-  >,
-): string {
-  return contentFingerprint({
-    releaseId: input.releaseId,
-    projectionId: input.projectionId,
-    releaseFingerprint: input.releaseFingerprint,
-    projectionFingerprint: input.projectionFingerprint,
-    manifest: input.manifest,
-  });
-}
-
-function executionId(
-  fingerprint: string,
-): string {
-  return `execution:${fingerprint}`;
-}
-
-export function executeProduction(
-  input: V8ProductionInput,
-): Readonly<V8ProductionExecution> {
-  const manifest = createProductionManifest(input);
-
-  const fingerprint = executionFingerprint({
-    releaseId: manifest.releaseId,
-    projectionId: manifest.projectionId,
-    releaseFingerprint: manifest.releaseFingerprint,
-    projectionFingerprint: manifest.projectionFingerprint,
-    manifest: manifest.manifest,
-  });
-
-  return immutable({
-    schema: "nexmold.v8.production-execution.v1",
-    status: "EXECUTED" as const,
-    releaseId: manifest.releaseId,
-    projectionId: manifest.projectionId,
-    releaseFingerprint: manifest.releaseFingerprint,
-    projectionFingerprint: manifest.projectionFingerprint,
-    manifest: [...manifest.manifest],
-    executionId: executionId(fingerprint),
-    executionFingerprint: fingerprint,
-  });
-}
-
-export function assertProductionExecution(
-  input: V8ProductionInput,
-): Readonly<V8ProductionExecution> {
-  return executeProduction(input);
 }
