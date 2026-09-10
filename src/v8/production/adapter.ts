@@ -1,13 +1,23 @@
 import { immutable, invariant } from "../constitution/invariants.js";
 import { contentFingerprint } from "../foundation/hash.js";
 import { assertReleaseReady } from "../release/gate.js";
-import type { V8ProductionInput, V8ProductionManifest } from "./types.js";
+import type {
+  V8ProductionExecution,
+  V8ProductionInput,
+  V8ProductionManifest,
+} from "./types.js";
 
 function canonicalPaths(paths: readonly string[]): string[] {
-  return [...new Set(paths.map((value) => value.trim()).filter(Boolean))].sort();
+  return [...new Set(
+    paths
+      .map((value) => value.trim())
+      .filter(Boolean),
+  )].sort();
 }
 
-function assertCanonicalReleaseIdentity(input: V8ProductionInput): void {
+function assertCanonicalReleaseIdentity(
+  input: V8ProductionInput,
+): void {
   const expectedFingerprint = contentFingerprint({
     projectionId: input.release.projectionId,
     projectionFingerprint: input.release.projectionFingerprint,
@@ -19,6 +29,7 @@ function assertCanonicalReleaseIdentity(input: V8ProductionInput): void {
     "V8_PRODUCTION_RELEASE_FINGERPRINT_MISMATCH",
     "Production release fingerprint does not match its canonical payload.",
   );
+
   invariant(
     input.release.id === `release:${expectedFingerprint}`,
     "V8_PRODUCTION_RELEASE_ID_MISMATCH",
@@ -29,21 +40,35 @@ function assertCanonicalReleaseIdentity(input: V8ProductionInput): void {
 export function createProductionManifest(
   input: V8ProductionInput,
 ): Readonly<V8ProductionManifest> {
-  invariant(input.release.projectionId === input.projection.id,
+  invariant(
+    input.release.projectionId === input.projection.id,
     "V8_PRODUCTION_PROJECTION_ID_MISMATCH",
-    "Release and projection identities must match.");
-  invariant(input.release.projectionFingerprint === input.projection.fingerprint,
+    "Release and projection identities must match.",
+  );
+
+  invariant(
+    input.release.projectionFingerprint === input.projection.fingerprint,
     "V8_PRODUCTION_PROJECTION_FINGERPRINT_MISMATCH",
-    "Release must reference the exact projection fingerprint.");
-  invariant(input.release.manifest.length > 0,
+    "Release must reference the exact projection fingerprint.",
+  );
+
+  invariant(
+    input.release.manifest.length > 0,
     "V8_PRODUCTION_EMPTY_MANIFEST",
-    "Production release manifest cannot be empty.");
+    "Production release manifest cannot be empty.",
+  );
 
   const expected = canonicalPaths(input.expectedPaths);
   const actual = canonicalPaths(input.release.manifest);
-  invariant(expected.length === actual.length && expected.every((value, index) => value === actual[index]),
+
+  invariant(
+    expected.length === actual.length &&
+      expected.every(
+        (value, index) => value === actual[index],
+      ),
     "V8_PRODUCTION_MANIFEST_MISMATCH",
-    "Production release manifest does not match expected generated paths.");
+    "Production release manifest does not match expected generated paths.",
+  );
 
   assertCanonicalReleaseIdentity(input);
   assertReleaseReady(input.release);
@@ -61,21 +86,38 @@ export function createProductionManifest(
 export function assertProductionManifest(
   manifest: V8ProductionManifest,
 ): Readonly<{ passed: true; releaseId: string }> {
-  invariant(manifest.schema === "nexmold.v8.production-manifest.v1",
-    "V8_PRODUCTION_SCHEMA_INVALID", "Unsupported V8 production manifest schema.");
-  invariant(manifest.releaseId.trim().length > 0 && manifest.projectionId.trim().length > 0 &&
-    manifest.projectionFingerprint.length === 64 && manifest.releaseFingerprint.length === 64,
-    "V8_PRODUCTION_IDENTITY_INVALID", "Production manifest contains invalid canonical identities.");
+  invariant(
+    manifest.schema === "nexmold.v8.production-manifest.v1",
+    "V8_PRODUCTION_SCHEMA_INVALID",
+    "Unsupported V8 production manifest schema.",
+  );
+
+  invariant(
+    manifest.releaseId.trim().length > 0 &&
+      manifest.projectionId.trim().length > 0 &&
+      manifest.projectionFingerprint.length === 64 &&
+      manifest.releaseFingerprint.length === 64,
+    "V8_PRODUCTION_IDENTITY_INVALID",
+    "Production manifest contains invalid canonical identities.",
+  );
 
   const paths = canonicalPaths(manifest.manifest);
-  invariant(paths.length === manifest.manifest.length && paths.every((value, index) => value === manifest.manifest[index]),
-    "V8_PRODUCTION_MANIFEST_NOT_CANONICAL", "Production manifest paths are not canonical.");
+
+  invariant(
+    paths.length === manifest.manifest.length &&
+      paths.every(
+        (value, index) => value === manifest.manifest[index],
+      ),
+    "V8_PRODUCTION_MANIFEST_NOT_CANONICAL",
+    "Production manifest paths are not canonical.",
+  );
 
   const expectedReleaseFingerprint = contentFingerprint({
     projectionId: manifest.projectionId,
     projectionFingerprint: manifest.projectionFingerprint,
     manifest: paths,
   });
+
   invariant(
     manifest.releaseFingerprint === expectedReleaseFingerprint &&
       manifest.releaseId === `release:${expectedReleaseFingerprint}`,
@@ -83,5 +125,65 @@ export function assertProductionManifest(
     "Production manifest release identity is not canonical.",
   );
 
-  return immutable({ passed: true, releaseId: manifest.releaseId });
+  return immutable({
+    passed: true,
+    releaseId: manifest.releaseId,
+  });
+}
+
+function executionFingerprint(
+  input: Pick<
+    V8ProductionExecution,
+    | "releaseId"
+    | "projectionId"
+    | "releaseFingerprint"
+    | "projectionFingerprint"
+    | "manifest"
+  >,
+): string {
+  return contentFingerprint({
+    releaseId: input.releaseId,
+    projectionId: input.projectionId,
+    releaseFingerprint: input.releaseFingerprint,
+    projectionFingerprint: input.projectionFingerprint,
+    manifest: input.manifest,
+  });
+}
+
+function executionId(
+  fingerprint: string,
+): string {
+  return `execution:${fingerprint}`;
+}
+
+export function executeProduction(
+  input: V8ProductionInput,
+): Readonly<V8ProductionExecution> {
+  const manifest = createProductionManifest(input);
+
+  const fingerprint = executionFingerprint({
+    releaseId: manifest.releaseId,
+    projectionId: manifest.projectionId,
+    releaseFingerprint: manifest.releaseFingerprint,
+    projectionFingerprint: manifest.projectionFingerprint,
+    manifest: manifest.manifest,
+  });
+
+  return immutable({
+    schema: "nexmold.v8.production-execution.v1",
+    status: "EXECUTED" as const,
+    releaseId: manifest.releaseId,
+    projectionId: manifest.projectionId,
+    releaseFingerprint: manifest.releaseFingerprint,
+    projectionFingerprint: manifest.projectionFingerprint,
+    manifest: [...manifest.manifest],
+    executionId: executionId(fingerprint),
+    executionFingerprint: fingerprint,
+  });
+}
+
+export function assertProductionExecution(
+  input: V8ProductionInput,
+): Readonly<V8ProductionExecution> {
+  return executeProduction(input);
 }
