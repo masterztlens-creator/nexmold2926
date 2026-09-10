@@ -4,11 +4,11 @@ import test from "node:test";
 import {
   FoundationService,
   InMemoryFoundationStore,
-} from "../../dist/v8/foundation/index.js";
+} from "../../../.v8-build/src/v8/foundation/index.js";
 
 import {
   ContentCompiler,
-} from "../../dist/v8/content-compiler/index.js";
+} from "../../../.v8-build/src/v8/content-compiler/index.js";
 
 const actor = {
   id: "v8-14-test",
