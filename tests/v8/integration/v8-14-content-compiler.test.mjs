@@ -10,6 +10,10 @@ import {
   ContentCompiler,
 } from "../../../.v8-build/src/v8/content-compiler/index.js";
 
+import {
+  contentFingerprint,
+} from "../../../.v8-build/src/v8/foundation/hash.js";
+
 const actor = {
   id: "v8-14-test",
   role: "SYSTEM",
@@ -238,22 +242,50 @@ test("V8-14 BLOCKS wrong context", () => {
         contextId: "context:wrong",
         title: "Blocked",
       }),
-    /V8_DECISION_VALIDATION_FAILED/,
+    /V8_CONTENT_COMPILER_CONTEXT_MISMATCH/,
   );
 });
 
 test("V8-14 BLOCKS unverified knowledge", () => {
   const fixture = buildFixture();
 
-  fixture.store.append({
+  const unverifiedKnowledge = fixture.store.append({
     aggregateType: "KNOWLEDGE",
-    aggregateId: fixture.knowledge.aggregateId,
-    version: 2,
+    aggregateId: "knowledge:v8-14-unverified",
+    version: 1,
     state: "REQUIRES_REVIEW",
-    payload: fixture.knowledge.payload,
-    lineage: fixture.knowledge.lineage,
+    payload: {
+      proposition:
+        "Unverified manufacturing knowledge.",
+      claimIds: ["claim:v8-14-unverified"],
+    },
+    lineage: [],
     actor,
-    reason: "tamper test",
+    reason: "v8-14 unverified knowledge fixture",
+  });
+
+  const unverifiedDecisionPayload = {
+    problemId: fixture.problem.aggregateId,
+    knowledgeIds: [unverifiedKnowledge.aggregateId],
+    outcome:
+      "Apply the unverified manufacturing decision.",
+    status: "APPROVED",
+  };
+
+  const unverifiedDecision = fixture.store.append({
+    aggregateType: "DECISION",
+    aggregateId: "decision:v8-14-unverified",
+    version: 1,
+    state: "APPROVED",
+    payload: {
+      ...unverifiedDecisionPayload,
+      fingerprint: contentFingerprint(
+        unverifiedDecisionPayload,
+      ),
+    },
+    lineage: [],
+    actor,
+    reason: "v8-14 unverified decision fixture",
   });
 
   const compiler =
@@ -262,11 +294,13 @@ test("V8-14 BLOCKS unverified knowledge", () => {
   assert.throws(
     () =>
       compiler.compile({
-        decisionId: fixture.decision.aggregateId,
+        decisionId: unverifiedDecision.aggregateId,
         scopeId: fixture.scope.aggregateId,
         contextId: fixture.context.aggregateId,
         title: "Blocked",
       }),
     /V8_DECISION_VALIDATION_FAILED/,
   );
+
+  fixture.store.verifyChain();
 });
