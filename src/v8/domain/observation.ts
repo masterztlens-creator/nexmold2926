@@ -33,17 +33,47 @@ export function createObservation(
   },
 ): Readonly<Observation> {
   const kind = input.kind;
-  const subject = nonEmpty(input.subject, "observation.subject");
-  const value = nonEmpty(input.value, "observation.value");
-  const observedAt = nonEmpty(
-    input.observedAt,
-    "observation.observedAt",
+
+  invariant(
+    typeof kind === "string" && kind.trim().length > 0,
+    "V8_EMPTY_ID",
+    "Observation.kind cannot be empty.",
   );
 
   invariant(
-    typeof kind === "string",
-    "V8_OBSERVATION_KIND_REQUIRED",
-    "Observation kind is required.",
+    typeof input.subject === "string" &&
+      input.subject.trim().length > 0,
+    "V8_EMPTY_ID",
+    "Observation.subject cannot be empty.",
+  );
+
+  invariant(
+    typeof input.value === "string" &&
+      input.value.trim().length > 0,
+    "V8_EMPTY_ID",
+    "Observation.value cannot be empty.",
+  );
+
+  invariant(
+    typeof input.observedAt === "string" &&
+      input.observedAt.trim().length > 0,
+    "V8_EMPTY_ID",
+    "Observation.observedAt cannot be empty.",
+  );
+
+  const subject = nonEmpty(
+    input.subject,
+    "observation.subject",
+  );
+
+  const value = nonEmpty(
+    input.value,
+    "observation.value",
+  );
+
+  const observedAt = nonEmpty(
+    input.observedAt,
+    "observation.observedAt",
   );
 
   if (input.unit !== undefined) {
@@ -70,7 +100,12 @@ export function createObservation(
     observedAt,
     ...(input.unit === undefined
       ? {}
-      : { unit: nonEmpty(input.unit, "observation.unit") }),
+      : {
+          unit: nonEmpty(
+            input.unit,
+            "observation.unit",
+          ),
+        }),
     ...(input.contextId === undefined
       ? {}
       : {
