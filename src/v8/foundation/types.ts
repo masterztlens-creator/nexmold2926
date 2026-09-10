@@ -13,6 +13,7 @@ export type AggregateType =
   | "SOURCE"
   | "SNAPSHOT"
   | "EVIDENCE"
+  | "OBSERVATION"
   | "CLAIM"
   | "KNOWLEDGE"
   | "RULE"
@@ -163,6 +164,22 @@ export interface EvidencePayload {
     | "LOW";
 }
 
+export interface ObservationPayload {
+  readonly observationId: string;
+  readonly kind:
+    | "OUTCOME"
+    | "BEHAVIOR"
+    | "MEASUREMENT"
+    | "FEEDBACK"
+    | "SYSTEM_EVENT";
+  readonly subject: string;
+  readonly value: string;
+  readonly observedAt: string;
+  readonly unit?: string;
+  readonly contextId?: string;
+  readonly sourceId?: string;
+}
+
 export interface ClaimPayload {
   readonly statement: string;
   readonly evidenceIds: readonly EvidenceId[];
@@ -191,22 +208,28 @@ export interface ScopePayload {
   readonly industries: readonly string[];
   readonly languages: readonly string[];
 }
+
 export interface ContextPayload {
   readonly scopeId: string;
   readonly purpose: string;
   readonly variables: Readonly<Record<string, string>>;
-}export interface ProblemPayload {
+}
+
+export interface ProblemPayload {
   readonly contextId: string;
   readonly question: string;
   readonly constraints: readonly string[];
 }
+
 export interface DecisionPayload {
   readonly problemId: string;
   readonly knowledgeIds: readonly string[];
   readonly outcome: string;
   readonly status: "APPROVED";
   readonly fingerprint: string;
-}export interface VerificationPayload {
+}
+
+export interface VerificationPayload {
   readonly targetType:
     | "SOURCE"
     | "SNAPSHOT"
