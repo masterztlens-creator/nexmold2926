@@ -78,16 +78,16 @@ export function nonEmpty(
   return v.trim();
 }
 
-export function sortedUnique(
-  values: readonly string[],
-): readonly string[] {
+export function sortedUnique<T extends string>(
+  values: readonly T[],
+): readonly T[] {
   return [
     ...new Set(
       values
         .map((value) => value.trim())
         .filter((value) => value.length > 0),
     ),
-  ].sort();
+  ].sort() as T[];
 }
 
 export function canonicalize(
@@ -115,3 +115,4 @@ export function canonicalize(
 
   return v;
 }
+
