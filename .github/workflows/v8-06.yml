@@ -25,6 +25,5 @@ jobs:
         run: node --test tests/v8/intelligence/research-planner/acquisition-runner.test.ts
       - name: V8-06 real internet research gate
         env:
-          V8_SEARCH_ENDPOINT: ${{ secrets.V8_SEARCH_ENDPOINT }}
           V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-06-internet-research-gate.mjs

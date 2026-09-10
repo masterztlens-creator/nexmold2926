@@ -3,40 +3,14 @@ import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js
 import {
   expandEvidenceFromInternet,
 } from "../.v8-build/src/v8/intelligence/evidence-expansion/expansion.js";
-const endpoint = process.env.V8_SEARCH_ENDPOINT;
+import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
 const apiKey = process.env.V8_SEARCH_API_KEY;
-assert.ok(endpoint, "V8_SEARCH_ENDPOINT is required");
 assert.ok(apiKey, "V8_SEARCH_API_KEY is required");
-const searchProvider = {
-  name: "v8-07-real-search",
-  async search(query, options = {}) {
-    const url = new URL(endpoint);
-    url.searchParams.set("q", query);
-    const response = await fetch(url, {
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-      },
-      signal: options.signal,
-    });
-    assert.equal(
-      response.ok,
-      true,
-      `search HTTP ${response.status}`,
-    );
-    const payload = await response.json();
-    assert.equal(
-      Array.isArray(payload),
-      true,
-      "search response must be an array",
-    );
-    return payload.filter(
-      (item) =>
-        item &&
-        typeof item.url === "string" &&
-        item.url.startsWith("http"),
-    );
-  },
-};
+const searchProvider = new TavilySearchProvider(
+  apiKey,
+  "https://api.tavily.com/search",
+  "v8-07-real-search",
+);
 const pageFetcher = {
   async fetch(url, options = {}) {
     const response = await fetch(url, {

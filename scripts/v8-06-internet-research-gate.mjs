@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
 import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
 import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-import { HttpSearchProvider } from "../.v8-build/src/v8/acquisition/search-provider.js";
+import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
 import { runResearchAcquisition } from "../.v8-build/src/v8/intelligence/research-planner/acquisition-runner.js";
-const endpoint = process.env.V8_SEARCH_ENDPOINT;
 const apiKey = process.env.V8_SEARCH_API_KEY;
-if (!endpoint || !apiKey) {
+if (!apiKey) {
   throw new Error(
-    "V8_SEARCH_CONFIG_MISSING: V8_SEARCH_ENDPOINT and V8_SEARCH_API_KEY are required.",
+    "V8_SEARCH_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
   );
 }
 const opportunity = {
@@ -30,9 +29,9 @@ const opportunity = {
   reasons: ["V8-06 real internet gate"],
 };
 const store = new InMemoryFoundationStore();
-const searchProvider = new HttpSearchProvider(
-  endpoint,
+const searchProvider = new TavilySearchProvider(
   apiKey,
+  "https://api.tavily.com/search",
   "v8-06-real-search",
 );
 const pageFetcher = new HttpPageFetcher({
