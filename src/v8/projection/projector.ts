@@ -26,7 +26,42 @@ import type {
   ProjectionPayload,
   ProjectionResult,
   ProjectedContent,
+  Projection,
+  V8ProjectionInput,
 } from "./types.js";
+
+/**
+ * Legacy V8-05~08 projection producer.
+ *
+ * This API MUST remain intact.
+ */
+export function project(
+  input: ProjectionInput,
+): Readonly<Projection> {
+  const route = input.route.trim();
+
+  invariant(
+    route.startsWith("/") && route !== "/",
+    "V8_PROJECTION_ROUTE_INVALID",
+    "Projection route must be a non-root path.",
+  );
+
+  const fp = contentFingerprint({
+    publicationId: input.artifact.id,
+    route,
+    title: input.artifact.title,
+    body: input.artifact.body,
+  });
+
+  return immutable({
+    id: `projection:${fp}`,
+    publicationId: input.artifact.id,
+    route,
+    title: input.artifact.title,
+    body: input.artifact.body,
+    fingerprint: fp,
+  });
+}
 
 interface ContentShape {
   readonly id: string;
@@ -71,7 +106,7 @@ export class ProjectionProjector {
   }
 
   project(
-    input: ProjectionInput,
+    input: V8ProjectionInput,
   ): ProjectionResult {
     const compiled = input.compiled;
     const content = compiled.content as ContentShape;
@@ -83,8 +118,7 @@ export class ProjectionProjector {
     );
 
     invariant(
-      content.decisionId ===
-        compiled.decision.aggregateId,
+      content.decisionId === compiled.decision.aggregateId,
       "V8_PROJECTION_CONTENT_DECISION_MISMATCH",
       "Projection Content decision does not match compiled Decision.",
     );
@@ -125,8 +159,7 @@ export class ProjectionProjector {
       });
 
     invariant(
-      compiled.fingerprint ===
-        expectedSourceFingerprint,
+      compiled.fingerprint === expectedSourceFingerprint,
       "V8_PROJECTION_SOURCE_FINGERPRINT_MISMATCH",
       "Compiled Content fingerprint does not match its canonical projection input.",
     );
@@ -153,35 +186,16 @@ export class ProjectionProjector {
 
     if (existing !== null) {
       invariant(
-        existing.payload.sourceFingerprint ===
-          compiled.fingerprint,
-        "V8_PROJECTION_EXISTING_SOURCE_CHANGED",
-        "Existing Projection is bound to a different source fingerprint.",
-      );
-
-      const existingFingerprint =
-        contentFingerprint({
-          contentId: existing.payload.contentId,
-          decisionId: existing.payload.decisionId,
-          sourceFingerprint:
-            existing.payload.sourceFingerprint,
-          scopeId: existing.payload.scopeId,
-          contextId: existing.payload.contextId,
-          title: existing.payload.title,
-          body: existing.payload.body,
-        });
-
-      invariant(
-        existing.fingerprint ===
-          existingFingerprint,
-        "V8_PROJECTION_EXISTING_FINGERPRINT_MISMATCH",
-        "Existing Projection fingerprint is invalid.",
-      );
-
-      invariant(
-        existingFingerprint ===
-          projectionFingerprint,
-        "V8_PROJECTION_IDENTITY_MISMATCH",
+        existing.payload.contentId === content.id &&
+          existing.payload.decisionId ===
+            compiled.decision.aggregateId &&
+          existing.payload.sourceFingerprint ===
+            compiled.fingerprint &&
+          existing.payload.scopeId === input.scopeId &&
+          existing.payload.contextId === input.contextId &&
+          existing.payload.title === content.title &&
+          existing.payload.body === content.body,
+        "V8_PROJECTION_EXISTING_IDENTITY_MISMATCH",
         "Existing Projection does not match the requested projection.",
       );
 
@@ -196,8 +210,7 @@ export class ProjectionProjector {
           body: existing.payload.body,
           fingerprint: existing.fingerprint,
           lineage: existing.lineage,
-          sourceContent:
-            compiled.decision,
+          sourceContent: compiled.decision,
         }),
       });
     }
@@ -267,7 +280,7 @@ export class ProjectionProjector {
   }
 
   assert(
-    input: ProjectionInput,
+    input: V8ProjectionInput,
   ): void {
     this.project(input);
   }
