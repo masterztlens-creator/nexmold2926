@@ -123,7 +123,7 @@ test("V8-09: Internet → Source → sealed Snapshot → Evidence → Audit → 
     );
 
     assert.equal(claim.state, "VERIFIED");
-    assert.equal(claim.payload.status, "VERIFIED");
+    assert.equal(claim.payload.statement, "The fixture is governed evidence.");
     assert.ok(claim.lineage.some((item) => item.type === "EVIDENCE"));
     assert.ok(claim.lineage.some((item) => item.type === "SNAPSHOT"));
     assert.ok(claim.lineage.some((item) => item.type === "SOURCE"));
