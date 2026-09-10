@@ -1,4 +1,10 @@
 import {
+  createScope,
+  type Scope,
+} from "../domain/scope.js";import {
+  createContext,
+  type Context,
+} from "../domain/context.js";import {
   immutable,
   invariant,
 } from "../constitution/invariants.js";
@@ -711,7 +717,75 @@ export class FoundationService {
     });
   }
 
-  createKnowledge(
+  registerScope(
+    scope: Scope,
+    actor: AuditActor,
+    reason = "scope registration",
+  ) {
+    const prepared = createScope(scope);
+    invariant(
+      !this.store.get("SCOPE", prepared.id),
+      "V8_FOUNDATION_SCOPE_EXISTS",
+      "Scope identity already exists.",
+    );
+    return this.store.append({
+      aggregateType: "SCOPE",
+      aggregateId: prepared.id,
+      version: 1,
+      state: "REGISTERED",
+      payload: {
+        geography: prepared.geography,
+        industries: prepared.industries,
+        languages: prepared.languages,
+      },
+      lineage: [],
+      actor,
+      reason,
+    });
+  }
+  registerContext(
+    context: Context,
+    actor: AuditActor,
+    reason = "context registration",
+  ) {
+    const prepared = createContext(context);
+    const scope = this.store.get(
+      "SCOPE",
+      prepared.scopeId,
+    );
+    invariant(
+      scope !== null &&
+        scope.state === "REGISTERED",
+      "V8_FOUNDATION_CONTEXT_SCOPE_NOT_REGISTERED",
+      `Context scope ${prepared.scopeId} is not registered.`,
+    );
+    invariant(
+      !this.store.get("CONTEXT", prepared.id),
+      "V8_FOUNDATION_CONTEXT_EXISTS",
+      "Context identity already exists.",
+    );
+    return this.store.append({
+      aggregateType: "CONTEXT",
+      aggregateId: prepared.id,
+      version: 1,
+      state: "REGISTERED",
+      payload: {
+        scopeId: prepared.scopeId,
+        purpose: prepared.purpose,
+        variables: prepared.variables,
+      },
+      lineage: [
+        {
+          type: "SCOPE",
+          id: scope.aggregateId,
+          version: scope.version,
+          fingerprint: scope.fingerprint,
+        },
+      ],
+      actor,
+      reason,
+    });
+  }  createKnowledge(
     knowledge: Knowledge,
     actor: AuditActor,
     reason = "knowledge approval",

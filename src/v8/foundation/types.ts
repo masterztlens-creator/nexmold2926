@@ -18,6 +18,8 @@ export type AggregateType =
   | "RULE"
   | "POLICY"
   | "ELIGIBILITY"
+  | "SCOPE"
+  | "CONTEXT"
   | "PUBLICATION"
   | "PROJECTION"
   | "RELEASE"
@@ -182,7 +184,16 @@ export interface KnowledgePayload {
   readonly claimIds: readonly ClaimId[];
 }
 
-export interface VerificationPayload {
+export interface ScopePayload {
+  readonly geography: string;
+  readonly industries: readonly string[];
+  readonly languages: readonly string[];
+}
+export interface ContextPayload {
+  readonly scopeId: string;
+  readonly purpose: string;
+  readonly variables: Readonly<Record<string, string>>;
+}export interface VerificationPayload {
   readonly targetType:
     | "SOURCE"
     | "SNAPSHOT"
