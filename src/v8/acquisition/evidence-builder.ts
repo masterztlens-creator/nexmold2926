@@ -65,13 +65,18 @@ export function evidenceAggregateId(
   source: string,
   snapshotId: string,
   candidate: ExtractedEvidenceCandidate,
+  snapshotContentHash?: string,
 ): string {
   return evidenceId(
     contentFingerprint({
       source,
       snapshotId,
+      snapshotContentHash,
       locator: candidate.locator,
       excerpt: candidate.excerpt,
+      parameter: candidate.parameter,
+      value: candidate.value,
+      unit: candidate.unit,
     }),
   ).toString();
 }
@@ -123,6 +128,7 @@ export function appendEvidence(
           extractionConfidence:
             payload.extractionConfidence ?? "LOW",
         },
+        snapshot.contentHash,
       ),
       version: 1,
       state: "INGESTED",

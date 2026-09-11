@@ -81,15 +81,11 @@ test(
       "SEALED",
     );
 
-    // Existing immutable Snapshot must remain unchanged.
     assert.equal(
       store.get("SNAPSHOT", first.snapshotId)?.payload.capturedAt,
       "2026-09-10T00:00:00.000Z",
     );
 
-    // Critical V8-10-C diagnostic:
-    // the transient Snapshot returned by the second acquisition
-    // must exactly equal the persisted immutable Snapshot payload.
     assert.deepEqual(
       second.snapshot,
       store.get("SNAPSHOT", second.snapshotId)?.payload,
@@ -152,8 +148,6 @@ test(
       store.get("SNAPSHOT", second.snapshotId)?.fingerprint,
     );
 
-    // For a new snapshot identity, returned payload must also match
-    // the persisted immutable Snapshot payload.
     assert.deepEqual(
       second.snapshot,
       store.get("SNAPSHOT", second.snapshotId)?.payload,
@@ -220,7 +214,6 @@ test(
       ],
     );
 
-    // New snapshot identity must correspond exactly to its persisted payload.
     assert.deepEqual(
       second.snapshot,
       store.get("SNAPSHOT", second.snapshotId)?.payload,
@@ -277,6 +270,7 @@ test(
       first.sourceId,
       first.snapshotId,
       candidate,
+      first.snapshot?.contentHash,
     );
 
     const persistedEvidence = store.get(
@@ -292,15 +286,11 @@ test(
     assert.ok(persistedEvidence);
     assert.ok(persistedSnapshot);
 
-    // Returned Snapshot must equal the sealed persisted Snapshot.
     assert.deepEqual(
       second.snapshot,
       persistedSnapshot?.payload,
     );
 
-    // Critical V8-10-C diagnostic:
-    // repeated acquisition must not return a transient Evidence payload
-    // that differs from the immutable persisted Evidence record.
     assert.ok(Array.isArray(second.evidence));
     assert.equal(second.evidence.length, 1);
 
@@ -345,6 +335,7 @@ test(
       result.sourceId,
       result.snapshotId,
       candidate,
+      result.snapshot?.contentHash,
     );
 
     const evidence = store.get(
@@ -382,5 +373,67 @@ test(
     );
 
     store.verifyChain();
+  },
+);
+
+test(
+  "V8-10-F evidence aggregate identity separates candidates with identical locator and excerpt but different content",
+  () => {
+    const source = "https://example.com/spec";
+    const snapshotId = "snapshot:test-evidence-identity";
+    const snapshotContentHash = "hash:test-snapshot";
+
+    const firstCandidate = {
+      locator: source,
+      excerpt: "Rated operating condition",
+      parameter: "temperature",
+      value: 80,
+      unit: "C",
+      extractionConfidence: "HIGH",
+    };
+
+    const secondCandidate = {
+      locator: source,
+      excerpt: "Rated operating condition",
+      parameter: "pressure",
+      value: 10,
+      unit: "bar",
+      extractionConfidence: "HIGH",
+    };
+
+    const firstId = evidenceAggregateId(
+      source,
+      snapshotId,
+      firstCandidate,
+      snapshotContentHash,
+    );
+
+    const secondId = evidenceAggregateId(
+      source,
+      snapshotId,
+      secondCandidate,
+      snapshotContentHash,
+    );
+
+    assert.notEqual(
+      firstId,
+      secondId,
+      "Evidence candidates with different semantic content must not collide",
+    );
+
+    assert.notEqual(
+      firstCandidate.parameter,
+      secondCandidate.parameter,
+    );
+
+    assert.notEqual(
+      firstCandidate.value,
+      secondCandidate.value,
+    );
+
+    assert.notEqual(
+      firstCandidate.unit,
+      secondCandidate.unit,
+    );
   },
 );
