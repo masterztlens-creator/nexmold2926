@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
 import {
   expandEvidenceFromInternet,
@@ -54,6 +54,35 @@ const result = await expandEvidenceFromInternet(
     maxCandidates: 3,
   },
 );
+
+console.log("=== V8-07 DIAGNOSTIC START ===");
+console.log(`candidates=${result.candidates.length}`);
+
+for (const candidate of result.candidates) {
+  console.log(
+    `candidate url=${candidate.url} title=${JSON.stringify(candidate.title ?? "")}`,
+  );
+}
+
+console.log(`rankedCandidates=${result.rankedCandidates.length}`);
+
+for (const candidate of result.rankedCandidates) {
+  console.log(
+    `ranked url=${candidate.url} title=${JSON.stringify(candidate.title ?? "")}`,
+  );
+}
+
+console.log(`acquisitions=${result.acquisitions.length}`);
+
+for (const acquisition of result.acquisitions) {
+  console.log(
+    `acquisition url=${acquisition.page.finalUrl} status=${acquisition.page.status} mediaType=${JSON.stringify(acquisition.page.mediaType)} bytes=${acquisition.page.bytes.byteLength} bodyLength=${acquisition.page.body.length} evidence=${acquisition.evidence.length}`,
+  );
+}
+
+console.log(`searchErrors=${JSON.stringify(result.searchErrors)}`);
+console.log(`fetchErrors=${JSON.stringify(result.fetchErrors)}`);
+console.log("=== V8-07 DIAGNOSTIC END ===");
 
 assert.ok(
   result.candidates.length > 0,
