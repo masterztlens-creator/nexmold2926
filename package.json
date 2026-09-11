@@ -6,7 +6,7 @@
                     "node":  "\u003e=22.12.0"
                 },
     "scripts":  {
-                    "v8:compile":  "tsc -p tsconfig.v8.json",
+                    "v8:compile":  "node ./node_modules/typescript/bin/tsc -p tsconfig.v8.json",
                     "v8:test":  "npm run v8:compile \u0026\u0026 node --test tests/v8/**/*.test.mjs",
                     "v8:verify":  "node scripts/v8-final-gate.mjs",
                     "v714:build":  "node build-orchestrator.mjs",
