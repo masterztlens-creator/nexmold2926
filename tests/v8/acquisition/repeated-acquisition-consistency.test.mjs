@@ -87,6 +87,14 @@ test(
       "2026-09-10T00:00:00.000Z",
     );
 
+    // Critical V8-10-C diagnostic:
+    // the transient Snapshot returned by the second acquisition
+    // must exactly equal the persisted immutable Snapshot payload.
+    assert.deepEqual(
+      second.snapshot,
+      store.get("SNAPSHOT", second.snapshotId)?.payload,
+    );
+
     store.verifyChain();
   },
 );
@@ -142,6 +150,13 @@ test(
     assert.notEqual(
       store.get("SNAPSHOT", first.snapshotId)?.fingerprint,
       store.get("SNAPSHOT", second.snapshotId)?.fingerprint,
+    );
+
+    // For a new snapshot identity, returned payload must also match
+    // the persisted immutable Snapshot payload.
+    assert.deepEqual(
+      second.snapshot,
+      store.get("SNAPSHOT", second.snapshotId)?.payload,
     );
 
     store.verifyChain();
@@ -203,6 +218,95 @@ test(
         "https://example.com/intermediate",
         "https://example.com/resolved-b",
       ],
+    );
+
+    // New snapshot identity must correspond exactly to its persisted payload.
+    assert.deepEqual(
+      second.snapshot,
+      store.get("SNAPSHOT", second.snapshotId)?.payload,
+    );
+
+    store.verifyChain();
+  },
+);
+
+test(
+  "V8-10-C repeated acquisition keeps returned evidence identical to persisted evidence",
+  () => {
+    const store = new InMemoryFoundationStore();
+
+    const requestedUrl = "https://example.com/spec";
+    const finalUrl = "https://example.com/spec";
+    const body = "<html><body>80 C</body></html>";
+
+    const candidate = {
+      locator: finalUrl,
+      excerpt: "Rated operating temperature: 80 C",
+      parameter: "operating temperature",
+      value: 80,
+      unit: "C",
+      extractionConfidence: "HIGH",
+    };
+
+    const first = ingestFetchedPage(
+      store,
+      page({
+        requestedUrl,
+        finalUrl,
+        body,
+        fetchedAt: "2026-09-10T00:00:00.000Z",
+      }),
+      [candidate],
+    );
+
+    const second = ingestFetchedPage(
+      store,
+      page({
+        requestedUrl,
+        finalUrl,
+        body,
+        fetchedAt: "2026-09-11T00:00:00.000Z",
+      }),
+      [candidate],
+    );
+
+    assert.equal(second.sourceId, first.sourceId);
+    assert.equal(second.snapshotId, first.snapshotId);
+
+    const evidenceId = evidenceAggregateId(
+      first.sourceId,
+      first.snapshotId,
+      candidate,
+    );
+
+    const persistedEvidence = store.get(
+      "EVIDENCE",
+      evidenceId,
+    );
+
+    const persistedSnapshot = store.get(
+      "SNAPSHOT",
+      second.snapshotId,
+    );
+
+    assert.ok(persistedEvidence);
+    assert.ok(persistedSnapshot);
+
+    // Returned Snapshot must equal the sealed persisted Snapshot.
+    assert.deepEqual(
+      second.snapshot,
+      persistedSnapshot?.payload,
+    );
+
+    // Critical V8-10-C diagnostic:
+    // repeated acquisition must not return a transient Evidence payload
+    // that differs from the immutable persisted Evidence record.
+    assert.ok(Array.isArray(second.evidence));
+    assert.equal(second.evidence.length, 1);
+
+    assert.deepEqual(
+      second.evidence[0],
+      persistedEvidence?.payload,
     );
 
     store.verifyChain();
