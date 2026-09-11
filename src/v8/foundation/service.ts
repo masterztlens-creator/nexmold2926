@@ -736,85 +736,85 @@ export class FoundationService {
     });
   }
 
-  createKnowledge(
-    knowledge: Knowledge,
-    actor: AuditActor,
-    reason = "knowledge verification",
-  ) {
-    const prepared =
-      createKnowledge({
-        ...knowledge,
-        status: "APPROVED",
-      });
-
-    invariant(
-      prepared.status === "APPROVED",
-      "V8_FOUNDATION_KNOWLEDGE_NOT_APPROVED",
-      "Only approved knowledge can persist.",
-    );
-
-    const claimRecords =
-      prepared.claimIds.map(
-        (claimId) =>
-          this.store.get<ClaimPayload>(
-            "CLAIM",
-            claimId,
-          ),
-      );
-
-    invariant(
-      claimRecords.every(
-        (record) =>
-          record !== null &&
-          record.state === "VERIFIED",
-      ),
-      "V8_FOUNDATION_KNOWLEDGE_CLAIM_NOT_VERIFIED",
-      "Every supporting claim must be verified.",
-    );
-
-    invariant(
-      !this.store.get(
-        "KNOWLEDGE",
-        prepared.id,
-      ),
-      "V8_FOUNDATION_KNOWLEDGE_EXISTS",
-      "Knowledge identity already exists.",
-    );
-
-    const lineage =
-      uniqueLineage(
-        (
-          claimRecords as FoundationRecord<ClaimPayload>[]
-        ).flatMap((record) => [
-          ...record.lineage,
-          {
-            type: "CLAIM" as const,
-            id: record.aggregateId,
-            version: record.version,
-            fingerprint: record.fingerprint,
-          },
-        ]),
-      );
-
-    const payload: KnowledgePayload =
-      immutable({
-        proposition:
-          prepared.proposition,
-        claimIds:
-          prepared.claimIds,
-      });
-
-    return this.store.append({
-      aggregateType: "KNOWLEDGE",
-      aggregateId: prepared.id,
-      version: 1,
-      state: "VERIFIED",
-      payload,
-      lineage,
-      actor,
-      reason,
+createKnowledge(
+  knowledge: Knowledge,
+  actor: AuditActor,
+  reason = "knowledge verification",
+) {
+  const prepared =
+    createKnowledge({
+      ...knowledge,
+      status: "APPROVED",
     });
-  }
+
+  invariant(
+    prepared.status === "APPROVED",
+    "V8_FOUNDATION_KNOWLEDGE_NOT_APPROVED",
+    "Only approved knowledge can persist.",
+  );
+
+  const claimRecords =
+    prepared.claimIds.map(
+      (claimId) =>
+        this.store.get<ClaimPayload>(
+          "CLAIM",
+          claimId,
+        ),
+    );
+
+  invariant(
+    claimRecords.every(
+      (record) =>
+        record !== null &&
+        record.state === "VERIFIED",
+    ),
+    "V8_FOUNDATION_KNOWLEDGE_CLAIM_NOT_VERIFIED",
+    "Every supporting claim must be verified.",
+  );
+
+  invariant(
+    !this.store.get(
+      "KNOWLEDGE",
+      prepared.id,
+    ),
+    "V8_FOUNDATION_KNOWLEDGE_EXISTS",
+    "Knowledge identity already exists.",
+  );
+
+  const lineage =
+    uniqueLineage(
+      (
+        claimRecords as FoundationRecord<ClaimPayload>[]
+      ).flatMap((record) => [
+        ...record.lineage,
+        {
+          type: "CLAIM" as const,
+          id: record.aggregateId,
+          version: record.version,
+          fingerprint: record.fingerprint,
+        },
+      ]),
+    );
+
+  const payload: KnowledgePayload =
+    immutable({
+      proposition:
+        prepared.proposition,
+      claimIds:
+        prepared.claimIds,
+    });
+
+  return this.store.append({
+    aggregateType: "KNOWLEDGE",
+    aggregateId: prepared.id,
+    version: 1,
+    state: "VERIFIED",
+    payload,
+    lineage,
+    actor,
+    reason,
+  });
+}
 
   registerScope(
     scope: Scope,
