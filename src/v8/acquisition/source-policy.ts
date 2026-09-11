@@ -1,4 +1,3 @@
-import { isIP } from "node:net";
 import { normalizeSourceUrl } from "./url-normalizer.js";
 
 export type SourcePolicyStatus = "ELIGIBLE" | "BLOCKED";
@@ -56,46 +55,19 @@ function isBlockedIPv4(hostname: string): boolean {
     readonly number[],
     readonly number[],
   ][] = [
-    // 0.0.0.0/8 — "this" network / unspecified
     [[0, 0, 0, 0], [255, 0, 0, 0]],
-
-    // 10.0.0.0/8 — private
     [[10, 0, 0, 0], [255, 0, 0, 0]],
-
-    // 100.64.0.0/10 — shared address space
     [[100, 64, 0, 0], [255, 192, 0, 0]],
-
-    // 127.0.0.0/8 — loopback
     [[127, 0, 0, 0], [255, 0, 0, 0]],
-
-    // 169.254.0.0/16 — link-local
     [[169, 254, 0, 0], [255, 255, 0, 0]],
-
-    // 172.16.0.0/12 — private
     [[172, 16, 0, 0], [255, 240, 0, 0]],
-
-    // 192.0.0.0/24 — IETF protocol assignments
     [[192, 0, 0, 0], [255, 255, 255, 0]],
-
-    // 192.0.2.0/24 — TEST-NET-1
     [[192, 0, 2, 0], [255, 255, 255, 0]],
-
-    // 192.168.0.0/16 — private
     [[192, 168, 0, 0], [255, 255, 0, 0]],
-
-    // 198.18.0.0/15 — benchmarking
     [[198, 18, 0, 0], [255, 254, 0, 0]],
-
-    // 198.51.100.0/24 — TEST-NET-2
     [[198, 51, 100, 0], [255, 255, 255, 0]],
-
-    // 203.0.113.0/24 — TEST-NET-3
     [[203, 0, 113, 0], [255, 255, 255, 0]],
-
-    // 224.0.0.0/4 — multicast
     [[224, 0, 0, 0], [240, 0, 0, 0]],
-
-    // 240.0.0.0/4 — reserved
     [[240, 0, 0, 0], [240, 0, 0, 0]],
   ];
 
@@ -105,39 +77,31 @@ function isBlockedIPv4(hostname: string): boolean {
 }
 
 function isBlockedIPv6(hostname: string): boolean {
-  if (isIP(hostname) !== 6) {
+  const normalized = hostname
+    .toLowerCase()
+    .replace(/^\[/, "")
+    .replace(/\]$/, "");
+
+  if (!normalized.includes(":")) {
     return false;
   }
 
-  const normalized = hostname.toLowerCase();
-
-  // ::/128 — unspecified
   if (normalized === "::") {
     return true;
   }
 
-  // ::1/128 — loopback
   if (normalized === "::1") {
     return true;
   }
 
-  /*
-   * IPv4-mapped IPv6 addresses.
-   * URL/Node representations may arrive as ::ffff:127.0.0.1 etc.
-   */
+  // IPv4-mapped IPv6 is conservatively blocked.
   if (normalized.startsWith("::ffff:")) {
-    const mapped = normalized.slice("::ffff:".length);
-
-    if (isBlockedIPv4(mapped)) {
-      return true;
-    }
+    return true;
   }
 
-  /*
-   * fc00::/7 — Unique Local Addresses.
-   * fe80::/10 — Link-local.
-   * ff00::/8 — Multicast.
-   */
+  // fc00::/7 — Unique Local
+  // fe80::/10 — Link Local
+  // ff00::/8 — Multicast
   const firstGroup = normalized.split(":")[0] || "0";
   const first = Number.parseInt(firstGroup, 16);
 
