@@ -19,6 +19,7 @@ import {
 
 import {
   knowledgeId,
+  evidenceId,
   type KnowledgeId,
 } from "../domain/primitives.js";
 
@@ -234,16 +235,6 @@ export async function runV8ArticleRuntime(
     "No Internet acquisition result was produced.",
   );
 
-  /*
-   * acquisition.evidence is typed as EvidencePayload[].
-   *
-   * EvidencePayload deliberately does not contain aggregateId.
-   * The actual Foundation Evidence records are already persisted
-   * in the injected FoundationStore.
-   *
-   * Therefore we identify the corresponding Evidence aggregate
-   * from its deterministic evidence payload fingerprint.
-   */
   const evidencePayloads =
     acquisition.acquisitions.flatMap(
       (record) =>
@@ -256,29 +247,32 @@ export async function runV8ArticleRuntime(
     "Internet acquisition produced no Evidence records.",
   );
 
-  /*
-   * Evidence aggregate IDs are derived from the Evidence domain
-   * identity. The acquisition result preserves the payload, while
-   * the Foundation store owns the aggregate record.
-   *
-   * We reconstruct the Evidence identity from the same fields used
-   * by the persisted Evidence payload.
-   */
   const evidenceIds =
-    evidencePayloads.map(
-      (evidence) =>
-        `evidence:${contentFingerprint({
-          sourceId:
-            evidence.sourceId,
-          snapshotId:
-            evidence.snapshotId,
-          locator:
-            evidence.locator,
-          excerpt:
-            evidence.excerpt,
-          capturedAt:
-            evidence.capturedAt,
-        })}`,
+    acquisition.acquisitions.flatMap(
+      (record) =>
+        record.acquisition.evidence.map(
+          (evidence) =>
+            evidenceId(
+              contentFingerprint({
+                source:
+                  record.acquisition.sourceId,
+                snapshotId:
+                  record.acquisition.snapshotId,
+                snapshotContentHash:
+                  record.acquisition.snapshot.contentHash,
+                locator:
+                  evidence.locator,
+                excerpt:
+                  evidence.excerpt,
+                parameter:
+                  evidence.parameter,
+                value:
+                  evidence.value,
+                unit:
+                  evidence.unit,
+              }),
+            ).toString(),
+        ),
     );
 
   invariant(
@@ -314,7 +308,8 @@ export async function runV8ArticleRuntime(
       );
 
     invariant(
-      verified.state === "VERIFIED",
+      verified.state ===
+        "VERIFIED",
       "V8_ARTICLE_RUNTIME_EVIDENCE_NOT_VERIFIED",
       `Evidence ${id} did not reach VERIFIED state.`,
     );
@@ -556,25 +551,37 @@ export async function runV8ArticleRuntime(
             evidenceIds:
               item.acquisition.evidence.map(
                 (evidence) =>
-                  contentFingerprint({
-                    sourceId:
-                      evidence.sourceId,
-                    snapshotId:
-                      evidence.snapshotId,
-                    locator:
-                      evidence.locator,
-                    excerpt:
-                      evidence.excerpt,
-                    capturedAt:
-                      evidence.capturedAt,
-                  }),
+                  evidenceId(
+                    contentFingerprint({
+                      source:
+                        item.acquisition.sourceId,
+                      snapshotId:
+                        item.acquisition.snapshotId,
+                      snapshotContentHash:
+                        item.acquisition.snapshot.contentHash,
+                      locator:
+                        evidence.locator,
+                      excerpt:
+                        evidence.excerpt,
+                      parameter:
+                        evidence.parameter,
+                      value:
+                        evidence.value,
+                      unit:
+                        evidence.unit,
+                    }),
+                  ).toString(),
               ),
           }),
         ),
       verifiedEvidenceIds,
       claimIds:
         truth.claims,
-      knowledgeIds,
+      knowledgeIds:
+        knowledgeIds.map(
+          (id) =>
+            String(id),
+        ),
       scopeId:
         scope.id,
       contextId:
@@ -602,7 +609,8 @@ export async function runV8ArticleRuntime(
 
     knowledgeIds:
       knowledgeIds.map(
-        (id) => String(id),
+        (id) =>
+          String(id),
       ),
 
     scopeId:
