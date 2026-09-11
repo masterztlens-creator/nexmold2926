@@ -22,3 +22,4 @@ export * from "./publication/index.js";
 export * from "./performance/index.js";
 export * from "./conversion/index.js";
 export * from "./growth-loop/index.js";
+export * from "./truth-producer/index.js";
