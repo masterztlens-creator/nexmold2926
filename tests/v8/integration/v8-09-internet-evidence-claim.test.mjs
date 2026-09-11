@@ -10,24 +10,44 @@ import {
   InMemoryFoundationStore,
   ingestInternetDocument,
 } from "../../../.v8-build/src/v8/foundation/index.js";
+
 import {
   appendEvidence,
   evidenceAggregateId,
 } from "../../../.v8-build/src/v8/acquisition/index.js";
 
-const ingestor = { id: "v8-09-internet-ingestor", role: "INGESTOR" };
-const auditor = { id: "v8-09-auditor", role: "AUDITOR" };
+const ingestor = {
+  id: "v8-09-internet-ingestor",
+  role: "INGESTOR",
+};
+
+const auditor = {
+  id: "v8-09-auditor",
+  role: "AUDITOR",
+};
 
 async function withServer(handler, fn) {
   const server = createServer(handler);
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", resolve),
+  );
+
   try {
     const address = server.address();
-    assert.ok(address && typeof address === "object");
-    return await fn(`http://127.0.0.1:${address.port}/fixture`);
+
+    assert.ok(
+      address && typeof address === "object",
+    );
+
+    return await fn(
+      `http://127.0.0.1:${address.port}/fixture`,
+    );
   } finally {
     await new Promise((resolve, reject) =>
-      server.close((error) => (error ? reject(error) : resolve())),
+      server.close((error) =>
+        error ? reject(error) : resolve(),
+      ),
     );
   }
 }
@@ -37,33 +57,59 @@ test(
   async () => {
     await withServer((_req, res) => {
       res.writeHead(200, {
-        "content-type": "text/plain; charset=utf-8",
+        "content-type":
+          "text/plain; charset=utf-8",
       });
-      res.end("V8-09 governed evidence fixture");
+
+      res.end(
+        "V8-09 governed evidence fixture",
+      );
     }, async (url) => {
       const snapshotRoot = mkdtempSync(
-        join(tmpdir(), "nexmold-v8-09-"),
+        join(
+          tmpdir(),
+          "nexmold-v8-09-",
+        ),
       );
 
-      const store = new InMemoryFoundationStore();
-      const service = new FoundationService(store);
+      const store =
+        new InMemoryFoundationStore();
 
-      const acquired = await ingestInternetDocument(service, {
-        url,
-        title: "NEXMOLD V8-09 Internet Fixture",
-        publisher: "NEXMOLD Test Authority",
-        authority: "ENGINEERING_REFERENCE",
-        version: "v8-09-fixture-1",
-        actor: ingestor,
-        snapshotRoot,
-      });
+      const service =
+        new FoundationService(store);
 
-      assert.equal(acquired.acquisition.status, 200);
-      assert.equal(acquired.snapshotRecord.state, "SEALED");
+      const acquired =
+        await ingestInternetDocument(
+          service,
+          {
+            url,
+            title:
+              "NEXMOLD V8-09 Internet Fixture",
+            publisher:
+              "NEXMOLD Test Authority",
+            authority:
+              "ENGINEERING_REFERENCE",
+            version:
+              "v8-09-fixture-1",
+            actor: ingestor,
+            snapshotRoot,
+          },
+        );
+
+      assert.equal(
+        acquired.acquisition.status,
+        200,
+      );
+
+      assert.equal(
+        acquired.snapshotRecord.state,
+        "SEALED",
+      );
 
       const candidate = {
         locator: "body",
-        excerpt: "V8-09 governed evidence fixture",
+        excerpt:
+          "V8-09 governed evidence fixture",
         parameter: "fixture",
         value: "governed",
         unit: "text",
@@ -80,24 +126,36 @@ test(
         ingestor.id,
       );
 
-      assert.equal(payloads.length, 1);
-
-      const evidenceId = evidenceAggregateId(
-        acquired.source.id,
-        acquired.snapshotRecord.aggregateId,
-        candidate,
-        acquired.snapshotRecord.payload.contentHash,
+      assert.equal(
+        payloads.length,
+        1,
       );
 
-      const ingestedEvidence = store.get(
-        "EVIDENCE",
-        evidenceId,
-      );
+      const evidenceId =
+        evidenceAggregateId(
+          acquired.source.id,
+          acquired.snapshotRecord.aggregateId,
+          candidate,
+          acquired.snapshotRecord.payload
+            .contentHash,
+        );
+
+      const ingestedEvidence =
+        store.get(
+          "EVIDENCE",
+          evidenceId,
+        );
 
       assert.ok(ingestedEvidence);
-      assert.equal(ingestedEvidence.state, "INGESTED");
+
       assert.equal(
-        ingestedEvidence.payload.verificationStatus,
+        ingestedEvidence.state,
+        "INGESTED",
+      );
+
+      assert.equal(
+        ingestedEvidence.payload
+          .verificationStatus,
         "UNVERIFIED",
       );
 
@@ -105,9 +163,13 @@ test(
         () =>
           service.createClaim(
             {
-              id: "v8-09-premature-claim",
-              statement: "The fixture is governed evidence.",
-              evidenceIds: [evidenceId],
+              id:
+                "v8-09-premature-claim",
+              statement:
+                "The fixture is governed evidence.",
+              evidenceIds: [
+                evidenceId,
+              ],
               status: "VERIFIED",
               fingerprint: "ignored",
             },
@@ -116,39 +178,60 @@ test(
         /CLAIM_EVIDENCE_NOT_VERIFIED|EVIDENCE_NOT_VERIFIED/,
       );
 
-      const audited = service.verifyEvidence(
-        evidenceId,
-        auditor,
-      );
+      const audited =
+        service.verifyEvidence(
+          evidenceId,
+          auditor,
+        );
 
-      assert.equal(audited.state, "VERIFIED");
       assert.equal(
-        audited.payload.verificationStatus,
+        audited.state,
         "VERIFIED",
       );
 
-      const evidenceHistory = store.history(
-        "EVIDENCE",
-        evidenceId,
+      assert.equal(
+        audited.payload
+          .verificationStatus,
+        "VERIFIED",
       );
+
+      const evidenceHistory =
+        store.history(
+          "EVIDENCE",
+          evidenceId,
+        );
 
       assert.deepEqual(
-        evidenceHistory.map((record) => record.state),
-        ["INGESTED", "AUDITED", "VERIFIED"],
+        evidenceHistory.map(
+          (record) => record.state,
+        ),
+        [
+          "INGESTED",
+          "AUDITED",
+          "VERIFIED",
+        ],
       );
 
-      const claim = service.createClaim(
-        {
-          id: "v8-09-claim",
-          statement: "The fixture is governed evidence.",
-          evidenceIds: [evidenceId],
-          status: "VERIFIED",
-          fingerprint: "ignored",
-        },
-        auditor,
+      const claim =
+        service.createClaim(
+          {
+            id: "v8-09-claim",
+            statement:
+              "The fixture is governed evidence.",
+            evidenceIds: [
+              evidenceId,
+            ],
+            status: "VERIFIED",
+            fingerprint: "ignored",
+          },
+          auditor,
+        );
+
+      assert.equal(
+        claim.state,
+        "VERIFIED",
       );
 
-      assert.equal(claim.state, "VERIFIED");
       assert.equal(
         claim.payload.statement,
         "The fixture is governed evidence.",
@@ -156,19 +239,22 @@ test(
 
       assert.ok(
         claim.lineage.some(
-          (item) => item.type === "EVIDENCE",
+          (item) =>
+            item.type === "EVIDENCE",
         ),
       );
 
       assert.ok(
         claim.lineage.some(
-          (item) => item.type === "SNAPSHOT",
+          (item) =>
+            item.type === "SNAPSHOT",
         ),
       );
 
       assert.ok(
         claim.lineage.some(
-          (item) => item.type === "SOURCE",
+          (item) =>
+            item.type === "SOURCE",
         ),
       );
 
@@ -177,3 +263,244 @@ test(
   },
 );
 
+test(
+  "V8-11: Claim lineage remains bound to the exact Evidence version and fingerprint",
+  async () => {
+    await withServer((_req, res) => {
+      res.writeHead(200, {
+        "content-type":
+          "text/plain; charset=utf-8",
+      });
+
+      res.end(
+        "V8-11 immutable claim fixture",
+      );
+    }, async (url) => {
+      const snapshotRoot = mkdtempSync(
+        join(
+          tmpdir(),
+          "nexmold-v8-11-",
+        ),
+      );
+
+      const store =
+        new InMemoryFoundationStore();
+
+      const service =
+        new FoundationService(store);
+
+      const acquired =
+        await ingestInternetDocument(
+          service,
+          {
+            url,
+            title:
+              "NEXMOLD V8-11 Internet Fixture",
+            publisher:
+              "NEXMOLD Test Authority",
+            authority:
+              "ENGINEERING_REFERENCE",
+            version:
+              "v8-11-fixture-1",
+            actor: ingestor,
+            snapshotRoot,
+          },
+        );
+
+      const candidate = {
+        locator: "body",
+        excerpt:
+          "V8-11 immutable claim fixture",
+        parameter: "fixture",
+        value: "original",
+        unit: "text",
+        section: "body",
+        extractionConfidence: "HIGH",
+      };
+
+      appendEvidence(
+        store,
+        acquired.source.id,
+        acquired.snapshotRecord.aggregateId,
+        acquired.snapshotRecord.payload,
+        [candidate],
+        ingestor.id,
+      );
+
+      const evidenceId =
+        evidenceAggregateId(
+          acquired.source.id,
+          acquired.snapshotRecord.aggregateId,
+          candidate,
+          acquired.snapshotRecord.payload
+            .contentHash,
+        );
+
+      service.verifyEvidence(
+        evidenceId,
+        auditor,
+      );
+
+      const verifiedEvidence =
+        store.get(
+          "EVIDENCE",
+          evidenceId,
+        );
+
+      assert.ok(
+        verifiedEvidence,
+      );
+
+      assert.equal(
+        verifiedEvidence.state,
+        "VERIFIED",
+      );
+
+      const claim =
+        service.createClaim(
+          {
+            id: "v8-11-claim",
+            statement:
+              "The fixture contains the original governed value.",
+            evidenceIds: [
+              evidenceId,
+            ],
+            status: "VERIFIED",
+            fingerprint: "ignored",
+          },
+          auditor,
+        );
+
+      const claimEvidenceLineage =
+        claim.lineage.find(
+          (item) =>
+            item.type === "EVIDENCE" &&
+            item.id === evidenceId,
+        );
+
+      assert.ok(
+        claimEvidenceLineage,
+        "Claim must contain exact Evidence lineage",
+      );
+
+      assert.equal(
+        claimEvidenceLineage.version,
+        verifiedEvidence.version,
+        "Claim must bind the Evidence version used at creation",
+      );
+
+      assert.equal(
+        claimEvidenceLineage.fingerprint,
+        verifiedEvidence.fingerprint,
+        "Claim must bind the Evidence fingerprint used at creation",
+      );
+
+      const originalVersion =
+        verifiedEvidence.version;
+
+      const originalFingerprint =
+        verifiedEvidence.fingerprint;
+
+      const replacementPayload = {
+        ...verifiedEvidence.payload,
+        value: "replacement",
+        excerpt:
+          "V8-11 replacement evidence content",
+        evidenceHash:
+          `${verifiedEvidence.payload.evidenceHash}:replacement`,
+      };
+
+      const replacement =
+        store.append({
+          aggregateType: "EVIDENCE",
+          aggregateId: evidenceId,
+          version:
+            verifiedEvidence.version + 1,
+          state: "VERIFIED",
+          payload: replacementPayload,
+          lineage:
+            verifiedEvidence.lineage,
+          actor: auditor,
+          reason:
+            "V8-11 evidence history mutation fixture",
+        });
+
+      assert.equal(
+        replacement.version,
+        originalVersion + 1,
+      );
+
+      assert.notEqual(
+        replacement.fingerprint,
+        originalFingerprint,
+        "A changed Evidence version must have a different record fingerprint",
+      );
+
+      const persistedClaim =
+        store.get(
+          "CLAIM",
+          claim.aggregateId,
+        );
+
+      assert.ok(
+        persistedClaim,
+      );
+
+      const persistedClaimEvidenceLineage =
+        persistedClaim.lineage.find(
+          (item) =>
+            item.type === "EVIDENCE" &&
+            item.id === evidenceId,
+        );
+
+      assert.ok(
+        persistedClaimEvidenceLineage,
+      );
+
+      assert.equal(
+        persistedClaimEvidenceLineage.version,
+        originalVersion,
+        "Existing Claim must remain bound to the original Evidence version",
+      );
+
+      assert.equal(
+        persistedClaimEvidenceLineage.fingerprint,
+        originalFingerprint,
+        "Existing Claim must remain bound to the original Evidence fingerprint",
+      );
+
+      assert.notEqual(
+        persistedClaimEvidenceLineage.version,
+        replacement.version,
+        "Claim lineage must not silently follow a later Evidence version",
+      );
+
+      assert.notEqual(
+        persistedClaimEvidenceLineage.fingerprint,
+        replacement.fingerprint,
+        "Claim lineage must not silently follow a later Evidence fingerprint",
+      );
+
+      const evidenceHistory =
+        store.history(
+          "EVIDENCE",
+          evidenceId,
+        );
+
+      assert.equal(
+        evidenceHistory.length,
+        4,
+        "Evidence history must preserve the original verification record and later version",
+      );
+
+      assert.equal(
+        evidenceHistory[
+          evidenceHistory.length - 1
+        ].version,
+        replacement.version,
+      );
+
+      store.verifyChain();
+    });
+  },
+);
