@@ -394,12 +394,15 @@ test(
 
       /*
        * Create a later Evidence history version
-       * through the Foundation state machine.
+       * through the actual Foundation state machine.
        *
-       * VERIFIED -> REQUIRES_REVIEW is a legal
-       * transition and therefore tests historical
-       * Claim binding without bypassing Foundation
-       * invariants.
+       * The Foundation contract permits:
+       *
+       * VERIFIED -> RETIRED
+       *
+       * This intentionally creates a later Evidence
+       * record without modifying the already-created
+       * Claim lineage.
        */
       const laterEvidence =
         store.append({
@@ -407,7 +410,7 @@ test(
           aggregateId: evidenceId,
           version:
             verifiedEvidence.version + 1,
-          state: "REQUIRES_REVIEW",
+          state: "RETIRED",
           payload: {
             ...verifiedEvidence.payload,
             value: "replacement",
@@ -420,12 +423,17 @@ test(
             verifiedEvidence.lineage,
           actor: auditor,
           reason:
-            "V8-11 evidence history mutation fixture",
+            "V8-11 evidence history retirement fixture",
         });
 
       assert.equal(
         laterEvidence.version,
         originalVersion + 1,
+      );
+
+      assert.equal(
+        laterEvidence.state,
+        "RETIRED",
       );
 
       assert.notEqual(
@@ -488,7 +496,7 @@ test(
       assert.equal(
         evidenceHistory.length,
         4,
-        "Evidence history must preserve the original verification record and later version",
+        "Evidence history must preserve the original verification record and later retirement version",
       );
 
       assert.deepEqual(
@@ -499,7 +507,7 @@ test(
           "INGESTED",
           "AUDITED",
           "VERIFIED",
-          "REQUIRES_REVIEW",
+          "RETIRED",
         ],
       );
 
@@ -514,4 +522,3 @@ test(
     });
   },
 );
-
