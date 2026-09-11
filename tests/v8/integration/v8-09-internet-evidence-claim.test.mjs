@@ -336,20 +336,11 @@ test(
             .contentHash,
         );
 
-      service.verifyEvidence(
-        evidenceId,
-        auditor,
-      );
-
       const verifiedEvidence =
-        store.get(
-          "EVIDENCE",
+        service.verifyEvidence(
           evidenceId,
+          auditor,
         );
-
-      assert.ok(
-        verifiedEvidence,
-      );
 
       assert.equal(
         verifiedEvidence.state,
@@ -401,23 +392,30 @@ test(
       const originalFingerprint =
         verifiedEvidence.fingerprint;
 
-      const replacementPayload = {
-        ...verifiedEvidence.payload,
-        value: "replacement",
-        excerpt:
-          "V8-11 replacement evidence content",
-        evidenceHash:
-          `${verifiedEvidence.payload.evidenceHash}:replacement`,
-      };
-
-      const replacement =
+      /*
+       * Create a later Evidence history version
+       * through the Foundation state machine.
+       *
+       * VERIFIED -> REQUIRES_REVIEW is a legal
+       * transition and therefore tests historical
+       * Claim binding without bypassing Foundation
+       * invariants.
+       */
+      const laterEvidence =
         store.append({
           aggregateType: "EVIDENCE",
           aggregateId: evidenceId,
           version:
             verifiedEvidence.version + 1,
-          state: "VERIFIED",
-          payload: replacementPayload,
+          state: "REQUIRES_REVIEW",
+          payload: {
+            ...verifiedEvidence.payload,
+            value: "replacement",
+            excerpt:
+              "V8-11 replacement evidence content",
+            evidenceHash:
+              `${verifiedEvidence.payload.evidenceHash}:replacement`,
+          },
           lineage:
             verifiedEvidence.lineage,
           actor: auditor,
@@ -426,12 +424,12 @@ test(
         });
 
       assert.equal(
-        replacement.version,
+        laterEvidence.version,
         originalVersion + 1,
       );
 
       assert.notEqual(
-        replacement.fingerprint,
+        laterEvidence.fingerprint,
         originalFingerprint,
         "A changed Evidence version must have a different record fingerprint",
       );
@@ -471,13 +469,13 @@ test(
 
       assert.notEqual(
         persistedClaimEvidenceLineage.version,
-        replacement.version,
+        laterEvidence.version,
         "Claim lineage must not silently follow a later Evidence version",
       );
 
       assert.notEqual(
         persistedClaimEvidenceLineage.fingerprint,
-        replacement.fingerprint,
+        laterEvidence.fingerprint,
         "Claim lineage must not silently follow a later Evidence fingerprint",
       );
 
@@ -493,14 +491,27 @@ test(
         "Evidence history must preserve the original verification record and later version",
       );
 
+      assert.deepEqual(
+        evidenceHistory.map(
+          (record) => record.state,
+        ),
+        [
+          "INGESTED",
+          "AUDITED",
+          "VERIFIED",
+          "REQUIRES_REVIEW",
+        ],
+      );
+
       assert.equal(
         evidenceHistory[
           evidenceHistory.length - 1
         ].version,
-        replacement.version,
+        laterEvidence.version,
       );
 
       store.verifyChain();
     });
   },
 );
+
