@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 
 import {
   FoundationService,
   InMemoryFoundationStore,
   createSource,
+  contentFingerprint,
 } from "../../../.v8-build/src/v8/index.js";
 
 import {
@@ -21,12 +21,6 @@ const auditor = {
   id: "truth-producer-auditor",
   role: "AUDITOR",
 };
-
-function sha256(value) {
-  return createHash("sha256")
-    .update(value, "utf8")
-    .digest("hex");
-}
 
 test(
   "V8 Truth Producer closes VERIFIED Evidence -> Claim -> Knowledge",
@@ -59,7 +53,7 @@ test(
         retrievedAt:
           "2026-09-10T00:00:00.000Z",
         documentHash:
-          sha256(content),
+          contentFingerprint(content),
       });
 
     service.registerSource(
@@ -183,7 +177,9 @@ test(
         result.claims[0],
       );
 
-    assert.ok(claim);
+    assert.ok(
+      claim,
+    );
 
     assert.equal(
       claim.state,
@@ -201,7 +197,9 @@ test(
         result.knowledge[0],
       );
 
-    assert.ok(knowledge);
+    assert.ok(
+      knowledge,
+    );
 
     assert.equal(
       knowledge.state,
