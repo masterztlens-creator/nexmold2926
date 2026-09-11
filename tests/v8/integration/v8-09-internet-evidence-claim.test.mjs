@@ -32,102 +32,148 @@ async function withServer(handler, fn) {
   }
 }
 
-test("V8-09: Internet → Source → sealed Snapshot → Evidence → Audit → Claim", async () => {
-  await withServer((_req, res) => {
-    res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-    res.end("V8-09 governed evidence fixture");
-  }, async (url) => {
-    const snapshotRoot = mkdtempSync(join(tmpdir(), "nexmold-v8-09-"));
+test(
+  "V8-09: Internet → Source → sealed Snapshot → Evidence → Audit → Claim",
+  async () => {
+    await withServer((_req, res) => {
+      res.writeHead(200, {
+        "content-type": "text/plain; charset=utf-8",
+      });
+      res.end("V8-09 governed evidence fixture");
+    }, async (url) => {
+      const snapshotRoot = mkdtempSync(
+        join(tmpdir(), "nexmold-v8-09-"),
+      );
 
-    const store = new InMemoryFoundationStore();
-    const service = new FoundationService(store);
+      const store = new InMemoryFoundationStore();
+      const service = new FoundationService(store);
 
-    const acquired = await ingestInternetDocument(service, {
-      url,
-      title: "NEXMOLD V8-09 Internet Fixture",
-      publisher: "NEXMOLD Test Authority",
-      authority: "ENGINEERING_REFERENCE",
-      version: "v8-09-fixture-1",
-      actor: ingestor,
-      snapshotRoot,
-    });
+      const acquired = await ingestInternetDocument(service, {
+        url,
+        title: "NEXMOLD V8-09 Internet Fixture",
+        publisher: "NEXMOLD Test Authority",
+        authority: "ENGINEERING_REFERENCE",
+        version: "v8-09-fixture-1",
+        actor: ingestor,
+        snapshotRoot,
+      });
 
-    assert.equal(acquired.acquisition.status, 200);
-    assert.equal(acquired.snapshotRecord.state, "SEALED");
+      assert.equal(acquired.acquisition.status, 200);
+      assert.equal(acquired.snapshotRecord.state, "SEALED");
 
-    const candidate = {
-      locator: "body",
-      excerpt: "V8-09 governed evidence fixture",
-      parameter: "fixture",
-      value: "governed",
-      unit: "text",
-      section: "body",
-      extractionConfidence: "HIGH",
-    };
+      const candidate = {
+        locator: "body",
+        excerpt: "V8-09 governed evidence fixture",
+        parameter: "fixture",
+        value: "governed",
+        unit: "text",
+        section: "body",
+        extractionConfidence: "HIGH",
+      };
 
-    const payloads = appendEvidence(
-      store,
-      acquired.source.id,
-      acquired.snapshotRecord.aggregateId,
-      acquired.snapshotRecord.payload,
-      [candidate],
-      ingestor.id,
-    );
+      const payloads = appendEvidence(
+        store,
+        acquired.source.id,
+        acquired.snapshotRecord.aggregateId,
+        acquired.snapshotRecord.payload,
+        [candidate],
+        ingestor.id,
+      );
 
-    assert.equal(payloads.length, 1);
-    const evidenceId = evidenceAggregateId(
-      acquired.source.id,
-      acquired.snapshotRecord.aggregateId,
-      candidate,
-    );
+      assert.equal(payloads.length, 1);
 
-    const ingestedEvidence = store.get("EVIDENCE", evidenceId);
-    assert.ok(ingestedEvidence);
-    assert.equal(ingestedEvidence.state, "INGESTED");
-    assert.equal(ingestedEvidence.payload.verificationStatus, "UNVERIFIED");
+      const evidenceId = evidenceAggregateId(
+        acquired.source.id,
+        acquired.snapshotRecord.aggregateId,
+        candidate,
+        acquired.snapshotRecord.payload.contentHash,
+      );
 
-    assert.throws(
-      () =>
-        service.createClaim(
-          {
-            id: "v8-09-premature-claim",
-            statement: "The fixture is governed evidence.",
-            evidenceIds: [evidenceId],
-            status: "VERIFIED",
-            fingerprint: "ignored",
-          },
-          auditor,
+      const ingestedEvidence = store.get(
+        "EVIDENCE",
+        evidenceId,
+      );
+
+      assert.ok(ingestedEvidence);
+      assert.equal(ingestedEvidence.state, "INGESTED");
+      assert.equal(
+        ingestedEvidence.payload.verificationStatus,
+        "UNVERIFIED",
+      );
+
+      assert.throws(
+        () =>
+          service.createClaim(
+            {
+              id: "v8-09-premature-claim",
+              statement: "The fixture is governed evidence.",
+              evidenceIds: [evidenceId],
+              status: "VERIFIED",
+              fingerprint: "ignored",
+            },
+            auditor,
+          ),
+        /CLAIM_EVIDENCE_NOT_VERIFIED|EVIDENCE_NOT_VERIFIED/,
+      );
+
+      const audited = service.verifyEvidence(
+        evidenceId,
+        auditor,
+      );
+
+      assert.equal(audited.state, "VERIFIED");
+      assert.equal(
+        audited.payload.verificationStatus,
+        "VERIFIED",
+      );
+
+      const evidenceHistory = store.history(
+        "EVIDENCE",
+        evidenceId,
+      );
+
+      assert.deepEqual(
+        evidenceHistory.map((record) => record.state),
+        ["INGESTED", "AUDITED", "VERIFIED"],
+      );
+
+      const claim = service.createClaim(
+        {
+          id: "v8-09-claim",
+          statement: "The fixture is governed evidence.",
+          evidenceIds: [evidenceId],
+          status: "VERIFIED",
+          fingerprint: "ignored",
+        },
+        auditor,
+      );
+
+      assert.equal(claim.state, "VERIFIED");
+      assert.equal(
+        claim.payload.statement,
+        "The fixture is governed evidence.",
+      );
+
+      assert.ok(
+        claim.lineage.some(
+          (item) => item.type === "EVIDENCE",
         ),
-      /CLAIM_EVIDENCE_NOT_VERIFIED|EVIDENCE_NOT_VERIFIED/,
-    );
+      );
 
-    const audited = service.verifyEvidence(evidenceId, auditor);
-    assert.equal(audited.state, "VERIFIED");
-    assert.equal(audited.payload.verificationStatus, "VERIFIED");
+      assert.ok(
+        claim.lineage.some(
+          (item) => item.type === "SNAPSHOT",
+        ),
+      );
 
-    const evidenceHistory = store.history("EVIDENCE", evidenceId);
-    assert.deepEqual(
-      evidenceHistory.map((record) => record.state),
-      ["INGESTED", "AUDITED", "VERIFIED"],
-    );
+      assert.ok(
+        claim.lineage.some(
+          (item) => item.type === "SOURCE",
+        ),
+      );
 
-    const claim = service.createClaim(
-      {
-        id: "v8-09-claim",
-        statement: "The fixture is governed evidence.",
-        evidenceIds: [evidenceId],
-        status: "VERIFIED",
-        fingerprint: "ignored",
-      },
-      auditor,
-    );
+      store.verifyChain();
+    });
+  },
+);
 
-    assert.equal(claim.state, "VERIFIED");
-    assert.equal(claim.payload.statement, "The fixture is governed evidence.");
-    assert.ok(claim.lineage.some((item) => item.type === "EVIDENCE"));
-    assert.ok(claim.lineage.some((item) => item.type === "SNAPSHOT"));
-    assert.ok(claim.lineage.some((item) => item.type === "SOURCE"));
-
-    store.verifyChain();
-  });
-});
