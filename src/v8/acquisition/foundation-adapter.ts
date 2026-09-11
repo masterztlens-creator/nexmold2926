@@ -7,7 +7,10 @@ import type {
   AcquisitionConfig,
   AcquisitionResult,
 } from "./types.js";
-import { evidenceAggregateId, buildEvidencePayloads } from "./evidence-builder.js";
+import {
+  evidenceAggregateId,
+  buildEvidencePayloads,
+} from "./evidence-builder.js";
 import { HttpPageFetcher } from "./page-fetcher.js";
 
 export function ingestFetchedPage(
@@ -128,7 +131,7 @@ export function ingestFetchedPage(
     });
   }
 
-  const sealed = store.get("SNAPSHOT", snapshotId);
+  const sealed = store.get<SnapshotPayload>("SNAPSHOT", snapshotId);
 
   if (!sealed || sealed.state !== "SEALED") {
     throw new Error("V8_ACQUISITION_SNAPSHOT_NOT_SEALED");
@@ -205,4 +208,3 @@ export function ingestFetchedPage(
     evidence,
   };
 }
-
