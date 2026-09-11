@@ -1,6 +1,9 @@
 import { contentFingerprint } from "../foundation/hash.js";
 import { sourceId } from "../domain/primitives.js";
-import type { FoundationStore, SnapshotPayload } from "../foundation/types.js";
+import type {
+  FoundationStore,
+  SnapshotPayload,
+} from "../foundation/types.js";
 import type {
   ExtractedEvidenceCandidate,
   FetchedPage,
@@ -131,10 +134,15 @@ export function ingestFetchedPage(
     });
   }
 
-  const sealed = store.get<SnapshotPayload>("SNAPSHOT", snapshotId);
+  const sealed = store.get<SnapshotPayload>(
+    "SNAPSHOT",
+    snapshotId,
+  );
 
   if (!sealed || sealed.state !== "SEALED") {
-    throw new Error("V8_ACQUISITION_SNAPSHOT_NOT_SEALED");
+    throw new Error(
+      "V8_ACQUISITION_SNAPSHOT_NOT_SEALED",
+    );
   }
 
   /*
@@ -158,18 +166,26 @@ export function ingestFetchedPage(
   const sourceRecord = store.get("SOURCE", sid);
 
   if (!sourceRecord) {
-    throw new Error("V8_ACQUISITION_SOURCE_NOT_FOUND");
+    throw new Error(
+      "V8_ACQUISITION_SOURCE_NOT_FOUND",
+    );
   }
 
   for (const payload of evidence) {
-    const aggregateId = evidenceAggregateId(sid, snapshotId, {
-      locator: payload.locator,
-      excerpt: payload.excerpt,
-      parameter: payload.parameter,
-      value: payload.value,
-      unit: payload.unit,
-      extractionConfidence: payload.extractionConfidence ?? "LOW",
-    });
+    const aggregateId = evidenceAggregateId(
+      sid,
+      snapshotId,
+      {
+        locator: payload.locator,
+        excerpt: payload.excerpt,
+        parameter: payload.parameter,
+        value: payload.value,
+        unit: payload.unit,
+        extractionConfidence:
+          payload.extractionConfidence ?? "LOW",
+      },
+      persistedSnapshot.contentHash,
+    );
 
     if (!store.get("EVIDENCE", aggregateId)) {
       store.append({
@@ -196,7 +212,8 @@ export function ingestFetchedPage(
           id: actorId,
           role: "INGESTOR",
         },
-        reason: "V8-05 extracted web evidence ingestion",
+        reason:
+          "V8-05 extracted web evidence ingestion",
       });
     }
   }
