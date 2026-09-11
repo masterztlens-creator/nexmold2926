@@ -8,6 +8,18 @@ import {
   type FoundationService,
 } from "../../index.js";
 
+import {
+  claimId,
+  evidenceId,
+  type ClaimId,
+  type EvidenceId,
+} from "../../domain/primitives.js";
+
+import type {
+  AuditActor,
+  AuditRole,
+} from "../../foundation/types.js";
+
 import type {
   ClaimCandidate,
   ClaimInterpreter,
@@ -69,7 +81,7 @@ function normalizeCandidate(
 
 function verifiedEvidence(
   store: FoundationStore,
-  ids: readonly string[],
+  ids: readonly EvidenceId[],
 ): EvidencePayload[] {
   return ids.map((id) => {
     const record =
@@ -94,6 +106,29 @@ function verifiedEvidence(
   });
 }
 
+function normalizeActor(
+  actor: TruthProducerInput["actor"],
+): AuditActor {
+  const roles: readonly AuditRole[] = [
+    "SYSTEM",
+    "INGESTOR",
+    "AUDITOR",
+    "VERIFIER",
+    "GOVERNOR",
+  ];
+
+  if (!roles.includes(actor.role as AuditRole)) {
+    throw new Error(
+      `V8_TRUTH_PRODUCER_INVALID_AUDIT_ROLE:${actor.role}`,
+    );
+  }
+
+  return {
+    id: actor.id,
+    role: actor.role as AuditRole,
+  };
+}
+
 export class TruthProducer {
   private readonly service: FoundationService;
   private readonly interpreter: ClaimInterpreter;
@@ -109,13 +144,16 @@ export class TruthProducer {
   produce(
     input: TruthProducerInput,
   ): TruthProducerResult {
+    const actor = normalizeActor(input.actor);
+
     const candidates =
       this.interpreter.interpret(
         input.evidence,
       );
 
-    const claims: string[] = [];
+    const claims: ClaimId[] = [];
     const knowledge: string[] = [];
+
     const rejectedCandidates: {
       statement: string;
       reason: string;
@@ -141,20 +179,22 @@ export class TruthProducer {
       }
 
       try {
+        const typedEvidenceIds =
+          candidate.evidenceIds.map(
+            evidenceId,
+          );
+
         const evidence =
           verifiedEvidence(
             this.service.storeView,
-            candidate.evidenceIds,
+            typedEvidenceIds,
           );
 
-        const claim = createClaim({
-          id: undefined,
-          statement:
-            candidate.statement,
-          evidenceIds:
-            candidate.evidenceIds,
-          status: "VERIFIED",
-          fingerprint: "ignored",
+      const claim = createClaim({
+        id: undefined,
+        statement: candidate.statement,
+        evidenceIds: typedEvidenceIds,
+        status: "VERIFIED",
           ...(candidate.scope
             ? {
                 scope:
@@ -197,12 +237,17 @@ export class TruthProducer {
         const claimRecord =
           this.service.createClaim(
             claim as Claim,
-            input.actor,
+            actor,
             "truth producer",
           );
 
+        const persistedClaimId =
+          claimId(
+            claimRecord.aggregateId,
+          );
+
         claims.push(
-          claimRecord.aggregateId,
+          persistedClaimId,
         );
 
         /*
@@ -214,19 +259,17 @@ export class TruthProducer {
          */
         const knowledgeInput =
           createKnowledge({
-            proposition:
-              candidate.statement,
-            claimIds: [
-              claimRecord.aggregateId,
-            ],
-            status: "APPROVED",
-            fingerprint: "ignored",
+          proposition: candidate.statement,
+          claimIds: [
+          persistedClaimId,
+          ],
+          status: "APPROVED",
           });
 
         const knowledgeRecord =
           this.service.createKnowledge(
             knowledgeInput as Knowledge,
-            input.actor,
+            actor,
             "truth producer",
           );
 
