@@ -72,7 +72,6 @@ import {
 } from "../foundation/hash.js";
 
 import {
-  immutable,
   invariant,
 } from "../constitution/invariants.js";
 
@@ -594,7 +593,7 @@ export async function runV8ArticleRuntime(
         compiled.fingerprint,
     });
 
-  return immutable({
+  return {
     acquisition,
 
     verifiedEvidenceIds:
@@ -629,5 +628,5 @@ export async function runV8ArticleRuntime(
       compiled.content,
 
     fingerprint,
-  });
+  };
 }
