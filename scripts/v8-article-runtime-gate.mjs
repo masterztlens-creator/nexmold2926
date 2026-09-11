@@ -180,17 +180,78 @@ assert.ok(
   "V8_ARTICLE_RUNTIME_EVIDENCE_NOT_PERSISTED",
 );
 
+/*
+ * auditTrail() contains the complete immutable history:
+ *
+ *   INGESTED
+ *      ↓
+ *   AUDITED
+ *      ↓
+ *   VERIFIED
+ *
+ * Therefore we must validate the latest record
+ * for each Evidence aggregate, not every historical
+ * record.
+ */
+const latestEvidenceRecords =
+  new Map();
+
 for (const record of evidenceRecords) {
+  const existing =
+    latestEvidenceRecords.get(
+      record.aggregateId,
+    );
+
+  if (
+    existing === undefined ||
+    record.version > existing.version
+  ) {
+    latestEvidenceRecords.set(
+      record.aggregateId,
+      record,
+    );
+  }
+}
+
+assert.equal(
+  latestEvidenceRecords.size,
+  result.verifiedEvidenceIds.length,
+  "V8_ARTICLE_RUNTIME_EVIDENCE_LATEST_COUNT_MISMATCH",
+);
+
+for (
+  const record of latestEvidenceRecords.values()
+) {
   assert.equal(
     record.state,
     "VERIFIED",
-    `Evidence ${record.aggregateId} did not reach VERIFIED.`,
+    `Evidence ${record.aggregateId} latest state is not VERIFIED.`,
   );
 
   assert.equal(
     record.payload.verificationStatus,
     "VERIFIED",
-    `Evidence ${record.aggregateId} payload is not VERIFIED.`,
+    `Evidence ${record.aggregateId} latest payload is not VERIFIED.`,
+  );
+}
+
+for (
+  const evidenceId of result.verifiedEvidenceIds
+) {
+  const latest =
+    latestEvidenceRecords.get(
+      evidenceId,
+    );
+
+  assert.ok(
+    latest,
+    `Verified Evidence ${evidenceId} has no latest Foundation record.`,
+  );
+
+  assert.equal(
+    latest.state,
+    "VERIFIED",
+    `Verified Evidence ${evidenceId} latest state is not VERIFIED.`,
   );
 }
 
@@ -208,11 +269,33 @@ assert.ok(
   "V8_ARTICLE_RUNTIME_CLAIMS_NOT_PERSISTED",
 );
 
+const latestClaimRecords =
+  new Map();
+
 for (const record of claimRecords) {
+  const existing =
+    latestClaimRecords.get(
+      record.aggregateId,
+    );
+
+  if (
+    existing === undefined ||
+    record.version > existing.version
+  ) {
+    latestClaimRecords.set(
+      record.aggregateId,
+      record,
+    );
+  }
+}
+
+for (
+  const record of latestClaimRecords.values()
+) {
   assert.equal(
     record.state,
     "VERIFIED",
-    `Claim ${record.aggregateId} did not reach VERIFIED.`,
+    `Claim ${record.aggregateId} latest state is not VERIFIED.`,
   );
 }
 
@@ -230,11 +313,33 @@ assert.ok(
   "V8_ARTICLE_RUNTIME_KNOWLEDGE_NOT_PERSISTED",
 );
 
+const latestKnowledgeRecords =
+  new Map();
+
 for (const record of knowledgeRecords) {
+  const existing =
+    latestKnowledgeRecords.get(
+      record.aggregateId,
+    );
+
+  if (
+    existing === undefined ||
+    record.version > existing.version
+  ) {
+    latestKnowledgeRecords.set(
+      record.aggregateId,
+      record,
+    );
+  }
+}
+
+for (
+  const record of latestKnowledgeRecords.values()
+) {
   assert.equal(
     record.state,
     "VERIFIED",
-    `Knowledge ${record.aggregateId} did not reach VERIFIED.`,
+    `Knowledge ${record.aggregateId} latest state is not VERIFIED.`,
   );
 }
 
