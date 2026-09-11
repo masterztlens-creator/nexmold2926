@@ -8,11 +8,11 @@ import { join } from "node:path";
 import {
   FoundationService,
   InMemoryFoundationStore,
-  ingestInternetDocument,
 } from "../../../.v8-build/src/v8/foundation/index.js";
 
 import {
-  appendEvidence,
+  HttpPageFetcher,
+  ingestFetchedPage,
   evidenceAggregateId,
 } from "../../../.v8-build/src/v8/acquisition/index.js";
 
@@ -44,12 +44,31 @@ async function withServer(handler, fn) {
       `http://127.0.0.1:${address.port}/fixture`,
     );
   } finally {
-    await new Promise((resolve, reject) =>
+    await new Promise((resolve, reject) => {
       server.close((error) =>
         error ? reject(error) : resolve(),
-      ),
-    );
+      );
+    });
   }
+}
+
+async function acquireInternetFixture(
+  url,
+  store,
+  candidate,
+) {
+  const fetcher = new HttpPageFetcher();
+
+  const page = await fetcher.fetch(url);
+
+  return ingestFetchedPage(
+    store,
+    page,
+    [candidate],
+    {
+      actorId: ingestor.id,
+    },
+  );
 }
 
 test(
@@ -65,46 +84,11 @@ test(
         "V8-09 governed evidence fixture",
       );
     }, async (url) => {
-      const snapshotRoot = mkdtempSync(
-        join(
-          tmpdir(),
-          "nexmold-v8-09-",
-        ),
-      );
-
       const store =
         new InMemoryFoundationStore();
 
       const service =
         new FoundationService(store);
-
-      const acquired =
-        await ingestInternetDocument(
-          service,
-          {
-            url,
-            title:
-              "NEXMOLD V8-09 Internet Fixture",
-            publisher:
-              "NEXMOLD Test Authority",
-            authority:
-              "ENGINEERING_REFERENCE",
-            version:
-              "v8-09-fixture-1",
-            actor: ingestor,
-            snapshotRoot,
-          },
-        );
-
-      assert.equal(
-        acquired.acquisition.status,
-        200,
-      );
-
-      assert.equal(
-        acquired.snapshotRecord.state,
-        "SEALED",
-      );
 
       const candidate = {
         locator: "body",
@@ -117,27 +101,52 @@ test(
         extractionConfidence: "HIGH",
       };
 
-      const payloads = appendEvidence(
-        store,
-        acquired.source.id,
-        acquired.snapshotRecord.aggregateId,
-        acquired.snapshotRecord.payload,
-        [candidate],
-        ingestor.id,
+      const acquired =
+        await acquireInternetFixture(
+          url,
+          store,
+          candidate,
+        );
+
+      assert.equal(
+        acquired.sourceId.length > 0,
+        true,
       );
 
       assert.equal(
-        payloads.length,
+        acquired.snapshotId.length > 0,
+        true,
+      );
+
+      assert.equal(
+        acquired.snapshot.contentHash.length > 0,
+        true,
+      );
+
+      const snapshotRecord =
+        store.get(
+          "SNAPSHOT",
+          acquired.snapshotId,
+        );
+
+      assert.ok(snapshotRecord);
+
+      assert.equal(
+        snapshotRecord.state,
+        "SEALED",
+      );
+
+      assert.equal(
+        acquired.evidence.length,
         1,
       );
 
       const evidenceId =
         evidenceAggregateId(
-          acquired.source.id,
-          acquired.snapshotRecord.aggregateId,
+          acquired.sourceId,
+          acquired.snapshotId,
           candidate,
-          acquired.snapshotRecord.payload
-            .contentHash,
+          acquired.snapshot.contentHash,
         );
 
       const ingestedEvidence =
@@ -276,36 +285,11 @@ test(
         "V8-11 immutable claim fixture",
       );
     }, async (url) => {
-      const snapshotRoot = mkdtempSync(
-        join(
-          tmpdir(),
-          "nexmold-v8-11-",
-        ),
-      );
-
       const store =
         new InMemoryFoundationStore();
 
       const service =
         new FoundationService(store);
-
-      const acquired =
-        await ingestInternetDocument(
-          service,
-          {
-            url,
-            title:
-              "NEXMOLD V8-11 Internet Fixture",
-            publisher:
-              "NEXMOLD Test Authority",
-            authority:
-              "ENGINEERING_REFERENCE",
-            version:
-              "v8-11-fixture-1",
-            actor: ingestor,
-            snapshotRoot,
-          },
-        );
 
       const candidate = {
         locator: "body",
@@ -318,22 +302,19 @@ test(
         extractionConfidence: "HIGH",
       };
 
-      appendEvidence(
-        store,
-        acquired.source.id,
-        acquired.snapshotRecord.aggregateId,
-        acquired.snapshotRecord.payload,
-        [candidate],
-        ingestor.id,
-      );
+      const acquired =
+        await acquireInternetFixture(
+          url,
+          store,
+          candidate,
+        );
 
       const evidenceId =
         evidenceAggregateId(
-          acquired.source.id,
-          acquired.snapshotRecord.aggregateId,
+          acquired.sourceId,
+          acquired.snapshotId,
           candidate,
-          acquired.snapshotRecord.payload
-            .contentHash,
+          acquired.snapshot.contentHash,
         );
 
       const verifiedEvidence =
