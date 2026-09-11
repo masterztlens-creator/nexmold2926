@@ -76,7 +76,27 @@ console.log(`acquisitions=${result.acquisitions.length}`);
 
 for (const acquisition of result.acquisitions) {
   console.log(
-    `acquisition url=${acquisition.page.finalUrl} status=${acquisition.page.status} mediaType=${JSON.stringify(acquisition.page.mediaType)} bytes=${acquisition.page.bytes.byteLength} bodyLength=${acquisition.page.body.length} evidence=${acquisition.evidence.length}`,
+    "acquisition keys=",
+    Object.keys(acquisition),
+  );
+
+  console.log(
+    "acquisition evidence type=",
+    typeof acquisition.evidence,
+  );
+
+  console.log(
+    "acquisition evidence value=",
+    acquisition.evidence,
+  );
+
+  console.log(
+    "acquisition object=",
+    JSON.stringify(acquisition, null, 2),
+  );
+
+  console.log(
+    `acquisition url=${acquisition.page.finalUrl} status=${acquisition.page.status} mediaType=${JSON.stringify(acquisition.page.mediaType)} bytes=${acquisition.page.bytes.byteLength} bodyLength=${acquisition.page.body.length} evidence=${acquisition.evidence?.length ?? "undefined"}`,
   );
 }
 
@@ -101,7 +121,7 @@ assert.ok(
 
 assert.ok(
   result.acquisitions.some(
-    (item) => item.evidence.length > 0,
+    (item) => item.evidence?.length > 0,
   ),
   "no extracted evidence was persisted",
 );
@@ -113,7 +133,7 @@ for (const acquisition of result.acquisitions) {
   );
 
   assert.equal(
-    acquisition.evidence[0]?.state,
+    acquisition.evidence?.[0]?.state,
     "INGESTED",
   );
 }
