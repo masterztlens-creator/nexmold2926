@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 
 import {
   FoundationService,
@@ -22,11 +23,7 @@ const auditor = {
 };
 
 function sha256(value) {
-  const crypto =
-    require("node:crypto");
-
-  return crypto
-    .createHash("sha256")
+  return createHash("sha256")
     .update(value, "utf8")
     .digest("hex");
 }
