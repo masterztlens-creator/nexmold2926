@@ -1,0 +1,77 @@
+name: V8 Evidence Trace Gate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  v8-evidence-trace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Diagnose TypeScript installation
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          echo "=== package.json TypeScript declaration ==="
+          node -e "const p=require('./package.json'); console.log(p.devDependencies?.typescript ?? p.dependencies?.typescript ?? 'MISSING')"
+
+          echo "=== npm TypeScript tree ==="
+          npm ls typescript --depth=0
+
+          echo "=== TypeScript package directory ==="
+          test -d ./node_modules/typescript
+          ls -la ./node_modules/typescript
+
+          echo "=== TypeScript package bin directory ==="
+          test -d ./node_modules/typescript/bin
+          ls -la ./node_modules/typescript/bin
+
+          echo "=== TypeScript compiler entry ==="
+          test -f ./node_modules/typescript/bin/tsc
+          ls -la ./node_modules/typescript/bin/tsc
+
+          echo "=== TypeScript direct execution ==="
+          node ./node_modules/typescript/bin/tsc --version
+
+          echo "=== npm bin directory ==="
+          ls -la ./node_modules/.bin || true
+
+          echo "=== tsc symlink ==="
+          if test -e ./node_modules/.bin/tsc; then
+            ls -la ./node_modules/.bin/tsc
+          else
+            echo "WARNING: ./node_modules/.bin/tsc does not exist"
+          fi
+
+      - name: Compile V8
+        run: npm run v8:compile
+
+      - name: Verify V8 build output
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          test -f .v8-build/src/v8/foundation/store.js
+          test -f .v8-build/src/v8/foundation/hash.js
+          test -f .v8-build/src/v8/acquisition/page-fetcher.js
+          test -f .v8-build/src/v8/acquisition/tavily-search-provider.js
+          test -f .v8-build/src/v8/domain/primitives.js
+          test -f .v8-build/src/v8/runtime/article-runtime.js
+
+      - name: Real Internet Evidence Trace Gate
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: node scripts/v8-evidence-trace-gate.mjs
