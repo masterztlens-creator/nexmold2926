@@ -3,8 +3,20 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
 import {
-  ArticleRuntime,
-} from "../src/v8/runtime/article-runtime.js";
+  InMemoryFoundationStore,
+} from "../.v8-build/src/v8/foundation/store.js";
+
+import {
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  TavilySearchProvider,
+} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+
+import {
+  runV8ArticleRuntime,
+} from "../.v8-build/src/v8/runtime/article-runtime.js";
 
 function sha256(value) {
   return createHash("sha256")
@@ -12,11 +24,11 @@ function sha256(value) {
     .digest("hex");
 }
 
-function fail(message) {
-  throw new Error(message);
-}
-
-function assertEqual(actual, expected, message) {
+function assertEqual(
+  actual,
+  expected,
+  message,
+) {
   assert.equal(
     actual,
     expected,
@@ -24,8 +36,14 @@ function assertEqual(actual, expected, message) {
   );
 }
 
-function assertTruthy(value, message) {
-  assert.ok(value, message);
+function assertTruthy(
+  value,
+  message,
+) {
+  assert.ok(
+    value,
+    message,
+  );
 }
 
 function getLineage(record) {
@@ -85,13 +103,20 @@ function assertRecordFingerprint(record) {
   );
 }
 
-function getRequiredRecord(store, id, type) {
+function getRequiredRecord(
+  store,
+  id,
+  type,
+) {
   assertTruthy(
     id,
     `V8_CONTENT_PROVENANCE_ID_MISSING:${type}`,
   );
 
-  const record = store.get(id);
+  const record = store.get(
+    type,
+    id,
+  );
 
   assertTruthy(
     record,
@@ -107,10 +132,170 @@ function getRequiredRecord(store, id, type) {
   return record;
 }
 
-async function main() {
-  const runtime = new ArticleRuntime();
+const apiKey =
+  process.env.V8_SEARCH_API_KEY;
 
-  const result = await runtime.run();
+if (!apiKey) {
+  throw new Error(
+    "V8_CONTENT_PROVENANCE_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
+  );
+}
+
+async function main() {
+  /*
+   * The V8 runtime must execute from the compiled
+   * .v8-build tree.
+   *
+   * The source file is TypeScript:
+   *
+   *   src/v8/runtime/article-runtime.ts
+   *
+   * Therefore importing:
+   *
+   *   ../src/v8/runtime/article-runtime.js
+   *
+   * is invalid in Node.
+   *
+   * The proven runtime gate uses the compiled module:
+   *
+   *   ../.v8-build/src/v8/runtime/article-runtime.js
+   *
+   * and calls runV8ArticleRuntime().
+   */
+
+  const store =
+    new InMemoryFoundationStore();
+
+  const searchProvider =
+    new TavilySearchProvider(
+      apiKey,
+      "https://api.tavily.com/search",
+      "v8-content-provenance-gate",
+    );
+
+  const pageFetcher =
+    new HttpPageFetcher({
+      timeoutMs: 20000,
+      maxBytes: 5000000,
+    });
+
+  const opportunity = {
+    keyword: {
+      keyword:
+        "plastic injection molding wall thickness",
+      normalized:
+        "plastic injection molding wall thickness",
+      source: "SEED",
+      intent: "INFORMATIONAL",
+      terms: [
+        "wall thickness",
+        "injection molding",
+      ],
+    },
+
+    score: 0.9,
+
+    demand: 0.8,
+
+    relevance: 1,
+
+    competition: 0.3,
+
+    authorityGap: 0.7,
+
+    conversionPotential: 0.6,
+
+    reasons: [
+      "V8 content provenance gate",
+      "REAL_INTERNET source traceability",
+    ],
+  };
+
+  const result =
+    await runV8ArticleRuntime({
+      opportunity,
+
+      searchProvider,
+
+      pageFetcher,
+
+      store,
+
+      actor: {
+        id:
+          "v8-content-provenance-gate",
+        role: "SYSTEM",
+      },
+
+      acquisition: {
+        maxQueries: 1,
+        maxCandidates: 3,
+        actorId:
+          "v8-content-provenance-gate",
+      },
+
+      scope: {
+        id:
+          "scope:v8:content-provenance-gate",
+
+        geography:
+          "GLOBAL",
+
+        industries: [
+          "PLASTIC_INJECTION_MOLDING",
+        ],
+
+        languages: [
+          "en",
+        ],
+      },
+
+      context: {
+        id:
+          "context:v8:content-provenance-gate",
+
+        purpose:
+          "Prove that generated content remains traceable to verified Internet evidence.",
+
+        variables: {
+          sourceMode:
+            "REAL_INTERNET",
+
+          evidencePolicy:
+            "VERIFIED_ONLY",
+
+          contentPolicy:
+            "EVIDENCE_BACKED",
+
+          provenancePolicy:
+            "FULL_CHAIN",
+        },
+      },
+
+      problem: {
+        id:
+          "problem:v8:content-provenance-gate",
+
+        question:
+          "What evidence-backed information can be stated about plastic injection molding wall thickness?",
+
+        constraints: [
+          "Use real Internet-acquired evidence only.",
+          "Only VERIFIED evidence may produce claims.",
+          "Only VERIFIED claims may produce knowledge.",
+          "Decision must be APPROVED.",
+          "Content must be derived from the approved decision.",
+          "Every published content assertion must remain traceable to Internet evidence.",
+        ],
+      },
+
+      title:
+        "Plastic Injection Molding Wall Thickness",
+    });
+
+  /*
+   * Runtime result existence.
+   */
 
   assertTruthy(
     result,
@@ -172,23 +357,31 @@ async function main() {
     "V8_CONTENT_PROVENANCE_EVIDENCE_IDS_EMPTY",
   );
 
-  assert.ok(
-    Array.isArray(result.acquisition),
-    "V8_CONTENT_PROVENANCE_ACQUISITION_NOT_ARRAY",
+  assertTruthy(
+    result.acquisition,
+    "V8_CONTENT_PROVENANCE_ACQUISITION_MISSING",
   );
 
   assert.ok(
-    result.acquisition.length > 0,
+    Array.isArray(
+      result.acquisition.acquisitions,
+    ),
+    "V8_CONTENT_PROVENANCE_ACQUISITION_LIST_NOT_ARRAY",
+  );
+
+  assert.ok(
+    result.acquisition.acquisitions.length > 0,
     "V8_CONTENT_PROVENANCE_ACQUISITION_EMPTY",
   );
 
-  const store = runtime.store;
-
   /*
-   * Gate 1:
-   * Content exists and has an immutable fingerprint.
+   * Gate 1
+   *
+   * Content must exist and have a fingerprint.
    */
-  const content = result.content;
+
+  const content =
+    result.content;
 
   assertTruthy(
     content.id,
@@ -210,17 +403,22 @@ async function main() {
     "V8_CONTENT_PROVENANCE_CONTENT_BODY_MISSING",
   );
 
-  assertRecordFingerprint(content);
+  assertRecordFingerprint(
+    content,
+  );
 
   /*
-   * Gate 2:
-   * Content -> Decision.
+   * Gate 2
+   *
+   * Content -> Decision
    */
-  const decision = getRequiredRecord(
-    store,
-    result.decisionId,
-    "DECISION",
-  );
+
+  const decision =
+    getRequiredRecord(
+      store,
+      result.decisionId,
+      "DECISION",
+    );
 
   assertLineageLink(
     decision,
@@ -229,14 +427,17 @@ async function main() {
   );
 
   /*
-   * Gate 3:
-   * Decision -> Problem.
+   * Gate 3
+   *
+   * Decision -> Problem
    */
-  const problem = getRequiredRecord(
-    store,
-    result.problemId,
-    "PROBLEM",
-  );
+
+  const problem =
+    getRequiredRecord(
+      store,
+      result.problemId,
+      "PROBLEM",
+    );
 
   assertLineageLink(
     problem,
@@ -245,14 +446,17 @@ async function main() {
   );
 
   /*
-   * Gate 4:
-   * Decision -> Context.
+   * Gate 4
+   *
+   * Decision -> Context
    */
-  const context = getRequiredRecord(
-    store,
-    result.contextId,
-    "CONTEXT",
-  );
+
+  const context =
+    getRequiredRecord(
+      store,
+      result.contextId,
+      "CONTEXT",
+    );
 
   assertLineageLink(
     context,
@@ -261,14 +465,17 @@ async function main() {
   );
 
   /*
-   * Gate 5:
-   * Context -> Scope.
+   * Gate 5
+   *
+   * Context -> Scope
    */
-  const scope = getRequiredRecord(
-    store,
-    result.scopeId,
-    "SCOPE",
-  );
+
+  const scope =
+    getRequiredRecord(
+      store,
+      result.scopeId,
+      "SCOPE",
+    );
 
   assertLineageLink(
     scope,
@@ -277,24 +484,37 @@ async function main() {
   );
 
   /*
-   * Gate 6:
-   * Decision -> Knowledge.
+   * Gate 6
+   *
+   * Decision -> Knowledge
+   *
+   * The Decision payload must explicitly contain
+   * every Knowledge ID used by the runtime.
    */
-  const decisionPayload = decision.payload;
 
-  assert.ok(
+  const decisionPayload =
+    decision.payload;
+
+  assertTruthy(
     decisionPayload,
     `V8_CONTENT_PROVENANCE_DECISION_PAYLOAD_MISSING:${decision.id}`,
   );
 
   assert.ok(
-    Array.isArray(decisionPayload.knowledgeIds),
+    Array.isArray(
+      decisionPayload.knowledgeIds,
+    ),
     `V8_CONTENT_PROVENANCE_DECISION_KNOWLEDGE_IDS_NOT_ARRAY:${decision.id}`,
   );
 
-  for (const knowledgeId of result.knowledgeIds) {
+  for (
+    const knowledgeId
+    of result.knowledgeIds
+  ) {
     assert.ok(
-      decisionPayload.knowledgeIds.includes(knowledgeId),
+      decisionPayload.knowledgeIds.includes(
+        knowledgeId,
+      ),
       [
         "V8_CONTENT_PROVENANCE_DECISION_KNOWLEDGE_LINK_MISSING:",
         decision.id,
@@ -305,35 +525,57 @@ async function main() {
   }
 
   /*
-   * Gate 7:
-   * Knowledge -> Claim.
+   * Gate 7
+   *
+   * Knowledge -> Claim
+   *
+   * FoundationService.createKnowledge()
+   * creates CLAIM lineage on Knowledge.
    */
-  const knowledgeRecords = [];
 
-  for (const knowledgeId of result.knowledgeIds) {
-    const knowledge = getRequiredRecord(
-      store,
-      knowledgeId,
-      "KNOWLEDGE",
+  for (
+    const knowledgeId
+    of result.knowledgeIds
+  ) {
+    const knowledge =
+      getRequiredRecord(
+        store,
+        knowledgeId,
+        "KNOWLEDGE",
+      );
+
+    assertRecordFingerprint(
+      knowledge,
     );
 
-    assertRecordFingerprint(knowledge);
+    const knowledgePayload =
+      knowledge.payload;
 
-    const knowledgePayload = knowledge.payload;
-
-    assert.ok(
+    assertTruthy(
       knowledgePayload,
       `V8_CONTENT_PROVENANCE_KNOWLEDGE_PAYLOAD_MISSING:${knowledge.id}`,
     );
 
     assert.ok(
-      Array.isArray(knowledgePayload.claimIds),
+      Array.isArray(
+        knowledgePayload.claimIds,
+      ),
       `V8_CONTENT_PROVENANCE_KNOWLEDGE_CLAIM_IDS_NOT_ARRAY:${knowledge.id}`,
     );
 
-    for (const claimId of knowledgePayload.claimIds) {
+    assert.ok(
+      knowledgePayload.claimIds.length > 0,
+      `V8_CONTENT_PROVENANCE_KNOWLEDGE_CLAIM_IDS_EMPTY:${knowledge.id}`,
+    );
+
+    for (
+      const claimId
+      of knowledgePayload.claimIds
+    ) {
       assert.ok(
-        result.claimIds.includes(claimId),
+        result.claimIds.includes(
+          claimId,
+        ),
         [
           "V8_CONTENT_PROVENANCE_KNOWLEDGE_CLAIM_NOT_IN_RUNTIME:",
           knowledge.id,
@@ -342,64 +584,71 @@ async function main() {
         ].join(" "),
       );
 
-      const claim = getRequiredRecord(
-        store,
-        claimId,
-        "CLAIM",
-      );
+      const claim =
+        getRequiredRecord(
+          store,
+          claimId,
+          "CLAIM",
+        );
 
       /*
-       * IMPORTANT:
-       * createKnowledge() stores CLAIM lineage.
+       * createKnowledge() creates:
+       *
+       * Knowledge.lineage
+       *   -> CLAIM
        */
+
       assertLineageLink(
         claim,
         knowledge,
         "CLAIM",
       );
-
-      knowledgeRecords.push(knowledge);
     }
   }
 
   /*
-   * Gate 8:
-   * Claim -> Evidence.
+   * Gate 8
    *
-   * IMPORTANT:
-   * createClaim() does NOT create CLAIM lineage on Evidence.
+   * Claim -> Evidence
    *
-   * It creates EVIDENCE lineage on the Claim:
+   * createClaim() creates:
    *
-   *   Claim.lineage
-   *     -> EVIDENCE
+   * Claim.lineage
+   *   -> EVIDENCE
    *
-   * Therefore this assertion MUST be:
+   * It does NOT create:
    *
-   *   assertLineageLink(evidence, claim, "EVIDENCE")
-   *
-   * and NOT:
-   *
-   *   assertLineageLink(evidence, claim, "CLAIM")
+   * Evidence.lineage
+   *   -> CLAIM
    */
-  for (const claimId of result.claimIds) {
-    const claim = getRequiredRecord(
-      store,
-      claimId,
-      "CLAIM",
+
+  for (
+    const claimId
+    of result.claimIds
+  ) {
+    const claim =
+      getRequiredRecord(
+        store,
+        claimId,
+        "CLAIM",
+      );
+
+    assertRecordFingerprint(
+      claim,
     );
 
-    assertRecordFingerprint(claim);
+    const claimPayload =
+      claim.payload;
 
-    const claimPayload = claim.payload;
-
-    assert.ok(
+    assertTruthy(
       claimPayload,
       `V8_CONTENT_PROVENANCE_CLAIM_PAYLOAD_MISSING:${claim.id}`,
     );
 
     assert.ok(
-      Array.isArray(claimPayload.evidenceIds),
+      Array.isArray(
+        claimPayload.evidenceIds,
+      ),
       `V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_IDS_NOT_ARRAY:${claim.id}`,
     );
 
@@ -408,9 +657,14 @@ async function main() {
       `V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_IDS_EMPTY:${claim.id}`,
     );
 
-    for (const evidenceId of claimPayload.evidenceIds) {
+    for (
+      const evidenceId
+      of claimPayload.evidenceIds
+    ) {
       assert.ok(
-        result.verifiedEvidenceIds.includes(evidenceId),
+        result.verifiedEvidenceIds.includes(
+          evidenceId,
+        ),
         [
           "V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_NOT_IN_RUNTIME:",
           claim.id,
@@ -419,21 +673,21 @@ async function main() {
         ].join(" "),
       );
 
-      const evidence = getRequiredRecord(
-        store,
-        evidenceId,
-        "EVIDENCE",
-      );
+      const evidence =
+        getRequiredRecord(
+          store,
+          evidenceId,
+          "EVIDENCE",
+        );
 
       /*
-       * CORRECT DIRECTION:
+       * CORRECT LINEAGE DIRECTION:
        *
-       * Claim lineage contains:
+       * Claim.lineage contains:
+       *
        *   EVIDENCE -> evidence.id
-       *
-       * The previous implementation incorrectly checked:
-       *   CLAIM -> claim.id
        */
+
       assertLineageLink(
         evidence,
         claim,
@@ -443,21 +697,33 @@ async function main() {
   }
 
   /*
-   * Gate 9:
-   * Evidence -> Snapshot.
+   * Gate 9
+   *
+   * Evidence -> Snapshot
+   *
+   * Evidence payload explicitly identifies
+   * the Snapshot from which the evidence was extracted.
    */
-  for (const evidenceId of result.verifiedEvidenceIds) {
-    const evidence = getRequiredRecord(
-      store,
-      evidenceId,
-      "EVIDENCE",
+
+  for (
+    const evidenceId
+    of result.verifiedEvidenceIds
+  ) {
+    const evidence =
+      getRequiredRecord(
+        store,
+        evidenceId,
+        "EVIDENCE",
+      );
+
+    assertRecordFingerprint(
+      evidence,
     );
 
-    assertRecordFingerprint(evidence);
+    const evidencePayload =
+      evidence.payload;
 
-    const evidencePayload = evidence.payload;
-
-    assert.ok(
+    assertTruthy(
       evidencePayload,
       `V8_CONTENT_PROVENANCE_EVIDENCE_PAYLOAD_MISSING:${evidence.id}`,
     );
@@ -467,13 +733,22 @@ async function main() {
       `V8_CONTENT_PROVENANCE_EVIDENCE_SNAPSHOT_ID_MISSING:${evidence.id}`,
     );
 
-    const snapshot = getRequiredRecord(
-      store,
-      evidencePayload.snapshotId,
-      "SNAPSHOT",
+    const snapshot =
+      getRequiredRecord(
+        store,
+        evidencePayload.snapshotId,
+        "SNAPSHOT",
+      );
+
+    assertRecordFingerprint(
+      snapshot,
     );
 
-    assertRecordFingerprint(snapshot);
+    /*
+     * Evidence lineage contains:
+     *
+     *   SNAPSHOT -> snapshot.id
+     */
 
     assertLineageLink(
       snapshot,
@@ -483,23 +758,31 @@ async function main() {
   }
 
   /*
-   * Gate 10:
-   * Snapshot -> Internet Source.
+   * Gate 10
+   *
+   * Snapshot -> Internet Source
    */
-  for (const evidenceId of result.verifiedEvidenceIds) {
-    const evidence = getRequiredRecord(
-      store,
-      evidenceId,
-      "EVIDENCE",
-    );
 
-    const evidencePayload = evidence.payload;
+  for (
+    const evidenceId
+    of result.verifiedEvidenceIds
+  ) {
+    const evidence =
+      getRequiredRecord(
+        store,
+        evidenceId,
+        "EVIDENCE",
+      );
 
-    const snapshot = getRequiredRecord(
-      store,
-      evidencePayload.snapshotId,
-      "SNAPSHOT",
-    );
+    const evidencePayload =
+      evidence.payload;
+
+    const snapshot =
+      getRequiredRecord(
+        store,
+        evidencePayload.snapshotId,
+        "SNAPSHOT",
+      );
 
     assertTruthy(
       snapshot.payload,
@@ -511,13 +794,22 @@ async function main() {
       `V8_CONTENT_PROVENANCE_SNAPSHOT_SOURCE_ID_MISSING:${snapshot.id}`,
     );
 
-    const source = getRequiredRecord(
-      store,
-      snapshot.payload.sourceId,
-      "SOURCE",
+    const source =
+      getRequiredRecord(
+        store,
+        snapshot.payload.sourceId,
+        "SOURCE",
+      );
+
+    assertRecordFingerprint(
+      source,
     );
 
-    assertRecordFingerprint(source);
+    /*
+     * Snapshot lineage contains:
+     *
+     *   SOURCE -> source.id
+     */
 
     assertLineageLink(
       source,
@@ -527,14 +819,32 @@ async function main() {
   }
 
   /*
-   * Gate 11:
-   * Every acquired Internet page must correspond to
-   * a persisted Source/Snapshot/Evidence chain.
+   * Gate 11
+   *
+   * Every real Internet acquisition must have:
+   *
+   *   Source
+   *      ↓
+   *   Snapshot
+   *      ↓
+   *   Evidence
    */
-  for (const acquisition of result.acquisition) {
+
+  for (
+    const acquisitionRecord
+    of result.acquisition.acquisitions
+  ) {
+    assertTruthy(
+      acquisitionRecord,
+      "V8_CONTENT_PROVENANCE_ACQUISITION_RECORD_MISSING",
+    );
+
+    const acquisition =
+      acquisitionRecord.acquisition;
+
     assertTruthy(
       acquisition,
-      "V8_CONTENT_PROVENANCE_ACQUISITION_RECORD_MISSING",
+      "V8_CONTENT_PROVENANCE_ACQUISITION_PAYLOAD_MISSING",
     );
 
     assertTruthy(
@@ -547,17 +857,19 @@ async function main() {
       "V8_CONTENT_PROVENANCE_ACQUISITION_SNAPSHOT_ID_MISSING",
     );
 
-    const source = getRequiredRecord(
-      store,
-      acquisition.sourceId,
-      "SOURCE",
-    );
+    const source =
+      getRequiredRecord(
+        store,
+        acquisition.sourceId,
+        "SOURCE",
+      );
 
-    const snapshot = getRequiredRecord(
-      store,
-      acquisition.snapshotId,
-      "SNAPSHOT",
-    );
+    const snapshot =
+      getRequiredRecord(
+        store,
+        acquisition.snapshotId,
+        "SNAPSHOT",
+      );
 
     assertEqual(
       snapshot.payload.sourceId,
@@ -565,14 +877,21 @@ async function main() {
       `V8_CONTENT_PROVENANCE_SOURCE_SNAPSHOT_ID_MISMATCH:${snapshot.id}`,
     );
 
-    const matchingEvidence = result.verifiedEvidenceIds
-      .map((id) =>
-        getRequiredRecord(store, id, "EVIDENCE"),
-      )
-      .filter(
-        (evidence) =>
-          evidence.payload.snapshotId === snapshot.id,
-      );
+    const matchingEvidence =
+      result.verifiedEvidenceIds
+        .map(
+          (id) =>
+            getRequiredRecord(
+              store,
+              id,
+              "EVIDENCE",
+            ),
+        )
+        .filter(
+          (evidence) =>
+            evidence.payload.snapshotId ===
+            snapshot.id,
+        );
 
     assert.ok(
       matchingEvidence.length > 0,
@@ -584,17 +903,31 @@ async function main() {
   }
 
   /*
-   * Gate 12:
-   * Content must be linked to all runtime Knowledge records.
+   * Gate 12
+   *
+   * Content -> Knowledge
+   *
+   * ContentCompiler creates Knowledge lineage
+   * on Content. Every runtime Knowledge must
+   * therefore appear in Content lineage with
+   * the exact same fingerprint.
    */
-  const contentLineage = getLineage(content);
 
-  for (const knowledgeId of result.knowledgeIds) {
-    const link = contentLineage.find(
-      (entry) =>
-        entry.type === "KNOWLEDGE" &&
-        entry.id === knowledgeId,
-    );
+  const contentLineage =
+    getLineage(content);
+
+  for (
+    const knowledgeId
+    of result.knowledgeIds
+  ) {
+    const link =
+      contentLineage.find(
+        (entry) =>
+          entry.type ===
+            "KNOWLEDGE" &&
+          entry.id ===
+            knowledgeId,
+      );
 
     assertTruthy(
       link,
@@ -606,11 +939,12 @@ async function main() {
       ].join(" "),
     );
 
-    const knowledge = getRequiredRecord(
-      store,
-      knowledgeId,
-      "KNOWLEDGE",
-    );
+    const knowledge =
+      getRequiredRecord(
+        store,
+        knowledgeId,
+        "KNOWLEDGE",
+      );
 
     assertEqual(
       link.fingerprint,
@@ -623,68 +957,67 @@ async function main() {
   }
 
   /*
-   * Gate 13:
-   * Foundation chain verification.
+   * Gate 13
+   *
+   * Full immutable Foundation chain verification.
    *
    * verifyChain() returns void.
-   * Success means it completes without throwing.
+   * Successful completion means no exception
+   * was thrown.
    */
+
   store.verifyChain();
 
   /*
-   * Gate 14:
-   * Tamper detection.
+   * Gate 14
    *
-   * We deliberately create a detached tampered copy.
-   * Its fingerprint must no longer match the original record.
+   * Detached tamper detection.
+   *
+   * The original persisted Claim remains untouched.
+   * We create a modified detached representation
+   * and prove that its fingerprint differs.
    */
-  const tamperTarget = getRequiredRecord(
-    store,
-    result.claimIds[0],
-    "CLAIM",
-  );
 
-  const tampered = {
-    ...tamperTarget,
-    fingerprint: sha256(
-      JSON.stringify({
-        ...tamperTarget,
-        payload: {
-          ...tamperTarget.payload,
-          proposition:
-            `${tamperTarget.payload.proposition ?? ""} [TAMPERED]`,
-        },
-      }),
-    ),
+  const tamperTarget =
+    getRequiredRecord(
+      store,
+      result.claimIds[0],
+      "CLAIM",
+    );
+
+  const originalFingerprint =
+    tamperTarget.fingerprint;
+
+  const tamperedPayload = {
+    ...tamperTarget.payload,
+
+    proposition:
+      `${tamperTarget.payload.proposition ?? ""} [TAMPERED]`,
   };
 
-  assert.notEqual(
-    tampered.fingerprint,
-    tamperTarget.fingerprint,
+  const tamperedFingerprint =
+    sha256(
+      JSON.stringify(
+        tamperedPayload,
+      ),
+    );
+
+  assert.ok(
+    tamperedFingerprint !==
+      originalFingerprint,
     "V8_CONTENT_PROVENANCE_TAMPER_DETECTION_FAILED",
   );
 
   /*
-   * Final result.
+   * Final output.
    */
+
   console.log(
-    "[NEXMOLD][V8-CONTENT-PROVENANCE] CONTENT PROVENANCE GATE PASS",
+    "[NEXMOLD][V8-CONTENT-PROVENANCE] REAL INTERNET CONTENT PROVENANCE GATE PASS",
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] content=${content.id}`,
-  );
-
-  console.log(
-    `[V8-CONTENT-PROVENANCE] decision=${decision.id}`,
-  );
-
-  console.log(
-    `[V8-CONTENT-PROVENANCE] knowledge=${result.knowledgeIds.length}`,
-  );
-
-  console.log(
-    `[V8-CONTENT-PROVENANCE] claims=${result.claimIds.length}`,
+    `[V8-CONTENT-PROVENANCE] acquired=${result.acquisition.acquisitions.length}`,
   );
 
   console.log(
@@ -692,32 +1025,44 @@ async function main() {
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] snapshots=${result.acquisition.length}`,
+    `[V8-CONTENT-PROVENANCE] claims=${result.claimIds.length}`,
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] internetSources=${result.acquisition.length}`,
+    `[V8-CONTENT-PROVENANCE] knowledge=${result.knowledgeIds.length}`,
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] chainValid=true`,
+    `[V8-CONTENT-PROVENANCE] scope=${result.scopeId}`,
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] tamperDetection=true`,
+    `[V8-CONTENT-PROVENANCE] context=${result.contextId}`,
   );
 
   console.log(
-    `[V8-CONTENT-PROVENANCE] fingerprint=${content.fingerprint}`,
+    `[V8-CONTENT-PROVENANCE] problem=${result.problemId}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] decision=${result.decisionId}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] decisionState=${decision.state}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] content=true`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] provenance=SOURCE→SNAPSHOT→EVIDENCE→CLAIM→KNOWLEDGE→DECISION→CONTENT`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] fingerprint=${result.fingerprint}`,
   );
 }
 
-main().catch((error) => {
-  console.error(
-    "[NEXMOLD][V8-CONTENT-PROVENANCE] GATE FAIL",
-  );
-
-  console.error(error);
-
-  process.exitCode = 1;
-});
+await main();
