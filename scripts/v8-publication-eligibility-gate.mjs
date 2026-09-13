@@ -54,9 +54,9 @@ const apiKey = requiredEnv("V8_SEARCH_API_KEY");
 
 const store = new InMemoryFoundationStore();
 
-const searchProvider = new TavilySearchProvider({
+const searchProvider = new TavilySearchProvider(
   apiKey,
-});
+);
 
 const pageFetcher = new HttpPageFetcher();
 
