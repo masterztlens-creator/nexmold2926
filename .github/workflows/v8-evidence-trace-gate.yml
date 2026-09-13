@@ -1,6 +1,17 @@
 name: V8 Evidence Trace Gate
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "scripts/v8-evidence-trace-gate.mjs"
+      - ".github/workflows/v8-evidence-trace-gate.yml"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+
   workflow_dispatch:
 
 jobs:
