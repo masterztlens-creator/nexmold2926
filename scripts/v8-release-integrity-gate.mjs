@@ -1,17 +1,8 @@
 import assert from "node:assert/strict";
 
-import {
-  InMemoryFoundationStore,
-} from "../.v8-build/src/v8/foundation/store.js";
-
-import {
-  HttpPageFetcher,
-} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-
-import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
+import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
+import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
 import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
@@ -30,8 +21,11 @@ import {
 
 import {
   createRule,
+} from "../.v8-build/src/v8/governance/rule.js";
+
+import {
   createPolicy,
-} from "../.v8-build/src/v8/governance/index.js";
+} from "../.v8-build/src/v8/governance/policy.js";
 
 import {
   project,
@@ -39,20 +33,58 @@ import {
 
 import {
   releasePreflight,
+} from "../.v8-build/src/v8/release/preflight.js";
+
+import {
   assertReleaseReady,
-} from "../.v8-build/src/v8/release/index.js";
+} from "../.v8-build/src/v8/release/gate.js";
 
-const apiKey =
-  process.env.V8_SEARCH_API_KEY;
+const apiKey = process.env.V8_SEARCH_API_KEY;
 
-if (!apiKey) {
-  throw new Error(
-    "V8_RELEASE_INTEGRITY_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
+assert(
+  typeof apiKey === "string" && apiKey.trim().length > 0,
+  "V8_RELEASE_INTEGRITY_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
+);
+
+function assertTruthy(value, message) {
+  assert(value, message);
+}
+
+function assertString(value, message) {
+  assert.equal(
+    typeof value,
+    "string",
+    message,
+  );
+
+  assert(
+    value.trim().length > 0,
+    message,
   );
 }
 
-function assertTruthy(value, message) {
-  assert.ok(value, message);
+function assertArray(value, message) {
+  assert(
+    Array.isArray(value),
+    message,
+  );
+}
+
+function getRequiredRecord(store, type, id, message) {
+  assertString(
+    id,
+    message ?? `V8_RELEASE_INTEGRITY_ID_MISSING:${type}`,
+  );
+
+  const record = store.get(type, id);
+
+  assertTruthy(
+    record,
+    message ??
+      `V8_RELEASE_INTEGRITY_RECORD_NOT_FOUND:${type}:${id}`,
+  );
+
+  return record;
 }
 
 function lineageLink(record) {
@@ -64,28 +96,32 @@ function lineageLink(record) {
   };
 }
 
-function getRequiredRecord(
-  store,
-  type,
-  id,
-  message,
-) {
-  const record = store.get(type, id);
+function sameLineage(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
 
-  assertTruthy(
-    record,
-    message ?? `V8_RELEASE_INTEGRITY_RECORD_MISSING:${type}:${id}`,
-  );
+  if (a.length !== b.length) {
+    return false;
+  }
 
-  return record;
+  return a.every((left, index) => {
+    const right = b[index];
+
+    return (
+      right !== undefined &&
+      left.type === right.type &&
+      left.id === right.id &&
+      left.version === right.version &&
+      left.fingerprint === right.fingerprint
+    );
+  });
 }
 
 const opportunity = {
   keyword: {
-    keyword:
-      "plastic injection molding wall thickness",
-    normalized:
-      "plastic injection molding wall thickness",
+    keyword: "plastic injection molding wall thickness",
+    normalized: "plastic injection molding wall thickness",
     source: "SEED",
     intent: "INFORMATIONAL",
     terms: [
@@ -106,342 +142,324 @@ const opportunity = {
   ],
 };
 
-const store =
-  new InMemoryFoundationStore();
+const store = new InMemoryFoundationStore();
 
 const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-    "https://api.tavily.com/search",
-    "v8-release-integrity-gate",
-  );
+  new TavilySearchProvider(apiKey);
 
 const pageFetcher =
   new HttpPageFetcher({
-    timeoutMs: 20000,
-    maxBytes: 5000000,
+    timeoutMs: 20_000,
+    maxBytes: 5_000_000,
   });
 
-const result =
-  await runV8ArticleRuntime({
-    opportunity,
-    searchProvider,
-    pageFetcher,
-    store,
+const runtime = await runV8ArticleRuntime({
+  opportunity,
 
-    actor: {
-      id: "v8-release-integrity-gate",
-      role: "SYSTEM",
+  searchProvider,
+  pageFetcher,
+
+  store,
+
+  actor: {
+    id: "v8-release-integrity-gate",
+    role: "SYSTEM",
+  },
+
+  acquisition: {
+    maxQueries: 1,
+    maxCandidates: 3,
+    actorId: "v8-release-integrity-gate",
+  },
+
+  scope: {
+    geography: "GLOBAL",
+    industries: [
+      "PLASTICS",
+      "INJECTION_MOLDING",
+    ],
+    languages: [
+      "en",
+    ],
+  },
+
+  context: {
+    purpose:
+      "Validate release integrity from real Internet evidence through publication and release.",
+    variables: {
+      source: "REAL_INTERNET",
+      gate: "V8-15",
     },
+  },
 
-    acquisition: {
-      maxQueries: 1,
-      maxCandidates: 3,
-      actorId:
-        "v8-release-integrity-gate",
-    },
+  problem: {
+    question:
+      "What wall thickness considerations should be evaluated for plastic injection molding?",
+    constraints: [
+      "Claims must be grounded in verified Internet evidence.",
+      "Publication requires an approved decision.",
+      "Release must preserve publication and projection identity.",
+    ],
+  },
 
-    scope: {
-      id:
-        "scope:v8:release-integrity-gate",
+  title:
+    "Plastic Injection Molding Wall Thickness",
+});
 
-      geography: "GLOBAL",
-
-      industries: [
-        "PLASTIC_INJECTION_MOLDING",
-      ],
-
-      languages: [
-        "en",
-      ],
-    },
-
-    context: {
-      id:
-        "context:v8:release-integrity-gate",
-
-      purpose:
-        "Validate that an approved publication can pass release integrity without losing its provenance.",
-
-      variables: {
-        sourceMode:
-          "REAL_INTERNET",
-
-        evidencePolicy:
-          "VERIFIED_ONLY",
-
-        contentPolicy:
-          "EVIDENCE_BACKED",
-
-        publicationPolicy:
-          "APPROVED_POLICY_REQUIRED",
-
-        releasePolicy:
-          "CANONICAL_MANIFEST",
-      },
-    },
-
-    problem: {
-      id:
-        "problem:v8:release-integrity-gate",
-
-      question:
-        "What evidence-backed information can be released about plastic injection molding wall thickness?",
-
-      constraints: [
-        "Use real Internet-acquired evidence only.",
-        "Only VERIFIED evidence may produce claims.",
-        "Only VERIFIED claims may produce approved knowledge.",
-        "Decision must be APPROVED.",
-        "Content must be derived from the approved decision.",
-        "Publication eligibility must be ELIGIBLE.",
-        "Publication requires an APPROVED policy.",
-        "Release manifest must be canonical.",
-      ],
-    },
-
-    title:
-      "Plastic Injection Molding Wall Thickness",
-  });
-
-assertTruthy(
-  result.acquisition,
-  "V8_RELEASE_INTEGRITY_ACQUISITION_MISSING",
+assertArray(
+  runtime.acquisition,
+  "V8_RELEASE_INTEGRITY_ACQUISITION_INVALID",
 );
 
-assert.ok(
-  result.acquisition.acquisitions.length > 0,
+assert(
+  runtime.acquisition.length > 0,
   "V8_RELEASE_INTEGRITY_ACQUISITION_EMPTY",
 );
 
-assert.ok(
-  result.verifiedEvidenceIds.length > 0,
+assertArray(
+  runtime.verifiedEvidenceIds,
+  "V8_RELEASE_INTEGRITY_EVIDENCE_IDS_INVALID",
+);
+
+assert(
+  runtime.verifiedEvidenceIds.length > 0,
   "V8_RELEASE_INTEGRITY_VERIFIED_EVIDENCE_EMPTY",
 );
 
-assert.ok(
-  result.claimIds.length > 0,
+assertArray(
+  runtime.claimIds,
+  "V8_RELEASE_INTEGRITY_CLAIM_IDS_INVALID",
+);
+
+assert(
+  runtime.claimIds.length > 0,
   "V8_RELEASE_INTEGRITY_CLAIMS_EMPTY",
 );
 
-assert.ok(
-  result.knowledgeIds.length > 0,
+assertArray(
+  runtime.knowledgeIds,
+  "V8_RELEASE_INTEGRITY_KNOWLEDGE_IDS_INVALID",
+);
+
+assert(
+  runtime.knowledgeIds.length > 0,
   "V8_RELEASE_INTEGRITY_KNOWLEDGE_EMPTY",
 );
 
-assertTruthy(
-  result.scopeId,
-  "V8_RELEASE_INTEGRITY_SCOPE_MISSING",
+assertString(
+  runtime.scopeId,
+  "V8_RELEASE_INTEGRITY_SCOPE_ID_INVALID",
+);
+
+assertString(
+  runtime.contextId,
+  "V8_RELEASE_INTEGRITY_CONTEXT_ID_INVALID",
+);
+
+assertString(
+  runtime.problemId,
+  "V8_RELEASE_INTEGRITY_PROBLEM_ID_INVALID",
+);
+
+assertString(
+  runtime.decisionId,
+  "V8_RELEASE_INTEGRITY_DECISION_ID_INVALID",
 );
 
 assertTruthy(
-  result.contextId,
-  "V8_RELEASE_INTEGRITY_CONTEXT_MISSING",
-);
-
-assertTruthy(
-  result.decisionId,
-  "V8_RELEASE_INTEGRITY_DECISION_MISSING",
-);
-
-assertTruthy(
-  result.content,
+  runtime.content,
   "V8_RELEASE_INTEGRITY_CONTENT_MISSING",
 );
 
-const compiler =
-  new ContentCompiler(store);
-
-const compiled =
-  compiler.compile({
-    decisionId:
-      result.decisionId,
-
-    scopeId:
-      result.scopeId,
-
-    contextId:
-      result.contextId,
-
-    title:
-      "Plastic Injection Molding Wall Thickness",
-  });
+const decision = getRequiredRecord(
+  store,
+  "DECISION",
+  runtime.decisionId,
+  "V8_RELEASE_INTEGRITY_DECISION_NOT_FOUND",
+);
 
 assert.equal(
-  compiled.decision.state,
+  decision.state,
   "APPROVED",
   "V8_RELEASE_INTEGRITY_DECISION_NOT_APPROVED",
 );
 
 assert.equal(
+  decision.payload.status,
+  "APPROVED",
+  "V8_RELEASE_INTEGRITY_DECISION_PAYLOAD_NOT_APPROVED",
+);
+
+const compiler =
+  new ContentCompiler(store);
+
+const compiled = compiler.compile({
+  decisionId: runtime.decisionId,
+  scopeId: runtime.scopeId,
+  contextId: runtime.contextId,
+  title: "Plastic Injection Molding Wall Thickness",
+});
+
+assertTruthy(
+  compiled.content,
+  "V8_RELEASE_INTEGRITY_COMPILED_CONTENT_MISSING",
+);
+
+assert.equal(
   compiled.content.id,
-  result.content.id,
+  runtime.content.id,
   "V8_RELEASE_INTEGRITY_CONTENT_ID_MISMATCH",
 );
 
+assert.equal(
+  compiled.content.decisionId,
+  runtime.decisionId,
+  "V8_RELEASE_INTEGRITY_CONTENT_DECISION_MISMATCH",
+);
+
+assert.equal(
+  compiled.content.title,
+  runtime.content.title,
+  "V8_RELEASE_INTEGRITY_CONTENT_TITLE_MISMATCH",
+);
+
+assert.equal(
+  compiled.content.body,
+  runtime.content.body,
+  "V8_RELEASE_INTEGRITY_CONTENT_BODY_MISMATCH",
+);
+
 const eligibilityEvaluator =
-  new PublicationEligibilityEvaluator(
-    store,
-  );
+  new PublicationEligibilityEvaluator(store);
 
 const eligibilityResult =
   eligibilityEvaluator.evaluate({
     compiled,
-    scopeId:
-      result.scopeId,
-    contextId:
-      result.contextId,
+    scopeId: runtime.scopeId,
+    contextId: runtime.contextId,
   });
 
 assert.equal(
   eligibilityResult.status,
   "ELIGIBLE",
-  `V8_RELEASE_INTEGRITY_ELIGIBILITY_NOT_ELIGIBLE:${eligibilityResult.reasons.join(",")}`,
+  `V8_RELEASE_INTEGRITY_PUBLICATION_NOT_ELIGIBLE:${JSON.stringify(
+    eligibilityResult.reasons,
+  )}`,
 );
 
 assert.equal(
   eligibilityResult.eligible,
   true,
-  "V8_RELEASE_INTEGRITY_ELIGIBILITY_FALSE",
-);
-
-assert.equal(
-  eligibilityResult.fingerprint,
-  compiled.fingerprint,
-  "V8_RELEASE_INTEGRITY_ELIGIBILITY_FINGERPRINT_MISMATCH",
+  "V8_RELEASE_INTEGRITY_PUBLICATION_ELIGIBLE_FLAG_FALSE",
 );
 
 const eligibilityId =
   `eligibility:v8:release-integrity-gate:${compiled.fingerprint}`;
 
-const eligibilityRecord =
+const eligibility =
   store.append({
-    aggregateType:
-      "ELIGIBILITY",
-
-    aggregateId:
-      eligibilityId,
-
+    aggregateType: "ELIGIBILITY",
+    aggregateId: eligibilityId,
     version: 1,
-
     state: "APPROVED",
 
     payload: {
-      status:
-        eligibilityResult.status,
-
-      eligible:
-        eligibilityResult.eligible,
-
-      contentId:
-        eligibilityResult.contentId,
-
-      decisionId:
-        eligibilityResult.decisionId,
-
-      scopeId:
-        eligibilityResult.scopeId,
-
-      contextId:
-        eligibilityResult.contextId,
-
-      fingerprint:
-        eligibilityResult.fingerprint,
-
-      reasons:
-        eligibilityResult.reasons,
+      contentId: eligibilityResult.contentId,
+      decisionId: eligibilityResult.decisionId,
+      scopeId: eligibilityResult.scopeId,
+      contextId: eligibilityResult.contextId,
+      fingerprint: eligibilityResult.fingerprint,
+      reasons: eligibilityResult.reasons,
+      status: eligibilityResult.status,
+      eligible: eligibilityResult.eligible,
     },
 
-    lineage:
-      eligibilityResult.lineage,
+    lineage: eligibilityResult.lineage,
 
     actor: {
-      id:
-        "v8-release-integrity-gate",
-      role:
-        "GOVERNOR",
+      id: "v8-release-integrity-gate",
+      role: "GOVERNOR",
     },
 
     reason:
-      "V8-15 release integrity eligibility approval.",
+      "Approve publication eligibility for V8 release integrity validation.",
   });
 
 assert.equal(
-  eligibilityRecord.state,
-  "APPROVED",
-  "V8_RELEASE_INTEGRITY_ELIGIBILITY_NOT_APPROVED",
+  eligibility.aggregateType,
+  "ELIGIBILITY",
+  "V8_RELEASE_INTEGRITY_ELIGIBILITY_TYPE_MISMATCH",
 );
 
-const knowledgeRecords =
-  result.knowledgeIds.map(
-    (knowledgeId) => {
-      const record =
-        getRequiredRecord(
-          store,
-          "KNOWLEDGE",
-          knowledgeId,
-        );
+assert.equal(
+  eligibility.aggregateId,
+  eligibilityId,
+  "V8_RELEASE_INTEGRITY_ELIGIBILITY_ID_MISMATCH",
+);
 
-      assert.equal(
-        record.state,
-        "VERIFIED",
-        `V8_RELEASE_INTEGRITY_KNOWLEDGE_NOT_VERIFIED:${knowledgeId}`,
-      );
+assert.equal(
+  eligibility.state,
+  "APPROVED",
+  "V8_RELEASE_INTEGRITY_ELIGIBILITY_STATE_INVALID",
+);
 
-      return record;
-    },
+const knowledgeForPolicy =
+  runtime.knowledgeIds.map((knowledgeId) =>
+    getRequiredRecord(
+      store,
+      "KNOWLEDGE",
+      knowledgeId,
+      `V8_RELEASE_INTEGRITY_KNOWLEDGE_NOT_FOUND:${knowledgeId}`,
+    ),
   );
+
+for (const knowledge of knowledgeForPolicy) {
+  assert.equal(
+    knowledge.state,
+    "VERIFIED",
+    `V8_RELEASE_INTEGRITY_KNOWLEDGE_NOT_VERIFIED:${knowledge.aggregateId}`,
+  );
+}
 
 const rule =
   createRule({
+    statement:
+      "Publication is allowed only when V8 content is eligible and its supporting knowledge is verified.",
+    knowledgeIds:
+      runtime.knowledgeIds,
+    effect: "ALLOW",
+    status: "APPROVED",
     id:
       `rule:v8:release-integrity-gate:${compiled.fingerprint}`,
-
-    statement:
-      "Release requires verified knowledge, approved decision, eligible publication state, and canonical release manifest.",
-
-    knowledgeIds:
-      knowledgeRecords.map(
-        (record) =>
-          record.aggregateId,
-      ),
-
-    effect:
-      "ALLOW",
-
-    status:
-      "APPROVED",
   });
 
 const ruleRecord =
   store.append({
-    aggregateType:
-      "RULE",
-
-    aggregateId:
-      rule.id,
-
+    aggregateType: "RULE",
+    aggregateId: rule.id,
     version: 1,
-
     state: "APPROVED",
 
-    payload:
-      rule,
+    payload: rule,
 
-    lineage:
-      knowledgeRecords.map(
-        lineageLink,
-      ),
+    lineage: runtime.knowledgeIds.map(
+      (knowledgeId) =>
+        lineageLink(
+          getRequiredRecord(
+            store,
+            "KNOWLEDGE",
+            knowledgeId,
+          ),
+        ),
+    ),
 
     actor: {
-      id:
-        "v8-release-integrity-gate",
-      role:
-        "GOVERNOR",
+      id: "v8-release-integrity-gate",
+      role: "GOVERNOR",
     },
 
     reason:
-      "V8-15 approved release rule.",
+      "Approve publication rule for V8 release integrity validation.",
   });
 
 assert.equal(
@@ -452,51 +470,41 @@ assert.equal(
 
 const policy =
   createPolicy({
-    id:
-      `policy:v8:release-integrity-gate:${compiled.fingerprint}`,
-
     name:
-      "V8 Release Integrity Policy",
+      "V8 Release Integrity Publication Policy",
 
     ruleIds: [
       rule.id,
     ],
 
-    mode:
-      "ALL",
+    mode: "ALL",
 
-    status:
-      "APPROVED",
+    status: "APPROVED",
+
+    id:
+      `policy:v8:release-integrity-gate:${compiled.fingerprint}`,
   });
 
 const policyRecord =
   store.append({
-    aggregateType:
-      "POLICY",
-
-    aggregateId:
-      policy.id,
-
+    aggregateType: "POLICY",
+    aggregateId: policy.id,
     version: 1,
-
     state: "APPROVED",
 
-    payload:
-      policy,
+    payload: policy,
 
     lineage: [
       lineageLink(ruleRecord),
     ],
 
     actor: {
-      id:
-        "v8-release-integrity-gate",
-      role:
-        "GOVERNOR",
+      id: "v8-release-integrity-gate",
+      role: "GOVERNOR",
     },
 
     reason:
-      "V8-15 approved release policy.",
+      "Approve publication policy for V8 release integrity validation.",
   });
 
 assert.equal(
@@ -519,24 +527,59 @@ const publicationArtifact =
     body:
       compiled.content.body,
 
-    eligibility:
-      eligibilityRecord,
+    eligibility,
 
     policyId:
       policyRecord.aggregateId,
 
-    lineage:
-      eligibilityRecord.lineage,
+    lineage: [
+      ...eligibility.lineage,
+
+      lineageLink(eligibility),
+    ],
   });
 
-assert.ok(
+assertTruthy(
+  publicationArtifact,
+  "V8_RELEASE_INTEGRITY_PUBLICATION_ARTIFACT_MISSING",
+);
+
+assertString(
   publicationArtifact.id,
-  "V8_RELEASE_INTEGRITY_PUBLICATION_ID_MISSING",
+  "V8_RELEASE_INTEGRITY_PUBLICATION_ID_INVALID",
 );
 
 assert.equal(
+  publicationArtifact.subjectId,
+  compiled.content.id,
+  "V8_RELEASE_INTEGRITY_PUBLICATION_SUBJECT_MISMATCH",
+);
+
+assert.equal(
+  publicationArtifact.title,
+  compiled.content.title,
+  "V8_RELEASE_INTEGRITY_PUBLICATION_TITLE_MISMATCH",
+);
+
+assert.equal(
+  publicationArtifact.body,
+  compiled.content.body,
+  "V8_RELEASE_INTEGRITY_PUBLICATION_BODY_MISMATCH",
+);
+
+/*
+ * IMPORTANT:
+ *
+ * PublicationArtifact.eligibilityRecordId must point to
+ * the Foundation Record identity, not the aggregate identity.
+ *
+ * Foundation:
+ *   aggregateId = eligibility:v8:...
+ *   recordId    = ELIGIBILITY:eligibility:v8:...:1
+ */
+assert.equal(
   publicationArtifact.eligibilityRecordId,
-  eligibilityRecord.aggregateId,
+  eligibility.recordId,
   "V8_RELEASE_INTEGRITY_PUBLICATION_ELIGIBILITY_MISMATCH",
 );
 
@@ -552,227 +595,278 @@ assert.equal(
   "V8_RELEASE_INTEGRITY_PUBLICATION_POLICY_FINGERPRINT_MISMATCH",
 );
 
-assert.equal(
-  publicationArtifact.contentFingerprint,
-  compiled.fingerprint,
-  "V8_RELEASE_INTEGRITY_PUBLICATION_CONTENT_FINGERPRINT_MISMATCH",
+assert(
+  publicationArtifact.lineage.some(
+    (link) =>
+      link.type === "ELIGIBILITY" &&
+      link.id === eligibility.aggregateId &&
+      link.version === eligibility.version &&
+      link.fingerprint === eligibility.fingerprint,
+  ),
+  "V8_RELEASE_INTEGRITY_PUBLICATION_ELIGIBILITY_LINEAGE_MISSING",
+);
+
+assert(
+  publicationArtifact.lineage.some(
+    (link) =>
+      link.type === "POLICY" &&
+      link.id === policyRecord.aggregateId &&
+      link.version === policyRecord.version &&
+      link.fingerprint === policyRecord.fingerprint,
+  ),
+  "V8_RELEASE_INTEGRITY_PUBLICATION_POLICY_LINEAGE_MISSING",
 );
 
 const publicationRecord =
   store.append({
-    aggregateType:
-      "PUBLICATION",
-
-    aggregateId:
-      publicationArtifact.id,
-
+    aggregateType: "PUBLICATION",
+    aggregateId: publicationArtifact.id,
     version: 1,
-
     state: "SEALED",
 
-    payload:
-      publicationArtifact,
+    payload: publicationArtifact,
 
-    lineage:
-      publicationArtifact.lineage,
+    lineage: publicationArtifact.lineage,
 
     actor: {
-      id:
-        "v8-release-integrity-gate",
-      role:
-        "PUBLISHER",
+      id: "v8-release-integrity-gate",
+      role: "GOVERNOR",
     },
 
     reason:
-      "V8-15 sealed publication artifact for release integrity validation.",
+      "Seal publication artifact for V8 release integrity validation.",
   });
 
 assert.equal(
   publicationRecord.state,
   "SEALED",
-  "V8_RELEASE_INTEGRITY_PUBLICATION_NOT_SEALED",
+  "V8_RELEASE_INTEGRITY_PUBLICATION_STATE_INVALID",
 );
-
-const storedPublication =
-  getRequiredRecord(
-    store,
-    "PUBLICATION",
-    publicationArtifact.id,
-  );
 
 assert.equal(
-  storedPublication.fingerprint,
-  publicationRecord.fingerprint,
-  "V8_RELEASE_INTEGRITY_PUBLICATION_RECORD_FINGERPRINT_MISMATCH",
+  publicationRecord.aggregateId,
+  publicationArtifact.id,
+  "V8_RELEASE_INTEGRITY_PUBLICATION_RECORD_ID_MISMATCH",
 );
 
-const legacyProjection =
-  project({
-    artifact:
-      publicationArtifact,
+const route =
+  "/industries/plastic-injection-molding/wall-thickness/";
 
-    route:
-      "/industries/plastic-injection-molding/wall-thickness/",
+const projection =
+  project({
+    artifact: publicationArtifact,
+    route,
   });
 
-assert.ok(
-  legacyProjection.id,
-  "V8_RELEASE_INTEGRITY_PROJECTION_ID_MISSING",
+assertTruthy(
+  projection,
+  "V8_RELEASE_INTEGRITY_PROJECTION_MISSING",
 );
 
 assert.equal(
-  legacyProjection.publicationId,
+  projection.publicationId,
   publicationArtifact.id,
   "V8_RELEASE_INTEGRITY_PROJECTION_PUBLICATION_MISMATCH",
 );
 
-assert.ok(
-  legacyProjection.fingerprint.length === 64,
-  "V8_RELEASE_INTEGRITY_PROJECTION_FINGERPRINT_INVALID",
-);
-
-const requiredPaths = [
-  "/industries/plastic-injection-molding/wall-thickness/",
-];
-
-const releaseArtifact =
-  releasePreflight({
-    projection:
-      legacyProjection,
-
-    requiredPaths,
-
-    generatedPaths: [
-      ...requiredPaths,
-    ],
-  });
-
-assert.ok(
-  releaseArtifact.id,
-  "V8_RELEASE_INTEGRITY_RELEASE_ID_MISSING",
+assert.equal(
+  projection.route,
+  route,
+  "V8_RELEASE_INTEGRITY_PROJECTION_ROUTE_MISMATCH",
 );
 
 assert.equal(
-  releaseArtifact.projectionId,
-  legacyProjection.id,
+  projection.title,
+  publicationArtifact.title,
+  "V8_RELEASE_INTEGRITY_PROJECTION_TITLE_MISMATCH",
+);
+
+assert.equal(
+  projection.body,
+  publicationArtifact.body,
+  "V8_RELEASE_INTEGRITY_PROJECTION_BODY_MISMATCH",
+);
+
+assertString(
+  projection.fingerprint,
+  "V8_RELEASE_INTEGRITY_PROJECTION_FINGERPRINT_INVALID",
+);
+
+assert.equal(
+  projection.id,
+  `projection:${projection.fingerprint}`,
+  "V8_RELEASE_INTEGRITY_PROJECTION_ID_MISMATCH",
+);
+
+const projectionRecord =
+  store.append({
+    aggregateType: "PROJECTION",
+    aggregateId: projection.id,
+    version: 1,
+    state: "REGISTERED",
+
+    payload: projection,
+
+    lineage: [
+      lineageLink(publicationRecord),
+    ],
+
+    actor: {
+      id: "v8-release-integrity-gate",
+      role: "SYSTEM",
+    },
+
+    reason:
+      "Register canonical route projection for V8 release integrity validation.",
+  });
+
+assert.equal(
+  projectionRecord.state,
+  "REGISTERED",
+  "V8_RELEASE_INTEGRITY_PROJECTION_STATE_INVALID",
+);
+
+assert.equal(
+  projectionRecord.aggregateId,
+  projection.id,
+  "V8_RELEASE_INTEGRITY_PROJECTION_RECORD_ID_MISMATCH",
+);
+
+const requiredPaths = [
+  route,
+];
+
+const generatedPaths = [
+  route,
+];
+
+const release =
+  releasePreflight({
+    projection,
+    requiredPaths,
+    generatedPaths,
+  });
+
+assertTruthy(
+  release,
+  "V8_RELEASE_INTEGRITY_RELEASE_ARTIFACT_MISSING",
+);
+
+assertString(
+  release.id,
+  "V8_RELEASE_INTEGRITY_RELEASE_ID_INVALID",
+);
+
+assert.equal(
+  release.projectionId,
+  projection.id,
   "V8_RELEASE_INTEGRITY_RELEASE_PROJECTION_MISMATCH",
 );
 
 assert.equal(
-  releaseArtifact.projectionFingerprint,
-  legacyProjection.fingerprint,
+  release.projectionFingerprint,
+  projection.fingerprint,
   "V8_RELEASE_INTEGRITY_RELEASE_PROJECTION_FINGERPRINT_MISMATCH",
 );
 
+assertArray(
+  release.manifest,
+  "V8_RELEASE_INTEGRITY_RELEASE_MANIFEST_INVALID",
+);
+
+assert(
+  release.manifest.length > 0,
+  "V8_RELEASE_INTEGRITY_RELEASE_MANIFEST_EMPTY",
+);
+
 assert.deepEqual(
-  releaseArtifact.manifest,
-  [
-    "/industries/plastic-injection-molding/wall-thickness/",
-  ],
-  "V8_RELEASE_INTEGRITY_RELEASE_MANIFEST_MISMATCH",
+  release.manifest,
+  [...release.manifest].sort(),
+  "V8_RELEASE_INTEGRITY_RELEASE_MANIFEST_NOT_SORTED",
 );
 
-const releaseAssertion =
-  assertReleaseReady(
-    releaseArtifact,
-  );
-
-assert.equal(
-  releaseAssertion.passed,
-  true,
-  "V8_RELEASE_INTEGRITY_RELEASE_ASSERTION_FAILED",
-);
-
-assert.equal(
-  releaseAssertion.releaseId,
-  releaseArtifact.id,
-  "V8_RELEASE_INTEGRITY_RELEASE_ASSERTION_ID_MISMATCH",
-);
+assertReleaseReady(release);
 
 const releaseRecord =
   store.append({
-    aggregateType:
-      "RELEASE",
-
-    aggregateId:
-      releaseArtifact.id,
-
+    aggregateType: "RELEASE",
+    aggregateId: release.id,
     version: 1,
-
     state: "SEALED",
 
-    payload:
-      releaseArtifact,
+    payload: release,
 
     lineage: [
-      {
-        type:
-          "PUBLICATION",
-
-        id:
-          publicationRecord.aggregateId,
-
-        version:
-          publicationRecord.version,
-
-        fingerprint:
-          publicationRecord.fingerprint,
-      },
-
-      {
-        type:
-          "PROJECTION",
-
-        id:
-          legacyProjection.id,
-
-        version: 1,
-
-        fingerprint:
-          legacyProjection.fingerprint,
-      },
+      lineageLink(publicationRecord),
+      lineageLink(projectionRecord),
     ],
 
     actor: {
-      id:
-        "v8-release-integrity-gate",
-      role:
-        "RELEASER",
+      id: "v8-release-integrity-gate",
+      role: "SYSTEM",
     },
 
     reason:
-      "V8-15 release artifact sealed after canonical release preflight.",
+      "Seal release artifact for V8 release integrity validation.",
   });
 
 assert.equal(
   releaseRecord.state,
   "SEALED",
-  "V8_RELEASE_INTEGRITY_RELEASE_NOT_SEALED",
+  "V8_RELEASE_INTEGRITY_RELEASE_STATE_INVALID",
 );
 
-const storedRelease =
-  getRequiredRecord(
-    store,
+assert.equal(
+  releaseRecord.aggregateId,
+  release.id,
+  "V8_RELEASE_INTEGRITY_RELEASE_ID_MISMATCH",
+);
+
+assert.equal(
+  releaseRecord.payload.projectionId,
+  projection.id,
+  "V8_RELEASE_INTEGRITY_RELEASE_PAYLOAD_PROJECTION_MISMATCH",
+);
+
+assert.equal(
+  releaseRecord.payload.projectionFingerprint,
+  projection.fingerprint,
+  "V8_RELEASE_INTEGRITY_RELEASE_PAYLOAD_PROJECTION_FINGERPRINT_MISMATCH",
+);
+
+assert.deepEqual(
+  releaseRecord.payload.manifest,
+  generatedPaths,
+  "V8_RELEASE_INTEGRITY_RELEASE_MANIFEST_MISMATCH",
+);
+
+const persistedRelease =
+  store.get(
     "RELEASE",
-    releaseArtifact.id,
+    release.id,
   );
 
-assert.equal(
-  storedRelease.payload.projectionId,
-  legacyProjection.id,
-  "V8_RELEASE_INTEGRITY_STORED_RELEASE_PROJECTION_MISMATCH",
+assertTruthy(
+  persistedRelease,
+  "V8_RELEASE_INTEGRITY_RELEASE_NOT_PERSISTED",
 );
 
 assert.equal(
-  storedRelease.payload.projectionFingerprint,
-  legacyProjection.fingerprint,
-  "V8_RELEASE_INTEGRITY_STORED_RELEASE_PROJECTION_FINGERPRINT_MISMATCH",
+  persistedRelease.aggregateId,
+  release.id,
+  "V8_RELEASE_INTEGRITY_PERSISTED_RELEASE_ID_MISMATCH",
 );
 
 assert.equal(
-  storedRelease.payload.fingerprint,
-  releaseArtifact.fingerprint,
-  "V8_RELEASE_INTEGRITY_STORED_RELEASE_FINGERPRINT_MISMATCH",
+  persistedRelease.fingerprint,
+  releaseRecord.fingerprint,
+  "V8_RELEASE_INTEGRITY_PERSISTED_RELEASE_FINGERPRINT_MISMATCH",
+);
+
+assert.equal(
+  persistedRelease.payload.fingerprint,
+  release.fingerprint,
+  "V8_RELEASE_INTEGRITY_RELEASE_ARTIFACT_FINGERPRINT_MISMATCH",
 );
 
 store.verifyChain();
@@ -782,35 +876,43 @@ console.log(
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] acquired=${result.acquisition.acquisitions.length}`,
+  `[V8-RELEASE-INTEGRITY] acquired=${runtime.acquisition.length}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] verifiedEvidence=${result.verifiedEvidenceIds.length}`,
+  `[V8-RELEASE-INTEGRITY] verifiedEvidence=${runtime.verifiedEvidenceIds.length}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] claims=${result.claimIds.length}`,
+  `[V8-RELEASE-INTEGRITY] claims=${runtime.claimIds.length}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] knowledge=${result.knowledgeIds.length}`,
+  `[V8-RELEASE-INTEGRITY] knowledge=${runtime.knowledgeIds.length}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] decision=${result.decisionId}`,
+  `[V8-RELEASE-INTEGRITY] decision=${runtime.decisionId}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] decisionState=${compiled.decision.state}`,
+  `[V8-RELEASE-INTEGRITY] decisionState=${decision.state}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] eligibility=${eligibilityRecord.aggregateId}`,
+  `[V8-RELEASE-INTEGRITY] content=${compiled.content.id}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] eligibilityState=${eligibilityRecord.state}`,
+  `[V8-RELEASE-INTEGRITY] eligibility=${eligibility.aggregateId}`,
+);
+
+console.log(
+  `[V8-RELEASE-INTEGRITY] eligibilityRecord=${eligibility.recordId}`,
+);
+
+console.log(
+  `[V8-RELEASE-INTEGRITY] eligibilityState=${eligibility.state}`,
 );
 
 console.log(
@@ -822,7 +924,7 @@ console.log(
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] publication=${publicationRecord.aggregateId}`,
+  `[V8-RELEASE-INTEGRITY] publication=${publicationArtifact.id}`,
 );
 
 console.log(
@@ -830,15 +932,15 @@ console.log(
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] projection=${legacyProjection.id}`,
+  `[V8-RELEASE-INTEGRITY] projection=${projection.id}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] projectionFingerprint=${legacyProjection.fingerprint}`,
+  `[V8-RELEASE-INTEGRITY] projectionFingerprint=${projection.fingerprint}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] release=${releaseRecord.aggregateId}`,
+  `[V8-RELEASE-INTEGRITY] release=${release.id}`,
 );
 
 console.log(
@@ -846,13 +948,13 @@ console.log(
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] releaseFingerprint=${releaseArtifact.fingerprint}`,
+  `[V8-RELEASE-INTEGRITY] releaseFingerprint=${release.fingerprint}`,
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] manifest=${releaseArtifact.manifest.length}`,
+  `[V8-RELEASE-INTEGRITY] manifest=${release.manifest.length}`,
 );
 
 console.log(
-  "[V8-RELEASE-INTEGRITY] chainValid=true",
+  `[V8-RELEASE-INTEGRITY] chainValid=true`,
 );
