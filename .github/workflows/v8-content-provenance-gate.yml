@@ -1,0 +1,54 @@
+name: V8 Content Provenance Gate
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "scripts/v8-content-provenance-gate.mjs"
+      - ".github/workflows/v8-content-provenance-gate.yml"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+
+  workflow_dispatch:
+
+jobs:
+  v8-content-provenance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Diagnose TypeScript installation
+        run: |
+          node --version
+          npm --version
+          npm ls typescript --depth=0
+          node ./node_modules/typescript/bin/tsc --version
+
+      - name: Compile V8
+        run: npm run v8:compile
+
+      - name: Verify V8 build output
+        shell: bash
+        run: |
+          test -f .v8-build/src/v8/runtime/article-runtime.js
+          test -f .v8-build/src/v8/content-compiler/compiler.js
+          test -f .v8-build/src/v8/foundation/store.js
+
+      - name: Real Internet Content Provenance Gate
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: node scripts/v8-content-provenance-gate.mjs
