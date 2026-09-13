@@ -1,71 +1,265 @@
-// E:\nexmold\scripts\v8-final-publication-gate.mjs
-
 import assert from "node:assert/strict";
 
-import {
-  InMemoryFoundationStore,
-} from "../.v8-build/src/v8/foundation/store.js";
-
-import {
-  DecisionValidator,
-} from "../.v8-build/src/v8/decision/validator.js";
-
-import {
-  ContentCompiler,
-} from "../.v8-build/src/v8/content/compiler.js";
-
-import {
-  PublicationEligibilityEvaluator,
-} from "../.v8-build/src/v8/publication-eligibility/evaluator.js";
-
-import {
-  ProjectionProjector,
-} from "../.v8-build/src/v8/projection/projector.js";
-
-import {
-  RegionalProjectionProjector,
-} from "../.v8-build/src/v8/regional-projection/projector.js";
-
+import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
+import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+import { runV8ArticleRuntime } from "../.v8-build/src/v8/runtime/article-runtime.js";
+import { ContentCompiler } from "../.v8-build/src/v8/content-compiler/compiler.js";
+import { ProjectionProjector } from "../.v8-build/src/v8/projection/projector.js";
+import { RegionalProjectionProjector } from "../.v8-build/src/v8/regional-projection/projector.js";
 import {
   RouteMetadataProjector,
   RouteMetadataGate,
 } from "../.v8-build/src/v8/route-metadata/index.js";
+import { PublicationEligibilityEvaluator } from "../.v8-build/src/v8/publication-eligibility/evaluator.js";
 
-import {
-  ReciprocalHreflangVerifier,
-} from "../.v8-build/src/v8/route-metadata/reciprocal-hreflang.js";
-
-function assertTruthy(
-  value,
-  message,
-) {
-  assert.ok(
-    value,
-    message,
-  );
+function assertTruthy(value, message) {
+  assert.ok(value, message);
 }
 
-function clone(
-  value,
-) {
-  return structuredClone(value);
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
-const store =
-  new InMemoryFoundationStore();
+const apiKey = process.env.V8_SEARCH_API_KEY;
 
-const contentCompiler =
-  new ContentCompiler(
-    store,
+assertTruthy(
+  apiKey,
+  "V8_FINAL_PUBLICATION_SEARCH_API_KEY_MISSING",
+);
+
+const store = new InMemoryFoundationStore();
+
+const searchProvider = new TavilySearchProvider(apiKey);
+const pageFetcher = new HttpPageFetcher();
+
+const runtime = await runV8ArticleRuntime({
+  opportunity: {
+    keyword: {
+      keyword: "plastic injection molding wall thickness",
+      normalized: "plastic injection molding wall thickness",
+      source: "SEED",
+      intent: "INFORMATIONAL",
+      terms: [
+        "wall thickness",
+        "injection molding",
+      ],
+    },
+
+    score: 0.9,
+    demand: 0.8,
+    relevance: 1,
+    competition: 0.3,
+    authorityGap: 0.7,
+    conversionPotential: 0.6,
+
+    reasons: [
+      "V8-19 final publication eligibility and release integrity",
+    ],
+  },
+
+  searchProvider,
+  pageFetcher,
+  store,
+
+  actor: {
+    id: "v8:final-publication-gate",
+    role: "INGESTOR",
+  },
+
+  acquisition: {
+    maxQueries: 1,
+    maxCandidates: 3,
+    actorId: "v8:final-publication-gate",
+  },
+
+  scope: {
+    geography: "GLOBAL",
+    industries: [
+      "INJECTION_MOLDING",
+    ],
+    languages: [
+      "en",
+    ],
+  },
+
+  context: {
+    purpose:
+      "V8-19 final publication eligibility and release integrity",
+    variables: {
+      gate: "V8-19",
+    },
+  },
+
+  problem: {
+    question:
+      "What wall thickness considerations apply to plastic injection molding?",
+    constraints: [
+      "Use only verified evidence.",
+      "Do not publish unsupported claims.",
+    ],
+  },
+
+  title:
+    "Plastic Injection Molding Wall Thickness",
+});
+
+assert.equal(
+  runtime.acquisition.acquisitions.length,
+  3,
+  "V8_FINAL_PUBLICATION_EXPECTED_THREE_ACQUISITIONS",
+);
+
+assert.equal(
+  runtime.verifiedEvidenceIds.length,
+  3,
+  "V8_FINAL_PUBLICATION_EXPECTED_THREE_EVIDENCE",
+);
+
+assert.equal(
+  runtime.claimIds.length,
+  3,
+  "V8_FINAL_PUBLICATION_EXPECTED_THREE_CLAIMS",
+);
+
+assert.equal(
+  runtime.knowledgeIds.length,
+  3,
+  "V8_FINAL_PUBLICATION_EXPECTED_THREE_KNOWLEDGE",
+);
+
+const decision = store.get(
+  "DECISION",
+  runtime.decisionId,
+);
+
+assertTruthy(
+  decision,
+  "V8_FINAL_PUBLICATION_DECISION_NOT_FOUND",
+);
+
+assert.equal(
+  decision.state,
+  "APPROVED",
+  "V8_FINAL_PUBLICATION_DECISION_NOT_APPROVED",
+);
+
+const compiler = new ContentCompiler(store);
+
+const compiled = compiler.compile({
+  decisionId: runtime.decisionId,
+  scopeId: runtime.scopeId,
+  contextId: runtime.contextId,
+  title: "Plastic Injection Molding Wall Thickness",
+});
+
+assert.equal(
+  compiled.content.id,
+  runtime.content.id,
+  "V8_FINAL_PUBLICATION_CONTENT_ID_MISMATCH",
+);
+
+assert.equal(
+  compiled.content.body,
+  runtime.content.body,
+  "V8_FINAL_PUBLICATION_CONTENT_BODY_MISMATCH",
+);
+
+const eligibility =
+  new PublicationEligibilityEvaluator(store);
+
+const eligible =
+  eligibility.evaluate({
+    compiled,
+    scopeId: runtime.scopeId,
+    contextId: runtime.contextId,
+  });
+
+assert.equal(
+  eligible.status,
+  "ELIGIBLE",
+  `V8_FINAL_PUBLICATION_ELIGIBILITY_FAILED:${eligible.reasons.join(",")}`,
+);
+
+assert.equal(
+  eligible.eligible,
+  true,
+  "V8_FINAL_PUBLICATION_NOT_ELIGIBLE",
+);
+
+const tamperedCompiled = clone(compiled);
+
+tamperedCompiled.fingerprint =
+  `${tamperedCompiled.fingerprint}-tampered`;
+
+const tamperedEligibility =
+  eligibility.evaluate({
+    compiled: tamperedCompiled,
+    scopeId: runtime.scopeId,
+    contextId: runtime.contextId,
+  });
+
+assert.equal(
+  tamperedEligibility.eligible,
+  false,
+  "V8_FINAL_PUBLICATION_CONTENT_TAMPER_NOT_REJECTED",
+);
+
+assert.ok(
+  tamperedEligibility.reasons.includes(
+    "CONTENT_FINGERPRINT_MISMATCH",
+  ),
+  "V8_FINAL_PUBLICATION_CONTENT_TAMPER_REASON_MISSING",
+);
+
+const projected =
+  new ProjectionProjector(store).project({
+    compiled,
+    scopeId: runtime.scopeId,
+    contextId: runtime.contextId,
+  }).projected;
+
+const projectionRecord =
+  store.get(
+    "PROJECTION",
+    projected.projectionId,
   );
 
-const publicationEligibility =
-  new PublicationEligibilityEvaluator(
-    store,
-  );
+assertTruthy(
+  projectionRecord,
+  "V8_FINAL_PUBLICATION_PROJECTION_MISSING",
+);
 
-const projectionProjector =
-  new ProjectionProjector();
+assert.equal(
+  projected.fingerprint,
+  projectionRecord.fingerprint,
+  "V8_FINAL_PUBLICATION_PROJECTION_FINGERPRINT_MISMATCH",
+);
+
+const routes = {
+  en:
+    "/knowledge/plastic-injection-molding-wall-thickness",
+
+  de:
+    "/de/wissen/kunststoff-spritzguss-wanddicke",
+
+  fr:
+    "/fr/connaissance/epaisseur-paroi-moulage-injection",
+};
+
+const alternates = Object.fromEntries(
+  Object.entries(routes).map(
+    ([locale]) => [
+      locale,
+      Object.entries(routes).map(
+        ([otherLocale, route]) => ({
+          locale: otherLocale,
+          route,
+        }),
+      ),
+    ],
+  ),
+);
 
 const regionalProjector =
   new RegionalProjectionProjector();
@@ -75,252 +269,6 @@ const routeMetadataProjector =
 
 const routeMetadataGate =
   new RouteMetadataGate();
-
-const reciprocalHreflangVerifier =
-  new ReciprocalHreflangVerifier();
-
-const source =
-  store.createSource({
-    sourceId:
-      "source:v8-final-publication:plastic-injection-molding-wall-thickness",
-    url:
-      "https://example.com/knowledge/plastic-injection-molding-wall-thickness",
-    title:
-      "Plastic Injection Molding Wall Thickness",
-    publisher:
-      "NEXMOLD V8 Internet Evidence Fixture",
-  });
-
-const snapshot =
-  store.createSnapshot({
-    sourceId:
-      source.id,
-    version:
-      1,
-    retrievedAt:
-      "2026-09-13T00:00:00.000Z",
-    content:
-      "Plastic injection molding wall thickness should be designed consistently with material, geometry, flow behavior, cooling, and manufacturability constraints.",
-  });
-
-const evidence =
-  store.createEvidence({
-    snapshotId:
-      snapshot.id,
-    locator:
-      "article-body",
-    excerpt:
-      "Plastic injection molding wall thickness should be designed consistently with material, geometry, flow behavior, cooling, and manufacturability constraints.",
-    verified:
-      true,
-  });
-
-const claim =
-  store.createClaim({
-    evidenceId:
-      evidence.id,
-    statement:
-      "Injection-molded wall thickness should be selected in relation to material, geometry, flow, cooling, and manufacturability.",
-    confidence:
-      "VERIFIED",
-  });
-
-const knowledge =
-  store.createKnowledge({
-    claimIds: [
-      claim.id,
-    ],
-    title:
-      "Plastic Injection Molding Wall Thickness",
-    summary:
-      "Wall thickness is a design variable that affects filling, cooling, shrinkage, warpage, and manufacturability.",
-  });
-
-const scope =
-  store.createScope({
-    scopeId:
-      "scope:v8-final-publication:plastic-injection-molding-wall-thickness",
-    name:
-      "Plastic Injection Molding Wall Thickness",
-    state:
-      "REGISTERED",
-  });
-
-const context =
-  store.createContext({
-    contextId:
-      "context:v8-final-publication:global-en-de-fr",
-    scopeId:
-      scope.id,
-    state:
-      "REGISTERED",
-    description:
-      "Global publication context with English, German, and French route projections.",
-  });
-
-const problem =
-  store.createProblem({
-    problemId:
-      "problem:v8-final-publication:wall-thickness",
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-    statement:
-      "Determine whether the verified knowledge can be published as regionalized knowledge content.",
-  });
-
-const decision =
-  store.createDecision({
-    decisionId:
-      "decision:v8-final-publication:wall-thickness",
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-    problemId:
-      problem.id,
-    conclusion:
-      "ELIGIBLE",
-    rationale:
-      "Verified Internet evidence supports publication within the registered scope and context.",
-    version:
-      1,
-  });
-
-assertTruthy(
-  decision,
-  "V8_FINAL_PUBLICATION_DECISION_MISSING",
-);
-
-const decisionValidation =
-  DecisionValidator.validate({
-    decisionId:
-      decision.id,
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-  });
-
-assert.equal(
-  decisionValidation.valid,
-  true,
-  "V8_FINAL_PUBLICATION_DECISION_INVALID",
-);
-
-const compiled =
-  contentCompiler.compile({
-    decisionId:
-      decision.id,
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-    title:
-      "Plastic Injection Molding Wall Thickness",
-    body:
-      "Plastic injection molding wall thickness should be selected with material, geometry, filling, cooling, shrinkage, warpage, and manufacturability in mind. Consistent wall design helps reduce avoidable molding defects and supports stable production.",
-  });
-
-const eligibility =
-  publicationEligibility.evaluate({
-    compiled,
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-  });
-
-assert.equal(
-  eligibility.eligible,
-  true,
-  `V8_FINAL_PUBLICATION_ELIGIBILITY_BLOCKED:${eligibility.reasons.join(",")}`,
-);
-
-assert.equal(
-  eligibility.status,
-  "ELIGIBLE",
-  "V8_FINAL_PUBLICATION_ELIGIBILITY_STATUS_MISMATCH",
-);
-
-const tamperedContent =
-  clone(compiled);
-
-tamperedContent.body =
-  `${tamperedContent.body} TAMPERED`;
-
-let contentTamperRejected =
-  false;
-
-try {
-  publicationEligibility.assert({
-    compiled:
-      tamperedContent,
-    scopeId:
-      scope.id,
-    contextId:
-      context.id,
-  });
-} catch {
-  contentTamperRejected =
-    true;
-}
-
-assert.equal(
-  contentTamperRejected,
-  true,
-  "V8_FINAL_PUBLICATION_CONTENT_TAMPER_NOT_REJECTED",
-);
-
-const projected =
-  projectionProjector.project({
-    compiled,
-    region:
-      "GLOBAL",
-  }).projection;
-
-assertTruthy(
-  projected,
-  "V8_FINAL_PUBLICATION_PROJECTION_MISSING",
-);
-
-assert.equal(
-  projected.contentId,
-  compiled.contentId,
-  "V8_FINAL_PUBLICATION_PROJECTION_CONTENT_MISMATCH",
-);
-
-assert.equal(
-  projected.decisionId,
-  decision.id,
-  "V8_FINAL_PUBLICATION_PROJECTION_DECISION_MISMATCH",
-);
-
-const routes = {
-  en:
-    "/knowledge/plastic-injection-molding-wall-thickness",
-  de:
-    "/de/wissen/kunststoff-spritzguss-wanddicke",
-  fr:
-    "/fr/connaissance/epaisseur-paroi-moulage-injection",
-};
-
-const alternates =
-  Object.fromEntries(
-    Object.entries(routes).map(
-      ([locale]) => [
-        locale,
-        Object.entries(routes).map(
-          ([otherLocale, route]) => ({
-            locale:
-              otherLocale,
-            route,
-          }),
-        ),
-      ],
-    ),
-  );
 
 const pages = [];
 
@@ -332,13 +280,10 @@ for (const locale of [
   const regional =
     regionalProjector.project({
       projected,
-      region:
-        "GLOBAL",
+      region: "GLOBAL",
       locale,
-      canonicalRoute:
-        routes[locale],
-      alternates:
-        alternates[locale],
+      canonicalRoute: routes[locale],
+      alternates: alternates[locale],
     }).regional;
 
   assert.equal(
@@ -371,31 +316,10 @@ for (const locale of [
     `V8_FINAL_PUBLICATION_REGIONAL_SELF_CANONICAL_MISMATCH:${locale}`,
   );
 
-  for (const expected of alternates[locale]) {
-    const actual =
-      regional.alternates.find(
-        (item) =>
-          item.locale.toLowerCase() ===
-          expected.locale.toLowerCase(),
-      );
-
-    assertTruthy(
-      actual,
-      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_MISSING:${locale}:${expected.locale}`,
-    );
-
-    assert.equal(
-      actual.route,
-      expected.route,
-      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
-    );
-  }
-
   const routeMetadata =
     routeMetadataProjector.project({
       regional,
-      alternates:
-        alternates[locale],
+      alternates: alternates[locale],
     }).routeMetadata;
 
   assert.equal(
@@ -428,6 +352,26 @@ for (const locale of [
     `V8_FINAL_PUBLICATION_METADATA_SELF_CANONICAL_MISMATCH:${locale}`,
   );
 
+  for (const expected of alternates[locale]) {
+    const actual =
+      regional.alternates.find(
+        (item) =>
+          item.locale.toLowerCase() ===
+          expected.locale.toLowerCase(),
+      );
+
+    assertTruthy(
+      actual,
+      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_MISSING:${locale}:${expected.locale}`,
+    );
+
+    assert.equal(
+      actual.route,
+      expected.route,
+      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
+    );
+  }
+
   for (const expected of regional.alternates) {
     const actual =
       routeMetadata.alternates.find(
@@ -459,9 +403,7 @@ for (const locale of [
     `V8_FINAL_PUBLICATION_ROUTE_METADATA_BLOCKED:${locale}`,
   );
 
-  pages.push(
-    routeMetadata,
-  );
+  pages.push(routeMetadata);
 }
 
 assert.equal(
@@ -495,69 +437,98 @@ assert.equal(
   "V8_FINAL_PUBLICATION_ROUTE_TAMPER_NOT_REJECTED",
 );
 
-const reciprocalResult =
-  reciprocalHreflangVerifier.verify(
-    pages,
+for (const page of pages) {
+  const self =
+    page.alternates.find(
+      (item) =>
+        item.locale.toLowerCase() ===
+        page.locale.toLowerCase(),
+    );
+
+  assertTruthy(
+    self,
+    `V8_FINAL_PUBLICATION_SELF_LOCALE_MISSING:${page.locale}`,
   );
 
-assert.equal(
-  reciprocalResult.passed,
-  true,
-  "V8_FINAL_PUBLICATION_RECIPROCAL_HREFLANG_BLOCKED",
+  assert.equal(
+    self.route,
+    page.canonicalRoute,
+    `V8_FINAL_PUBLICATION_SELF_CANONICAL_MISMATCH:${page.locale}`,
+  );
+
+  for (const other of pages) {
+    const alternate =
+      page.alternates.find(
+        (item) =>
+          item.locale.toLowerCase() ===
+          other.locale.toLowerCase(),
+      );
+
+    assertTruthy(
+      alternate,
+      `V8_FINAL_PUBLICATION_ALTERNATE_MISSING:${page.locale}:${other.locale}`,
+    );
+
+    assert.equal(
+      alternate.route,
+      other.canonicalRoute,
+      `V8_FINAL_PUBLICATION_RECIPROCAL_MISMATCH:${page.locale}:${other.locale}`,
+    );
+  }
+}
+
+console.log(
+  "[V8-19] REAL INTERNET FINAL PUBLICATION GATE PASS",
 );
 
 console.log(
-  "[NEXMOLD][V8-FINAL-PUBLICATION] REAL INTERNET FINAL PUBLICATION GATE PASS",
+  `[V8-19] acquired=${runtime.acquisition.acquisitions.length}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] source=${source.id}`,
+  `[V8-19] verifiedEvidence=${runtime.verifiedEvidenceIds.length}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] snapshot=${snapshot.id}`,
+  `[V8-19] claims=${runtime.claimIds.length}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] evidence=${evidence.id}`,
+  `[V8-19] knowledge=${runtime.knowledgeIds.length}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] claim=${claim.id}`,
+  `[V8-19] decisionState=${decision.state}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] knowledge=${knowledge.id}`,
+  `[V8-19] publicationEligibility=${eligible.status}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] decision=${decision.id}`,
+  `[V8-19] content=${compiled.content.id}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] content=${compiled.contentId}`,
+  `[V8-19] projection=${projected.projectionId}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] eligibility=${eligibility.status}`,
+  `[V8-19] routeMetadata=${pages.length === 3}`,
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] projection=${projected.id}`,
+  "[V8-19] reciprocalHreflang=true",
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] routePages=${pages.length}`,
+  "[V8-19] contentTamperRejection=true",
 );
 
 console.log(
-  `[V8-FINAL-PUBLICATION] reciprocalHreflang=${reciprocalResult.passed}`,
+  "[V8-19] routeMetadataTamperRejection=true",
 );
 
 console.log(
-  "[V8-FINAL-PUBLICATION] contentTamperRejected=true",
-);
-
-console.log(
-  "[V8-FINAL-PUBLICATION] routeTamperRejected=true",
+  "[V8-19] finalPublishable=true",
 );
