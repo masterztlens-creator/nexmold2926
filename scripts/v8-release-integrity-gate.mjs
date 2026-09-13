@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 
 import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
+
 import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
 import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+
 import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
@@ -186,6 +189,7 @@ const runtime = await runV8ArticleRuntime({
   context: {
     purpose:
       "Validate release integrity from real Internet evidence through publication and release.",
+
     variables: {
       source: "REAL_INTERNET",
       gate: "V8-15",
@@ -195,6 +199,7 @@ const runtime = await runV8ArticleRuntime({
   problem: {
     question:
       "What wall thickness considerations should be evaluated for plastic injection molding?",
+
     constraints: [
       "Claims must be grounded in verified Internet evidence.",
       "Publication requires an approved decision.",
@@ -206,13 +211,29 @@ const runtime = await runV8ArticleRuntime({
     "Plastic Injection Molding Wall Thickness",
 });
 
-assertArray(
+/*
+ * ArticleRuntimeResult.acquisition is a ResearchAcquisitionResult object.
+ *
+ * The actual acquisition array is:
+ *
+ *   runtime.acquisition.acquisitions
+ *
+ * It is NOT:
+ *
+ *   runtime.acquisition
+ */
+assertTruthy(
   runtime.acquisition,
-  "V8_RELEASE_INTEGRITY_ACQUISITION_INVALID",
+  "V8_RELEASE_INTEGRITY_ACQUISITION_MISSING",
+);
+
+assertArray(
+  runtime.acquisition.acquisitions,
+  "V8_RELEASE_INTEGRITY_ACQUISITIONS_INVALID",
 );
 
 assert(
-  runtime.acquisition.length > 0,
+  runtime.acquisition.acquisitions.length > 0,
   "V8_RELEASE_INTEGRITY_ACQUISITION_EMPTY",
 );
 
@@ -403,14 +424,20 @@ assert.equal(
   "V8_RELEASE_INTEGRITY_ELIGIBILITY_STATE_INVALID",
 );
 
+assertString(
+  eligibility.recordId,
+  "V8_RELEASE_INTEGRITY_ELIGIBILITY_RECORD_ID_MISSING",
+);
+
 const knowledgeForPolicy =
-  runtime.knowledgeIds.map((knowledgeId) =>
-    getRequiredRecord(
-      store,
-      "KNOWLEDGE",
-      knowledgeId,
-      `V8_RELEASE_INTEGRITY_KNOWLEDGE_NOT_FOUND:${knowledgeId}`,
-    ),
+  runtime.knowledgeIds.map(
+    (knowledgeId) =>
+      getRequiredRecord(
+        store,
+        "KNOWLEDGE",
+        knowledgeId,
+        `V8_RELEASE_INTEGRITY_KNOWLEDGE_NOT_FOUND:${knowledgeId}`,
+      ),
   );
 
 for (const knowledge of knowledgeForPolicy) {
@@ -425,10 +452,14 @@ const rule =
   createRule({
     statement:
       "Publication is allowed only when V8 content is eligible and its supporting knowledge is verified.",
+
     knowledgeIds:
       runtime.knowledgeIds,
+
     effect: "ALLOW",
+
     status: "APPROVED",
+
     id:
       `rule:v8:release-integrity-gate:${compiled.fingerprint}`,
   });
@@ -442,16 +473,17 @@ const ruleRecord =
 
     payload: rule,
 
-    lineage: runtime.knowledgeIds.map(
-      (knowledgeId) =>
-        lineageLink(
-          getRequiredRecord(
-            store,
-            "KNOWLEDGE",
-            knowledgeId,
+    lineage:
+      runtime.knowledgeIds.map(
+        (knowledgeId) =>
+          lineageLink(
+            getRequiredRecord(
+              store,
+              "KNOWLEDGE",
+              knowledgeId,
+            ),
           ),
-        ),
-    ),
+      ),
 
     actor: {
       id: "v8-release-integrity-gate",
@@ -534,7 +566,6 @@ const publicationArtifact =
 
     lineage: [
       ...eligibility.lineage,
-
       lineageLink(eligibility),
     ],
   });
@@ -568,14 +599,16 @@ assert.equal(
 );
 
 /*
- * IMPORTANT:
- *
  * PublicationArtifact.eligibilityRecordId must point to
  * the Foundation Record identity, not the aggregate identity.
  *
  * Foundation:
- *   aggregateId = eligibility:v8:...
- *   recordId    = ELIGIBILITY:eligibility:v8:...:1
+ *
+ * aggregateId:
+ *   eligibility:v8:...
+ *
+ * recordId:
+ *   ELIGIBILITY:eligibility:v8:...:1
  */
 assert.equal(
   publicationArtifact.eligibilityRecordId,
@@ -876,7 +909,7 @@ console.log(
 );
 
 console.log(
-  `[V8-RELEASE-INTEGRITY] acquired=${runtime.acquisition.length}`,
+  `[V8-RELEASE-INTEGRITY] acquired=${runtime.acquisition.acquisitions.length}`,
 );
 
 console.log(
