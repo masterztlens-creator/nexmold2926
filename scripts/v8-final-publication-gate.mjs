@@ -1,3 +1,5 @@
+// E:\nexmold\scripts\v8-final-publication-gate.mjs
+
 import assert from "node:assert/strict";
 
 import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
@@ -187,12 +189,6 @@ assert.equal(
   "V8_FINAL_PUBLICATION_NOT_ELIGIBLE",
 );
 
-/*
- * Content tamper test.
- *
- * The content fingerprint is intentionally modified.
- * The publication evaluator must reject it.
- */
 const tamperedCompiled = clone(compiled);
 
 tamperedCompiled.fingerprint =
@@ -292,11 +288,111 @@ for (const locale of [
       alternates: alternates[locale],
     }).regional;
 
+  assert.equal(
+    regional.locale,
+    locale,
+    `V8_FINAL_PUBLICATION_REGIONAL_LOCALE_MISMATCH:${locale}`,
+  );
+
+  assert.equal(
+    regional.canonicalRoute,
+    routes[locale],
+    `V8_FINAL_PUBLICATION_REGIONAL_CANONICAL_MISMATCH:${locale}`,
+  );
+
+  const regionalSelf =
+    regional.alternates.find(
+      (item) =>
+        item.locale.toLowerCase() ===
+        locale.toLowerCase(),
+    );
+
+  assertTruthy(
+    regionalSelf,
+    `V8_FINAL_PUBLICATION_REGIONAL_SELF_MISSING:${locale}`,
+  );
+
+  assert.equal(
+    regionalSelf.route,
+    regional.canonicalRoute,
+    `V8_FINAL_PUBLICATION_REGIONAL_SELF_CANONICAL_MISMATCH:${locale}`,
+  );
+
   const routeMetadata =
     routeMetadataProjector.project({
       regional,
       alternates: alternates[locale],
     }).routeMetadata;
+
+  assert.equal(
+    routeMetadata.locale,
+    locale,
+    `V8_FINAL_PUBLICATION_METADATA_LOCALE_MISMATCH:${locale}`,
+  );
+
+  assert.equal(
+    routeMetadata.canonicalRoute,
+    regional.canonicalRoute,
+    `V8_FINAL_PUBLICATION_METADATA_CANONICAL_MISMATCH:${locale}`,
+  );
+
+  const routeMetadataSelf =
+    routeMetadata.alternates.find(
+      (item) =>
+        item.locale.toLowerCase() ===
+        routeMetadata.locale.toLowerCase(),
+    );
+
+  assertTruthy(
+    routeMetadataSelf,
+    `V8_FINAL_PUBLICATION_METADATA_SELF_MISSING:${locale}`,
+  );
+
+  assert.equal(
+    routeMetadataSelf.route,
+    routeMetadata.canonicalRoute,
+    `V8_FINAL_PUBLICATION_METADATA_SELF_CANONICAL_MISMATCH:${locale}`,
+  );
+
+  for (const expected of alternates[locale]) {
+    const actual =
+      regional.alternates.find(
+        (item) =>
+          item.locale.toLowerCase() ===
+          expected.locale.toLowerCase(),
+      );
+
+    assertTruthy(
+      actual,
+      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_MISSING:${locale}:${expected.locale}`,
+    );
+
+    assert.equal(
+      actual.route,
+      expected.route,
+      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
+    );
+  }
+
+  for (const expected of regional.alternates) {
+    const actual =
+      routeMetadata.alternates.find(
+        (item) =>
+          item.locale.toLowerCase() ===
+          expected.locale.toLowerCase(),
+      );
+
+    assertTruthy(
+      actual,
+      `V8_FINAL_PUBLICATION_METADATA_ALTERNATE_MISSING:${locale}:${expected.locale}`,
+    );
+
+    assert.equal(
+      actual.route,
+      expected.route,
+      `V8_FINAL_PUBLICATION_METADATA_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
+    );
+  }
 
   const gateResult =
     routeMetadataGate.check(
@@ -318,9 +414,6 @@ assert.equal(
   "V8_FINAL_PUBLICATION_ROUTE_PAGE_COUNT_MISMATCH",
 );
 
-/*
- * Route metadata tamper test.
- */
 const tamperedRoute =
   clone(pages[0]);
 
@@ -335,9 +428,6 @@ assert.equal(
   "V8_FINAL_PUBLICATION_ROUTE_TAMPER_NOT_REJECTED",
 );
 
-/*
- * Reciprocal hreflang verification.
- */
 for (const page of pages) {
   const self =
     page.alternates.find(
