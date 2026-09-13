@@ -479,9 +479,6 @@ for (
  * Gate 5
  *
  * Evidence → Snapshot identity.
- *
- * Every Evidence must point to the exact Snapshot used by the acquisition
- * runtime.
  * ============================================================================
  */
 
@@ -594,12 +591,9 @@ for (
  * ============================================================================
  * Snapshot text projection
  *
- * IMPORTANT:
+ * Snapshot payload is HTML.
  *
- * Snapshot.payload.payload contains the captured HTML.
- *
- * Evidence excerpts are produced from the HTML text projection performed by
- * source-extractor.ts:
+ * Evidence excerpt is generated from the HTML text projection:
  *
  *   - remove script
  *   - remove style
@@ -608,19 +602,13 @@ for (
  *   - decode common HTML entities
  *   - normalize whitespace
  *
- * Therefore the correct trace invariant is:
+ * Therefore:
  *
- *     Evidence.excerpt
- *         ∈
- *     textProjection(Snapshot.payload.payload)
+ * Evidence.excerpt ∈ textProjection(Snapshot.payload.payload)
  *
  * NOT:
  *
- *     Evidence.excerpt
- *         ∈
- *     raw HTML
- *
- * This gate reproduces that projection locally without changing V8 core.
+ * Evidence.excerpt ∈ raw HTML
  * ============================================================================
  */
 
@@ -682,16 +670,6 @@ function snapshotTextProjection(
  *
  * Evidence excerpt must exist in the immutable Snapshot-derived text
  * projection.
- *
- * This is the core:
- *
- *     REAL INTERNET
- *          ↓
- *       SNAPSHOT
- *          ↓
- *   TEXT PROJECTION
- *          ↓
- *       EVIDENCE
  * ============================================================================
  */
 
@@ -773,8 +751,6 @@ for (
  *   parameter
  *   value
  *   unit
- *
- * This mirrors evidence-builder.ts.
  * ============================================================================
  */
 
@@ -1151,29 +1127,23 @@ for (
  * Gate 13
  *
  * Foundation immutable chain must verify.
+ *
+ * IMPORTANT:
+ *
+ * InMemoryFoundationStore.verifyChain() returns void.
+ *
+ * Success condition:
+ *   - verifyChain() completes without throwing.
+ *
+ * Failure condition:
+ *   - verifyChain() throws V8_FOUNDATION_CHAIN_BROKEN or
+ *     V8_FOUNDATION_FINGERPRINT_MISMATCH.
+ *
+ * DO NOT assert a return value here.
  * ============================================================================
  */
 
-const chainVerification =
-  store.verifyChain();
-
-assert.ok(
-  chainVerification,
-  "V8_EVIDENCE_TRACE_CHAIN_VERIFICATION_EMPTY",
-);
-
-if (
-  typeof chainVerification ===
-    "object" &&
-  chainVerification !== null &&
-  "valid" in chainVerification
-) {
-  assert.equal(
-    chainVerification.valid,
-    true,
-    "V8_EVIDENCE_TRACE_FOUNDATION_CHAIN_INVALID",
-  );
-}
+store.verifyChain();
 
 
 /*
@@ -1261,7 +1231,7 @@ console.log(
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] chainValid=true`,
+  "[V8-EVIDENCE-TRACE] chainValid=true",
 );
 
 console.log(
