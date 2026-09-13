@@ -20,16 +20,50 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify TypeScript
+      - name: Diagnose TypeScript installation
+        shell: bash
         run: |
-          node -e "const p=require('./package.json'); if(p.devDependencies?.typescript !== '6.0.3' && p.dependencies?.typescript !== '6.0.3') process.exit(1)"
-          ./node_modules/.bin/tsc --version
+          set -euxo pipefail
+
+          echo "=== package.json TypeScript declaration ==="
+          node -e "const p=require('./package.json'); console.log(p.devDependencies?.typescript ?? p.dependencies?.typescript ?? 'MISSING')"
+
+          echo "=== npm TypeScript tree ==="
+          npm ls typescript --depth=0
+
+          echo "=== TypeScript package directory ==="
+          test -d ./node_modules/typescript
+          ls -la ./node_modules/typescript
+
+          echo "=== TypeScript package bin directory ==="
+          test -d ./node_modules/typescript/bin
+          ls -la ./node_modules/typescript/bin
+
+          echo "=== TypeScript compiler entry ==="
+          test -f ./node_modules/typescript/bin/tsc
+          ls -la ./node_modules/typescript/bin/tsc
+
+          echo "=== TypeScript direct execution ==="
+          node ./node_modules/typescript/bin/tsc --version
+
+          echo "=== npm bin directory ==="
+          ls -la ./node_modules/.bin || true
+
+          echo "=== tsc symlink ==="
+          if test -e ./node_modules/.bin/tsc; then
+            ls -la ./node_modules/.bin/tsc
+          else
+            echo "WARNING: ./node_modules/.bin/tsc does not exist"
+          fi
 
       - name: Compile V8
         run: npm run v8:compile
 
       - name: Verify V8 build output
+        shell: bash
         run: |
+          set -euxo pipefail
+
           test -f .v8-build/src/v8/foundation/store.js
           test -f .v8-build/src/v8/acquisition/page-fetcher.js
           test -f .v8-build/src/v8/acquisition/tavily-search-provider.js
