@@ -11,10 +11,11 @@ on:
       - "tsconfig.v8.json"
       - "package.json"
       - "package-lock.json"
+
   workflow_dispatch:
 
 jobs:
-  decision-gate:
+  v8-decision:
     name: V8 Decision
     runs-on: ubuntu-latest
 
@@ -45,11 +46,11 @@ jobs:
           set -euo pipefail
 
           files=(
-            ".v8-build/src/v8/runtime/article-runtime.js"
-            ".v8-build/src/v8/applicability/engine.js"
-            ".v8-build/src/v8/domain/decision.js"
-            ".v8-build/src/v8/foundation/service.js"
             ".v8-build/src/v8/foundation/store.js"
+            ".v8-build/src/v8/foundation/service.js"
+            ".v8-build/src/v8/applicability/engine.js"
+            ".v8-build/src/v8/runtime/article-runtime.js"
+            ".v8-build/src/v8/decision/domain.js"
           )
 
           for file in "${files[@]}"; do
@@ -60,4 +61,5 @@ jobs:
       - name: Real Internet Decision Gate
         env:
           V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
-        run: node scripts/v8-decision-gate.mjs
+        run: |
+          node scripts/v8-decision-gate.mjs
