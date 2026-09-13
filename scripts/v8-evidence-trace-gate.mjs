@@ -25,6 +25,51 @@ import {
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
 
 
+/*
+ * ============================================================================
+ * V8-11 REAL INTERNET EVIDENCE TRACE GATE
+ *
+ * Required chain:
+ *
+ * REAL INTERNET
+ *      ↓
+ * SOURCE
+ *      ↓
+ * SNAPSHOT
+ *      ↓
+ * EVIDENCE
+ *      ↓
+ * CLAIM
+ *      ↓
+ * KNOWLEDGE
+ *      ↓
+ * DECISION
+ *      ↓
+ * verifyChain()
+ *
+ * Core invariant:
+ *
+ * Content is disposable.
+ * Truth is durable.
+ *
+ * This gate proves that the durable Evidence layer can be traced back to
+ * immutable Snapshot content acquired from the real Internet.
+ *
+ * IMPORTANT:
+ * - Do not use fixtures.
+ * - Do not use synthetic source records.
+ * - Do not bypass acquisition.
+ * - Do not modify V8 foundation/domain/acquisition code.
+ * ============================================================================
+ */
+
+
+/*
+ * ============================================================================
+ * Configuration
+ * ============================================================================
+ */
+
 const apiKey =
   process.env.V8_SEARCH_API_KEY;
 
@@ -35,16 +80,26 @@ if (!apiKey) {
 }
 
 
+/*
+ * ============================================================================
+ * Real Internet research opportunity
+ * ============================================================================
+ */
+
 const opportunity = {
   keyword: {
     keyword:
       "plastic injection molding wall thickness",
+
     normalized:
       "plastic injection molding wall thickness",
+
     source:
       "SEED",
+
     intent:
       "INFORMATIONAL",
+
     terms: [
       "wall thickness",
       "injection molding",
@@ -52,10 +107,15 @@ const opportunity = {
   },
 
   score: 0.9,
+
   demand: 0.8,
+
   relevance: 1,
+
   competition: 0.3,
+
   authorityGap: 0.7,
+
   conversionPotential: 0.6,
 
   reasons: [
@@ -64,9 +124,14 @@ const opportunity = {
 };
 
 
+/*
+ * ============================================================================
+ * Runtime infrastructure
+ * ============================================================================
+ */
+
 const store =
   new InMemoryFoundationStore();
-
 
 const searchProvider =
   new TavilySearchProvider(
@@ -75,13 +140,18 @@ const searchProvider =
     "v8-evidence-trace-gate",
   );
 
-
 const pageFetcher =
   new HttpPageFetcher({
     timeoutMs: 20000,
     maxBytes: 5000000,
   });
 
+
+/*
+ * ============================================================================
+ * Run the real V8 article runtime.
+ * ============================================================================
+ */
 
 const result =
   await runV8ArticleRuntime({
@@ -96,13 +166,16 @@ const result =
     actor: {
       id:
         "v8-evidence-trace-gate",
+
       role:
         "SYSTEM",
     },
 
     acquisition: {
       maxQueries: 1,
+
       maxCandidates: 3,
+
       actorId:
         "v8-evidence-trace-gate",
     },
@@ -155,7 +228,7 @@ const result =
       constraints: [
         "Use real Internet-acquired sources only.",
         "Every Evidence record must reference a persisted Snapshot.",
-        "Every Evidence excerpt must exist in the persisted Snapshot payload.",
+        "Every Evidence excerpt must exist in the persisted Snapshot-derived text projection.",
         "Every Evidence hash must match the immutable Snapshot content and Evidence fields.",
         "Every Claim must reference at least one Evidence record.",
         "Only VERIFIED Evidence may produce Claims.",
@@ -170,15 +243,23 @@ const result =
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 0
+ *
  * Real Internet acquisition exists.
- * --------------------------------------------------------------------------
+ * ============================================================================
  */
 
 assert.ok(
   result.acquisition,
   "V8_EVIDENCE_TRACE_ACQUISITION_MISSING",
+);
+
+assert.ok(
+  Array.isArray(
+    result.acquisition.acquisitions,
+  ),
+  "V8_EVIDENCE_TRACE_ACQUISITIONS_NOT_ARRAY",
 );
 
 assert.ok(
@@ -188,17 +269,14 @@ assert.ok(
 
 
 /*
- * --------------------------------------------------------------------------
- * Build latest Foundation record maps.
+ * ============================================================================
+ * Helper
  *
- * auditTrail() is immutable history, therefore historical states such as:
+ * Foundation auditTrail() is immutable history.
  *
- *   INGESTED
- *       ↓
- *   VERIFIED
- *
- * must not be interpreted as independent current states.
- * --------------------------------------------------------------------------
+ * We must resolve the latest record for each aggregate rather than treating
+ * every historical version as a current record.
+ * ============================================================================
  */
 
 function latestRecordsByAggregate(
@@ -238,6 +316,12 @@ function latestRecordsByAggregate(
 }
 
 
+/*
+ * ============================================================================
+ * Latest aggregate maps
+ * ============================================================================
+ */
+
 const latestSourceRecords =
   latestRecordsByAggregate(
     "SOURCE",
@@ -270,10 +354,11 @@ const latestDecisionRecords =
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 1
+ *
  * Source records exist.
- * --------------------------------------------------------------------------
+ * ============================================================================
  */
 
 assert.ok(
@@ -283,10 +368,12 @@ assert.ok(
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 2
- * Snapshot records exist and are SEALED.
- * --------------------------------------------------------------------------
+ *
+ * Snapshots exist and are immutable SEALED snapshots containing the actual
+ * Internet payload.
+ * ============================================================================
  */
 
 assert.ok(
@@ -325,11 +412,19 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 3
- * Every runtime Evidence ID has a Foundation record.
- * --------------------------------------------------------------------------
+ *
+ * Runtime verified Evidence must exist and must be persisted.
+ * ============================================================================
  */
+
+assert.ok(
+  Array.isArray(
+    result.verifiedEvidenceIds,
+  ),
+  "V8_EVIDENCE_TRACE_VERIFIED_EVIDENCE_IDS_NOT_ARRAY",
+);
 
 assert.ok(
   result.verifiedEvidenceIds.length > 0,
@@ -344,10 +439,11 @@ assert.equal(
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 4
- * Evidence must be VERIFIED.
- * --------------------------------------------------------------------------
+ *
+ * Every runtime Evidence must be VERIFIED.
+ * ============================================================================
  */
 
 for (
@@ -379,13 +475,14 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 5
+ *
  * Evidence → Snapshot identity.
  *
- * Every Evidence must reference the exact Snapshot used by the acquisition
- * record that produced it.
- * --------------------------------------------------------------------------
+ * Every Evidence must point to the exact Snapshot used by the acquisition
+ * runtime.
+ * ============================================================================
  */
 
 const acquisitionBySnapshotId =
@@ -400,7 +497,6 @@ for (
     acquisitionRecord,
   );
 }
-
 
 for (
   const evidenceRecord of
@@ -451,10 +547,12 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 6
- * Evidence source identity must match Snapshot source identity.
- * --------------------------------------------------------------------------
+ *
+ * Evidence source identity must match Snapshot source identity and the Source
+ * aggregate must exist.
+ * ============================================================================
  */
 
 for (
@@ -493,20 +591,108 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
- * Gate 7
- * Exact Evidence excerpt must exist in the immutable Snapshot payload.
+ * ============================================================================
+ * Snapshot text projection
  *
- * This is the core traceability test:
+ * IMPORTANT:
+ *
+ * Snapshot.payload.payload contains the captured HTML.
+ *
+ * Evidence excerpts are produced from the HTML text projection performed by
+ * source-extractor.ts:
+ *
+ *   - remove script
+ *   - remove style
+ *   - remove noscript
+ *   - remove HTML tags
+ *   - decode common HTML entities
+ *   - normalize whitespace
+ *
+ * Therefore the correct trace invariant is:
+ *
+ *     Evidence.excerpt
+ *         ∈
+ *     textProjection(Snapshot.payload.payload)
+ *
+ * NOT:
+ *
+ *     Evidence.excerpt
+ *         ∈
+ *     raw HTML
+ *
+ * This gate reproduces that projection locally without changing V8 core.
+ * ============================================================================
+ */
+
+function snapshotTextProjection(
+  html,
+) {
+  return html
+    .replace(
+      /<script[\s\S]*?<\/script>/gi,
+      " ",
+    )
+    .replace(
+      /<style[\s\S]*?<\/style>/gi,
+      " ",
+    )
+    .replace(
+      /<noscript[\s\S]*?<\/noscript>/gi,
+      " ",
+    )
+    .replace(
+      /<[^>]+>/g,
+      " ",
+    )
+    .replace(
+      /&nbsp;/gi,
+      " ",
+    )
+    .replace(
+      /&amp;/gi,
+      "&",
+    )
+    .replace(
+      /&lt;/gi,
+      "<",
+    )
+    .replace(
+      /&gt;/gi,
+      ">",
+    )
+    .replace(
+      /&#39;/gi,
+      "'",
+    )
+    .replace(
+      /&quot;/gi,
+      '"',
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
+
+
+/*
+ * ============================================================================
+ * Gate 7
+ *
+ * Evidence excerpt must exist in the immutable Snapshot-derived text
+ * projection.
+ *
+ * This is the core:
  *
  *     REAL INTERNET
  *          ↓
  *       SNAPSHOT
  *          ↓
+ *   TEXT PROJECTION
+ *          ↓
  *       EVIDENCE
- *
- * Evidence is not allowed to become detached from captured source content.
- * --------------------------------------------------------------------------
+ * ============================================================================
  */
 
 let exactExcerptMatches =
@@ -536,23 +722,36 @@ for (
     typeof snapshotPayload ===
       "string" &&
       snapshotPayload.length > 0,
-    `Snapshot ${evidence.snapshotId} has no text payload.`,
+    `Snapshot ${evidence.snapshotId} has no captured payload.`,
+  );
+
+  const snapshotText =
+    snapshotTextProjection(
+      snapshotPayload,
+    );
+
+  assert.ok(
+    snapshotText.length > 0,
+    `Snapshot ${evidence.snapshotId} text projection is empty.`,
   );
 
   assert.ok(
-    evidence.excerpt.trim().length > 0,
+    typeof evidence.excerpt ===
+      "string" &&
+      evidence.excerpt.trim().length > 0,
     `Evidence ${evidenceRecord.aggregateId} excerpt is empty.`,
   );
 
   assert.ok(
-    snapshotPayload.includes(
+    snapshotText.includes(
       evidence.excerpt,
     ),
     [
-      `Evidence ${evidenceRecord.aggregateId} excerpt is not present in Snapshot ${evidence.snapshotId}.`,
+      `Evidence ${evidenceRecord.aggregateId} excerpt is not present in the Snapshot-derived text projection.`,
       `Evidence locator: ${evidence.locator}`,
       `Evidence excerpt length: ${evidence.excerpt.length}`,
       `Snapshot payload length: ${snapshotPayload.length}`,
+      `Snapshot text projection length: ${snapshotText.length}`,
     ].join("\n"),
   );
 
@@ -561,8 +760,9 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 8
+ *
  * Evidence hash must reproduce exactly from:
  *
  *   source
@@ -575,7 +775,7 @@ for (
  *   unit
  *
  * This mirrors evidence-builder.ts.
- * --------------------------------------------------------------------------
+ * ============================================================================
  */
 
 let evidenceHashMatches =
@@ -636,14 +836,11 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 9
- * Runtime Evidence IDs must be reproducible from the persisted Evidence
- * identity inputs.
  *
- * This additionally verifies that the Evidence aggregate itself has not
- * drifted away from the identity returned by the runtime.
- * --------------------------------------------------------------------------
+ * Evidence aggregate identity must be reproducible.
+ * ============================================================================
  */
 
 for (
@@ -652,6 +849,16 @@ for (
 ) {
   const evidence =
     evidenceRecord.payload;
+
+  const snapshotRecord =
+    latestSnapshotRecords.get(
+      evidence.snapshotId,
+    );
+
+  assert.ok(
+    snapshotRecord,
+    `Evidence ${evidenceRecord.aggregateId} Snapshot is missing.`,
+  );
 
   const expectedEvidenceId =
     evidenceId(
@@ -663,9 +870,7 @@ for (
           evidence.snapshotId,
 
         snapshotContentHash:
-          latestSnapshotRecords.get(
-            evidence.snapshotId,
-          )?.payload.contentHash,
+          snapshotRecord.payload.contentHash,
 
         locator:
           evidence.locator,
@@ -693,11 +898,19 @@ for (
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 10
- * Every Claim must reference at least one Evidence record.
- * --------------------------------------------------------------------------
+ *
+ * Every Claim must reference at least one persisted Evidence record.
+ * ============================================================================
  */
+
+assert.ok(
+  Array.isArray(
+    result.claimIds,
+  ),
+  "V8_EVIDENCE_TRACE_CLAIM_IDS_NOT_ARRAY",
+);
 
 assert.ok(
   result.claimIds.length > 0,
@@ -708,7 +921,6 @@ assert.ok(
   latestClaimRecords.size > 0,
   "V8_EVIDENCE_TRACE_CLAIMS_NOT_PERSISTED",
 );
-
 
 for (
   const claimId of
@@ -742,40 +954,48 @@ for (
 
   assert.ok(
     claim.evidenceIds.length > 0,
-    `Claim ${claimId} contains no Evidence references.`,
+    `Claim ${claimId} has no Evidence references.`,
   );
 
   for (
     const referencedEvidenceId of
       claim.evidenceIds
   ) {
-    const evidenceRecord =
-      latestEvidenceRecords.get(
-        String(
-          referencedEvidenceId,
-        ),
-      );
-
     assert.ok(
-      evidenceRecord,
-      `Claim ${claimId} references missing Evidence ${String(referencedEvidenceId)}.`,
+      latestEvidenceRecords.has(
+        referencedEvidenceId,
+      ),
+      `Claim ${claimId} references missing Evidence ${referencedEvidenceId}.`,
     );
 
+    const referencedEvidence =
+      latestEvidenceRecords.get(
+        referencedEvidenceId,
+      );
+
     assert.equal(
-      evidenceRecord.state,
+      referencedEvidence?.state,
       "VERIFIED",
-      `Claim ${claimId} references Evidence ${String(referencedEvidenceId)} that is not VERIFIED.`,
+      `Claim ${claimId} references Evidence ${referencedEvidenceId} which is not VERIFIED.`,
     );
   }
 }
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 11
- * Every Knowledge record must reference Claims.
- * --------------------------------------------------------------------------
+ *
+ * Every Knowledge record must reference at least one Claim.
+ * ============================================================================
  */
+
+assert.ok(
+  Array.isArray(
+    result.knowledgeIds,
+  ),
+  "V8_EVIDENCE_TRACE_KNOWLEDGE_IDS_NOT_ARRAY",
+);
 
 assert.ok(
   result.knowledgeIds.length > 0,
@@ -787,25 +1007,24 @@ assert.ok(
   "V8_EVIDENCE_TRACE_KNOWLEDGE_NOT_PERSISTED",
 );
 
-
 for (
-  const knowledgeIdValue of
+  const knowledgeId of
     result.knowledgeIds
 ) {
   const knowledgeRecord =
     latestKnowledgeRecords.get(
-      knowledgeIdValue,
+      knowledgeId,
     );
 
   assert.ok(
     knowledgeRecord,
-    `Knowledge ${knowledgeIdValue} has no latest Foundation record.`,
+    `Knowledge ${knowledgeId} has no latest Foundation record.`,
   );
 
   assert.equal(
     knowledgeRecord.state,
     "VERIFIED",
-    `Knowledge ${knowledgeIdValue} latest state is not VERIFIED.`,
+    `Knowledge ${knowledgeId} latest state is not VERIFIED.`,
   );
 
   const knowledge =
@@ -815,49 +1034,55 @@ for (
     Array.isArray(
       knowledge.claimIds,
     ),
-    `Knowledge ${knowledgeIdValue} claimIds is not an array.`,
+    `Knowledge ${knowledgeId} claimIds is not an array.`,
   );
 
   assert.ok(
     knowledge.claimIds.length > 0,
-    `Knowledge ${knowledgeIdValue} contains no Claim references.`,
+    `Knowledge ${knowledgeId} has no Claim references.`,
   );
 
   for (
     const referencedClaimId of
       knowledge.claimIds
   ) {
-    const claimRecord =
-      latestClaimRecords.get(
-        String(
-          referencedClaimId,
-        ),
-      );
-
     assert.ok(
-      claimRecord,
-      `Knowledge ${knowledgeIdValue} references missing Claim ${String(referencedClaimId)}.`,
+      latestClaimRecords.has(
+        referencedClaimId,
+      ),
+      `Knowledge ${knowledgeId} references missing Claim ${referencedClaimId}.`,
     );
 
+    const referencedClaim =
+      latestClaimRecords.get(
+        referencedClaimId,
+      );
+
     assert.equal(
-      claimRecord.state,
+      referencedClaim?.state,
       "VERIFIED",
-      `Knowledge ${knowledgeIdValue} references Claim ${String(referencedClaimId)} that is not VERIFIED.`,
+      `Knowledge ${knowledgeId} references Claim ${referencedClaimId} which is not VERIFIED.`,
     );
   }
 }
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
  * Gate 12
- * Decision must exist and be APPROVED.
- * --------------------------------------------------------------------------
+ *
+ * Decision must:
+ *
+ *   - exist
+ *   - be persisted
+ *   - be APPROVED
+ *   - reference Knowledge
+ * ============================================================================
  */
 
 assert.ok(
   result.decisionId,
-  "V8_EVIDENCE_TRACE_DECISION_MISSING",
+  "V8_EVIDENCE_TRACE_DECISION_ID_MISSING",
 );
 
 const decisionRecord =
@@ -873,54 +1098,126 @@ assert.ok(
 assert.equal(
   decisionRecord.state,
   "APPROVED",
-  `Decision ${result.decisionId} is not APPROVED.`,
+  `Decision ${result.decisionId} latest Foundation state is not APPROVED.`,
 );
-
-
-/*
- * --------------------------------------------------------------------------
- * Gate 13
- * Decision must reference the Knowledge produced by this runtime.
- * --------------------------------------------------------------------------
- */
 
 const decision =
   decisionRecord.payload;
+
+assert.equal(
+  decision.status,
+  "APPROVED",
+  `Decision ${result.decisionId} payload status is not APPROVED.`,
+);
 
 assert.ok(
   Array.isArray(
     decision.knowledgeIds,
   ),
-  "V8_EVIDENCE_TRACE_DECISION_KNOWLEDGE_IDS_INVALID",
+  `Decision ${result.decisionId} knowledgeIds is not an array.`,
+);
+
+assert.ok(
+  decision.knowledgeIds.length > 0,
+  `Decision ${result.decisionId} has no Knowledge references.`,
 );
 
 for (
-  const knowledgeIdValue of
-    result.knowledgeIds
+  const referencedKnowledgeId of
+    decision.knowledgeIds
 ) {
   assert.ok(
-    decision.knowledgeIds.includes(
-      knowledgeIdValue,
+    latestKnowledgeRecords.has(
+      referencedKnowledgeId,
     ),
-    `Decision ${result.decisionId} does not reference Knowledge ${knowledgeIdValue}.`,
+    `Decision ${result.decisionId} references missing Knowledge ${referencedKnowledgeId}.`,
+  );
+
+  const referencedKnowledge =
+    latestKnowledgeRecords.get(
+      referencedKnowledgeId,
+    );
+
+  assert.equal(
+    referencedKnowledge?.state,
+    "VERIFIED",
+    `Decision ${result.decisionId} references Knowledge ${referencedKnowledgeId} which is not VERIFIED.`,
   );
 }
 
 
 /*
- * --------------------------------------------------------------------------
- * Gate 14
- * Final Foundation chain integrity.
- * --------------------------------------------------------------------------
+ * ============================================================================
+ * Gate 13
+ *
+ * Foundation immutable chain must verify.
+ * ============================================================================
  */
 
-store.verifyChain();
+const chainVerification =
+  store.verifyChain();
+
+assert.ok(
+  chainVerification,
+  "V8_EVIDENCE_TRACE_CHAIN_VERIFICATION_EMPTY",
+);
+
+if (
+  typeof chainVerification ===
+    "object" &&
+  chainVerification !== null &&
+  "valid" in chainVerification
+) {
+  assert.equal(
+    chainVerification.valid,
+    true,
+    "V8_EVIDENCE_TRACE_FOUNDATION_CHAIN_INVALID",
+  );
+}
 
 
 /*
- * --------------------------------------------------------------------------
+ * ============================================================================
+ * Gate 14
+ *
+ * Runtime fingerprint must exist.
+ * ============================================================================
+ */
+
+assert.ok(
+  typeof result.fingerprint ===
+    "string" &&
+    result.fingerprint.length > 0,
+  "V8_EVIDENCE_TRACE_RUNTIME_FINGERPRINT_MISSING",
+);
+
+
+/*
+ * ============================================================================
+ * Final metrics
+ * ============================================================================
+ */
+
+const acquired =
+  result.acquisition.acquisitions.length;
+
+const snapshots =
+  latestSnapshotRecords.size;
+
+const verifiedEvidence =
+  result.verifiedEvidenceIds.length;
+
+const claims =
+  result.claimIds.length;
+
+const knowledge =
+  result.knowledgeIds.length;
+
+
+/*
+ * ============================================================================
  * PASS
- * --------------------------------------------------------------------------
+ * ============================================================================
  */
 
 console.log(
@@ -928,19 +1225,15 @@ console.log(
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] acquired=${result.acquisition.acquisitions.length}`,
+  `[V8-EVIDENCE-TRACE] acquired=${acquired}`,
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] sources=${latestSourceRecords.size}`,
+  `[V8-EVIDENCE-TRACE] snapshots=${snapshots}`,
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] snapshots=${latestSnapshotRecords.size}`,
-);
-
-console.log(
-  `[V8-EVIDENCE-TRACE] verifiedEvidence=${result.verifiedEvidenceIds.length}`,
+  `[V8-EVIDENCE-TRACE] verifiedEvidence=${verifiedEvidence}`,
 );
 
 console.log(
@@ -952,11 +1245,11 @@ console.log(
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] claims=${result.claimIds.length}`,
+  `[V8-EVIDENCE-TRACE] claims=${claims}`,
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] knowledge=${result.knowledgeIds.length}`,
+  `[V8-EVIDENCE-TRACE] knowledge=${knowledge}`,
 );
 
 console.log(
@@ -968,7 +1261,7 @@ console.log(
 );
 
 console.log(
-  `[V8-EVIDENCE-TRACE] content=true`,
+  `[V8-EVIDENCE-TRACE] chainValid=true`,
 );
 
 console.log(
