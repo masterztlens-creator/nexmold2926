@@ -1,0 +1,63 @@
+name: V8 Decision Gate
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "scripts/v8-decision-gate.mjs"
+      - ".github/workflows/v8-decision-gate.yml"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+jobs:
+  decision-gate:
+    name: V8 Decision
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Diagnose TypeScript installation
+        run: |
+          npm ls typescript --depth=0
+          node ./node_modules/typescript/bin/tsc --version
+
+      - name: Compile V8
+        run: npm run v8:compile
+
+      - name: Verify V8 Decision build output
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files=(
+            ".v8-build/src/v8/runtime/article-runtime.js"
+            ".v8-build/src/v8/applicability/engine.js"
+            ".v8-build/src/v8/domain/decision.js"
+            ".v8-build/src/v8/foundation/service.js"
+            ".v8-build/src/v8/foundation/store.js"
+          )
+
+          for file in "${files[@]}"; do
+            test -f "$file"
+            echo "[V8-BUILD] verified=$file"
+          done
+
+      - name: Real Internet Decision Gate
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: node scripts/v8-decision-gate.mjs
