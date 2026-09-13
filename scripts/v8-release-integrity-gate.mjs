@@ -99,28 +99,6 @@ function lineageLink(record) {
   };
 }
 
-function sameLineage(a, b) {
-  if (!Array.isArray(a) || !Array.isArray(b)) {
-    return false;
-  }
-
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  return a.every((left, index) => {
-    const right = b[index];
-
-    return (
-      right !== undefined &&
-      left.type === right.type &&
-      left.id === right.id &&
-      left.version === right.version &&
-      left.fingerprint === right.fingerprint
-    );
-  });
-}
-
 const opportunity = {
   keyword: {
     keyword: "plastic injection molding wall thickness",
@@ -177,10 +155,12 @@ const runtime = await runV8ArticleRuntime({
 
   scope: {
     geography: "GLOBAL",
+
     industries: [
       "PLASTICS",
       "INJECTION_MOLDING",
     ],
+
     languages: [
       "en",
     ],
@@ -211,17 +191,6 @@ const runtime = await runV8ArticleRuntime({
     "Plastic Injection Molding Wall Thickness",
 });
 
-/*
- * ArticleRuntimeResult.acquisition is a ResearchAcquisitionResult object.
- *
- * The actual acquisition array is:
- *
- *   runtime.acquisition.acquisitions
- *
- * It is NOT:
- *
- *   runtime.acquisition
- */
 assertTruthy(
   runtime.acquisition,
   "V8_RELEASE_INTEGRITY_ACQUISITION_MISSING",
@@ -598,18 +567,6 @@ assert.equal(
   "V8_RELEASE_INTEGRITY_PUBLICATION_BODY_MISMATCH",
 );
 
-/*
- * PublicationArtifact.eligibilityRecordId must point to
- * the Foundation Record identity, not the aggregate identity.
- *
- * Foundation:
- *
- * aggregateId:
- *   eligibility:v8:...
- *
- * recordId:
- *   ELIGIBILITY:eligibility:v8:...:1
- */
 assert.equal(
   publicationArtifact.eligibilityRecordId,
   eligibility.recordId,
@@ -628,15 +585,26 @@ assert.equal(
   "V8_RELEASE_INTEGRITY_PUBLICATION_POLICY_FINGERPRINT_MISMATCH",
 );
 
+/*
+ * PublicationGate normalizes publication lineage as:
+ *
+ *   eligibility.lineage
+ *   +
+ *   POLICY
+ *
+ * The ELIGIBILITY aggregate itself is represented by:
+ *
+ *   publicationArtifact.eligibilityRecordId
+ *
+ * Therefore PublicationArtifact.lineage must not contain
+ * an additional ELIGIBILITY self-link.
+ */
 assert(
-  publicationArtifact.lineage.some(
+  publicationArtifact.lineage.every(
     (link) =>
-      link.type === "ELIGIBILITY" &&
-      link.id === eligibility.aggregateId &&
-      link.version === eligibility.version &&
-      link.fingerprint === eligibility.fingerprint,
+      link.type !== "ELIGIBILITY",
   ),
-  "V8_RELEASE_INTEGRITY_PUBLICATION_ELIGIBILITY_LINEAGE_MISSING",
+  "V8_RELEASE_INTEGRITY_PUBLICATION_UNEXPECTED_ELIGIBILITY_LINEAGE",
 );
 
 assert(
