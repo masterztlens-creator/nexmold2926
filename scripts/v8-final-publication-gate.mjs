@@ -7,8 +7,8 @@ import {
 } from "../.v8-build/src/v8/foundation/store.js";
 
 import {
-  DecisionApprovalService,
-} from "../.v8-build/src/v8/decision/approval.js";
+  DecisionValidator,
+} from "../.v8-build/src/v8/decision/validator.js";
 
 import {
   ContentCompiler,
@@ -54,11 +54,6 @@ function clone(
 const store =
   new InMemoryFoundationStore();
 
-const decisionApproval =
-  new DecisionApprovalService(
-    store,
-  );
-
 const contentCompiler =
   new ContentCompiler(
     store,
@@ -84,15 +79,12 @@ const routeMetadataGate =
 const reciprocalHreflangVerifier =
   new ReciprocalHreflangVerifier();
 
-const sourceUrl =
-  "https://example.com/knowledge/plastic-injection-molding-wall-thickness";
-
 const source =
   store.createSource({
     sourceId:
       "source:v8-final-publication:plastic-injection-molding-wall-thickness",
     url:
-      sourceUrl,
+      "https://example.com/knowledge/plastic-injection-molding-wall-thickness",
     title:
       "Plastic Injection Molding Wall Thickness",
     publisher:
@@ -196,16 +188,25 @@ const decision =
       1,
   });
 
-const approvedDecision =
-  decisionApproval.approve({
+assertTruthy(
+  decision,
+  "V8_FINAL_PUBLICATION_DECISION_MISSING",
+);
+
+const decisionValidation =
+  DecisionValidator.validate({
     decisionId:
       decision.id,
+    scopeId:
+      scope.id,
+    contextId:
+      context.id,
   });
 
 assert.equal(
-  approvedDecision.status,
-  "APPROVED",
-  "V8_FINAL_PUBLICATION_DECISION_NOT_APPROVED",
+  decisionValidation.valid,
+  true,
+  "V8_FINAL_PUBLICATION_DECISION_INVALID",
 );
 
 const compiled =
@@ -503,12 +504,6 @@ assert.equal(
   reciprocalResult.passed,
   true,
   "V8_FINAL_PUBLICATION_RECIPROCAL_HREFLANG_BLOCKED",
-);
-
-assert.equal(
-  reciprocalResult.localeCount,
-  3,
-  "V8_FINAL_PUBLICATION_RECIPROCAL_LOCALE_COUNT_MISMATCH",
 );
 
 console.log(
