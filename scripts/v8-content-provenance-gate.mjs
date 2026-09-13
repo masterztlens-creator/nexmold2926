@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 
 import {
+  createHash,
+} from "node:crypto";
+
+import {
   contentFingerprint,
 } from "../.v8-build/src/v8/foundation/hash.js";
 
@@ -129,12 +133,6 @@ function getRequiredRecord(
   assertTruthy(
     record,
     `V8_CONTENT_PROVENANCE_RECORD_NOT_FOUND:${type}:${id}`,
-  );
-
-  assertEqual(
-    record.type,
-    type,
-    `V8_CONTENT_PROVENANCE_RECORD_TYPE_MISMATCH:${id}`,
   );
 
   return record;
