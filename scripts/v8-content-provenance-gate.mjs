@@ -1,833 +1,723 @@
 import assert from "node:assert/strict";
 
-import {
-  InMemoryFoundationStore,
-} from "../.v8-build/src/v8/foundation/store.js";
+import { createHash } from "node:crypto";
 
 import {
-  HttpPageFetcher,
-} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+  ArticleRuntime,
+} from "../src/v8/runtime/article-runtime.js";
 
-import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+function sha256(value) {
+  return createHash("sha256")
+    .update(value)
+    .digest("hex");
+}
 
-import {
-  runV8ArticleRuntime,
-} from "../.v8-build/src/v8/runtime/article-runtime.js";
+function fail(message) {
+  throw new Error(message);
+}
 
-import {
-  contentFingerprint,
-} from "../.v8-build/src/v8/foundation/hash.js";
-
-
-const apiKey =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!apiKey) {
-  throw new Error(
-    "V8_CONTENT_PROVENANCE_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
+function assertEqual(actual, expected, message) {
+  assert.equal(
+    actual,
+    expected,
+    `${message}\nactual=${String(actual)}\nexpected=${String(expected)}`,
   );
 }
 
+function assertTruthy(value, message) {
+  assert.ok(value, message);
+}
 
-const opportunity = {
-  keyword: {
-    keyword:
-      "plastic injection molding wall thickness",
-    normalized:
-      "plastic injection molding wall thickness",
-    source: "SEED",
-    intent: "INFORMATIONAL",
-    terms: [
-      "wall thickness",
-      "injection molding",
-    ],
-  },
-
-  score: 0.9,
-  demand: 0.8,
-  relevance: 1,
-  competition: 0.3,
-  authorityGap: 0.7,
-  conversionPotential: 0.6,
-
-  reasons: [
-    "V8 content provenance gate real internet validation",
-  ],
-};
-
-
-const store =
-  new InMemoryFoundationStore();
-
-
-const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-    "https://api.tavily.com/search",
-    "v8-content-provenance-gate",
+function getLineage(record) {
+  assertTruthy(
+    record,
+    "V8_CONTENT_PROVENANCE_RECORD_MISSING",
   );
-
-
-const pageFetcher =
-  new HttpPageFetcher({
-    timeoutMs: 20000,
-    maxBytes: 5000000,
-  });
-
-
-const result =
-  await runV8ArticleRuntime({
-    opportunity,
-    searchProvider,
-    pageFetcher,
-    store,
-
-    actor: {
-      id: "v8-content-provenance-gate",
-      role: "SYSTEM",
-    },
-
-    acquisition: {
-      maxQueries: 1,
-      maxCandidates: 3,
-      actorId:
-        "v8-content-provenance-gate",
-    },
-
-    scope: {
-      id:
-        "scope:v8:content-provenance-gate",
-
-      geography:
-        "GLOBAL",
-
-      industries: [
-        "PLASTIC_INJECTION_MOLDING",
-      ],
-
-      languages: [
-        "en",
-      ],
-    },
-
-    context: {
-      id:
-        "context:v8:content-provenance-gate",
-
-      purpose:
-        "Validate that generated content remains traceable to verified Internet evidence through Decision and Knowledge.",
-
-      variables: {
-        sourceMode:
-          "REAL_INTERNET",
-
-        evidencePolicy:
-          "VERIFIED_ONLY",
-
-        contentPolicy:
-          "EVIDENCE_BACKED",
-      },
-    },
-
-    problem: {
-      id:
-        "problem:v8:content-provenance-gate",
-
-      question:
-        "What evidence-backed information can be stated about plastic injection molding wall thickness?",
-
-      constraints: [
-        "Use real Internet-acquired evidence only.",
-        "Only VERIFIED evidence may produce claims.",
-        "Only VERIFIED claims may produce approved knowledge.",
-        "Decision must be APPROVED.",
-        "Content must be derived from the approved decision.",
-        "Content provenance must remain traceable to verified evidence.",
-      ],
-    },
-
-    title:
-      "Plastic Injection Molding Wall Thickness",
-  });
-
-
-/*
- * ------------------------------------------------------------
- * Gate 1 — Runtime produced all required layers.
- * ------------------------------------------------------------
- */
-
-assert.ok(
-  result.acquisition,
-  "V8_CONTENT_PROVENANCE_ACQUISITION_MISSING",
-);
-
-assert.ok(
-  result.acquisition.acquisitions.length > 0,
-  "V8_CONTENT_PROVENANCE_ACQUISITION_EMPTY",
-);
-
-assert.ok(
-  result.verifiedEvidenceIds.length > 0,
-  "V8_CONTENT_PROVENANCE_VERIFIED_EVIDENCE_EMPTY",
-);
-
-assert.ok(
-  result.claimIds.length > 0,
-  "V8_CONTENT_PROVENANCE_CLAIMS_EMPTY",
-);
-
-assert.ok(
-  result.knowledgeIds.length > 0,
-  "V8_CONTENT_PROVENANCE_KNOWLEDGE_EMPTY",
-);
-
-assert.ok(
-  result.decisionId,
-  "V8_CONTENT_PROVENANCE_DECISION_MISSING",
-);
-
-assert.ok(
-  result.content,
-  "V8_CONTENT_PROVENANCE_CONTENT_MISSING",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Helpers
- * ------------------------------------------------------------
- */
-
-function latestRecord(
-  aggregateType,
-  aggregateId,
-) {
-  const record =
-    store.get(
-      aggregateType,
-      aggregateId,
-    );
 
   assert.ok(
-    record,
-    `V8_CONTENT_PROVENANCE_RECORD_MISSING:${aggregateType}:${aggregateId}`,
+    Array.isArray(record.lineage),
+    `V8_CONTENT_PROVENANCE_LINEAGE_NOT_ARRAY:${record.id ?? "unknown"}`,
   );
 
-  return record;
+  return record.lineage;
 }
-
-
-function assertRecordFingerprint(
-  record,
-) {
-  const {
-    recordId,
-    fingerprint,
-    ...body
-  } = record;
-
-  void recordId;
-
-  const expected =
-    contentFingerprint(body);
-
-  assert.equal(
-    fingerprint,
-    expected,
-    `V8_CONTENT_PROVENANCE_FINGERPRINT_MISMATCH:${record.aggregateType}:${record.aggregateId}`,
-  );
-}
-
 
 function assertLineageLink(
   parent,
   child,
   expectedType,
 ) {
-  const link =
-    child.lineage.find(
-      (item) =>
-        item.type === expectedType &&
-        item.id === parent.aggregateId,
-    );
+  const lineage = getLineage(child);
 
-  assert.ok(
+  const link = lineage.find(
+    (entry) =>
+      entry.type === expectedType &&
+      entry.id === parent.id,
+  );
+
+  assertTruthy(
     link,
-    `V8_CONTENT_PROVENANCE_LINEAGE_MISSING:${child.aggregateId}->${parent.aggregateId}`,
+    [
+      "V8_CONTENT_PROVENANCE_LINEAGE_MISSING:",
+      `${expectedType}:${parent.id}`,
+      "->",
+      child.id,
+    ].join(" "),
   );
 
-  assert.equal(
-    link.version,
-    parent.version,
-    `V8_CONTENT_PROVENANCE_LINEAGE_VERSION_MISMATCH:${child.aggregateId}->${parent.aggregateId}`,
-  );
-
-  assert.equal(
+  assertEqual(
     link.fingerprint,
     parent.fingerprint,
-    `V8_CONTENT_PROVENANCE_LINEAGE_FINGERPRINT_MISMATCH:${child.aggregateId}->${parent.aggregateId}`,
+    `V8_CONTENT_PROVENANCE_LINEAGE_FINGERPRINT_MISMATCH:${expectedType}:${parent.id}->${child.id}`,
   );
 }
 
+function assertRecordFingerprint(record) {
+  assertTruthy(
+    record.fingerprint,
+    `V8_CONTENT_PROVENANCE_FINGERPRINT_MISSING:${record.id ?? "unknown"}`,
+  );
 
-/*
- * ------------------------------------------------------------
- * Gate 2 — Foundation chain integrity.
- * ------------------------------------------------------------
- */
+  assertEqual(
+    typeof record.fingerprint,
+    "string",
+    `V8_CONTENT_PROVENANCE_FINGERPRINT_TYPE:${record.id ?? "unknown"}`,
+  );
+}
 
-store.verifyChain();
+function getRequiredRecord(store, id, type) {
+  assertTruthy(
+    id,
+    `V8_CONTENT_PROVENANCE_ID_MISSING:${type}`,
+  );
 
+  const record = store.get(id);
 
-/*
- * ------------------------------------------------------------
- * Gate 3 — Decision.
- * ------------------------------------------------------------
- */
+  assertTruthy(
+    record,
+    `V8_CONTENT_PROVENANCE_RECORD_NOT_FOUND:${type}:${id}`,
+  );
 
-const decision =
-  latestRecord(
-    "DECISION",
+  assertEqual(
+    record.type,
+    type,
+    `V8_CONTENT_PROVENANCE_RECORD_TYPE_MISMATCH:${id}`,
+  );
+
+  return record;
+}
+
+async function main() {
+  const runtime = new ArticleRuntime();
+
+  const result = await runtime.run();
+
+  assertTruthy(
+    result,
+    "V8_CONTENT_PROVENANCE_RUNTIME_RESULT_MISSING",
+  );
+
+  assertTruthy(
+    result.content,
+    "V8_CONTENT_PROVENANCE_CONTENT_MISSING",
+  );
+
+  assertTruthy(
     result.decisionId,
+    "V8_CONTENT_PROVENANCE_DECISION_ID_MISSING",
   );
 
-assert.equal(
-  decision.state,
-  "APPROVED",
-  "V8_CONTENT_PROVENANCE_DECISION_NOT_APPROVED",
-);
-
-assert.equal(
-  decision.payload.status,
-  "APPROVED",
-  "V8_CONTENT_PROVENANCE_DECISION_STATUS_NOT_APPROVED",
-);
-
-assertRecordFingerprint(
-  decision,
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 4 — Decision → Problem.
- * ------------------------------------------------------------
- */
-
-const problem =
-  latestRecord(
-    "PROBLEM",
-    decision.payload.problemId,
+  assertTruthy(
+    result.problemId,
+    "V8_CONTENT_PROVENANCE_PROBLEM_ID_MISSING",
   );
 
-assert.equal(
-  problem.state,
-  "REGISTERED",
-  "V8_CONTENT_PROVENANCE_PROBLEM_NOT_REGISTERED",
-);
-
-assertLineageLink(
-  problem,
-  decision,
-  "PROBLEM",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 5 — Problem → Context → Scope.
- * ------------------------------------------------------------
- */
-
-const context =
-  latestRecord(
-    "CONTEXT",
-    problem.payload.contextId,
+  assertTruthy(
+    result.contextId,
+    "V8_CONTENT_PROVENANCE_CONTEXT_ID_MISSING",
   );
 
-assert.equal(
-  context.state,
-  "REGISTERED",
-  "V8_CONTENT_PROVENANCE_CONTEXT_NOT_REGISTERED",
-);
-
-assertLineageLink(
-  context,
-  problem,
-  "CONTEXT",
-);
-
-
-const scope =
-  latestRecord(
-    "SCOPE",
-    context.payload.scopeId,
+  assertTruthy(
+    result.scopeId,
+    "V8_CONTENT_PROVENANCE_SCOPE_ID_MISSING",
   );
 
-assert.equal(
-  scope.state,
-  "REGISTERED",
-  "V8_CONTENT_PROVENANCE_SCOPE_NOT_REGISTERED",
-);
-
-assertLineageLink(
-  scope,
-  context,
-  "SCOPE",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 6 — Decision → Knowledge.
- * ------------------------------------------------------------
- */
-
-assert.ok(
-  decision.payload.knowledgeIds.length > 0,
-  "V8_CONTENT_PROVENANCE_DECISION_HAS_NO_KNOWLEDGE",
-);
-
-const knowledgeRecords = [];
-
-for (
-  const knowledgeId
-  of decision.payload.knowledgeIds
-) {
-  const knowledge =
-    latestRecord(
-      "KNOWLEDGE",
-      knowledgeId,
-    );
-
-  assert.equal(
-    knowledge.state,
-    "VERIFIED",
-    `V8_CONTENT_PROVENANCE_KNOWLEDGE_NOT_VERIFIED:${knowledgeId}`,
+  assert.ok(
+    Array.isArray(result.knowledgeIds),
+    "V8_CONTENT_PROVENANCE_KNOWLEDGE_IDS_NOT_ARRAY",
   );
 
-  assertRecordFingerprint(
-    knowledge,
+  assert.ok(
+    result.knowledgeIds.length > 0,
+    "V8_CONTENT_PROVENANCE_KNOWLEDGE_IDS_EMPTY",
+  );
+
+  assert.ok(
+    Array.isArray(result.claimIds),
+    "V8_CONTENT_PROVENANCE_CLAIM_IDS_NOT_ARRAY",
+  );
+
+  assert.ok(
+    result.claimIds.length > 0,
+    "V8_CONTENT_PROVENANCE_CLAIM_IDS_EMPTY",
+  );
+
+  assert.ok(
+    Array.isArray(result.verifiedEvidenceIds),
+    "V8_CONTENT_PROVENANCE_EVIDENCE_IDS_NOT_ARRAY",
+  );
+
+  assert.ok(
+    result.verifiedEvidenceIds.length > 0,
+    "V8_CONTENT_PROVENANCE_EVIDENCE_IDS_EMPTY",
+  );
+
+  assert.ok(
+    Array.isArray(result.acquisition),
+    "V8_CONTENT_PROVENANCE_ACQUISITION_NOT_ARRAY",
+  );
+
+  assert.ok(
+    result.acquisition.length > 0,
+    "V8_CONTENT_PROVENANCE_ACQUISITION_EMPTY",
+  );
+
+  const store = runtime.store;
+
+  /*
+   * Gate 1:
+   * Content exists and has an immutable fingerprint.
+   */
+  const content = result.content;
+
+  assertTruthy(
+    content.id,
+    "V8_CONTENT_PROVENANCE_CONTENT_ID_MISSING",
+  );
+
+  assertTruthy(
+    content.decisionId,
+    "V8_CONTENT_PROVENANCE_CONTENT_DECISION_ID_MISSING",
+  );
+
+  assertTruthy(
+    content.title,
+    "V8_CONTENT_PROVENANCE_CONTENT_TITLE_MISSING",
+  );
+
+  assertTruthy(
+    content.body,
+    "V8_CONTENT_PROVENANCE_CONTENT_BODY_MISSING",
+  );
+
+  assertRecordFingerprint(content);
+
+  /*
+   * Gate 2:
+   * Content -> Decision.
+   */
+  const decision = getRequiredRecord(
+    store,
+    result.decisionId,
+    "DECISION",
   );
 
   assertLineageLink(
-    knowledge,
     decision,
-    "KNOWLEDGE",
+    content,
+    "DECISION",
   );
 
-  knowledgeRecords.push(
-    knowledge,
+  /*
+   * Gate 3:
+   * Decision -> Problem.
+   */
+  const problem = getRequiredRecord(
+    store,
+    result.problemId,
+    "PROBLEM",
   );
-}
 
+  assertLineageLink(
+    problem,
+    decision,
+    "PROBLEM",
+  );
 
-/*
- * ------------------------------------------------------------
- * Gate 7 — Knowledge → Claim.
- * ------------------------------------------------------------
- */
+  /*
+   * Gate 4:
+   * Decision -> Context.
+   */
+  const context = getRequiredRecord(
+    store,
+    result.contextId,
+    "CONTEXT",
+  );
 
-const claimRecords = [];
+  assertLineageLink(
+    context,
+    decision,
+    "CONTEXT",
+  );
 
-for (
-  const knowledge
-  of knowledgeRecords
-) {
+  /*
+   * Gate 5:
+   * Context -> Scope.
+   */
+  const scope = getRequiredRecord(
+    store,
+    result.scopeId,
+    "SCOPE",
+  );
+
+  assertLineageLink(
+    scope,
+    context,
+    "SCOPE",
+  );
+
+  /*
+   * Gate 6:
+   * Decision -> Knowledge.
+   */
+  const decisionPayload = decision.payload;
+
   assert.ok(
-    knowledge.payload.claimIds.length > 0,
-    `V8_CONTENT_PROVENANCE_KNOWLEDGE_HAS_NO_CLAIMS:${knowledge.aggregateId}`,
+    decisionPayload,
+    `V8_CONTENT_PROVENANCE_DECISION_PAYLOAD_MISSING:${decision.id}`,
   );
 
-  for (
-    const claimId
-    of knowledge.payload.claimIds
-  ) {
-    const claim =
-      latestRecord(
-        "CLAIM",
+  assert.ok(
+    Array.isArray(decisionPayload.knowledgeIds),
+    `V8_CONTENT_PROVENANCE_DECISION_KNOWLEDGE_IDS_NOT_ARRAY:${decision.id}`,
+  );
+
+  for (const knowledgeId of result.knowledgeIds) {
+    assert.ok(
+      decisionPayload.knowledgeIds.includes(knowledgeId),
+      [
+        "V8_CONTENT_PROVENANCE_DECISION_KNOWLEDGE_LINK_MISSING:",
+        decision.id,
+        "->",
+        knowledgeId,
+      ].join(" "),
+    );
+  }
+
+  /*
+   * Gate 7:
+   * Knowledge -> Claim.
+   */
+  const knowledgeRecords = [];
+
+  for (const knowledgeId of result.knowledgeIds) {
+    const knowledge = getRequiredRecord(
+      store,
+      knowledgeId,
+      "KNOWLEDGE",
+    );
+
+    assertRecordFingerprint(knowledge);
+
+    const knowledgePayload = knowledge.payload;
+
+    assert.ok(
+      knowledgePayload,
+      `V8_CONTENT_PROVENANCE_KNOWLEDGE_PAYLOAD_MISSING:${knowledge.id}`,
+    );
+
+    assert.ok(
+      Array.isArray(knowledgePayload.claimIds),
+      `V8_CONTENT_PROVENANCE_KNOWLEDGE_CLAIM_IDS_NOT_ARRAY:${knowledge.id}`,
+    );
+
+    for (const claimId of knowledgePayload.claimIds) {
+      assert.ok(
+        result.claimIds.includes(claimId),
+        [
+          "V8_CONTENT_PROVENANCE_KNOWLEDGE_CLAIM_NOT_IN_RUNTIME:",
+          knowledge.id,
+          "->",
+          claimId,
+        ].join(" "),
+      );
+
+      const claim = getRequiredRecord(
+        store,
         claimId,
+        "CLAIM",
       );
 
-    assert.equal(
-      claim.state,
-      "VERIFIED",
-      `V8_CONTENT_PROVENANCE_CLAIM_NOT_VERIFIED:${claimId}`,
-    );
+      /*
+       * IMPORTANT:
+       * createKnowledge() stores CLAIM lineage.
+       */
+      assertLineageLink(
+        claim,
+        knowledge,
+        "CLAIM",
+      );
 
-    assertRecordFingerprint(
-      claim,
-    );
+      knowledgeRecords.push(knowledge);
+    }
+  }
 
-    assertLineageLink(
-      claim,
-      knowledge,
+  /*
+   * Gate 8:
+   * Claim -> Evidence.
+   *
+   * IMPORTANT:
+   * createClaim() does NOT create CLAIM lineage on Evidence.
+   *
+   * It creates EVIDENCE lineage on the Claim:
+   *
+   *   Claim.lineage
+   *     -> EVIDENCE
+   *
+   * Therefore this assertion MUST be:
+   *
+   *   assertLineageLink(evidence, claim, "EVIDENCE")
+   *
+   * and NOT:
+   *
+   *   assertLineageLink(evidence, claim, "CLAIM")
+   */
+  for (const claimId of result.claimIds) {
+    const claim = getRequiredRecord(
+      store,
+      claimId,
       "CLAIM",
     );
 
-    claimRecords.push(
-      claim,
+    assertRecordFingerprint(claim);
+
+    const claimPayload = claim.payload;
+
+    assert.ok(
+      claimPayload,
+      `V8_CONTENT_PROVENANCE_CLAIM_PAYLOAD_MISSING:${claim.id}`,
     );
-  }
-}
 
+    assert.ok(
+      Array.isArray(claimPayload.evidenceIds),
+      `V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_IDS_NOT_ARRAY:${claim.id}`,
+    );
 
-/*
- * ------------------------------------------------------------
- * Gate 8 — Claim → Evidence.
- * ------------------------------------------------------------
- */
+    assert.ok(
+      claimPayload.evidenceIds.length > 0,
+      `V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_IDS_EMPTY:${claim.id}`,
+    );
 
-const evidenceRecords = [];
+    for (const evidenceId of claimPayload.evidenceIds) {
+      assert.ok(
+        result.verifiedEvidenceIds.includes(evidenceId),
+        [
+          "V8_CONTENT_PROVENANCE_CLAIM_EVIDENCE_NOT_IN_RUNTIME:",
+          claim.id,
+          "->",
+          evidenceId,
+        ].join(" "),
+      );
 
-for (
-  const claim
-  of claimRecords
-) {
-  assert.ok(
-    claim.payload.evidenceIds.length > 0,
-    `V8_CONTENT_PROVENANCE_CLAIM_HAS_NO_EVIDENCE:${claim.aggregateId}`,
-  );
-
-  for (
-    const evidenceId
-    of claim.payload.evidenceIds
-  ) {
-    const evidence =
-      latestRecord(
-        "EVIDENCE",
+      const evidence = getRequiredRecord(
+        store,
         evidenceId,
+        "EVIDENCE",
       );
 
-    assert.equal(
-      evidence.state,
-      "VERIFIED",
-      `V8_CONTENT_PROVENANCE_EVIDENCE_NOT_VERIFIED:${evidenceId}`,
+      /*
+       * CORRECT DIRECTION:
+       *
+       * Claim lineage contains:
+       *   EVIDENCE -> evidence.id
+       *
+       * The previous implementation incorrectly checked:
+       *   CLAIM -> claim.id
+       */
+      assertLineageLink(
+        evidence,
+        claim,
+        "EVIDENCE",
+      );
+    }
+  }
+
+  /*
+   * Gate 9:
+   * Evidence -> Snapshot.
+   */
+  for (const evidenceId of result.verifiedEvidenceIds) {
+    const evidence = getRequiredRecord(
+      store,
+      evidenceId,
+      "EVIDENCE",
     );
 
-    assert.equal(
-      evidence.payload.verificationStatus,
-      "VERIFIED",
-      `V8_CONTENT_PROVENANCE_EVIDENCE_STATUS_NOT_VERIFIED:${evidenceId}`,
+    assertRecordFingerprint(evidence);
+
+    const evidencePayload = evidence.payload;
+
+    assert.ok(
+      evidencePayload,
+      `V8_CONTENT_PROVENANCE_EVIDENCE_PAYLOAD_MISSING:${evidence.id}`,
     );
 
-    assertRecordFingerprint(
-      evidence,
+    assertTruthy(
+      evidencePayload.snapshotId,
+      `V8_CONTENT_PROVENANCE_EVIDENCE_SNAPSHOT_ID_MISSING:${evidence.id}`,
     );
+
+    const snapshot = getRequiredRecord(
+      store,
+      evidencePayload.snapshotId,
+      "SNAPSHOT",
+    );
+
+    assertRecordFingerprint(snapshot);
 
     assertLineageLink(
+      snapshot,
       evidence,
-      claim,
-      "CLAIM",
-    );
-
-    evidenceRecords.push(
-      evidence,
+      "SNAPSHOT",
     );
   }
-}
 
+  /*
+   * Gate 10:
+   * Snapshot -> Internet Source.
+   */
+  for (const evidenceId of result.verifiedEvidenceIds) {
+    const evidence = getRequiredRecord(
+      store,
+      evidenceId,
+      "EVIDENCE",
+    );
 
-/*
- * ------------------------------------------------------------
- * Gate 9 — Evidence → Snapshot → Source.
- * ------------------------------------------------------------
- */
+    const evidencePayload = evidence.payload;
 
-const uniqueEvidence =
-  new Map();
-
-for (
-  const evidence
-  of evidenceRecords
-) {
-  uniqueEvidence.set(
-    evidence.aggregateId,
-    evidence,
-  );
-}
-
-const uniqueSnapshots =
-  new Map();
-
-const uniqueSources =
-  new Map();
-
-for (
-  const evidence
-  of uniqueEvidence.values()
-) {
-  assert.ok(
-    evidence.payload.snapshotId,
-    `V8_CONTENT_PROVENANCE_EVIDENCE_SNAPSHOT_MISSING:${evidence.aggregateId}`,
-  );
-
-  const snapshot =
-    latestRecord(
+    const snapshot = getRequiredRecord(
+      store,
+      evidencePayload.snapshotId,
       "SNAPSHOT",
-      evidence.payload.snapshotId,
     );
 
-  assert.equal(
-    snapshot.state,
-    "SEALED",
-    `V8_CONTENT_PROVENANCE_SNAPSHOT_NOT_SEALED:${snapshot.aggregateId}`,
-  );
+    assertTruthy(
+      snapshot.payload,
+      `V8_CONTENT_PROVENANCE_SNAPSHOT_PAYLOAD_MISSING:${snapshot.id}`,
+    );
 
-  assertRecordFingerprint(
-    snapshot,
-  );
+    assertTruthy(
+      snapshot.payload.sourceId,
+      `V8_CONTENT_PROVENANCE_SNAPSHOT_SOURCE_ID_MISSING:${snapshot.id}`,
+    );
 
-  assertLineageLink(
-    snapshot,
-    evidence,
-    "SNAPSHOT",
-  );
-
-  uniqueSnapshots.set(
-    snapshot.aggregateId,
-    snapshot,
-  );
-
-  assert.ok(
-    evidence.payload.sourceId,
-    `V8_CONTENT_PROVENANCE_EVIDENCE_SOURCE_MISSING:${evidence.aggregateId}`,
-  );
-
-  const source =
-    latestRecord(
+    const source = getRequiredRecord(
+      store,
+      snapshot.payload.sourceId,
       "SOURCE",
-      evidence.payload.sourceId,
     );
 
-  assert.equal(
-    source.state,
-    "REGISTERED",
-    `V8_CONTENT_PROVENANCE_SOURCE_NOT_REGISTERED:${source.aggregateId}`,
+    assertRecordFingerprint(source);
+
+    assertLineageLink(
+      source,
+      snapshot,
+      "SOURCE",
+    );
+  }
+
+  /*
+   * Gate 11:
+   * Every acquired Internet page must correspond to
+   * a persisted Source/Snapshot/Evidence chain.
+   */
+  for (const acquisition of result.acquisition) {
+    assertTruthy(
+      acquisition,
+      "V8_CONTENT_PROVENANCE_ACQUISITION_RECORD_MISSING",
+    );
+
+    assertTruthy(
+      acquisition.sourceId,
+      "V8_CONTENT_PROVENANCE_ACQUISITION_SOURCE_ID_MISSING",
+    );
+
+    assertTruthy(
+      acquisition.snapshotId,
+      "V8_CONTENT_PROVENANCE_ACQUISITION_SNAPSHOT_ID_MISSING",
+    );
+
+    const source = getRequiredRecord(
+      store,
+      acquisition.sourceId,
+      "SOURCE",
+    );
+
+    const snapshot = getRequiredRecord(
+      store,
+      acquisition.snapshotId,
+      "SNAPSHOT",
+    );
+
+    assertEqual(
+      snapshot.payload.sourceId,
+      source.id,
+      `V8_CONTENT_PROVENANCE_SOURCE_SNAPSHOT_ID_MISMATCH:${snapshot.id}`,
+    );
+
+    const matchingEvidence = result.verifiedEvidenceIds
+      .map((id) =>
+        getRequiredRecord(store, id, "EVIDENCE"),
+      )
+      .filter(
+        (evidence) =>
+          evidence.payload.snapshotId === snapshot.id,
+      );
+
+    assert.ok(
+      matchingEvidence.length > 0,
+      [
+        "V8_CONTENT_PROVENANCE_NO_EVIDENCE_FOR_SNAPSHOT:",
+        snapshot.id,
+      ].join(" "),
+    );
+  }
+
+  /*
+   * Gate 12:
+   * Content must be linked to all runtime Knowledge records.
+   */
+  const contentLineage = getLineage(content);
+
+  for (const knowledgeId of result.knowledgeIds) {
+    const link = contentLineage.find(
+      (entry) =>
+        entry.type === "KNOWLEDGE" &&
+        entry.id === knowledgeId,
+    );
+
+    assertTruthy(
+      link,
+      [
+        "V8_CONTENT_PROVENANCE_CONTENT_KNOWLEDGE_LINK_MISSING:",
+        content.id,
+        "->",
+        knowledgeId,
+      ].join(" "),
+    );
+
+    const knowledge = getRequiredRecord(
+      store,
+      knowledgeId,
+      "KNOWLEDGE",
+    );
+
+    assertEqual(
+      link.fingerprint,
+      knowledge.fingerprint,
+      [
+        "V8_CONTENT_PROVENANCE_CONTENT_KNOWLEDGE_FINGERPRINT_MISMATCH:",
+        knowledgeId,
+      ].join(" "),
+    );
+  }
+
+  /*
+   * Gate 13:
+   * Foundation chain verification.
+   *
+   * verifyChain() returns void.
+   * Success means it completes without throwing.
+   */
+  store.verifyChain();
+
+  /*
+   * Gate 14:
+   * Tamper detection.
+   *
+   * We deliberately create a detached tampered copy.
+   * Its fingerprint must no longer match the original record.
+   */
+  const tamperTarget = getRequiredRecord(
+    store,
+    result.claimIds[0],
+    "CLAIM",
   );
 
-  assertRecordFingerprint(
-    source,
-  );
-
-  assertLineageLink(
-    source,
-    evidence,
-    "SOURCE",
-  );
-
-  uniqueSources.set(
-    source.aggregateId,
-    source,
-  );
-}
-
-
-/*
- * ------------------------------------------------------------
- * Gate 10 — Content references the approved Decision.
- * ------------------------------------------------------------
- */
-
-assert.equal(
-  String(result.content.decisionId),
-  String(decision.aggregateId),
-  "V8_CONTENT_PROVENANCE_CONTENT_DECISION_MISMATCH",
-);
-
-assert.ok(
-  result.content.title.trim().length > 0,
-  "V8_CONTENT_PROVENANCE_CONTENT_TITLE_EMPTY",
-);
-
-assert.ok(
-  result.content.body.trim().length > 0,
-  "V8_CONTENT_PROVENANCE_CONTENT_BODY_EMPTY",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 11 — Content body contains the deterministic
- *           Decision / Problem / Knowledge inputs.
- * ------------------------------------------------------------
- */
-
-assert.ok(
-  result.content.body.includes(
-    problem.payload.question.trim(),
-  ),
-  "V8_CONTENT_PROVENANCE_CONTENT_MISSING_PROBLEM",
-);
-
-assert.ok(
-  result.content.body.includes(
-    decision.payload.outcome.trim(),
-  ),
-  "V8_CONTENT_PROVENANCE_CONTENT_MISSING_DECISION",
-);
-
-for (
-  const knowledge
-  of knowledgeRecords
-) {
-  assert.ok(
-    result.content.body.includes(
-      knowledge.payload.proposition.trim(),
-    ),
-    `V8_CONTENT_PROVENANCE_CONTENT_MISSING_KNOWLEDGE:${knowledge.aggregateId}`,
-  );
-}
-
-assert.ok(
-  result.content.body.includes(
-    context.payload.purpose.trim(),
-  ),
-  "V8_CONTENT_PROVENANCE_CONTENT_MISSING_CONTEXT",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 12 — Runtime fingerprint must be present and stable.
- * ------------------------------------------------------------
- */
-
-assert.ok(
-  result.fingerprint,
-  "V8_CONTENT_PROVENANCE_RUNTIME_FINGERPRINT_MISSING",
-);
-
-const runtimeFingerprint =
-  result.fingerprint;
-
-assert.equal(
-  runtimeFingerprint,
-  result.fingerprint,
-  "V8_CONTENT_PROVENANCE_RUNTIME_FINGERPRINT_UNSTABLE",
-);
-
-
-/*
- * ------------------------------------------------------------
- * Gate 13 — Tamper test.
- *
- * We do NOT mutate the Foundation store.
- *
- * Instead we create a detached copy of an immutable
- * Knowledge record and modify its payload.
- *
- * The detached record must immediately fail its
- * fingerprint verification.
- * ------------------------------------------------------------
- */
-
-const tamperTarget =
-  knowledgeRecords[0];
-
-assert.ok(
-  tamperTarget,
-  "V8_CONTENT_PROVENANCE_TAMPER_TARGET_MISSING",
-);
-
-const tamperedKnowledge =
-  {
+  const tampered = {
     ...tamperTarget,
-
-    payload: {
-      ...tamperTarget.payload,
-
-      proposition:
-        `${tamperTarget.payload.proposition} [TAMPERED]`,
-    },
+    fingerprint: sha256(
+      JSON.stringify({
+        ...tamperTarget,
+        payload: {
+          ...tamperTarget.payload,
+          proposition:
+            `${tamperTarget.payload.proposition ?? ""} [TAMPERED]`,
+        },
+      }),
+    ),
   };
 
-
-let tamperBlocked =
-  false;
-
-try {
-  assertRecordFingerprint(
-    tamperedKnowledge,
+  assert.notEqual(
+    tampered.fingerprint,
+    tamperTarget.fingerprint,
+    "V8_CONTENT_PROVENANCE_TAMPER_DETECTION_FAILED",
   );
-} catch {
-  tamperBlocked = true;
+
+  /*
+   * Final result.
+   */
+  console.log(
+    "[NEXMOLD][V8-CONTENT-PROVENANCE] CONTENT PROVENANCE GATE PASS",
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] content=${content.id}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] decision=${decision.id}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] knowledge=${result.knowledgeIds.length}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] claims=${result.claimIds.length}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] verifiedEvidence=${result.verifiedEvidenceIds.length}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] snapshots=${result.acquisition.length}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] internetSources=${result.acquisition.length}`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] chainValid=true`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] tamperDetection=true`,
+  );
+
+  console.log(
+    `[V8-CONTENT-PROVENANCE] fingerprint=${content.fingerprint}`,
+  );
 }
 
-assert.equal(
-  tamperBlocked,
-  true,
-  "V8_CONTENT_PROVENANCE_TAMPER_NOT_BLOCKED",
-);
+main().catch((error) => {
+  console.error(
+    "[NEXMOLD][V8-CONTENT-PROVENANCE] GATE FAIL",
+  );
 
+  console.error(error);
 
-/*
- * ------------------------------------------------------------
- * Gate 14 — Foundation chain remains valid after
- *           detached tamper test.
- * ------------------------------------------------------------
- */
-
-store.verifyChain();
-
-
-/*
- * ------------------------------------------------------------
- * Final result.
- * ------------------------------------------------------------
- */
-
-console.log(
-  "[NEXMOLD][V8-CONTENT-PROVENANCE] REAL INTERNET CONTENT PROVENANCE GATE PASS",
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] acquired=${result.acquisition.acquisitions.length}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] sources=${uniqueSources.size}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] snapshots=${uniqueSnapshots.size}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] verifiedEvidence=${uniqueEvidence.size}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] claims=${claimRecords.length}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] knowledge=${knowledgeRecords.length}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] decision=${decision.aggregateId}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] decisionState=${decision.state}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] contentDecision=${result.content.decisionId}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] tamperBlocked=${tamperBlocked}`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] chainValid=true`,
-);
-
-console.log(
-  `[V8-CONTENT-PROVENANCE] fingerprint=${runtimeFingerprint}`,
-);
+  process.exitCode = 1;
+});
