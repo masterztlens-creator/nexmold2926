@@ -68,6 +68,7 @@ jobs:
           test -f postcss.config.cjs
           test -f tailwind.config.mjs
           test -f scripts/v8-final-gate.mjs
+          test -f scripts/v8-final-publication-gate.mjs
           test -f scripts/v8-production-gate.mjs
           test -f build-orchestrator.mjs
 
@@ -194,6 +195,20 @@ jobs:
 
           node scripts/v8-final-gate.mjs
 
+      - name: V8-19 Final Publication Gate
+        shell: bash
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${V8_SEARCH_API_KEY:-}" ]; then
+            echo "ERROR: V8_SEARCH_API_KEY is required for the production publication gate"
+            exit 1
+          fi
+
+          node scripts/v8-final-publication-gate.mjs
+
       - name: Real production build + V8-09 integration chain
         shell: bash
         run: |
@@ -201,4 +216,3 @@ jobs:
 
           node --experimental-strip-types \
             build-orchestrator.mjs
-
