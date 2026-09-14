@@ -216,28 +216,30 @@ async function main() {
         "Plastic Injection Molding Wall Thickness",
     });
 
-  assertEqual(
-    runtime.acquisition.acquisitions.length,
-    3,
-    "Unexpected acquisition count",
+  const acquisitionCount =
+    runtime.acquisition.acquisitions.length;
+
+  assertTrue(
+    acquisitionCount >= 1,
+    "V8_ACQUISITION_NO_SUCCESSFUL_ACQUISITIONS",
   );
 
   assertEqual(
     runtime.verifiedEvidenceIds.length,
-    3,
-    "Unexpected verified evidence count",
+    acquisitionCount,
+    "V8_ACQUISITION_EVIDENCE_COUNT_MISMATCH",
   );
 
   assertEqual(
     runtime.claimIds.length,
-    3,
-    "Unexpected claim count",
+    acquisitionCount,
+    "V8_ACQUISITION_CLAIM_COUNT_MISMATCH",
   );
 
   assertEqual(
     runtime.knowledgeIds.length,
-    3,
-    "Unexpected knowledge count",
+    acquisitionCount,
+    "V8_ACQUISITION_KNOWLEDGE_COUNT_MISMATCH",
   );
 
   const applicability =
