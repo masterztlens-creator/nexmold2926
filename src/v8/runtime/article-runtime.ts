@@ -263,7 +263,7 @@ function canonicalEvidenceId(
         evidence.flowDirection,
 
       extractionConfidence:
-        evidence.extractionConfidence,
+        evidence.extractionConfidence ?? "LOW",
     }),
   ).toString();
 }
