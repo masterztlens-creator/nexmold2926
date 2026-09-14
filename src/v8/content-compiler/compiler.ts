@@ -115,12 +115,6 @@ export class ContentCompiler {
       "Content title cannot be empty.",
     );
 
-    this.validator.assert({
-      decisionId: input.decisionId,
-      scopeId: input.scopeId,
-      contextId: input.contextId,
-    });
-
     const decision =
       this.store.get<DecisionPayload>(
         "DECISION",
@@ -152,6 +146,12 @@ export class ContentCompiler {
       "V8_CONTENT_COMPILER_CONTEXT_MISMATCH",
       "Problem context does not match compiler context.",
     );
+
+    this.validator.assert({
+      decisionId: input.decisionId,
+      scopeId: input.scopeId,
+      contextId: input.contextId,
+    });
 
     const context =
       this.store.get<ContextPayload>(
