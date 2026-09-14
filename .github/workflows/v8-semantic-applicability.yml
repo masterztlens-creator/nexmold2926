@@ -1,4 +1,4 @@
-name: V8-22A Semantic Applicability Gate
+name: V8-22A Semantic Applicability
 
 on:
   push:
@@ -18,12 +18,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: v8-semantic-applicability-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  v8-22a-semantic-applicability:
+  semantic-applicability:
     name: V8-22A Semantic Applicability
     runs-on: ubuntu-latest
 
@@ -64,13 +60,18 @@ jobs:
           test -f .v8-build/src/v8/applicability/semantic-types.js
 
       - name: Run V8-22A Semantic Applicability Gate
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-semantic-applicability-gate.mjs
 
       - name: Emit gate identity
+        if: success()
         shell: bash
         run: |
           set -euo pipefail
 
-          echo "V8-22A_GATE=SEMANTIC_APPLICABILITY"
-          echo "V8-22A_SOURCE_SHA=${GITHUB_SHA}"
-          echo "V8-22A_STATUS=PASS"
+          echo "[V8-22A] semantic applicability gate identity"
+          echo "[V8-22A] source_sha=${GITHUB_SHA}"
+          echo "[V8-22A] workflow=${GITHUB_WORKFLOW}"
+          echo "[V8-22A] run_id=${GITHUB_RUN_ID}"
+          echo "[V8-22A] status=PASS"
