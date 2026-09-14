@@ -18,35 +18,53 @@ export type SemanticApplicabilityReason =
   | "SEMANTIC_RELATION_MISSING"
   | "SEMANTIC_RELATION_CONFLICT";
 
-export interface SemanticRelation {
-  readonly subject:
-    | ProblemId
-    | KnowledgeId
-    | ClaimId;
-
-  readonly predicate:
-    | "RELEVANT_TO"
-    | "COVERS"
-    | "CONDITION_COMPATIBLE"
-    | "SCOPE_COMPATIBLE"
-    | "CONFLICTS_WITH";
-
-  readonly object:
-    | ProblemId
-    | KnowledgeId
-    | ClaimId
-    | ScopeId;
-
-  readonly source:
-    | "EXPLICIT"
-    | "VERIFIED_DERIVATION";
-}
+export type SemanticRelation =
+  | {
+      readonly subject: KnowledgeId;
+      readonly predicate: "RELEVANT_TO";
+      readonly object: ProblemId;
+      readonly source:
+        | "EXPLICIT"
+        | "VERIFIED_DERIVATION";
+    }
+  | {
+      readonly subject: ClaimId;
+      readonly predicate: "COVERS";
+      readonly object: KnowledgeId;
+      readonly source:
+        | "EXPLICIT"
+        | "VERIFIED_DERIVATION";
+    }
+  | {
+      readonly subject: ClaimId;
+      readonly predicate: "CONDITION_COMPATIBLE";
+      readonly object: ProblemId;
+      readonly source:
+        | "EXPLICIT"
+        | "VERIFIED_DERIVATION";
+    }
+  | {
+      readonly subject: KnowledgeId;
+      readonly predicate: "SCOPE_COMPATIBLE";
+      readonly object: ScopeId;
+      readonly source:
+        | "EXPLICIT"
+        | "VERIFIED_DERIVATION";
+    }
+  | {
+      readonly subject: KnowledgeId | ClaimId;
+      readonly predicate: "CONFLICTS_WITH";
+      readonly object: ProblemId;
+      readonly source:
+        | "EXPLICIT"
+        | "VERIFIED_DERIVATION";
+    };
 
 export interface SemanticApplicabilityInput {
   readonly problemId: ProblemId;
   readonly knowledgeId: KnowledgeId;
   readonly scopeId: ScopeId;
-
+  readonly claimIds: readonly ClaimId[];
   readonly relations: readonly SemanticRelation[];
 }
 
