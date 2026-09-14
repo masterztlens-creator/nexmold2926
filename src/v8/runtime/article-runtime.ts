@@ -225,16 +225,45 @@ function canonicalEvidenceId(
         sourceId,
       snapshotId,
       snapshotContentHash,
+
       locator:
         evidence.locator,
       excerpt:
         evidence.excerpt,
+
+      page:
+        evidence.page,
+      printedPage:
+        evidence.printedPage,
+
+      section:
+        evidence.section,
+      table:
+        evidence.table,
+      row:
+        evidence.row,
+
       parameter:
         evidence.parameter,
       value:
         evidence.value,
       unit:
         evidence.unit,
+
+      materialManufacturer:
+        evidence.materialManufacturer,
+      materialGrade:
+        evidence.materialGrade,
+
+      testMethod:
+        evidence.testMethod,
+      testCondition:
+        evidence.testCondition,
+      flowDirection:
+        evidence.flowDirection,
+
+      extractionConfidence:
+        evidence.extractionConfidence,
     }),
   ).toString();
 }
@@ -746,4 +775,3 @@ export async function runV8ArticleRuntime(
     fingerprint,
   };
 }
-
