@@ -213,6 +213,116 @@ const DEFAULT_ACTOR: AuditActor = {
   role: "SYSTEM",
 };
 
+function canonicalEvidenceId(
+  sourceId: string,
+  snapshotId: string,
+  snapshotContentHash: string,
+  evidence: EvidencePayload,
+): string {
+  return evidenceId(
+    contentFingerprint({
+      source:
+        sourceId,
+      snapshotId,
+      snapshotContentHash,
+      locator:
+        evidence.locator,
+      excerpt:
+        evidence.excerpt,
+      parameter:
+        evidence.parameter,
+      value:
+        evidence.value,
+      unit:
+        evidence.unit,
+    }),
+  ).toString();
+}
+
+/*
+ * Runtime Truth Selection
+ *
+ * Acquisition persists the complete Evidence inventory for every fetched
+ * Internet page. That inventory is intentionally broader than the Evidence
+ * set used by one Article Runtime execution.
+ *
+ * The Article Runtime therefore selects exactly one canonical Evidence
+ * aggregate from each successful acquisition. Selection is deterministic:
+ *
+ *   1. preserve acquisition order;
+ *   2. preserve extractor order within an acquisition;
+ *   3. choose the first canonical Evidence ID not already selected.
+ *
+ * This does not delete, mutate, or truncate persisted Evidence. It only
+ * defines which Evidence aggregates become inputs to TruthProducer for this
+ * runtime execution.
+ */
+function selectRuntimeEvidence(
+  acquisitions: readonly ResearchAcquisitionResult["acquisitions"][number][],
+): readonly {
+  readonly id: string;
+  readonly payload: EvidencePayload;
+}[] {
+  const selected: {
+    id: string;
+    payload: EvidencePayload;
+  }[] = [];
+
+  const selectedIds = new Set<string>();
+
+  for (const record of acquisitions) {
+    let selectedForAcquisition:
+      | {
+          id: string;
+          payload: EvidencePayload;
+        }
+      | undefined;
+
+    for (const payload of record.acquisition.evidence) {
+      const id = canonicalEvidenceId(
+        record.acquisition.sourceId,
+        record.acquisition.snapshotId,
+        record.acquisition.snapshot.contentHash,
+        payload,
+      );
+
+      if (selectedIds.has(id)) {
+        continue;
+      }
+
+      selectedForAcquisition = {
+        id,
+        payload,
+      };
+
+      break;
+    }
+
+    invariant(
+      selectedForAcquisition !== undefined,
+      "V8_ARTICLE_RUNTIME_ACQUISITION_WITHOUT_SELECTABLE_EVIDENCE",
+      `Acquisition ${record.candidateUrl} produced no selectable canonical Evidence.`,
+    );
+
+    selectedIds.add(
+      selectedForAcquisition.id,
+    );
+
+    selected.push(
+      selectedForAcquisition,
+    );
+  }
+
+  invariant(
+    selected.length ===
+      acquisitions.length,
+    "V8_ARTICLE_RUNTIME_EVIDENCE_SELECTION_INCOMPLETE",
+    "Runtime Evidence selection did not produce one canonical Evidence record per acquisition.",
+  );
+
+  return selected;
+}
+
 export async function runV8ArticleRuntime(
   input: ArticleRuntimeInput,
 ): Promise<ArticleRuntimeResult> {
@@ -260,51 +370,35 @@ export async function runV8ArticleRuntime(
   );
 
   /*
-   * Evidence identity is defined by the Foundation identity fields,
-   * not by extractionConfidence.
+   * The Foundation retains the complete Evidence inventory.
    *
-   * Multiple acquisition candidates may therefore resolve to the same
-   * canonical Evidence ID. Runtime verification must operate on the
-   * canonical ID set so that a single Evidence aggregate is verified
-   * exactly once.
+   * Runtime Truth Production uses one deterministic canonical Evidence
+   * aggregate per acquisition rather than promoting the entire extraction
+   * inventory into Claims and Knowledge.
    */
-  const evidenceIds = [
-    ...new Set(
-      acquisition.acquisitions.flatMap(
-        (record) =>
-          record.acquisition.evidence.map(
-            (evidence) =>
-              evidenceId(
-                contentFingerprint({
-                  source:
-                    record.acquisition.sourceId,
-                  snapshotId:
-                    record.acquisition.snapshotId,
-                  snapshotContentHash:
-                    record.acquisition.snapshot.contentHash,
-                  locator:
-                    evidence.locator,
-                  excerpt:
-                    evidence.excerpt,
-                  parameter:
-                    evidence.parameter,
-                  value:
-                    evidence.value,
-                  unit:
-                    evidence.unit,
-                }),
-              ).toString(),
-          ),
-      ),
-    ),
-  ];
+  const selectedEvidence =
+    selectRuntimeEvidence(
+      acquisition.acquisitions,
+    );
+
+  const evidenceIds =
+    selectedEvidence.map(
+      (item) => item.id,
+    );
+
+  const selectedEvidencePayloads =
+    selectedEvidence.map(
+      (item) => item.payload,
+    );
 
   invariant(
     evidenceIds.length > 0 &&
-      evidenceIds.length <=
-        evidencePayloads.length,
+      evidenceIds.length ===
+        acquisition.acquisitions.length &&
+      evidenceIds.length ===
+        selectedEvidencePayloads.length,
     "V8_ARTICLE_RUNTIME_EVIDENCE_ID_MAPPING_FAILED",
-    "Evidence identity mapping failed.",
+    "Runtime Evidence selection and identity mapping failed.",
   );
 
   const verifiedEvidenceIds:
@@ -345,9 +439,10 @@ export async function runV8ArticleRuntime(
   }
 
   invariant(
-    verifiedEvidenceIds.length > 0,
-    "V8_ARTICLE_RUNTIME_NO_VERIFIED_EVIDENCE",
-    "No Evidence record reached VERIFIED state.",
+    verifiedEvidenceIds.length ===
+      acquisition.acquisitions.length,
+    "V8_ARTICLE_RUNTIME_VERIFIED_EVIDENCE_COUNT_MISMATCH",
+    "The number of verified runtime Evidence records does not match the number of acquisitions.",
   );
 
   const verifiedPayloads =
@@ -370,6 +465,13 @@ export async function runV8ArticleRuntime(
         return record.payload;
       },
     );
+
+  invariant(
+    verifiedPayloads.length ===
+      selectedEvidencePayloads.length,
+    "V8_ARTICLE_RUNTIME_SELECTED_EVIDENCE_LOOKUP_MISMATCH",
+    "Verified Evidence payload count does not match selected runtime Evidence count.",
+  );
 
   const interpreter =
     new ConservativeClaimInterpreter(
@@ -576,29 +678,17 @@ export async function runV8ArticleRuntime(
             evidenceIds:
               item.acquisition.evidence.map(
                 (evidence) =>
-                  evidenceId(
-                    contentFingerprint({
-                      source:
-                        item.acquisition.sourceId,
-                      snapshotId:
-                        item.acquisition.snapshotId,
-                      snapshotContentHash:
-                        item.acquisition.snapshot.contentHash,
-                      locator:
-                        evidence.locator,
-                      excerpt:
-                        evidence.excerpt,
-                      parameter:
-                        evidence.parameter,
-                      value:
-                        evidence.value,
-                      unit:
-                        evidence.unit,
-                    }),
-                  ).toString(),
+                  canonicalEvidenceId(
+                    item.acquisition.sourceId,
+                    item.acquisition.snapshotId,
+                    item.acquisition.snapshot.contentHash,
+                    evidence,
+                  ),
               ),
           }),
         ),
+      selectedRuntimeEvidenceIds:
+        evidenceIds,
       verifiedEvidenceIds,
       claimIds:
         truth.claims,
@@ -656,3 +746,4 @@ export async function runV8ArticleRuntime(
     fingerprint,
   };
 }
+
