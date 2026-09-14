@@ -1,0 +1,76 @@
+name: V8-22A Semantic Applicability Gate
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/applicability/**"
+      - "src/v8/domain/**"
+      - "src/v8/constitution/**"
+      - "scripts/v8-semantic-applicability-gate.mjs"
+      - ".github/workflows/v8-semantic-applicability.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.v8.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v8-semantic-applicability-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  v8-22a-semantic-applicability:
+    name: V8-22A Semantic Applicability
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify required V8-22A files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f src/v8/applicability/semantic-types.ts
+          test -f src/v8/applicability/semantic.ts
+          test -f scripts/v8-semantic-applicability-gate.mjs
+          test -f .github/workflows/v8-semantic-applicability.yml
+
+      - name: Compile V8
+        run: npm run v8:compile
+
+      - name: Verify compiled semantic applicability
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f .v8-build/src/v8/applicability/semantic.js
+          test -f .v8-build/src/v8/applicability/semantic-types.js
+
+      - name: Run V8-22A Semantic Applicability Gate
+        run: node scripts/v8-semantic-applicability-gate.mjs
+
+      - name: Emit gate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "V8-22A_GATE=SEMANTIC_APPLICABILITY"
+          echo "V8-22A_SOURCE_SHA=${GITHUB_SHA}"
+          echo "V8-22A_STATUS=PASS"
