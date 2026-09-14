@@ -637,7 +637,7 @@ async function main() {
 
   assertIncludes(
     invalidContextValidation.reasons,
-    "CONTEXT_SCOPE_MISMATCH",
+    "CONTEXT_ID_MISMATCH",
     "Invalid validation context did not fail closed.",
   );
 
