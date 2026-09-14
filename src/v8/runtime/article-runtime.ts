@@ -259,37 +259,50 @@ export async function runV8ArticleRuntime(
     "Internet acquisition produced no Evidence records.",
   );
 
-  const evidenceIds =
-    acquisition.acquisitions.flatMap(
-      (record) =>
-        record.acquisition.evidence.map(
-          (evidence) =>
-            evidenceId(
-              contentFingerprint({
-                source:
-                  record.acquisition.sourceId,
-                snapshotId:
-                  record.acquisition.snapshotId,
-                snapshotContentHash:
-                  record.acquisition.snapshot.contentHash,
-                locator:
-                  evidence.locator,
-                excerpt:
-                  evidence.excerpt,
-                parameter:
-                  evidence.parameter,
-                value:
-                  evidence.value,
-                unit:
-                  evidence.unit,
-              }),
-            ).toString(),
-        ),
-    );
+  /*
+   * Evidence identity is defined by the Foundation identity fields,
+   * not by extractionConfidence.
+   *
+   * Multiple acquisition candidates may therefore resolve to the same
+   * canonical Evidence ID. Runtime verification must operate on the
+   * canonical ID set so that a single Evidence aggregate is verified
+   * exactly once.
+   */
+  const evidenceIds = [
+    ...new Set(
+      acquisition.acquisitions.flatMap(
+        (record) =>
+          record.acquisition.evidence.map(
+            (evidence) =>
+              evidenceId(
+                contentFingerprint({
+                  source:
+                    record.acquisition.sourceId,
+                  snapshotId:
+                    record.acquisition.snapshotId,
+                  snapshotContentHash:
+                    record.acquisition.snapshot.contentHash,
+                  locator:
+                    evidence.locator,
+                  excerpt:
+                    evidence.excerpt,
+                  parameter:
+                    evidence.parameter,
+                  value:
+                    evidence.value,
+                  unit:
+                    evidence.unit,
+                }),
+              ).toString(),
+          ),
+      ),
+    ),
+  ];
 
   invariant(
-    evidenceIds.length ===
-      evidencePayloads.length,
+    evidenceIds.length > 0 &&
+      evidenceIds.length <=
+        evidencePayloads.length,
     "V8_ARTICLE_RUNTIME_EVIDENCE_ID_MAPPING_FAILED",
     "Evidence identity mapping failed.",
   );
