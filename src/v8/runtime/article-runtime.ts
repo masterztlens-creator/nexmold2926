@@ -180,6 +180,14 @@ export class ConservativeClaimInterpreter
         ClaimEpistemicLevel =
         "OBSERVATION";
 
+      const units =
+        typeof item.unit === "string" &&
+        item.unit.trim()
+          ? [
+              item.unit.trim(),
+            ]
+          : undefined;
+
       candidates.push({
         statement,
         evidenceIds: [
@@ -187,6 +195,11 @@ export class ConservativeClaimInterpreter
         ],
         epistemicLevel,
         confidence,
+        ...(units
+          ? {
+              units,
+            }
+          : {}),
         isUniversal: false,
       });
     }
