@@ -68,7 +68,6 @@ function evidenceKey(
     candidate.parameter ?? "",
     candidate.value ?? "",
     candidate.unit ?? "",
-    candidate.extractionConfidence,
   ].join("\u001f");
 }
 
@@ -158,24 +157,34 @@ export async function runResearchAcquisition(
   const acquisitions: ResearchAcquisitionRecord[] = [];
   const fetchErrors: ResearchAcquisitionError[] = [];
 
-  for (const candidate of discovery.candidates.slice(0, maxCandidates)) {
+  for (
+    const candidate of discovery.candidates.slice(
+      0,
+      maxCandidates,
+    )
+  ) {
     throwIfAborted(config.signal);
 
     try {
-      const page = await pageFetcher.fetch(candidate.url, {
-        signal: config.signal,
-      });
-
-      const extracted = extractResearchEvidence(page);
-
-      const acquisition = ingestFetchedPage(
-        store,
-        page,
-        extracted,
+      const page = await pageFetcher.fetch(
+        candidate.url,
         {
-          actorId: config.actorId,
+          signal: config.signal,
         },
       );
+
+      const extracted =
+        extractResearchEvidence(page);
+
+      const acquisition =
+        ingestFetchedPage(
+          store,
+          page,
+          extracted,
+          {
+            actorId: config.actorId,
+          },
+        );
 
       acquisitions.push({
         candidateUrl: candidate.url,
