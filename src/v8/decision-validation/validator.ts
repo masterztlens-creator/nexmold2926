@@ -108,6 +108,10 @@ export class DecisionValidator {
         reasons.push("PROBLEM_NOT_REGISTERED");
       }
 
+    if (problem.payload.contextId !== input.contextId) {
+      reasons.push("CONTEXT_ID_MISMATCH");
+    }
+
       const context = this.store.get<ContextPayload>(
         "CONTEXT",
         problem.payload.contextId,
