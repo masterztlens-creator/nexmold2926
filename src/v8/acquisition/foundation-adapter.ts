@@ -178,9 +178,30 @@ export function ingestFetchedPage(
       {
         locator: payload.locator,
         excerpt: payload.excerpt,
+
+        page: payload.page,
+        printedPage: payload.printedPage,
+
+        section: payload.section,
+        table: payload.table,
+        row: payload.row,
+
         parameter: payload.parameter,
         value: payload.value,
         unit: payload.unit,
+
+        materialManufacturer:
+          payload.materialManufacturer,
+        materialGrade:
+          payload.materialGrade,
+
+        testMethod:
+          payload.testMethod,
+        testCondition:
+          payload.testCondition,
+        flowDirection:
+          payload.flowDirection,
+
         extractionConfidence:
           payload.extractionConfidence ?? "LOW",
       },
