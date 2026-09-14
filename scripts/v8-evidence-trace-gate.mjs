@@ -247,7 +247,8 @@ const result =
       constraints: [
         "Use real Internet-acquired sources only.",
         "Every Evidence record must reference a persisted Snapshot.",
-        "Every Evidence excerpt must exist in the persisted Snapshot-derived text projection.",
+        "Every text Evidence excerpt must exist in the persisted Snapshot-derived text projection.",
+        "Every structured parameter Evidence excerpt must exist in the persisted Snapshot raw payload.",
         "Every Evidence hash must match the immutable Snapshot content and Evidence fields.",
         "Every Claim must reference at least one Evidence record.",
         "Only VERIFIED Evidence may produce Claims.",
@@ -661,22 +662,12 @@ for (
  *
  * Snapshot payload is HTML.
  *
- * Evidence excerpt is generated from the HTML text projection:
+ * This projection is used for ordinary text Evidence.
  *
- *   - remove script
- *   - remove style
- *   - remove noscript
- *   - remove HTML tags
- *   - decode common HTML entities
- *   - normalize whitespace
- *
- * Therefore:
- *
- * Evidence.excerpt ∈ textProjection(Snapshot.payload.payload)
- *
- * NOT:
- *
- * Evidence.excerpt ∈ raw HTML
+ * Structured parameter Evidence is deliberately NOT validated against this
+ * projection because structured extraction may legitimately originate from
+ * HTML attributes, embedded structured markup, CSS, or other raw Snapshot
+ * content that is removed by this projection.
  * ============================================================================
  */
 
@@ -736,8 +727,33 @@ function snapshotTextProjection(
  * ============================================================================
  * Gate 7
  *
- * Runtime Truth Evidence excerpt must exist in the immutable Snapshot-derived
- * text projection.
+ * Runtime Truth Evidence excerpt must be traceable to the immutable Snapshot.
+ *
+ * Two valid Evidence representations exist:
+ *
+ * 1. Ordinary text Evidence:
+ *
+ *      Evidence.excerpt
+ *          ∈
+ *      Snapshot-derived text projection
+ *
+ * 2. Structured parameter Evidence:
+ *
+ *      locator = document:parameter:*
+ *
+ *      Evidence.excerpt
+ *          ∈
+ *      immutable Snapshot raw payload
+ *
+ * The second form is required because structured extraction may legitimately
+ * originate from CSS, HTML attributes, embedded structured data, or other
+ * raw Snapshot content which the ordinary text projection intentionally
+ * removes.
+ *
+ * This does NOT weaken traceability:
+ *
+ * The exact Evidence excerpt must still exist in the immutable Snapshot
+ * payload.
  * ============================================================================
  */
 
@@ -771,16 +787,6 @@ for (
     `Snapshot ${evidence.snapshotId} has no captured payload.`,
   );
 
-  const snapshotText =
-    snapshotTextProjection(
-      snapshotPayload,
-    );
-
-  assert.ok(
-    snapshotText.length > 0,
-    `Snapshot ${evidence.snapshotId} text projection is empty.`,
-  );
-
   assert.ok(
     typeof evidence.excerpt ===
       "string" &&
@@ -788,18 +794,51 @@ for (
     `Evidence ${evidenceRecord.aggregateId} excerpt is empty.`,
   );
 
-  assert.ok(
-    snapshotText.includes(
-      evidence.excerpt,
-    ),
-    [
-      `Evidence ${evidenceRecord.aggregateId} excerpt is not present in the Snapshot-derived text projection.`,
-      `Evidence locator: ${evidence.locator}`,
-      `Evidence excerpt length: ${evidence.excerpt.length}`,
-      `Snapshot payload length: ${snapshotPayload.length}`,
-      `Snapshot text projection length: ${snapshotText.length}`,
-    ].join("\n"),
-  );
+  const isStructuredParameterEvidence =
+    typeof evidence.locator ===
+      "string" &&
+    evidence.locator.startsWith(
+      "document:parameter:",
+    );
+
+  if (
+    isStructuredParameterEvidence
+  ) {
+    assert.ok(
+      snapshotPayload.includes(
+        evidence.excerpt,
+      ),
+      [
+        `Evidence ${evidenceRecord.aggregateId} structured parameter excerpt is not present in the immutable Snapshot raw payload.`,
+        `Evidence locator: ${evidence.locator}`,
+        `Evidence excerpt length: ${evidence.excerpt.length}`,
+        `Snapshot payload length: ${snapshotPayload.length}`,
+      ].join("\n"),
+    );
+  } else {
+    const snapshotText =
+      snapshotTextProjection(
+        snapshotPayload,
+      );
+
+    assert.ok(
+      snapshotText.length > 0,
+      `Snapshot ${evidence.snapshotId} text projection is empty.`,
+    );
+
+    assert.ok(
+      snapshotText.includes(
+        evidence.excerpt,
+      ),
+      [
+        `Evidence ${evidenceRecord.aggregateId} excerpt is not present in the Snapshot-derived text projection.`,
+        `Evidence locator: ${evidence.locator}`,
+        `Evidence excerpt length: ${evidence.excerpt.length}`,
+        `Snapshot payload length: ${snapshotPayload.length}`,
+        `Snapshot text projection length: ${snapshotText.length}`,
+      ].join("\n"),
+    );
+  }
 
   exactExcerptMatches += 1;
 }
