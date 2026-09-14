@@ -37,7 +37,9 @@ import {
  *      ↓
  * SNAPSHOT
  *      ↓
- * EVIDENCE
+ * EVIDENCE INVENTORY
+ *      ↓
+ * RUNTIME TRUTH EVIDENCE
  *      ↓
  * CLAIM
  *      ↓
@@ -60,6 +62,23 @@ import {
  * - Do not use synthetic source records.
  * - Do not bypass acquisition.
  * - Do not modify V8 foundation/domain/acquisition code.
+ *
+ * Evidence contract:
+ *
+ * The Foundation may persist the complete Evidence inventory extracted from
+ * Internet snapshots.
+ *
+ * The Runtime Truth Producer may select a deterministic subset of that
+ * inventory for the current runtime execution.
+ *
+ * Therefore:
+ *
+ *   latestEvidenceRecords.size
+ *       >=
+ *   result.verifiedEvidenceIds.length
+ *
+ * The selected Runtime Evidence IDs are the authoritative Evidence set for
+ * the current Claim / Knowledge / Decision chain.
  * ============================================================================
  */
 
@@ -416,6 +435,20 @@ for (
  * Gate 3
  *
  * Runtime verified Evidence must exist and must be persisted.
+ *
+ * IMPORTANT:
+ *
+ * Foundation Evidence inventory may contain many extracted Evidence records.
+ *
+ * The Runtime Truth Producer intentionally selects a deterministic subset.
+ *
+ * Therefore the correct invariant is:
+ *
+ *   persisted Evidence inventory >= selected Runtime Evidence
+ *
+ * NOT:
+ *
+ *   persisted Evidence inventory === selected Runtime Evidence
  * ============================================================================
  */
 
@@ -431,10 +464,45 @@ assert.ok(
   "V8_EVIDENCE_TRACE_VERIFIED_EVIDENCE_EMPTY",
 );
 
+assert.ok(
+  latestEvidenceRecords.size >=
+    result.verifiedEvidenceIds.length,
+  "V8_EVIDENCE_TRACE_RUNTIME_EVIDENCE_EXCEEDS_PERSISTED_INVENTORY",
+);
+
+
+/*
+ * ============================================================================
+ * Runtime selected Evidence records
+ *
+ * This is the authoritative Evidence set for the current Truth Producer
+ * chain.
+ *
+ * The Foundation inventory remains complete and immutable.
+ * ============================================================================
+ */
+
+const runtimeEvidenceRecords =
+  result.verifiedEvidenceIds.map(
+    (evidenceIdValue) => {
+      const evidenceRecord =
+        latestEvidenceRecords.get(
+          evidenceIdValue,
+        );
+
+      assert.ok(
+        evidenceRecord,
+        `Evidence ${evidenceIdValue} has no latest Foundation record.`,
+      );
+
+      return evidenceRecord;
+    },
+  );
+
 assert.equal(
-  latestEvidenceRecords.size,
+  runtimeEvidenceRecords.length,
   result.verifiedEvidenceIds.length,
-  "V8_EVIDENCE_TRACE_EVIDENCE_COUNT_MISMATCH",
+  "V8_EVIDENCE_TRACE_RUNTIME_EVIDENCE_RECORD_COUNT_MISMATCH",
 );
 
 
@@ -442,7 +510,7 @@ assert.equal(
  * ============================================================================
  * Gate 4
  *
- * Every runtime Evidence must be VERIFIED.
+ * Every Runtime Truth Evidence must be VERIFIED.
  * ============================================================================
  */
 
@@ -478,7 +546,7 @@ for (
  * ============================================================================
  * Gate 5
  *
- * Evidence → Snapshot identity.
+ * Runtime Truth Evidence → Snapshot identity.
  * ============================================================================
  */
 
@@ -497,7 +565,7 @@ for (
 
 for (
   const evidenceRecord of
-    latestEvidenceRecords.values()
+    runtimeEvidenceRecords
 ) {
   const evidence =
     evidenceRecord.payload;
@@ -547,14 +615,14 @@ for (
  * ============================================================================
  * Gate 6
  *
- * Evidence source identity must match Snapshot source identity and the Source
- * aggregate must exist.
+ * Runtime Truth Evidence source identity must match Snapshot source identity
+ * and the Source aggregate must exist.
  * ============================================================================
  */
 
 for (
   const evidenceRecord of
-    latestEvidenceRecords.values()
+    runtimeEvidenceRecords
 ) {
   const evidence =
     evidenceRecord.payload;
@@ -668,8 +736,8 @@ function snapshotTextProjection(
  * ============================================================================
  * Gate 7
  *
- * Evidence excerpt must exist in the immutable Snapshot-derived text
- * projection.
+ * Runtime Truth Evidence excerpt must exist in the immutable Snapshot-derived
+ * text projection.
  * ============================================================================
  */
 
@@ -678,7 +746,7 @@ let exactExcerptMatches =
 
 for (
   const evidenceRecord of
-    latestEvidenceRecords.values()
+    runtimeEvidenceRecords
 ) {
   const evidence =
     evidenceRecord.payload;
@@ -741,7 +809,7 @@ for (
  * ============================================================================
  * Gate 8
  *
- * Evidence hash must reproduce exactly from:
+ * Runtime Truth Evidence hash must reproduce exactly from:
  *
  *   source
  *   snapshotId
@@ -759,7 +827,7 @@ let evidenceHashMatches =
 
 for (
   const evidenceRecord of
-    latestEvidenceRecords.values()
+    runtimeEvidenceRecords
 ) {
   const evidence =
     evidenceRecord.payload;
@@ -815,13 +883,13 @@ for (
  * ============================================================================
  * Gate 9
  *
- * Evidence aggregate identity must be reproducible.
+ * Runtime Truth Evidence aggregate identity must be reproducible.
  * ============================================================================
  */
 
 for (
   const evidenceRecord of
-    latestEvidenceRecords.values()
+    runtimeEvidenceRecords
 ) {
   const evidence =
     evidenceRecord.payload;
@@ -1174,6 +1242,9 @@ const acquired =
 const snapshots =
   latestSnapshotRecords.size;
 
+const evidenceInventory =
+  latestEvidenceRecords.size;
+
 const verifiedEvidence =
   result.verifiedEvidenceIds.length;
 
@@ -1200,6 +1271,10 @@ console.log(
 
 console.log(
   `[V8-EVIDENCE-TRACE] snapshots=${snapshots}`,
+);
+
+console.log(
+  `[V8-EVIDENCE-TRACE] evidenceInventory=${evidenceInventory}`,
 );
 
 console.log(
