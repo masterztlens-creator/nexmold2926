@@ -13,6 +13,47 @@ import type {
   ExtractedEvidenceCandidate,
 } from "./types.js";
 
+function evidenceIdentityInput(
+  source: string,
+  snapshotId: string,
+  snapshotContentHash: string | undefined,
+  candidate: ExtractedEvidenceCandidate,
+): Record<string, unknown> {
+  return {
+    source,
+    snapshotId,
+    snapshotContentHash,
+    locator: candidate.locator,
+    excerpt: candidate.excerpt,
+
+    page: candidate.page,
+    printedPage: candidate.printedPage,
+
+    section: candidate.section,
+    table: candidate.table,
+    row: candidate.row,
+
+    parameter: candidate.parameter,
+    value: candidate.value,
+    unit: candidate.unit,
+
+    materialManufacturer:
+      candidate.materialManufacturer,
+    materialGrade:
+      candidate.materialGrade,
+
+    testMethod:
+      candidate.testMethod,
+    testCondition:
+      candidate.testCondition,
+    flowDirection:
+      candidate.flowDirection,
+
+    extractionConfidence:
+      candidate.extractionConfidence,
+  };
+}
+
 export function buildEvidencePayloads(
   source: string,
   snapshotId: string,
@@ -25,23 +66,22 @@ export function buildEvidencePayloads(
    *   SOURCE
    *   SNAPSHOT ID
    *   SNAPSHOT CONTENT HASH
-   *   extracted evidence fields
+   *   exact extracted evidence fields
    *
-   * This prevents an otherwise identical-looking Evidence record
-   * from becoming detached from the exact Snapshot content that
-   * produced it.
+   * Semantic source metadata is deliberately included in the
+   * identity input so that two otherwise identical excerpts
+   * cannot collapse into the same Evidence identity when their
+   * technical conditions or material metadata differ.
    */
   return candidates.map((candidate) => {
-    const evidenceHash = contentFingerprint({
-      source,
-      snapshotId,
-      snapshotContentHash: snapshot.contentHash,
-      locator: candidate.locator,
-      excerpt: candidate.excerpt,
-      parameter: candidate.parameter,
-      value: candidate.value,
-      unit: candidate.unit,
-    });
+    const evidenceHash = contentFingerprint(
+      evidenceIdentityInput(
+        source,
+        snapshotId,
+        snapshot.contentHash,
+        candidate,
+      ),
+    );
 
     return {
       sourceId: sourceId(source),
@@ -51,12 +91,33 @@ export function buildEvidencePayloads(
       evidenceHash,
       capturedAt: snapshot.capturedAt,
       verificationStatus: "UNVERIFIED",
+
+      page: candidate.page,
+      printedPage: candidate.printedPage,
+
       section: candidate.section,
+      table: candidate.table,
+      row: candidate.row,
+
       parameter: candidate.parameter,
       value: candidate.value,
       unit: candidate.unit,
+
+      materialManufacturer:
+        candidate.materialManufacturer,
+      materialGrade:
+        candidate.materialGrade,
+
+      testMethod:
+        candidate.testMethod,
+      testCondition:
+        candidate.testCondition,
+      flowDirection:
+        candidate.flowDirection,
+
       extractionMethod: "TEXT_EXTRACTION",
-      extractionConfidence: candidate.extractionConfidence,
+      extractionConfidence:
+        candidate.extractionConfidence,
     };
   });
 }
@@ -68,16 +129,14 @@ export function evidenceAggregateId(
   snapshotContentHash?: string,
 ): string {
   return evidenceId(
-    contentFingerprint({
-      source,
-      snapshotId,
-      snapshotContentHash,
-      locator: candidate.locator,
-      excerpt: candidate.excerpt,
-      parameter: candidate.parameter,
-      value: candidate.value,
-      unit: candidate.unit,
-    }),
+    contentFingerprint(
+      evidenceIdentityInput(
+        source,
+        snapshotId,
+        snapshotContentHash,
+        candidate,
+      ),
+    ),
   ).toString();
 }
 
@@ -122,9 +181,30 @@ export function appendEvidence(
         {
           locator: payload.locator,
           excerpt: payload.excerpt,
+
+          page: payload.page,
+          printedPage: payload.printedPage,
+
+          section: payload.section,
+          table: payload.table,
+          row: payload.row,
+
           parameter: payload.parameter,
           value: payload.value,
           unit: payload.unit,
+
+          materialManufacturer:
+            payload.materialManufacturer,
+          materialGrade:
+            payload.materialGrade,
+
+          testMethod:
+            payload.testMethod,
+          testCondition:
+            payload.testCondition,
+          flowDirection:
+            payload.flowDirection,
+
           extractionConfidence:
             payload.extractionConfidence ?? "LOW",
         },
