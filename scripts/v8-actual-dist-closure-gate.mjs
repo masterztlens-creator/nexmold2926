@@ -825,6 +825,19 @@ function validateHtmlManifest(
     );
   }
 
+  /*
+   * IMPORTANT:
+   *
+   * The authoritative producer in build-orchestrator.mjs calculates the
+   * manifest set hash with native JavaScript Array.prototype.sort():
+   *
+   *   entries.map(...).sort().join("\n")
+   *
+   * The verifier MUST use the exact same canonicalization.
+   *
+   * Do NOT replace this with localeCompare(), because that can produce a
+   * different ordering from the producer and therefore a different SHA-256.
+   */
   const calculatedSetHash =
     sha256Text(
       entries
@@ -832,10 +845,7 @@ function validateHtmlManifest(
           (entry) =>
             `${entry.route}|${entry.path}|${entry.sha256}`,
         )
-        .sort(
-          (a, b) =>
-            a.localeCompare(b),
-        )
+        .sort()
         .join("\n"),
     );
 
@@ -943,8 +953,12 @@ function bindHandoffToDist(
  *
  * Never import src/v8/*.ts directly with plain Node.
  *
- * The V8 source uses .js import specifiers while the source files themselves
- * are TypeScript. The production gate therefore consumes .v8-build only.
+ * The production build compiles V8 into:
+ *
+ *   .v8-build/src/v8/...
+ *
+ * This gate therefore imports the compiled JavaScript output only.
+ *
  * ============================================================================
  */
 
@@ -962,8 +976,8 @@ async function importBuiltV8(
 
   requireCondition(
     fs.existsSync(file),
-    "V8_ACTUAL_DIST_COMPILED_MODULE_MISSING",
-    `Compiled V8 module is missing: ${path.relative(
+    "V8_ACTUAL_DIST_BUILT_MODULE_MISSING",
+    `Compiled V8 module does not exist: ${path.relative(
       ROOT,
       file,
     )}`,
@@ -1666,7 +1680,7 @@ async function main() {
    * --------------------------------------------------------------------------
    * PRODUCTION EXECUTION → PRODUCTION CONSUMPTION
    * --------------------------------------------------------------------------
-   */
+ */
 
   const consumption =
     await buildProductionConsumption(
