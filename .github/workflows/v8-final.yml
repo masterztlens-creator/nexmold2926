@@ -159,6 +159,7 @@ jobs:
             --no-package-lock \
             typescript@6.0.3 \
             astro@6.1.9 \
+            @astrojs/check@0.9.9 \
             @astrojs/sitemap \
             tailwindcss@3.4.17 \
             autoprefixer@10.4.21 \
@@ -170,6 +171,7 @@ jobs:
           const required = [
             'typescript',
             'astro',
+            '@astrojs/check',
             '@astrojs/sitemap',
             'tailwindcss',
             'autoprefixer',
