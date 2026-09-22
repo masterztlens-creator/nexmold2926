@@ -1,7 +1,21 @@
 ﻿name: NEXMOLD V8 Final Gate
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "build-orchestrator.mjs"
+      - "scripts/v8-actual-dist-closure-gate.mjs"
+      - "scripts/v8-final-publication-gate.mjs"
+      - ".github/workflows/v8-final.yml"
+      - "src/v8/**"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+
   workflow_dispatch:
+
   workflow_run:
     workflows:
       - NEXMOLD V8-04 Rule Policy Gate
@@ -14,7 +28,10 @@ permissions:
 jobs:
   v8-final:
     name: V8 Final + Production Integration
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     steps:
@@ -70,6 +87,7 @@ jobs:
           test -f scripts/v8-final-gate.mjs
           test -f scripts/v8-final-publication-gate.mjs
           test -f scripts/v8-production-gate.mjs
+          test -f scripts/v8-actual-dist-closure-gate.mjs
           test -f build-orchestrator.mjs
 
           echo "Required project files: PASS"
