@@ -157,12 +157,11 @@ export async function runResearchAcquisition(
   const acquisitions: ResearchAcquisitionRecord[] = [];
   const fetchErrors: ResearchAcquisitionError[] = [];
 
-  for (
-    const candidate of discovery.candidates.slice(
-      0,
-      maxCandidates,
-    )
-  ) {
+  for (const candidate of discovery.candidates) {
+    if (acquisitions.length >= maxCandidates) {
+      break;
+    }
+
     throwIfAborted(config.signal);
 
     try {
