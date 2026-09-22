@@ -11,6 +11,7 @@ on:
       - ".github/workflows/v8-final.yml"
       - "src/v8/**"
       - "tsconfig.v8.json"
+      - "tsconfig.json"
       - "package.json"
       - "package-lock.json"
 
