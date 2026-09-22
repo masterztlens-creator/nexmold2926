@@ -413,13 +413,19 @@ async function main() {
   await runCommand(BUILD_COMMAND, "BUILD");
   pass("BUILD", "Astro production build completed.");
 
-  section("ARTIFACT_AUDIT");
-  const manifest = auditDist();
-  auditForbiddenArtifacts();
-  auditSmokeRoutes();
+section("ARTIFACT_AUDIT");
+const manifest = auditDist();
+auditForbiddenArtifacts();
+auditSmokeRoutes();
 
-  section("V8_09_PRODUCTION_INTEGRATION");
-  await runV8ProductionGate();
+section("V8_ACTUAL_DIST_CLOSURE");
+await runCommand(
+  "node scripts/v8-actual-dist-closure-gate.mjs",
+  "V8_ACTUAL_DIST_CLOSURE",
+);
+
+section("V8_09_PRODUCTION_INTEGRATION");
+await runV8ProductionGate();
 
   section("V7.14_POST_BUILD_GATES");
   await runExportedGate(...GATES.runtime, "RUNTIME_GATE");
