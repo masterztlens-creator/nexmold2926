@@ -496,22 +496,20 @@ test(
     const fixture =
       createFixture();
 
-    const plan =
-      createPlan(
-        fixture,
-      );
+    const nonVerifiedKnowledgeId =
+      "knowledge:content-compiler:requires-review";
 
     fixture.store.append({
       aggregateType:
         "KNOWLEDGE",
       aggregateId:
-        fixture.knowledgeId,
-      version: 2,
+        nonVerifiedKnowledgeId,
+      version: 1,
       state:
-        "REJECTED",
+        "REQUIRES_REVIEW",
       payload: {
         proposition:
-          "Rejected wall thickness proposition.",
+          "Knowledge requiring review must never enter compiled content.",
         claimIds: [
           fixture.claimId,
         ],
@@ -527,10 +525,36 @@ test(
         fixture.store,
       );
 
+    const invalidPlan = {
+      decisionId:
+        fixture.decisionId,
+      scopeId:
+        fixture.scopeId,
+      contextId:
+        fixture.contextId,
+      sections: [
+        {
+          sectionId:
+            "requires-review",
+          heading:
+            "Requires review",
+          knowledgeIds: [
+            nonVerifiedKnowledgeId,
+          ],
+          claimIds: [
+            fixture.claimId,
+          ],
+          evidenceIds: [
+            fixture.evidenceId,
+          ],
+        },
+      ],
+    };
+
     assert.throws(
       () =>
         compiler.compile({
-          plan,
+          plan: invalidPlan,
           title:
             "Plastic Injection Molding Wall Thickness",
           primaryKeyword:

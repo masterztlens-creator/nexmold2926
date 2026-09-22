@@ -11,9 +11,16 @@ import type {
 } from "../article-intelligence/types.js";
 import {
   slugify,
+  type ContentBrief,
   type ContentDraft,
   type EvidenceRef,
 } from "../shared.js";
+
+export interface CompilerInput {
+  readonly brief: ContentBrief;
+  readonly evidence: readonly EvidenceRef[];
+  readonly facts?: readonly string[];
+}
 
 export interface EvidenceBoundCompilerInput {
   readonly plan: ArticlePlan;
@@ -47,6 +54,44 @@ function uniqueSorted(
   return immutable(
     [...new Set(values)].sort(),
   );
+}
+
+/**
+ * Legacy Intelligence Plane compiler.
+ *
+ * This function remains intentionally compatible with the existing
+ * GrowthPipeline/full-stack contract. It is not the formal V8 Truth ->
+ * Content compiler and does not replace EvidenceBoundContentCompiler.
+ */
+export function compileIndustrialContent(
+  input: CompilerInput,
+): ContentDraft {
+  const sections = input.brief.outline.map(
+    (heading, index) => ({
+      heading,
+      body:
+        index === 0
+          ? `${input.brief.primaryKeyword} is addressed here with defined scope and terminology.`
+          : `This section presents engineering considerations for ${input.brief.primaryKeyword}, with explicit conditions, trade-offs, and evidence where applicable.`,
+    }),
+  );
+
+  return Object.freeze({
+    title: input.brief.title,
+    slug: slugify(
+      input.brief.primaryKeyword,
+    ),
+    description: `Engineering guidance for ${input.brief.primaryKeyword}.`,
+    sections: Object.freeze(
+      sections,
+    ),
+    claims: Object.freeze(
+      input.facts ?? [],
+    ),
+    evidence: Object.freeze(
+      input.evidence,
+    ),
+  });
 }
 
 function toEvidenceRef(
@@ -166,8 +211,7 @@ export class EvidenceBoundContentCompiler {
               `Claim ${claimId} must be verified.`,
             );
 
-            return record.payload
-              .statement;
+            return record.payload.statement;
           }),
       );
 
@@ -192,7 +236,7 @@ export class EvidenceBoundContentCompiler {
 
             invariant(
               record.payload
-                .verificationStatus ===
+                  .verificationStatus ===
                 "VERIFIED",
               "V8_INTELLIGENCE_COMPILER_EVIDENCE_STATUS_NOT_VERIFIED",
               `Evidence ${evidenceId} verification status must be VERIFIED.`,
@@ -206,10 +250,9 @@ export class EvidenceBoundContentCompiler {
 
     return immutable({
       title,
-      slug:
-        slugify(
-          primaryKeyword,
-        ),
+      slug: slugify(
+        primaryKeyword,
+      ),
       description:
         input.description?.trim() ||
         `Evidence-backed engineering guidance for ${primaryKeyword}.`,
@@ -349,8 +392,7 @@ export class EvidenceBoundContentCompiler {
 
         for (
           const evidenceId of
-          claim.payload
-            .evidenceIds
+          claim.payload.evidenceIds
         ) {
           invariant(
             declaredEvidenceIds.has(
@@ -509,8 +551,7 @@ export class EvidenceBoundContentCompiler {
 
           const location =
             [
-              evidence.payload
-                .section,
+              evidence.payload.section,
               evidence.payload
                 .page !== undefined
                 ? `page ${evidence.payload.page}`
