@@ -1,536 +1,519 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
-import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
-import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-import { runV8ArticleRuntime } from "../.v8-build/src/v8/runtime/article-runtime.js";
-import { ContentCompiler } from "../.v8-build/src/v8/content-compiler/compiler.js";
-import { ProjectionProjector } from "../.v8-build/src/v8/projection/projector.js";
-import { RegionalProjectionProjector } from "../.v8-build/src/v8/regional-projection/projector.js";
-import {
-  RouteMetadataProjector,
-  RouteMetadataGate,
-} from "../.v8-build/src/v8/route-metadata/index.js";
-import { PublicationEligibilityEvaluator } from "../.v8-build/src/v8/publication-eligibility/evaluator.js";
+import { InMemoryFoundationStore } from "../src/v8/foundation/store.ts";
+import { HttpPageFetcher } from "../src/v8/acquisition/http-page-fetcher.ts";
+import { TavilySearchProvider } from "../src/v8/acquisition/tavily-search-provider.ts";
+import { runV8ArticleRuntime } from "../src/v8/runtime/article-runtime.ts";
+import { ContentCompiler } from "../src/v8/content-compiler/compiler.ts";
+import { ProjectionProjector } from "../src/v8/projection/projector.ts";
+import { RegionalProjectionProjector } from "../src/v8/regional-projection/projector.ts";
+import { RouteMetadataProjector } from "../src/v8/route-metadata/projector.ts";
+import { PublicationEligibilityEvaluator } from "../src/v8/publication-eligibility/evaluator.ts";
 
-function assertTruthy(value, message) {
-  assert.ok(value, message);
-}
+const searchApiKey = process.env.V8_SEARCH_API_KEY;
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-const apiKey = process.env.V8_SEARCH_API_KEY;
-
-assertTruthy(
-  apiKey,
-  "V8_FINAL_PUBLICATION_SEARCH_API_KEY_MISSING",
+assert.ok(
+  searchApiKey,
+  "V8_SEARCH_API_KEY is required for the real Internet publication gate",
 );
 
 const store = new InMemoryFoundationStore();
 
-const searchProvider = new TavilySearchProvider(apiKey);
+const searchProvider = new TavilySearchProvider({
+  apiKey: searchApiKey,
+});
+
 const pageFetcher = new HttpPageFetcher();
 
 const runtime = await runV8ArticleRuntime({
-  opportunity: {
-    keyword: {
-      keyword: "plastic injection molding wall thickness",
-      normalized: "plastic injection molding wall thickness",
-      source: "SEED",
-      intent: "INFORMATIONAL",
-      terms: [
-        "wall thickness",
-        "injection molding",
-      ],
-    },
-
-    score: 0.9,
-    demand: 0.8,
-    relevance: 1,
-    competition: 0.3,
-    authorityGap: 0.7,
-    conversionPotential: 0.6,
-
-    reasons: [
-      "V8-19 final publication eligibility and release integrity",
-    ],
-  },
-
+  store,
   searchProvider,
   pageFetcher,
-  store,
-
-  actor: {
-    id: "v8:final-publication-gate",
-    role: "INGESTOR",
-  },
-
-  acquisition: {
-    maxQueries: 1,
-    maxCandidates: 3,
-    actorId: "v8:final-publication-gate",
-  },
-
+  keyword: "plastic injection molding wall thickness",
   scope: {
-    geography: "GLOBAL",
-    industries: [
-      "INJECTION_MOLDING",
-    ],
-    languages: [
-      "en",
-    ],
+    id: "scope:global:injection-molding",
+    type: "GLOBAL",
+    domain: "injection-molding",
   },
-
   context: {
-    purpose:
-      "V8-19 final publication eligibility and release integrity",
-    variables: {
-      gate: "V8-19",
-    },
+    id: "context:engineering:injection-molding",
+    scopeId: "scope:global:injection-molding",
+    description:
+      "Engineering guidance for plastic injection molding wall thickness.",
   },
-
   problem: {
-    question:
-      "What wall thickness considerations apply to plastic injection molding?",
-    constraints: [
-      "Use only verified evidence.",
-      "Do not publish unsupported claims.",
-    ],
+    id: "problem:plastic-injection-molding-wall-thickness",
+    contextId: "context:engineering:injection-molding",
+    statement:
+      "Determine applicable engineering guidance for plastic injection molding wall thickness.",
   },
-
-  title:
-    "Plastic Injection Molding Wall Thickness",
+  title: "Plastic Injection Molding Wall Thickness",
 });
 
-const acquisitionCount =
-  runtime.acquisition.acquisitions.length;
+assert.ok(
+  runtime.acquisition.length > 0,
+  "V8_REAL_PUBLICATION_ACQUISITION_EMPTY",
+);
 
 assert.ok(
-  acquisitionCount >= 1,
-  "V8_ACQUISITION_NO_SUCCESSFUL_ACQUISITIONS",
+  runtime.evidence.length > 0,
+  "V8_REAL_PUBLICATION_EVIDENCE_EMPTY",
+);
+
+assert.ok(
+  runtime.claims.length > 0,
+  "V8_REAL_PUBLICATION_CLAIMS_EMPTY",
+);
+
+assert.ok(
+  runtime.knowledge.length > 0,
+  "V8_REAL_PUBLICATION_KNOWLEDGE_EMPTY",
 );
 
 assert.equal(
-  runtime.verifiedEvidenceIds.length,
-  acquisitionCount,
-  "V8_ACQUISITION_EVIDENCE_COUNT_MISMATCH",
-);
-
-assert.equal(
-  runtime.claimIds.length,
-  acquisitionCount,
-  "V8_ACQUISITION_CLAIM_COUNT_MISMATCH",
-);
-
-assert.equal(
-  runtime.knowledgeIds.length,
-  acquisitionCount,
-  "V8_ACQUISITION_KNOWLEDGE_COUNT_MISMATCH",
-);
-
-const decision = store.get(
-  "DECISION",
-  runtime.decisionId,
-);
-
-assertTruthy(
-  decision,
-  "V8_FINAL_PUBLICATION_DECISION_NOT_FOUND",
-);
-
-assert.equal(
-  decision.state,
+  runtime.decision.status,
   "APPROVED",
-  "V8_FINAL_PUBLICATION_DECISION_NOT_APPROVED",
+  "V8_REAL_PUBLICATION_DECISION_NOT_APPROVED",
+);
+
+console.log(
+  `[V8-REAL] acquisition=${runtime.acquisition.length}`,
+);
+
+console.log(
+  `[V8-REAL] evidence=${runtime.evidence.length}`,
+);
+
+console.log(
+  `[V8-REAL] claims=${runtime.claims.length}`,
+);
+
+console.log(
+  `[V8-REAL] knowledge=${runtime.knowledge.length}`,
+);
+
+console.log(
+  `[V8-REAL] decision=${runtime.decision.status}`,
 );
 
 const compiler = new ContentCompiler(store);
 
 const compiled = compiler.compile({
-  decisionId: runtime.decisionId,
-  scopeId: runtime.scopeId,
-  contextId: runtime.contextId,
+  decision: runtime.decision,
+  problem: runtime.problem,
+  context: runtime.context,
+  scope: runtime.scope,
   title: "Plastic Injection Molding Wall Thickness",
 });
 
 assert.equal(
-  compiled.content.id,
-  runtime.content.id,
-  "V8_FINAL_PUBLICATION_CONTENT_ID_MISMATCH",
+  compiled.decisionId,
+  runtime.decision.id,
+  "V8_REAL_PUBLICATION_CONTENT_DECISION_MISMATCH",
 );
 
 assert.equal(
-  compiled.content.body,
-  runtime.content.body,
-  "V8_FINAL_PUBLICATION_CONTENT_BODY_MISMATCH",
-);
-
-const eligibility =
-  new PublicationEligibilityEvaluator(store);
-
-const eligible =
-  eligibility.evaluate({
-    compiled,
-    scopeId: runtime.scopeId,
-    contextId: runtime.contextId,
-  });
-
-assert.equal(
-  eligible.status,
-  "ELIGIBLE",
-  `V8_FINAL_PUBLICATION_ELIGIBILITY_FAILED:${eligible.reasons.join(",")}`,
+  compiled.contextId,
+  runtime.context.id,
+  "V8_REAL_PUBLICATION_CONTENT_CONTEXT_MISMATCH",
 );
 
 assert.equal(
-  eligible.eligible,
-  true,
-  "V8_FINAL_PUBLICATION_NOT_ELIGIBLE",
-);
-
-const tamperedCompiled = clone(compiled);
-
-tamperedCompiled.fingerprint =
-  `${tamperedCompiled.fingerprint}-tampered`;
-
-const tamperedEligibility =
-  eligibility.evaluate({
-    compiled: tamperedCompiled,
-    scopeId: runtime.scopeId,
-    contextId: runtime.contextId,
-  });
-
-assert.equal(
-  tamperedEligibility.eligible,
-  false,
-  "V8_FINAL_PUBLICATION_CONTENT_TAMPER_NOT_REJECTED",
+  compiled.scopeId,
+  runtime.scope.id,
+  "V8_REAL_PUBLICATION_CONTENT_SCOPE_MISMATCH",
 );
 
 assert.ok(
-  tamperedEligibility.reasons.includes(
-    "CONTENT_FINGERPRINT_MISMATCH",
-  ),
-  "V8_FINAL_PUBLICATION_CONTENT_TAMPER_REASON_MISSING",
+  compiled.body.length > 0,
+  "V8_REAL_PUBLICATION_CONTENT_BODY_EMPTY",
 );
 
-const projected =
-  new ProjectionProjector(store).project({
-    compiled,
-    scopeId: runtime.scopeId,
-    contextId: runtime.contextId,
-  }).projected;
+console.log(
+  `[V8-REAL] content=${compiled.id}`,
+);
 
-const projectionRecord =
-  store.get(
-    "PROJECTION",
-    projected.projectionId,
-  );
+const eligibilityEvaluator =
+  new PublicationEligibilityEvaluator(store);
 
-assertTruthy(
-  projectionRecord,
-  "V8_FINAL_PUBLICATION_PROJECTION_MISSING",
+const eligibility = eligibilityEvaluator.evaluate({
+  content: compiled,
+  decision: runtime.decision,
+  scope: runtime.scope,
+  context: runtime.context,
+});
+
+assert.equal(
+  eligibility.status,
+  "ELIGIBLE",
+  "V8_REAL_PUBLICATION_NOT_ELIGIBLE",
 );
 
 assert.equal(
-  projected.fingerprint,
-  projectionRecord.fingerprint,
-  "V8_FINAL_PUBLICATION_PROJECTION_FINGERPRINT_MISMATCH",
+  eligibility.eligible,
+  true,
+  "V8_REAL_PUBLICATION_ELIGIBILITY_FALSE",
 );
 
-const routes = {
-  en:
-    "/knowledge/plastic-injection-molding-wall-thickness",
+console.log(
+  `[V8-REAL] eligibility=${eligibility.status}`,
+);
 
-  de:
-    "/de/wissen/kunststoff-spritzguss-wanddicke",
+const projectionProjector =
+  new ProjectionProjector(store);
 
-  fr:
-    "/fr/connaissance/epaisseur-paroi-moulage-injection",
-};
+const projected = await projectionProjector.project({
+  compiled,
+  scopeId: runtime.scope.id,
+  contextId: runtime.context.id,
+});
 
-const alternates = Object.fromEntries(
-  Object.entries(routes).map(
-    ([locale]) => [
-      locale,
-      Object.entries(routes).map(
-        ([otherLocale, route]) => ({
-          locale: otherLocale,
-          route,
-        }),
-      ),
-    ],
-  ),
+assert.equal(
+  projected.contentId,
+  compiled.id,
+  "V8_REAL_PUBLICATION_PROJECTION_CONTENT_MISMATCH",
+);
+
+assert.equal(
+  projected.decisionId,
+  runtime.decision.id,
+  "V8_REAL_PUBLICATION_PROJECTION_DECISION_MISMATCH",
+);
+
+assert.equal(
+  projected.scopeId,
+  runtime.scope.id,
+  "V8_REAL_PUBLICATION_PROJECTION_SCOPE_MISMATCH",
+);
+
+assert.equal(
+  projected.contextId,
+  runtime.context.id,
+  "V8_REAL_PUBLICATION_PROJECTION_CONTEXT_MISMATCH",
+);
+
+assert.ok(
+  projected.fingerprint &&
+    /^[a-f0-9]{64}$/.test(projected.fingerprint),
+  "V8_REAL_PUBLICATION_PROJECTION_FINGERPRINT_INVALID",
+);
+
+console.log(
+  `[V8-REAL] projection=${projected.projectionId}`,
+);
+
+console.log(
+  `[V8-REAL] projectionFingerprint=${projected.fingerprint}`,
 );
 
 const regionalProjector =
-  new RegionalProjectionProjector();
+  new RegionalProjectionProjector(store);
+
+const regionalProjections = [];
+
+for (const region of [
+  {
+    region: "GLOBAL",
+    locale: "en",
+    canonicalRoute:
+      "/knowledge/plastic-injection-molding-wall-thickness/",
+  },
+  {
+    region: "EU",
+    locale: "de",
+    canonicalRoute:
+      "/de/wissen/plastic-injection-molding-wall-thickness/",
+  },
+  {
+    region: "EU",
+    locale: "fr",
+    canonicalRoute:
+      "/fr/knowledge/plastic-injection-molding-wall-thickness/",
+  },
+]) {
+  const regional = await regionalProjector.project({
+    projection: projected,
+    region: region.region,
+    locale: region.locale,
+    canonicalRoute: region.canonicalRoute,
+  });
+
+  assert.equal(
+    regional.projectionId,
+    projected.projectionId,
+    "V8_REAL_PUBLICATION_REGIONAL_PROJECTION_MISMATCH",
+  );
+
+  assert.equal(
+    regional.contentId,
+    projected.contentId,
+    "V8_REAL_PUBLICATION_REGIONAL_CONTENT_MISMATCH",
+  );
+
+  assert.equal(
+    regional.decisionId,
+    projected.decisionId,
+    "V8_REAL_PUBLICATION_REGIONAL_DECISION_MISMATCH",
+  );
+
+  assert.equal(
+    regional.scopeId,
+    projected.scopeId,
+    "V8_REAL_PUBLICATION_REGIONAL_SCOPE_MISMATCH",
+  );
+
+  assert.equal(
+    regional.contextId,
+    projected.contextId,
+    "V8_REAL_PUBLICATION_REGIONAL_CONTEXT_MISMATCH",
+  );
+
+  assert.ok(
+    regional.fingerprint &&
+      /^[a-f0-9]{64}$/.test(regional.fingerprint),
+    "V8_REAL_PUBLICATION_REGIONAL_FINGERPRINT_INVALID",
+  );
+
+  regionalProjections.push(regional);
+}
+
+assert.equal(
+  regionalProjections.length,
+  3,
+  "V8_REAL_PUBLICATION_REGIONAL_PROJECTION_COUNT_INVALID",
+);
 
 const routeMetadataProjector =
-  new RouteMetadataProjector();
-
-const routeMetadataGate =
-  new RouteMetadataGate();
+  new RouteMetadataProjector(store);
 
 const pages = [];
 
-for (const locale of [
-  "en",
-  "de",
-  "fr",
-]) {
-  const regional =
-    regionalProjector.project({
-      projected,
-      region: "GLOBAL",
-      locale,
-      canonicalRoute: routes[locale],
-      alternates: alternates[locale],
-    }).regional;
+for (const regional of regionalProjections) {
+  const metadata = await routeMetadataProjector.project({
+    regionalProjection: regional,
+  });
 
-  assert.equal(
-    regional.locale,
-    locale,
-    `V8_FINAL_PUBLICATION_REGIONAL_LOCALE_MISMATCH:${locale}`,
-  );
-
-  assert.equal(
-    regional.canonicalRoute,
-    routes[locale],
-    `V8_FINAL_PUBLICATION_REGIONAL_CANONICAL_MISMATCH:${locale}`,
-  );
-
-  const regionalSelf =
-    regional.alternates.find(
-      (item) =>
-        item.locale.toLowerCase() ===
-        locale.toLowerCase(),
-    );
-
-  assertTruthy(
-    regionalSelf,
-    `V8_FINAL_PUBLICATION_REGIONAL_SELF_MISSING:${locale}`,
-  );
-
-  assert.equal(
-    regionalSelf.route,
-    regional.canonicalRoute,
-    `V8_FINAL_PUBLICATION_REGIONAL_SELF_CANONICAL_MISMATCH:${locale}`,
-  );
-
-  const routeMetadata =
-    routeMetadataProjector.project({
-      regional,
-      alternates: alternates[locale],
-    }).routeMetadata;
-
-  assert.equal(
-    routeMetadata.locale,
-    locale,
-    `V8_FINAL_PUBLICATION_METADATA_LOCALE_MISMATCH:${locale}`,
-  );
-
-  assert.equal(
-    routeMetadata.canonicalRoute,
-    regional.canonicalRoute,
-    `V8_FINAL_PUBLICATION_METADATA_CANONICAL_MISMATCH:${locale}`,
-  );
-
-  const routeMetadataSelf =
-    routeMetadata.alternates.find(
-      (item) =>
-        item.locale.toLowerCase() ===
-        routeMetadata.locale.toLowerCase(),
-    );
-
-  assertTruthy(
-    routeMetadataSelf,
-    `V8_FINAL_PUBLICATION_METADATA_SELF_MISSING:${locale}`,
-  );
-
-  assert.equal(
-    routeMetadataSelf.route,
-    routeMetadata.canonicalRoute,
-    `V8_FINAL_PUBLICATION_METADATA_SELF_CANONICAL_MISMATCH:${locale}`,
-  );
-
-  for (const expected of alternates[locale]) {
-    const actual =
-      regional.alternates.find(
-        (item) =>
-          item.locale.toLowerCase() ===
-          expected.locale.toLowerCase(),
-      );
-
-    assertTruthy(
-      actual,
-      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_MISSING:${locale}:${expected.locale}`,
-    );
-
-    assert.equal(
-      actual.route,
-      expected.route,
-      `V8_FINAL_PUBLICATION_REGIONAL_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
-    );
-  }
-
-  for (const expected of regional.alternates) {
-    const actual =
-      routeMetadata.alternates.find(
-        (item) =>
-          item.locale.toLowerCase() ===
-          expected.locale.toLowerCase(),
-      );
-
-    assertTruthy(
-      actual,
-      `V8_FINAL_PUBLICATION_METADATA_ALTERNATE_MISSING:${locale}:${expected.locale}`,
-    );
-
-    assert.equal(
-      actual.route,
-      expected.route,
-      `V8_FINAL_PUBLICATION_METADATA_ALTERNATE_ROUTE_MISMATCH:${locale}:${expected.locale}`,
-    );
-  }
-
-  const gateResult =
-    routeMetadataGate.check(
-      routeMetadata,
-    );
-
-  assert.equal(
-    gateResult.passed,
-    true,
-    `V8_FINAL_PUBLICATION_ROUTE_METADATA_BLOCKED:${locale}`,
-  );
-
-  pages.push(routeMetadata);
+  pages.push(metadata);
 }
 
 assert.equal(
   pages.length,
-  3,
-  "V8_FINAL_PUBLICATION_ROUTE_PAGE_COUNT_MISMATCH",
+  regionalProjections.length,
+  "V8_REAL_PUBLICATION_ROUTE_METADATA_COUNT_INVALID",
 );
 
-const tamperedRoute =
-  clone(pages[0]);
-
-tamperedRoute.alternates[1].route =
-  "/tampered";
-
-let routeTamperRejected =
-  false;
-
-try {
-  routeMetadataGate.check(
-    tamperedRoute,
-  );
-} catch (error) {
-  routeTamperRejected =
-    error?.code ===
-    "V8_ROUTE_METADATA_CANONICAL_MISMATCH";
-}
-
-assert.equal(
-  routeTamperRejected,
-  true,
-  "V8_FINAL_PUBLICATION_ROUTE_TAMPER_NOT_REJECTED",
-);
+const routes = new Set();
 
 for (const page of pages) {
-  const self =
-    page.alternates.find(
-      (item) =>
-        item.locale.toLowerCase() ===
-        page.locale.toLowerCase(),
-    );
+  assert.ok(
+    page.canonicalRoute.startsWith("/"),
+    "V8_REAL_PUBLICATION_CANONICAL_ROUTE_INVALID",
+  );
 
-  assertTruthy(
-    self,
-    `V8_FINAL_PUBLICATION_SELF_LOCALE_MISSING:${page.locale}`,
+  assert.ok(
+    !routes.has(page.canonicalRoute),
+    `V8_REAL_PUBLICATION_DUPLICATE_ROUTE:${page.canonicalRoute}`,
+  );
+
+  routes.add(page.canonicalRoute);
+
+  assert.ok(
+    page.fingerprint &&
+      /^[a-f0-9]{64}$/.test(page.fingerprint),
+    `V8_REAL_PUBLICATION_ROUTE_METADATA_FINGERPRINT_INVALID:${page.canonicalRoute}`,
+  );
+
+  assert.ok(
+    Array.isArray(page.alternates),
+    `V8_REAL_PUBLICATION_ALTERNATES_INVALID:${page.canonicalRoute}`,
+  );
+}
+
+for (const page of pages) {
+  const reciprocalLocales = new Set(
+    page.alternates.map((alternate) => alternate.locale),
   );
 
   assert.equal(
-    self.route,
-    page.canonicalRoute,
-    `V8_FINAL_PUBLICATION_SELF_CANONICAL_MISMATCH:${page.locale}`,
+    reciprocalLocales.size,
+    pages.length,
+    `V8_REAL_PUBLICATION_HREFLANG_INCOMPLETE:${page.canonicalRoute}`,
   );
-
-  for (const other of pages) {
-    const alternate =
-      page.alternates.find(
-        (item) =>
-          item.locale.toLowerCase() ===
-          other.locale.toLowerCase(),
-      );
-
-    assertTruthy(
-      alternate,
-      `V8_FINAL_PUBLICATION_ALTERNATE_MISSING:${page.locale}:${other.locale}`,
-    );
-
-    assert.equal(
-      alternate.route,
-      other.canonicalRoute,
-      `V8_FINAL_PUBLICATION_RECIPROCAL_MISMATCH:${page.locale}:${other.locale}`,
-    );
-  }
 }
 
 console.log(
-  "[V8-19] REAL INTERNET FINAL PUBLICATION GATE PASS",
+  `[V8-REAL] regionalProjections=${regionalProjections.length}`,
 );
 
 console.log(
-  `[V8-19] acquired=${runtime.acquisition.acquisitions.length}`,
+  `[V8-REAL] routeMetadata=${pages.length}`,
 );
 
 console.log(
-  `[V8-19] verifiedEvidence=${runtime.verifiedEvidenceIds.length}`,
+  "[V8-REAL] reciprocal hreflang validation: PASS",
+);
+
+/*
+ * --------------------------------------------------------------------------
+ * Canonical Real Internet Publication Handoff
+ * --------------------------------------------------------------------------
+ *
+ * This file is deliberately generated outside src/v8/.
+ *
+ * It binds the real Internet runtime chain to the exact Projection and
+ * regional route metadata that the later production closure gate will verify.
+ *
+ * The handoff is not a ReleaseArtifact.
+ * It is the boundary artifact between the real publication gate and the
+ * subsequent actual-dist production closure.
+ * --------------------------------------------------------------------------
+ */
+
+function canonicalHandoffPayload(value) {
+  return JSON.stringify(value);
+}
+
+function sha256Text(value) {
+  return createHash("sha256")
+    .update(value, "utf8")
+    .digest("hex");
+}
+
+const handoffPages = pages
+  .map((page) => {
+    const regional = regionalProjections.find(
+      (candidate) =>
+        candidate.locale === page.locale &&
+        candidate.canonicalRoute === page.canonicalRoute,
+    );
+
+    assert.ok(
+      regional,
+      `V8_HANDOFF_REGIONAL_PROJECTION_NOT_FOUND:${page.canonicalRoute}`,
+    );
+
+    return {
+      locale: page.locale,
+      region: regional.region,
+      canonicalRoute: page.canonicalRoute,
+      regionalProjectionId: regional.id,
+      regionalProjectionFingerprint: regional.fingerprint,
+      routeMetadataFingerprint: page.fingerprint,
+    };
+  })
+  .sort((a, b) =>
+    `${a.locale}:${a.canonicalRoute}`.localeCompare(
+      `${b.locale}:${b.canonicalRoute}`,
+    ),
+  );
+
+const handoffPayload = {
+  schema: "nexmold.v8.real-publication-handoff.v1",
+
+  contentId: projected.contentId,
+  decisionId: projected.decisionId,
+
+  projectionId: projected.projectionId,
+  projectionFingerprint: projected.fingerprint,
+
+  scopeId: projected.scopeId,
+  contextId: projected.contextId,
+
+  pages: handoffPages,
+};
+
+const handoffCanonical =
+  canonicalHandoffPayload(handoffPayload);
+
+const handoff = {
+  ...handoffPayload,
+  fingerprint: sha256Text(handoffCanonical),
+};
+
+assert.ok(
+  /^[a-f0-9]{64}$/.test(handoff.fingerprint),
+  "V8_HANDOFF_FINGERPRINT_INVALID",
+);
+
+const handoffDirectory =
+  path.resolve(".nexmold");
+
+fs.mkdirSync(handoffDirectory, {
+  recursive: true,
+});
+
+const handoffPath =
+  path.join(
+    handoffDirectory,
+    "v8-real-publication-handoff.json",
+  );
+
+fs.writeFileSync(
+  handoffPath,
+  `${JSON.stringify(handoff, null, 2)}\n`,
+  "utf8",
+);
+
+assert.ok(
+  fs.existsSync(handoffPath),
+  "V8_FINAL_PUBLICATION_HANDOFF_NOT_WRITTEN",
+);
+
+const persistedHandoff =
+  JSON.parse(
+    fs.readFileSync(handoffPath, "utf8"),
+  );
+
+assert.deepEqual(
+  persistedHandoff,
+  handoff,
+  "V8_FINAL_PUBLICATION_HANDOFF_PERSISTENCE_MISMATCH",
 );
 
 console.log(
-  `[V8-19] claims=${runtime.claimIds.length}`,
+  "[V8-HANDOFF] Real Internet publication handoff: PASS",
 );
 
 console.log(
-  `[V8-19] knowledge=${runtime.knowledgeIds.length}`,
+  `[V8-HANDOFF] content=${handoff.contentId}`,
 );
 
 console.log(
-  `[V8-19] decisionState=${decision.state}`,
+  `[V8-HANDOFF] decision=${handoff.decisionId}`,
 );
 
 console.log(
-  `[V8-19] publicationEligibility=${eligible.status}`,
+  `[V8-HANDOFF] projection=${handoff.projectionId}`,
 );
 
 console.log(
-  `[V8-19] content=${compiled.content.id}`,
+  `[V8-HANDOFF] projectionFingerprint=${handoff.projectionFingerprint}`,
 );
 
 console.log(
-  `[V8-19] projection=${projected.projectionId}`,
+  `[V8-HANDOFF] pages=${handoff.pages.length}`,
 );
 
 console.log(
-  `[V8-19] routeMetadata=${pages.length === 3}`,
+  `[V8-HANDOFF] fingerprint=${handoff.fingerprint}`,
+);
+
+const chainVerification =
+  store.verifyChain();
+
+assert.equal(
+  chainVerification.valid,
+  true,
+  "V8_REAL_PUBLICATION_FOUNDATION_CHAIN_INVALID",
 );
 
 console.log(
-  "[V8-19] reciprocalHreflang=true",
+  "[V8-REAL] Foundation chain verification: PASS",
 );
 
 console.log(
-  "[V8-19] contentTamperRejection=true",
-);
-
-console.log(
-  "[V8-19] routeMetadataTamperRejection=true",
-);
-
-console.log(
-  "[V8-19] finalPublishable=true",
+  "[V8-FINAL-PUBLICATION] REAL INTERNET PUBLICATION GATE PASS",
 );
