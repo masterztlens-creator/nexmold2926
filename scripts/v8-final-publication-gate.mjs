@@ -845,29 +845,60 @@ const handoffPages =
           `V8_HANDOFF_REGIONAL_PROJECTION_NOT_FOUND:${page.canonicalRoute}`,
         );
 
-        return {
-          locale:
-            page.locale,
+return {
+  locale:
+    page.locale,
 
-          region:
-            regional.region,
+  region:
+    regional.region,
 
-          canonicalRoute:
-            page.canonicalRoute,
+  canonicalRoute:
+    page.canonicalRoute,
 
-          regionalProjectionId:
-            regional.id,
+  title:
+    page.title,
 
-          regionalProjectionFingerprint:
-            String(
-              regional.fingerprint,
-            ),
+  body:
+    page.body,
 
-          routeMetadataFingerprint:
-            String(
-              page.fingerprint,
-            ),
-        };
+  alternates:
+    page.alternates.map(
+      (alternate) => ({
+        locale:
+          alternate.locale,
+
+        route:
+          alternate.route,
+      }),
+    ),
+
+  contentId:
+    page.contentId,
+
+  decisionId:
+    page.decisionId,
+
+  projectionId:
+    page.projectionId,
+
+  projectionFingerprint:
+    String(
+      projected.fingerprint,
+    ),
+
+  regionalProjectionId:
+    regional.id,
+
+  regionalProjectionFingerprint:
+    String(
+      regional.fingerprint,
+    ),
+
+  routeMetadataFingerprint:
+    String(
+      page.fingerprint,
+    ),
+};
       },
     )
     .sort(

@@ -404,13 +404,23 @@ async function main() {
     fail("ROUTE_CONFLICT_GATE", "scripts/route-conflict-check.mjs missing");
   }
 
-  section("EPOCH");
-  if (CLEAN_DIST) fs.rmSync(DIST, { recursive: true, force: true });
-  fs.mkdirSync(DIST, { recursive: true });
-  pass("EPOCH", `Clean build epoch ${epoch} prepared.`);
+section("EPOCH");
+if (CLEAN_DIST) fs.rmSync(DIST, { recursive: true, force: true });
+fs.mkdirSync(DIST, { recursive: true });
+pass("EPOCH", `Clean build epoch ${epoch} prepared.`);
 
-  section("BUILD");
-  await runCommand(BUILD_COMMAND, "BUILD");
+section("V8_ASTRO_PUBLICATION_ADAPTER");
+await runCommand(
+  "node scripts/v8-astro-publication-adapter.mjs",
+  "V8_ASTRO_PUBLICATION_ADAPTER",
+);
+pass(
+  "V8_ASTRO_PUBLICATION_ADAPTER",
+  "Real Internet V8 publication artifact materialized for Astro.",
+);
+
+section("BUILD");
+await runCommand(BUILD_COMMAND, "BUILD");
   pass("BUILD", "Astro production build completed.");
 
 section("ARTIFACT_AUDIT");
