@@ -156,7 +156,60 @@ function assertPairwiseReciprocity(
   assert.equal(
     rightAlternates.get(left.locale.toLowerCase()),
     left.canonicalRoute,
-    `V8_ROUTE_METADATA_RECIPROCAL_REVERSE_MISMATCH:${right.locale}:${left.locale}`,
+    `V8_ROUTE_METADATA_RECIPROCAL_REVERSE_MISMATCH:${left.locale}:${right.locale}`,
+  );
+}
+
+function emitAcquisitionDiagnostics(
+  acquisition,
+) {
+  console.log(
+    `[V8-18.1][DIAGNOSTIC] discovery.accepted=${acquisition.discovery.accepted}`,
+  );
+
+  console.log(
+    `[V8-18.1][DIAGNOSTIC] discovery.rejected=${acquisition.discovery.rejected}`,
+  );
+
+  console.log(
+    "[V8-18.1][DIAGNOSTIC] discovery.candidates=" +
+      JSON.stringify(
+        acquisition.discovery.candidates.map(
+          (candidate) => ({
+            url: candidate.url,
+            normalizedUrl: candidate.normalizedUrl,
+            kind: candidate.kind,
+            title: candidate.title,
+          }),
+        ),
+      ),
+  );
+
+  console.log(
+    "[V8-18.1][DIAGNOSTIC] searchErrors=" +
+      JSON.stringify(
+        acquisition.searchErrors,
+      ),
+  );
+
+  console.log(
+    "[V8-18.1][DIAGNOSTIC] fetchErrors=" +
+      JSON.stringify(
+        acquisition.fetchErrors,
+      ),
+  );
+
+  console.log(
+    "[V8-18.1][DIAGNOSTIC] acquisitions=" +
+      JSON.stringify(
+        acquisition.acquisitions.map(
+          (item) => ({
+            candidateUrl: item.candidateUrl,
+            finalUrl: item.page.finalUrl,
+            status: item.page.status,
+          }),
+        ),
+      ),
   );
 }
 
@@ -244,6 +297,10 @@ const runtime = await runV8ArticleRuntime({
 
   title: "Plastic Injection Molding Wall Thickness",
 });
+
+emitAcquisitionDiagnostics(
+  runtime.acquisition,
+);
 
 assert.ok(
   Array.isArray(
