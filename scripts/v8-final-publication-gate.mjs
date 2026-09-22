@@ -9,7 +9,7 @@ import {
 
 import {
   HttpPageFetcher,
-} from "../.v8-build/src/v8/acquisition/http-page-fetcher.js";
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
   TavilySearchProvider,
