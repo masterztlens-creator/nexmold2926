@@ -1,7 +1,6 @@
 name: NEXMOLD V8 Next Operational Gate
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows:
       - NEXMOLD V8 Final Gate
@@ -10,35 +9,43 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   v8-next:
     name: V8 Next Operational Verification
-    runs-on: ubuntu-latest
 
     if: >
-      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success'
 
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Resolve source SHA
+      - name: Resolve source SHA and source workflow run
         id: source
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
-            SHA="${{ github.event.workflow_run.head_sha }}"
-          else
-            SHA="${GITHUB_SHA}"
-          fi
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          RUN_ID="${{ github.event.workflow_run.id }}"
 
           if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Invalid SHA: $SHA"
+            echo "ERROR: Invalid source SHA: $SHA"
+            exit 1
+          fi
+
+          if [[ ! "$RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "ERROR: Invalid source workflow run ID: $RUN_ID"
             exit 1
           fi
 
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+          echo "Source SHA: $SHA"
+          echo "Source workflow run: $RUN_ID"
 
       - name: Checkout exact source
         uses: actions/checkout@v5
@@ -51,23 +58,165 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Verify LKG package contract
         shell: bash
         run: |
           set -euo pipefail
 
-          node -e '
-            const fs = require("node:fs");
-            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            const l = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+          node - <<'NODE'
+          const fs = require('node:fs');
 
-            if (p.name !== "nexmold-v8-full") process.exit(1);
-            if (p.engines?.node !== ">=22.12.0") process.exit(1);
-            if (p.devDependencies?.typescript !== "6.0.3") process.exit(1);
-            if (l.lockfileVersion !== 3) process.exit(1);
-            if (l.packages?.[""]?.devDependencies?.typescript !== "6.0.3") process.exit(1);
-          '
+          const packageJson = JSON.parse(
+            fs.readFileSync('package.json', 'utf8')
+          );
+
+          const lockfile = JSON.parse(
+            fs.readFileSync('package-lock.json', 'utf8')
+          );
+
+          if (packageJson.name !== 'nexmold-v8-full') {
+            throw new Error(
+              `Unexpected package name: ${packageJson.name}`
+            );
+          }
+
+          if (packageJson.engines?.node !== '>=22.12.0') {
+            throw new Error(
+              `Unexpected Node engine: ${packageJson.engines?.node}`
+            );
+          }
+
+          if (
+            packageJson.devDependencies?.typescript !==
+            '6.0.3'
+          ) {
+            throw new Error(
+              `Unexpected TypeScript version: ${
+                packageJson.devDependencies?.typescript
+              }`
+            );
+          }
+
+          if (lockfile.lockfileVersion !== 3) {
+            throw new Error(
+              `Unexpected lockfileVersion: ${
+                lockfile.lockfileVersion
+              }`
+            );
+          }
+
+          if (
+            lockfile.packages?.['']?.devDependencies
+              ?.typescript !== '6.0.3'
+          ) {
+            throw new Error(
+              'package-lock.json TypeScript baseline mismatch'
+            );
+          }
+
+          console.log(
+            'LKG package contract: PASS'
+          );
+          NODE
+
+      - name: Download V8 publication handoff
+        uses: actions/download-artifact@v4
+        with:
+          name: v8-real-publication-handoff
+          path: .nexmold
+          run-id: ${{ steps.source.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify downloaded V8 publication handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          HANDOFF=".nexmold/v8-real-publication-handoff.json"
+
+          if [ ! -f "$HANDOFF" ]; then
+            echo "ERROR: Downloaded V8 publication handoff is missing:"
+            echo "       $HANDOFF"
+            exit 1
+          fi
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const path =
+            '.nexmold/v8-real-publication-handoff.json';
+
+          const payload = JSON.parse(
+            fs.readFileSync(path, 'utf8')
+          );
+
+          if (
+            payload?.schema !==
+            'nexmold.v8.real-publication-handoff.v1'
+          ) {
+            throw new Error(
+              `Unexpected handoff schema: ${payload?.schema}`
+            );
+          }
+
+          if (
+            typeof payload.fingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/.test(payload.fingerprint)
+          ) {
+            throw new Error(
+              'Publication handoff fingerprint is missing or invalid'
+            );
+          }
+
+          if (
+            !Array.isArray(payload.pages) ||
+            payload.pages.length !== 3
+          ) {
+            throw new Error(
+              `Expected exactly 3 publication pages, received ${
+                payload.pages?.length ?? 0
+              }`
+            );
+          }
+
+          const requiredRoutes = new Set([
+            '/knowledge/plastic-injection-molding-wall-thickness/',
+            '/de/wissen/plastic-injection-molding-wall-thickness/',
+            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+          ]);
+
+          const actualRoutes = new Set(
+            payload.pages.map((page) => page?.canonicalRoute)
+          );
+
+          if (actualRoutes.size !== requiredRoutes.size) {
+            throw new Error(
+              'Publication handoff contains duplicate or invalid routes'
+            );
+          }
+
+          for (const route of requiredRoutes) {
+            if (!actualRoutes.has(route)) {
+              throw new Error(
+                `Publication handoff missing required route: ${route}`
+              );
+            }
+          }
+
+          console.log(
+            'Downloaded V8 publication handoff: PASS'
+          );
+
+          console.log(
+            `handoff fingerprint: ${payload.fingerprint}`
+          );
+
+          console.log(
+            `publication pages: ${payload.pages.length}`
+          );
+          NODE
 
       - name: Install locked dependencies
         run: npm ci

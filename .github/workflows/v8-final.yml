@@ -28,10 +28,12 @@ permissions:
 jobs:
   v8-final:
     name: V8 Final + Production Integration
+
     if: >
       github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
+
     runs-on: ubuntu-latest
 
     steps:
@@ -177,6 +179,7 @@ jobs:
           for (const name of required) {
             try {
               const resolved = require.resolve(name);
+
               console.log(
                 `dependency ${name}: PASS -> ${resolved}`
               );
@@ -226,6 +229,103 @@ jobs:
           fi
 
           node scripts/v8-final-publication-gate.mjs
+
+      - name: Verify V8 publication handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          HANDOFF=".nexmold/v8-real-publication-handoff.json"
+
+          if [ ! -f "$HANDOFF" ]; then
+            echo "ERROR: Required V8 publication handoff is missing:"
+            echo "       $HANDOFF"
+            exit 1
+          fi
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const path =
+            '.nexmold/v8-real-publication-handoff.json';
+
+          const payload = JSON.parse(
+            fs.readFileSync(path, 'utf8')
+          );
+
+          if (
+            payload?.schema !==
+            'nexmold.v8.real-publication-handoff.v1'
+          ) {
+            throw new Error(
+              `Unexpected handoff schema: ${payload?.schema}`
+            );
+          }
+
+          if (
+            typeof payload.fingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/.test(payload.fingerprint)
+          ) {
+            throw new Error(
+              'Publication handoff fingerprint is missing or invalid'
+            );
+          }
+
+          if (
+            !Array.isArray(payload.pages) ||
+            payload.pages.length !== 3
+          ) {
+            throw new Error(
+              `Expected exactly 3 publication pages, received ${
+                payload.pages?.length ?? 0
+              }`
+            );
+          }
+
+          const requiredRoutes = new Set([
+            '/knowledge/plastic-injection-molding-wall-thickness/',
+            '/de/wissen/plastic-injection-molding-wall-thickness/',
+            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+          ]);
+
+          const actualRoutes = new Set(
+            payload.pages.map((page) => page?.canonicalRoute)
+          );
+
+          if (actualRoutes.size !== requiredRoutes.size) {
+            throw new Error(
+              'Publication handoff contains duplicate or invalid routes'
+            );
+          }
+
+          for (const route of requiredRoutes) {
+            if (!actualRoutes.has(route)) {
+              throw new Error(
+                `Publication handoff missing required route: ${route}`
+              );
+            }
+          }
+
+          console.log(
+            'V8 publication handoff: PASS'
+          );
+
+          console.log(
+            `handoff fingerprint: ${payload.fingerprint}`
+          );
+
+          console.log(
+            `publication pages: ${payload.pages.length}`
+          );
+          NODE
+
+      - name: Upload verified V8 publication handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: v8-real-publication-handoff
+          path: .nexmold/v8-real-publication-handoff.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Real production build + V8-09 integration chain
         shell: bash
