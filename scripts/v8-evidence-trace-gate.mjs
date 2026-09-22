@@ -848,16 +848,30 @@ for (
  * ============================================================================
  * Gate 8
  *
- * Runtime Truth Evidence hash must reproduce exactly from:
+ * Runtime Truth Evidence hash must reproduce exactly from the SAME identity
+ * contract used by evidence-builder.ts and foundation-adapter.ts:
  *
  *   source
  *   snapshotId
  *   snapshotContentHash
  *   locator
  *   excerpt
+ *   page
+ *   printedPage
+ *   section
+ *   table
+ *   row
  *   parameter
  *   value
  *   unit
+ *   materialManufacturer
+ *   materialGrade
+ *   testMethod
+ *   testCondition
+ *   flowDirection
+ *   extractionConfidence
+ *
+ * extractionConfidence is normalized to LOW when undefined.
  * ============================================================================
  */
 
@@ -898,6 +912,21 @@ for (
       excerpt:
         evidence.excerpt,
 
+      page:
+        evidence.page,
+
+      printedPage:
+        evidence.printedPage,
+
+      section:
+        evidence.section,
+
+      table:
+        evidence.table,
+
+      row:
+        evidence.row,
+
       parameter:
         evidence.parameter,
 
@@ -906,6 +935,25 @@ for (
 
       unit:
         evidence.unit,
+
+      materialManufacturer:
+        evidence.materialManufacturer,
+
+      materialGrade:
+        evidence.materialGrade,
+
+      testMethod:
+        evidence.testMethod,
+
+      testCondition:
+        evidence.testCondition,
+
+      flowDirection:
+        evidence.flowDirection,
+
+      extractionConfidence:
+        evidence.extractionConfidence ??
+        "LOW",
     });
 
   assert.equal(
@@ -922,7 +970,8 @@ for (
  * ============================================================================
  * Gate 9
  *
- * Runtime Truth Evidence aggregate identity must be reproducible.
+ * Runtime Truth Evidence aggregate identity must be reproducible from the
+ * SAME identity contract used by evidence-builder.ts and foundation-adapter.ts.
  * ============================================================================
  */
 
@@ -961,6 +1010,21 @@ for (
         excerpt:
           evidence.excerpt,
 
+        page:
+          evidence.page,
+
+        printedPage:
+          evidence.printedPage,
+
+        section:
+          evidence.section,
+
+        table:
+          evidence.table,
+
+        row:
+          evidence.row,
+
         parameter:
           evidence.parameter,
 
@@ -969,6 +1033,25 @@ for (
 
         unit:
           evidence.unit,
+
+        materialManufacturer:
+          evidence.materialManufacturer,
+
+        materialGrade:
+          evidence.materialGrade,
+
+        testMethod:
+          evidence.testMethod,
+
+        testCondition:
+          evidence.testCondition,
+
+        flowDirection:
+          evidence.flowDirection,
+
+        extractionConfidence:
+          evidence.extractionConfidence ??
+          "LOW",
       }),
     ).toString();
 
