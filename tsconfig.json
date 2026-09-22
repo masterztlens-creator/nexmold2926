@@ -12,5 +12,17 @@
       "/src/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*.astro",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/v8/**",
+    "src/evidence/**",
+    "src/projection/**",
+    "src/publication/**",
+    "src/regional/**",
+    "src/release/**"
+  ]
 }
