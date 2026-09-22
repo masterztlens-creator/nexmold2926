@@ -10,6 +10,7 @@ on:
       - "scripts/v8-final-publication-gate.mjs"
       - ".github/workflows/v8-final.yml"
       - "src/v8/**"
+      - "src/pages/**"
       - "tsconfig.v8.json"
       - "tsconfig.json"
       - "package.json"
