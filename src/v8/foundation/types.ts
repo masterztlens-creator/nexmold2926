@@ -201,6 +201,14 @@ export interface ClaimPayload {
 export interface KnowledgePayload {
   readonly proposition: string;
   readonly claimIds: readonly ClaimId[];
+
+  readonly scope?: string;
+
+  readonly conditions?: readonly string[];
+
+  readonly units?: readonly string[];
+
+  readonly isUniversal?: boolean;
 }
 
 export interface ScopePayload {
