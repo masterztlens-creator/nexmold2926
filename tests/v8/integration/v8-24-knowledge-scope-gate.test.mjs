@@ -24,7 +24,10 @@ const AUDITOR = {
 
 function fixtureHash(content) {
   return createHash("sha256")
-    .update(content, "utf8")
+    .update(
+      JSON.stringify(content),
+      "utf8",
+    )
     .digest("hex");
 }
 
