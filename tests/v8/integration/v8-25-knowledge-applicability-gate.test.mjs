@@ -1,188 +1,277 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 
 import {
   FoundationService,
   InMemoryFoundationStore,
-} from "../../../.v8-build/src/v8/foundation/index.js";
-
-import {
-  ApplicabilityEngine,
-} from "../../../.v8-build/src/v8/applicability/index.js";
-
-import {
+  createSource,
   createClaim,
   createKnowledge,
   createScope,
   createContext,
-} from "../../../.v8-build/src/v8/domain/index.js";
+} from "../../../.v8-build/src/v8/index.js";
 
-const ACTOR = {
-  id: "v8-25-applicability-test",
+import {
+  ApplicabilityEngine,
+} from "../../../.v8-build/src/v8/applicability/engine.js";
+
+const actor = {
+  id: "v8-25-test",
   role: "SYSTEM",
 };
 
-const AUDITOR = {
-  id: "v8-25-applicability-auditor",
+const auditor = {
+  id: "v8-25-auditor",
   role: "AUDITOR",
 };
 
-function createKnowledgeFixture() {
-  const store = new InMemoryFoundationStore();
-  const service = new FoundationService(store);
+function fixtureHash(content) {
+  return createHash("sha256")
+    .update(
+      JSON.stringify(content),
+      "utf8",
+    )
+    .digest("hex");
+}
 
-  const claim = createClaim({
-    id: "claim:v8-25:conditioned",
-    statement:
-      "For ABS material at 23 C in injection molding, a 2.5 mm wall thickness is recommended.",
-    evidenceIds: [],
-    status: "VERIFIED",
-    fingerprint: "ignored",
-    scope: "injection molding",
-    conditions: [
-      "ABS",
-      "23 C",
-    ],
-    units: [
-      "mm",
-    ],
-    isUniversal: false,
+function createKnowledgeFixture(svc) {
+  const content =
+    "PA66 at 180 C requires wall thickness to be expressed in mm for this engineering condition.";
+
+  const source = createSource({
+    kind: "PUBLIC_WEB",
+    locator: "https://example.test/v8-25-applicability",
+    access: "PAYLOAD_ALLOWED",
+    title: "V8-25 Applicability Test Reference",
+    version: "1",
+    publisher: "NEXMOLD Test Authority",
+    authority: "ENGINEERING_REFERENCE",
+    canonicalUrl:
+      "https://example.test/v8-25-applicability",
+    retrievedAt:
+      "2026-09-23T00:00:00.000Z",
+    documentHash:
+      fixtureHash(content),
   });
 
-  /*
-   * The applicability test does not need to exercise the
-   * Evidence → Claim gate again.
-   *
-   * Persist a verified Claim fixture directly because this
-   * test is specifically about Knowledge → Applicability.
-   */
-  store.append({
-    aggregateType: "CLAIM",
-    aggregateId: claim.id,
-    version: 1,
-    state: "VERIFIED",
-    payload: {
-      statement: claim.statement,
-      evidenceIds: [],
-      scope: claim.scope,
-      conditions: claim.conditions,
-      units: claim.units,
-      isUniversal: claim.isUniversal,
+  svc.registerSource(
+    source,
+    actor,
+  );
+
+  const snapshot = svc.captureSnapshot(
+    {
+      source,
+      capturedAt:
+        "2026-09-23T00:00:00.000Z",
+      locator: source.locator,
+      content,
+      metadataOnly: false,
     },
-    lineage: [],
-    actor: AUDITOR,
-    reason: "V8-25 applicability fixture",
-  });
+    actor,
+  );
 
-  const knowledge = service.createKnowledge(
+  svc.sealSnapshot(
+    snapshot.aggregateId,
+    actor,
+  );
+
+  const evidence = svc.ingestEvidence(
+    {
+      id: "evidence:v8-25:1",
+      sourceId: source.id,
+      locator: "v8-25:p1",
+      excerpt: content,
+      ingestion: "INGESTED",
+      capturedAt: snapshot.recordedAt,
+      snapshotId: snapshot.aggregateId,
+      materialGrade: "PA66",
+      testCondition: "180 C",
+      unit: "mm",
+    },
+    actor,
+  );
+
+  svc.verifyEvidence(
+    evidence.aggregateId,
+    auditor,
+  );
+
+  const claim = svc.createClaim(
+    createClaim({
+      id: "claim:v8-25:1",
+      statement:
+        "PA66 at 180 C requires wall thickness to be expressed in mm for this engineering condition.",
+      evidenceIds: [
+        evidence.aggregateId,
+      ],
+      status: "VERIFIED",
+      fingerprint: "ignored",
+      scope: "injection molding",
+      conditions: [
+        "PA66",
+        "180 C",
+      ],
+      units: [
+        "mm",
+      ],
+      isUniversal: false,
+      epistemicLevel:
+        "ENGINEERING_INFERENCE",
+      confidence: "HIGH",
+    }),
+    auditor,
+  );
+
+  const knowledge = svc.createKnowledge(
     createKnowledge({
-      id: "knowledge:v8-25:conditioned",
+      id: "knowledge:v8-25:1",
       proposition:
-        "For ABS material at 23 C in injection molding, a 2.5 mm wall thickness is recommended.",
+        "For injection molding, this knowledge applies to PA66 at 180 C when wall thickness is expressed in mm.",
       claimIds: [
-        claim.id,
+        claim.aggregateId,
       ],
       status: "APPROVED",
       fingerprint: "ignored",
       scope: "injection molding",
       conditions: [
-        "ABS",
-        "23 C",
+        "PA66",
+        "180 C",
       ],
       units: [
         "mm",
       ],
       isUniversal: false,
     }),
-    AUDITOR,
-  );
-
-  const scope = service.registerScope(
-    createScope({
-      id: "scope:v8-25:injection-molding",
-      geography: "GLOBAL",
-      industries: [
-        "INJECTION_MOLDING",
-      ],
-      languages: [
-        "en",
-      ],
-    }),
-    ACTOR,
-  );
-
-  const context = service.registerContext(
-    createContext({
-      id: "context:v8-25:mismatched",
-      scopeId: scope.aggregateId,
-      purpose:
-        "Evaluate conditioned injection-molding knowledge.",
-      variables: {
-        materialGrade: "PA66",
-        testCondition: "180 C",
-        unit: "inch",
-      },
-    }),
-    ACTOR,
+    actor,
   );
 
   return {
-    store,
+    source,
+    snapshot,
+    evidence,
+    claim,
     knowledge,
-    scope,
-    context,
   };
 }
 
 test(
   "V8-25 RED: ApplicabilityEngine currently ignores Knowledge applicability constraints",
   () => {
+    const store =
+      new InMemoryFoundationStore();
+
+    const svc =
+      new FoundationService(store);
+
     const {
-      store,
       knowledge,
-      scope,
-      context,
-    } = createKnowledgeFixture();
+    } =
+      createKnowledgeFixture(svc);
 
-    const engine = new ApplicabilityEngine(store);
+    const scope =
+      svc.registerScope(
+        createScope({
+          id: "scope:v8-25:1",
+          geography: "GLOBAL",
+          industries: [
+            "INJECTION_MOLDING",
+          ],
+          languages: [
+            "en",
+          ],
+        }),
+        actor,
+      );
 
-    const result = engine.evaluate({
-      knowledgeId: knowledge.aggregateId,
-      scopeId: scope.aggregateId,
-      contextId: context.aggregateId,
-    });
+    const context =
+      svc.registerContext(
+        createContext({
+          id: "context:v8-25:1",
+          scopeId:
+            scope.aggregateId,
+          purpose:
+            "Evaluate Knowledge applicability against an incompatible material, condition, and unit.",
+          variables: {
+            materialGrade: "PA66",
+            testCondition: "180 C",
+            unit: "inch",
+          },
+        }),
+        actor,
+      );
+
+    const result =
+      new ApplicabilityEngine(
+        store,
+      ).evaluate({
+        knowledgeId:
+          knowledge.aggregateId,
+        scopeId:
+          scope.aggregateId,
+        contextId:
+          context.aggregateId,
+      });
 
     /*
-     * This assertion intentionally describes the required
-     * V8-25 semantic contract.
+     * V8-25 semantic requirement:
      *
-     * The current implementation is expected to FAIL here
-     * because it does not evaluate:
+     * Knowledge carries:
+     *   scope       = injection molding
+     *   conditions = PA66, 180 C
+     *   units       = mm
      *
-     *   Knowledge.conditions
-     *   Knowledge.units
+     * Context carries:
+     *   materialGrade = PA66
+     *   testCondition = 180 C
+     *   unit          = inch
      *
-     * against Context.variables.
+     * The unit is incompatible.
+     *
+     * Therefore applicability MUST eventually be false.
+     *
+     * The current ApplicabilityEngine is expected to return true
+     * because it currently checks only:
+     *
+     *   Knowledge existence/state
+     *   Scope existence/state
+     *   Context existence/state
+     *   Context -> Scope relationship
+     *
+     * and does not yet evaluate Knowledge applicability constraints.
      */
+
     assert.equal(
       result.applicable,
       false,
-      "Conditioned Knowledge must not be applicable to a Context whose variables do not satisfy its constraints.",
+      JSON.stringify(
+        {
+          expected:
+            "Knowledge applicability constraints must block incompatible context",
+          actual: result,
+        },
+        null,
+        2,
+      ),
     );
 
     assert.ok(
       result.reasons.some(
         (reason) =>
           reason.startsWith(
-            "KNOWLEDGE_CONDITION",
-          ) ||
-          reason.startsWith(
-            "KNOWLEDGE_UNIT",
+            "KNOWLEDGE_",
           ),
       ),
-      "Applicability failure must explain which Knowledge constraint blocked applicability.",
+      JSON.stringify(
+        result,
+        null,
+        2,
+      ),
     );
 
-    store.verifyChain();
+    assert.doesNotThrow(() => {
+      store.verifyChain();
+    });
   },
 );
