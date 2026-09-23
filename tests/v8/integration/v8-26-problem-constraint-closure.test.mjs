@@ -341,6 +341,92 @@ assert.equal(
 
 /*
  * BLOCK:
+ * The Decision is projected with a stale
+ * Problem version.
+ *
+ * The Decision still points at the same Problem
+ * identity and retains the original fingerprint,
+ * but its lineage is no longer bound to the exact
+ * persisted Problem version.
+ */
+const staleVersionStore = {
+  append:
+    store.append.bind(store),
+
+  get(type, id, version) {
+    const record =
+      originalGet(
+        type,
+        id,
+        version,
+      );
+
+    if (
+      type === "DECISION" &&
+      id ===
+        decisionRecord.aggregateId &&
+      record
+    ) {
+      return {
+        ...record,
+        lineage:
+          record.lineage.map(
+            (link) =>
+              link.type ===
+                "PROBLEM"
+                ? {
+                    ...link,
+                    version:
+                      link.version + 1,
+                  }
+                : link,
+          ),
+      };
+    }
+
+    return record;
+  },
+
+  history:
+    store.history.bind(store),
+
+  auditTrail:
+    store.auditTrail.bind(store),
+
+  verifyChain:
+    store.verifyChain.bind(store),
+};
+
+const staleVersionValidator =
+  new DecisionValidator(
+    staleVersionStore,
+  );
+
+const staleVersion =
+  staleVersionValidator.validate({
+    decisionId:
+      decisionRecord.aggregateId,
+    scopeId: scope.id,
+    contextId: context.id,
+  });
+
+assert.equal(
+  staleVersion.valid,
+  false,
+);
+
+assert.equal(
+  staleVersion.reasons.some(
+    (reason) =>
+      reason.includes(
+        "V8_PROBLEM_CONSTRAINT_VERSION_MISMATCH",
+      ),
+  ),
+  true,
+);
+
+/*
+ * BLOCK:
  * The Problem payload is tampered in the
  * validation projection.
  *
