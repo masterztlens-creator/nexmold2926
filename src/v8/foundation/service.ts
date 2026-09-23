@@ -713,10 +713,9 @@ export class FoundationService {
         ...((claim as any).confidence
           ? {
               confidence:
-                (claim as any).confidence,
+              (claim as any).confidence,
             }
-          }
-          : {}),
+        : {}),
 
         ...((claim as any).epistemicLevel
           ? {
