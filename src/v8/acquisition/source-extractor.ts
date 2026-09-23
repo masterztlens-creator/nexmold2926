@@ -8,6 +8,21 @@ const HTML_HEADING_PATTERN =
 const HTML_BLOCK_PATTERN =
   /<(?:p|li|dt|dd|td|th|div|section|article|blockquote)(?:\s[^>]*)?>([\s\S]*?)<\/(?:p|li|dt|dd|td|th|div|section|article|blockquote)>/gi;
 
+const MAIN_CONTENT_PATTERN =
+  /<main(?:\s[^>]*)?>([\s\S]*?)<\/main>/gi;
+
+const ARTICLE_CONTENT_PATTERN =
+  /<article(?:\s[^>]*)?>([\s\S]*?)<\/article>/gi;
+
+const BODY_CONTENT_PATTERN =
+  /<body(?:\s[^>]*)?>([\s\S]*?)<\/body>/gi;
+
+const SEMANTIC_UI_BLOCK_PATTERN =
+  /<(header|nav|footer|aside|dialog|template)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi;
+
+const ROLE_UI_BLOCK_PATTERN =
+  /<(?:div|section|aside|header|footer|nav)(?:\s[^>]*)?\b(?:role\s*=\s*["'](?:banner|navigation|contentinfo|complementary|dialog)["']|(?:id|class)\s*=\s*["'][^"']*(?:cookie|cookies|consent|gdpr|privacy-banner|privacy-consent|cookie-banner|cookie-consent|modal|popup|overlay|sidebar|side-bar|related-content|related-posts|advertisement|advert|promo|promotional|newsletter|subscribe|breadcrumb|breadcrumbs)[^"']*["'])[^>]*>[\s\S]*?<\/(?:div|section|aside|header|footer|nav)>/gi;
+
 const PARAMETER_VALUE_UNIT_PATTERNS: readonly RegExp[] = [
   /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s*[:=]\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\b/gi,
   /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s+(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\b/gi,
@@ -18,6 +33,8 @@ function decodeHtml(html: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<template[\s\S]*?<\/template>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
@@ -27,6 +44,19 @@ function decodeHtml(html: string): string {
     .replace(/&quot;/gi, '"')
     .replace(/&#(\d+);/g, (_, code: string) => {
       const numericCode = Number(code);
+
+      if (
+        !Number.isInteger(numericCode) ||
+        numericCode < 0 ||
+        numericCode > 0x10ffff
+      ) {
+        return " ";
+      }
+
+      return String.fromCodePoint(numericCode);
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) => {
+      const numericCode = Number.parseInt(code, 16);
 
       if (
         !Number.isInteger(numericCode) ||
@@ -84,11 +114,105 @@ function isPlausibleParameter(parameter: string): boolean {
     return false;
   }
 
-  if (/^(?:the|a|an|is|was|are|were|has|have|with|from|for|and|or)$/i.test(normalized)) {
+  if (
+    /^(?:the|a|an|is|was|are|were|has|have|with|from|for|and|or)$/i.test(
+      normalized,
+    )
+  ) {
     return false;
   }
 
   return true;
+}
+
+function extractFirstMatchingRegion(
+  html: string,
+  pattern: RegExp,
+): string | undefined {
+  pattern.lastIndex = 0;
+
+  const match = pattern.exec(html);
+
+  pattern.lastIndex = 0;
+
+  const content = match?.[1];
+
+  if (!content) {
+    return undefined;
+  }
+
+  return content;
+}
+
+function extractAllMatchingRegions(
+  html: string,
+  pattern: RegExp,
+): readonly string[] {
+  const regions: string[] = [];
+
+  pattern.lastIndex = 0;
+
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(html)) !== null) {
+    const content = match[1];
+
+    if (content) {
+      regions.push(content);
+    }
+  }
+
+  pattern.lastIndex = 0;
+
+  return regions;
+}
+
+function removeNonContentBlocks(html: string): string {
+  return html
+    .replace(SEMANTIC_UI_BLOCK_PATTERN, " ")
+    .replace(ROLE_UI_BLOCK_PATTERN, " ");
+}
+
+function selectSemanticContent(html: string): string {
+  const sanitized = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<template[\s\S]*?<\/template>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ");
+
+  const mainRegions = extractAllMatchingRegions(
+    sanitized,
+    MAIN_CONTENT_PATTERN,
+  );
+
+  if (mainRegions.length > 0) {
+    return removeNonContentBlocks(
+      mainRegions.join("\n"),
+    );
+  }
+
+  const articleRegions = extractAllMatchingRegions(
+    sanitized,
+    ARTICLE_CONTENT_PATTERN,
+  );
+
+  if (articleRegions.length > 0) {
+    return removeNonContentBlocks(
+      articleRegions.join("\n"),
+    );
+  }
+
+  const bodyRegion = extractFirstMatchingRegion(
+    sanitized,
+    BODY_CONTENT_PATTERN,
+  );
+
+  if (bodyRegion) {
+    return removeNonContentBlocks(bodyRegion);
+  }
+
+  return removeNonContentBlocks(sanitized);
 }
 
 function buildSectionMap(html: string): readonly {
@@ -143,14 +267,17 @@ function sectionForIndex(
 function buildStructuredEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const sections = buildSectionMap(html);
+  const content = selectSemanticContent(html);
+  const sections = buildSectionMap(content);
 
   const candidates: ExtractedEvidenceCandidate[] = [];
 
   for (const pattern of PARAMETER_VALUE_UNIT_PATTERNS) {
+    pattern.lastIndex = 0;
+
     let match: RegExpExecArray | null;
 
-    while ((match = pattern.exec(html)) !== null) {
+    while ((match = pattern.exec(content)) !== null) {
       const parameter = normalizeParameter(match[1] ?? "");
       const value = (match[2] ?? "").trim();
       const unit = normalizeUnit(match[3] ?? "");
@@ -198,13 +325,16 @@ function buildStructuredEvidence(
 function buildBlockEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const sections = buildSectionMap(html);
+  const content = selectSemanticContent(html);
+  const sections = buildSectionMap(content);
 
   const candidates: ExtractedEvidenceCandidate[] = [];
 
+  HTML_BLOCK_PATTERN.lastIndex = 0;
+
   let match: RegExpExecArray | null;
 
-  while ((match = HTML_BLOCK_PATTERN.exec(html)) !== null) {
+  while ((match = HTML_BLOCK_PATTERN.exec(content)) !== null) {
     const excerpt = normalizeText(match[1] ?? "");
 
     if (!excerpt) {
@@ -264,7 +394,8 @@ export function extractTextEvidence(
   html: string,
   locator = "document:text",
 ): readonly ExtractedEvidenceCandidate[] {
-  const text = decodeHtml(html);
+  const content = selectSemanticContent(html);
+  const text = decodeHtml(content);
 
   if (!text) {
     return [];
@@ -283,7 +414,8 @@ export function extractEvidenceByPattern(
   html: string,
   patterns: readonly RegExp[],
 ): readonly ExtractedEvidenceCandidate[] {
-  const text = decodeHtml(html);
+  const content = selectSemanticContent(html);
+  const text = decodeHtml(content);
   const output: ExtractedEvidenceCandidate[] = [];
 
   for (const pattern of patterns) {
