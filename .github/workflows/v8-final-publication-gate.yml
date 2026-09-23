@@ -66,3 +66,103 @@ jobs:
           V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: |
           node scripts/v8-final-publication-gate.mjs
+
+      - name: Verify Real Publication Handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          HANDOFF=".nexmold/v8-real-publication-handoff.json"
+
+          test -f "$HANDOFF"
+
+          node - "$HANDOFF" <<'NODE'
+          const fs = require("node:fs");
+
+          const file = process.argv[2];
+          const raw = fs.readFileSync(file, "utf8");
+          const handoff = JSON.parse(raw);
+
+          if (!handoff || typeof handoff !== "object") {
+            throw new Error("[V8-PREVIEW] Publication handoff is not an object.");
+          }
+
+          if (!Array.isArray(handoff.pages)) {
+            throw new Error("[V8-PREVIEW] Publication handoff.pages must be an array.");
+          }
+
+          if (handoff.pages.length === 0) {
+            throw new Error("[V8-PREVIEW] Publication handoff contains no pages.");
+          }
+
+          for (const [index, page] of handoff.pages.entries()) {
+            if (!page || typeof page !== "object") {
+              throw new Error(
+                `[V8-PREVIEW] pages[${index}] is not an object.`,
+              );
+            }
+
+            if (typeof page.title !== "string" || page.title.trim() === "") {
+              throw new Error(
+                `[V8-PREVIEW] pages[${index}].title is missing.`,
+              );
+            }
+
+            if (typeof page.body !== "string" || page.body.trim() === "") {
+              throw new Error(
+                `[V8-PREVIEW] pages[${index}].body is missing.`,
+              );
+            }
+
+            if (
+              typeof page.contentId !== "string" ||
+              page.contentId.trim() === ""
+            ) {
+              throw new Error(
+                `[V8-PREVIEW] pages[${index}].contentId is missing.`,
+              );
+            }
+
+            if (
+              typeof page.decisionId !== "string" ||
+              page.decisionId.trim() === ""
+            ) {
+              throw new Error(
+                `[V8-PREVIEW] pages[${index}].decisionId is missing.`,
+              );
+            }
+          }
+
+          console.log(
+            `[V8-PREVIEW] handoff=${file}`,
+          );
+
+          console.log(
+            `[V8-PREVIEW] pages=${handoff.pages.length}`,
+          );
+
+          for (const [index, page] of handoff.pages.entries()) {
+            console.log(
+              `[V8-PREVIEW] page=${index + 1} title=${page.title}`,
+            );
+
+            console.log(
+              `[V8-PREVIEW] page=${index + 1} contentId=${page.contentId}`,
+            );
+
+            console.log(
+              `[V8-PREVIEW] page=${index + 1} decisionId=${page.decisionId}`,
+            );
+
+            console.log(
+              `[V8-PREVIEW] page=${index + 1} bodyLength=${page.body.length}`,
+            );
+          }
+          NODE
+
+      - name: Upload V8 Article Preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: v8-real-publication-handoff
+          path: .nexmold/v8-real-publication-handoff.json
+          if-no-files-found: error
