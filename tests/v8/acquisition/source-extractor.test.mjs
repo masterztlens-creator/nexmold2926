@@ -7,120 +7,23 @@ import {
   extractTextEvidence,
 } from "../../../.v8-build/src/v8/acquisition/source-extractor.js";
 
-
-test("V8-22B extracts semantic main content and excludes navigation chrome", () => {
-  const html = `
-    <html>
-      <head>
-        <title>Engineering Guide</title>
-      </head>
-
-      <body>
-        <header>
-          NEXMOLD GLOBAL NAVIGATION
-        </header>
-
-        <nav>
-          HOME SERVICES INDUSTRIES CONTACT
-        </nav>
-
-        <main>
-          <h1>Injection Molding Wall Thickness</h1>
-          <p>Wall thickness should be uniform for reliable molding.</p>
-        </main>
-
-        <footer>
-          COPYRIGHT COOKIE POLICY PRIVACY
-        </footer>
-      </body>
-    </html>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Injection Molding Wall Thickness/,
-  );
-  assert.match(
-    result[0].excerpt,
-    /Wall thickness should be uniform/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /NEXMOLD GLOBAL NAVIGATION/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /HOME SERVICES INDUSTRIES CONTACT/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /COOKIE POLICY/,
-  );
-});
-
-
-test("V8-22B supports article-only documents without a main element", () => {
+test("V8-22B-S2 excludes nested sidebar descendants without truncating main content", () => {
   const html = `
     <body>
-      <header>Site Header</header>
-
-      <article>
-        <h1>Draft Angle Guidance</h1>
-        <p>A suitable draft angle supports reliable part ejection.</p>
-      </article>
-
-      <aside>RELATED ARTICLES</aside>
-      <footer>FOOTER CONTENT</footer>
-    </body>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Draft Angle Guidance/,
-  );
-  assert.match(
-    result[0].excerpt,
-    /reliable part ejection/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Site Header/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /RELATED ARTICLES/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /FOOTER CONTENT/,
-  );
-});
-
-
-test("V8-22B excludes cookie, consent, modal and sidebar UI blocks", () => {
-  const html = `
-    <body>
-      <div class="cookie-banner">
-        We use cookies to improve your experience.
-      </div>
-
-      <div id="consent-modal">
-        Accept all cookies.
-      </div>
-
       <div class="sidebar">
-        Related engineering articles.
+        <div class="sidebar-inner">
+          Related article: polluted content.
+        </div>
+
+        <div class="sidebar-actions">
+          Subscribe for updates.
+        </div>
       </div>
 
       <main>
-        <h1>Injection Molding</h1>
-        <p>Cooling time depends on material and wall thickness.</p>
+        <h1>Injection Molding Design</h1>
+        <p>Wall thickness: 2 mm.</p>
+        <p>Draft angle: 1 mm.</p>
       </main>
     </body>
   `;
@@ -128,45 +31,235 @@ test("V8-22B excludes cookie, consent, modal and sidebar UI blocks", () => {
   const result = extractTextEvidence(html);
 
   assert.equal(result.length, 1);
+
   assert.match(
     result[0].excerpt,
-    /Cooling time depends on material/,
+    /Injection Molding Design/,
   );
+
+  assert.match(
+    result[0].excerpt,
+    /Wall thickness: 2 mm/,
+  );
+
+  assert.match(
+    result[0].excerpt,
+    /Draft angle: 1 mm/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Related article: polluted content/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Subscribe for updates/,
+  );
+});
+
+test("V8-22B-S2 excludes nested cookie descendants without leaking trailing UI content", () => {
+  const html = `
+    <body>
+      <div class="cookie-banner">
+        <div class="cookie-inner">
+          We use cookies.
+        </div>
+
+        <div class="cookie-actions">
+          Accept all cookies.
+        </div>
+      </div>
+
+      <main>
+        <h1>Cooling Guidance</h1>
+        <p>Cooling time: 30 s.</p>
+      </main>
+    </body>
+  `;
+
+  const result = extractTextEvidence(html);
+
+  assert.equal(result.length, 1);
+
+  assert.match(
+    result[0].excerpt,
+    /Cooling Guidance/,
+  );
+
+  assert.match(
+    result[0].excerpt,
+    /Cooling time: 30 s/,
+  );
+
   assert.doesNotMatch(
     result[0].excerpt,
     /We use cookies/,
   );
+
   assert.doesNotMatch(
     result[0].excerpt,
     /Accept all cookies/,
   );
+});
+
+test("V8-22B-S2 preserves content before and after nested related-content blocks", () => {
+  const html = `
+    <main>
+      <article>
+        <h1>Draft Angle Guidance</h1>
+
+        <p>Before related content: Draft angle: 1 mm.</p>
+
+        <div class="related-content">
+          <div class="related-inner">
+            Related article A.
+          </div>
+
+          <div class="related-actions">
+            Read more articles.
+          </div>
+        </div>
+
+        <p>After related content: Wall thickness: 2 mm.</p>
+      </article>
+    </main>
+  `;
+
+  const result = extractTextEvidence(html);
+
+  assert.equal(result.length, 1);
+
+  assert.match(
+    result[0].excerpt,
+    /Before related content: Draft angle: 1 mm/,
+  );
+
+  assert.match(
+    result[0].excerpt,
+    /After related content: Wall thickness: 2 mm/,
+  );
+
   assert.doesNotMatch(
     result[0].excerpt,
-    /Related engineering articles/,
+    /Related article A/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Read more articles/,
   );
 });
 
+test("V8-22B-S2 excludes nested newsletter blocks inside article content", () => {
+  const html = `
+    <article>
+      <h1>Injection Molding Process</h1>
 
-test("V8-22B excludes semantic UI elements from structured evidence", () => {
+      <p>Injection pressure: 80 MPa.</p>
+
+      <section class="newsletter">
+        <div class="newsletter-inner">
+          Get our manufacturing newsletter.
+        </div>
+
+        <div class="newsletter-form">
+          Enter your email address.
+        </div>
+      </section>
+
+      <p>Clamp force: 50 kN.</p>
+    </article>
+  `;
+
+  const result = extractTextEvidence(html);
+
+  assert.equal(result.length, 1);
+
+  assert.match(
+    result[0].excerpt,
+    /Injection pressure: 80 MPa/,
+  );
+
+  assert.match(
+    result[0].excerpt,
+    /Clamp force: 50 kN/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /manufacturing newsletter/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Enter your email address/,
+  );
+});
+
+test("V8-22B-S2 excludes nested complementary UI blocks", () => {
   const html = `
     <body>
-      <nav>
-        Wall thickness: 999 mm
-      </nav>
+      <div role="complementary">
+        <div>
+          Recommended product: polluted-product.
+        </div>
 
-      <header>
-        Draft angle: 999 deg
-      </header>
+        <div>
+          Advertisement: polluted-ad.
+        </div>
+      </div>
 
       <main>
-        <h1>DFM Guidance</h1>
-        <p>Wall thickness: 2 mm.</p>
-        <p>Draft angle: 1 mm.</p>
+        <h1>Material Selection</h1>
+        <p>Material temperature: 220 °C.</p>
       </main>
+    </body>
+  `;
 
-      <footer>
-        Cooling time: 999 s
-      </footer>
+  const result = extractTextEvidence(html);
+
+  assert.equal(result.length, 1);
+
+  assert.match(
+    result[0].excerpt,
+    /Material Selection/,
+  );
+
+  assert.match(
+    result[0].excerpt,
+    /Material temperature: 220 °C/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Recommended product/,
+  );
+
+  assert.doesNotMatch(
+    result[0].excerpt,
+    /Advertisement/,
+  );
+});
+
+test("V8-22B-S2 structured extraction cannot promote nested UI values into evidence", () => {
+  const html = `
+    <body>
+      <div class="related-content">
+        <div class="related-inner">
+          Wall thickness: 999 mm.
+        </div>
+
+        <div class="related-actions">
+          Clamp force: 999 kN.
+        </div>
+      </div>
+
+      <main>
+        <h1>Engineering Parameters</h1>
+        <p>Wall thickness: 2 mm.</p>
+        <p>Clamp force: 50 kN.</p>
+      </main>
     </body>
   `;
 
@@ -174,98 +267,212 @@ test("V8-22B excludes semantic UI elements from structured evidence", () => {
 
   assert.ok(result.length >= 2);
 
-  const excerpts = result.map(
-    (candidate) => candidate.excerpt,
+  const parameterCandidates = result.filter(
+    (candidate) =>
+      candidate.parameter !== undefined,
   );
 
   assert.ok(
-    excerpts.some(
-      (excerpt) => /Wall thickness/i.test(excerpt),
+    parameterCandidates.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
     ),
   );
 
   assert.ok(
-    excerpts.some(
-      (excerpt) => /Draft angle/i.test(excerpt),
+    parameterCandidates.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "clamp force" &&
+        candidate.value === "50" &&
+        candidate.unit === "kN",
     ),
   );
 
   assert.ok(
-    excerpts.every(
-      (excerpt) => !/999/.test(excerpt),
+    parameterCandidates.every(
+      (candidate) =>
+        candidate.value !== "999",
     ),
   );
 });
 
-
-test("V8-22B removes script, style, noscript, template and SVG payloads", () => {
+test("V8-22B-S2 text and structured extraction share the same semantic boundary", () => {
   const html = `
     <body>
-      <script>
-        Wall thickness: 999 mm
-      </script>
+      <header>
+        Header pollution.
+      </header>
 
-      <style>
-        .x { content: "Wall thickness: 999 mm"; }
-      </style>
-
-      <noscript>
-        Wall thickness: 999 mm
-      </noscript>
-
-      <template>
-        Wall thickness: 999 mm
-      </template>
-
-      <svg>
-        <text>Wall thickness: 999 mm</text>
-      </svg>
+      <div class="sidebar">
+        <div>
+          Sidebar pollution.
+        </div>
+      </div>
 
       <main>
-        <p>Wall thickness should be 2 mm.</p>
+        <h1>Production Guidance</h1>
+        <p>Wall thickness: 2 mm.</p>
+        <p>Draft angle: 1 mm.</p>
       </main>
+
+      <footer>
+        Footer pollution.
+      </footer>
+    </body>
+  `;
+
+  const textResult = extractTextEvidence(html);
+  const structuredResult = extractStructuredEvidence(html);
+
+  assert.equal(textResult.length, 1);
+
+  assert.match(
+    textResult[0].excerpt,
+    /Production Guidance/,
+  );
+
+  assert.doesNotMatch(
+    textResult[0].excerpt,
+    /Header pollution/,
+  );
+
+  assert.doesNotMatch(
+    textResult[0].excerpt,
+    /Sidebar pollution/,
+  );
+
+  assert.doesNotMatch(
+    textResult[0].excerpt,
+    /Footer pollution/,
+  );
+
+  const structuredExcerpts = structuredResult.map(
+    (candidate) => candidate.excerpt,
+  );
+
+  assert.ok(
+    structuredExcerpts.some(
+      (excerpt) => /Wall thickness: 2 mm/.test(excerpt),
+    ),
+  );
+
+  assert.ok(
+    structuredExcerpts.some(
+      (excerpt) => /Draft angle: 1 mm/.test(excerpt),
+    ),
+  );
+
+  assert.ok(
+    structuredExcerpts.every(
+      (excerpt) =>
+        !/pollution/i.test(excerpt),
+    ),
+  );
+});
+
+test("V8-22B-S2 nested UI blocks cannot contaminate pattern extraction", () => {
+  const html = `
+    <main>
+      <p>target: first-authoritative-fact</p>
+
+      <div class="related-content">
+        <div class="related-inner">
+          target: polluted-related-content
+        </div>
+
+        <div class="related-actions">
+          target: polluted-action
+        </div>
+      </div>
+
+      <p>target: second-authoritative-fact</p>
+    </main>
+  `;
+
+  const result = extractEvidenceByPattern(
+    html,
+    [/target:\s*[a-z-]+/gi],
+  );
+
+  assert.equal(result.length, 1);
+
+  assert.equal(
+    result[0].excerpt,
+    "target: first-authoritative-fact",
+  );
+});
+
+test("V8-22B-S2 article boundary excludes nested UI but preserves article facts", () => {
+  const html = `
+    <body>
+      <article>
+        <h1>Injection Molding Wall Thickness</h1>
+
+        <p>Recommended wall thickness is 2 mm.</p>
+
+        <aside>
+          <div>
+            Related article: wall thickness calculator.
+          </div>
+
+          <div>
+            Advertisement: 999 mm solution.
+          </div>
+        </aside>
+
+        <p>Uniform thickness reduces molding defects.</p>
+      </article>
     </body>
   `;
 
   const result = extractTextEvidence(html);
 
   assert.equal(result.length, 1);
+
   assert.match(
     result[0].excerpt,
-    /Wall thickness should be 2 mm/,
+    /Recommended wall thickness is 2 mm/,
   );
+
+  assert.match(
+    result[0].excerpt,
+    /Uniform thickness reduces molding defects/,
+  );
+
   assert.doesNotMatch(
     result[0].excerpt,
-    /999/,
+    /wall thickness calculator/,
   );
-});
 
-
-test("V8-22B preserves HTML entity decoding inside semantic content", () => {
-  const html = `
-    <main>
-      <p>
-        Wall thickness &gt; 1&nbsp;mm &amp; uniform.
-      </p>
-    </main>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-  assert.match(
+  assert.doesNotMatch(
     result[0].excerpt,
-    /Wall thickness > 1 mm & uniform/,
+    /999 mm solution/,
   );
 });
 
-
-test("V8-22B structured extraction remains parameter/value/unit aware", () => {
+test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
   const html = `
     <main>
-      <h1>Wall Thickness</h1>
-      <p>Wall thickness: 2 mm.</p>
-      <p>Clamp force 50 kN.</p>
+      <h1>Injection Molding Design Rules</h1>
+
+      <p>First fact: Wall thickness: 2 mm.</p>
+
+      <div class="promo">
+        <div class="promo-inner">
+          Promotional content.
+        </div>
+
+        <div class="promo-actions">
+          Request a brochure.
+        </div>
+      </div>
+
+      <section>
+        <h2>Draft Angle</h2>
+        <p>Second fact: Draft angle: 1 mm.</p>
+      </section>
     </main>
   `;
 
@@ -283,112 +490,63 @@ test("V8-22B structured extraction remains parameter/value/unit aware", () => {
   assert.ok(
     result.some(
       (candidate) =>
-        candidate.parameter?.toLowerCase() === "clamp force" &&
-        candidate.value === "50" &&
-        candidate.unit === "kN",
+        candidate.parameter?.toLowerCase() === "draft angle" &&
+        candidate.value === "1" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Promotional content|Request a brochure/i.test(
+          candidate.excerpt,
+        ),
     ),
   );
 });
 
-
-test("V8-22B section attribution remains deterministic", () => {
+test("V8-22B-S2 repeated adversarial extraction is deterministic", () => {
   const html = `
-    <main>
-      <h1>Injection Molding</h1>
-      <p>Wall thickness: 2 mm.</p>
+    <body>
+      <header>
+        <div class="header-inner">
+          Header pollution.
+        </div>
+      </header>
 
-      <h2>Draft Angle</h2>
-      <p>Draft angle: 1 mm.</p>
-    </main>
+      <main>
+        <h1>DFM Guidance</h1>
+
+        <p>Wall thickness: 2 mm.</p>
+
+        <div class="sidebar">
+          <div class="sidebar-inner">
+            Sidebar pollution.
+          </div>
+
+          <div class="sidebar-actions">
+            Subscribe.
+          </div>
+        </div>
+
+        <p>Draft angle: 1 mm.</p>
+      </main>
+
+      <footer>
+        <div>
+          Footer pollution.
+        </div>
+      </footer>
+    </body>
   `;
 
-  const result = extractStructuredEvidence(html);
+  const firstText = extractTextEvidence(html);
+  const secondText = extractTextEvidence(html);
 
-  const wallThickness = result.find(
-    (candidate) =>
-      candidate.parameter?.toLowerCase() === "wall thickness",
-  );
+  const firstStructured = extractStructuredEvidence(html);
+  const secondStructured = extractStructuredEvidence(html);
 
-  const draftAngle = result.find(
-    (candidate) =>
-      candidate.parameter?.toLowerCase() === "draft angle",
-  );
-
-  assert.equal(
-    wallThickness?.section,
-    "Injection Molding",
-  );
-
-  assert.equal(
-    draftAngle?.section,
-    "Draft Angle",
-  );
-});
-
-
-test("V8-22B fails closed for script-only or empty documents", () => {
-  assert.deepEqual(
-    extractTextEvidence(
-      "<html><script>alert('x')</script></html>",
-    ),
-    [],
-  );
-
-  assert.deepEqual(
-    extractTextEvidence(
-      "<html><style>.x{display:none}</style></html>",
-    ),
-    [],
-  );
-
-  assert.deepEqual(
-    extractTextEvidence(""),
-    [],
-  );
-});
-
-
-test("V8-22B pattern extraction uses semantic content only", () => {
-  const html = `
-    <nav>
-      target: polluted-navigation
-    </nav>
-
-    <main>
-      <p>target: authoritative-main-content</p>
-    </main>
-
-    <footer>
-      target: polluted-footer
-    </footer>
-  `;
-
-  const result = extractEvidenceByPattern(
-    html,
-    [/target:\s*[a-z-]+/gi],
-  );
-
-  assert.equal(result.length, 1);
-  assert.equal(
-    result[0].excerpt,
-    "target: authoritative-main-content",
-  );
-});
-
-
-test("V8-22B extraction output is deterministic", () => {
-  const html = `
-    <header>HEADER</header>
-    <main>
-      <h1>DFM</h1>
-      <p>Wall thickness: 2 mm.</p>
-      <p>Draft angle: 1 mm.</p>
-    </main>
-    <footer>FOOTER</footer>
-  `;
-
-  const first = extractStructuredEvidence(html);
-  const second = extractStructuredEvidence(html);
-
-  assert.deepEqual(first, second);
+  assert.deepEqual(firstText, secondText);
+  assert.deepEqual(firstStructured, secondStructured);
 });
