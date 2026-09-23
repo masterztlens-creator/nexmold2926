@@ -17,11 +17,11 @@ const ARTICLE_CONTENT_PATTERN =
 const BODY_CONTENT_PATTERN =
   /<body(?:\s[^>]*)?>([\s\S]*?)<\/body>/gi;
 
-const SEMANTIC_UI_BLOCK_PATTERN =
-  /<(header|nav|footer|aside|dialog|template)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi;
+const SEMANTIC_UI_OPEN_PATTERN =
+  /<(header|nav|footer|aside|dialog|template)(?:\s[^>]*)?>/gi;
 
-const ROLE_UI_BLOCK_PATTERN =
-  /<(?:div|section|aside|header|footer|nav)(?:\s[^>]*)?\b(?:role\s*=\s*["'](?:banner|navigation|contentinfo|complementary|dialog)["']|(?:id|class)\s*=\s*["'][^"']*(?:cookie|cookies|consent|gdpr|privacy-banner|privacy-consent|cookie-banner|cookie-consent|modal|popup|overlay|sidebar|side-bar|related-content|related-posts|advertisement|advert|promo|promotional|newsletter|subscribe|breadcrumb|breadcrumbs)[^"']*["'])[^>]*>[\s\S]*?<\/(?:div|section|aside|header|footer|nav)>/gi;
+const ROLE_UI_OPEN_PATTERN =
+  /<(div|section|aside|header|footer|nav)(?:\s[^>]*)?>/gi;
 
 const PARAMETER_VALUE_UNIT_PATTERNS: readonly RegExp[] = [
   /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s*[:=]\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\b/gi,
@@ -81,17 +81,9 @@ function normalizeText(value: string): string {
 function normalizeUnit(unit: string): string {
   const normalized = unit.trim();
 
-  if (normalized === "μm") {
-    return "µm";
-  }
-
-  if (normalized === "um") {
-    return "µm";
-  }
-
-  if (normalized === "inch" || normalized === "inches") {
-    return "in";
-  }
+  if (normalized === "μm") return "µm";
+  if (normalized === "um") return "µm";
+  if (normalized === "inch" || normalized === "inches") return "in";
 
   return normalized;
 }
@@ -106,13 +98,8 @@ function normalizeParameter(parameter: string): string {
 function isPlausibleParameter(parameter: string): boolean {
   const normalized = parameter.trim();
 
-  if (normalized.length < 2 || normalized.length > 80) {
-    return false;
-  }
-
-  if (!/[A-Za-z]/.test(normalized)) {
-    return false;
-  }
+  if (normalized.length < 2 || normalized.length > 80) return false;
+  if (!/[A-Za-z]/.test(normalized)) return false;
 
   if (
     /^(?:the|a|an|is|was|are|were|has|have|with|from|for|and|or)$/i.test(
@@ -137,9 +124,7 @@ function extractFirstMatchingRegion(
 
   const content = match?.[1];
 
-  if (!content) {
-    return undefined;
-  }
+  if (!content) return undefined;
 
   return content;
 }
@@ -167,10 +152,126 @@ function extractAllMatchingRegions(
   return regions;
 }
 
+function isSelfClosingTag(openingTag: string): boolean {
+  return /\/\s*>$/.test(openingTag);
+}
+
+function isUiRoleOrMarker(
+  attributes: string,
+): boolean {
+  return (
+    /\brole\s*=\s*["'](?:banner|navigation|contentinfo|complementary|dialog)["']/i.test(
+      attributes,
+    ) ||
+    /(?:id|class)\s*=\s*["'][^"']*(?:cookie|cookies|consent|gdpr|privacy-banner|privacy-consent|cookie-banner|cookie-consent|modal|popup|overlay|sidebar|side-bar|related-content|related-posts|advertisement|advert|promo|promotional|newsletter|subscribe|breadcrumb|breadcrumbs)[^"']*["']/i.test(
+      attributes,
+    )
+  );
+}
+
+function findMatchingElementEnd(
+  html: string,
+  startIndex: number,
+  tagName: string,
+): number {
+  const tagPattern = new RegExp(
+    `<\\/?${tagName}(?:\\s[^>]*)?>`,
+    "gi",
+  );
+
+  tagPattern.lastIndex = startIndex;
+
+  let depth = 1;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(html)) !== null) {
+    const token = match[0];
+
+    if (/^<\//.test(token)) {
+      depth -= 1;
+
+      if (depth === 0) {
+        return match.index + token.length;
+      }
+
+      continue;
+    }
+
+    if (!isSelfClosingTag(token)) {
+      depth += 1;
+    }
+  }
+
+  return html.length;
+}
+
+function removeUiSubtrees(
+  html: string,
+  openingPattern: RegExp,
+  shouldRemove: (openingTag: string) => boolean,
+): string {
+  const output: string[] = [];
+
+  let cursor = 0;
+
+  openingPattern.lastIndex = 0;
+
+  let match: RegExpExecArray | null;
+
+  while ((match = openingPattern.exec(html)) !== null) {
+    const openingTag = match[0];
+    const tagName = match[1];
+
+    if (!tagName || !shouldRemove(openingTag)) {
+      continue;
+    }
+
+    output.push(html.slice(cursor, match.index));
+
+    const subtreeEnd = findMatchingElementEnd(
+      html,
+      match.index + openingTag.length,
+      tagName,
+    );
+
+    cursor = subtreeEnd;
+
+    openingPattern.lastIndex = subtreeEnd;
+  }
+
+  output.push(html.slice(cursor));
+
+  openingPattern.lastIndex = 0;
+
+  return output.join("");
+}
+
+function removeSemanticUiSubtrees(html: string): string {
+  return removeUiSubtrees(
+    html,
+    SEMANTIC_UI_OPEN_PATTERN,
+    () => true,
+  );
+}
+
+function removeRoleUiSubtrees(html: string): string {
+  return removeUiSubtrees(
+    html,
+    ROLE_UI_OPEN_PATTERN,
+    (openingTag) => {
+      const attributes = openingTag
+        .replace(/^<[^ \t\r\n\f>]+/i, "")
+        .replace(/\/?>$/i, "");
+
+      return isUiRoleOrMarker(attributes);
+    },
+  );
+}
+
 function removeNonContentBlocks(html: string): string {
-  return html
-    .replace(SEMANTIC_UI_BLOCK_PATTERN, " ")
-    .replace(ROLE_UI_BLOCK_PATTERN, " ");
+  const withoutSemanticUi = removeSemanticUiSubtrees(html);
+
+  return removeRoleUiSubtrees(withoutSemanticUi);
 }
 
 function selectSemanticContent(html: string): string {
@@ -215,7 +316,9 @@ function selectSemanticContent(html: string): string {
   return removeNonContentBlocks(sanitized);
 }
 
-function buildSectionMap(html: string): readonly {
+function buildSectionMap(
+  html: string,
+): readonly {
   readonly index: number;
   readonly section: string;
 }[] {
@@ -229,9 +332,7 @@ function buildSectionMap(html: string): readonly {
   while ((match = HTML_HEADING_PATTERN.exec(html)) !== null) {
     const section = normalizeText(match[2] ?? "");
 
-    if (!section) {
-      continue;
-    }
+    if (!section) continue;
 
     sections.push({
       index: match.index,
@@ -254,9 +355,7 @@ function sectionForIndex(
   let current: string | undefined;
 
   for (const section of sections) {
-    if (section.index > index) {
-      break;
-    }
+    if (section.index > index) break;
 
     current = section.section;
   }
@@ -269,7 +368,6 @@ function buildStructuredEvidence(
 ): readonly ExtractedEvidenceCandidate[] {
   const content = selectSemanticContent(html);
   const sections = buildSectionMap(content);
-
   const candidates: ExtractedEvidenceCandidate[] = [];
 
   for (const pattern of PARAMETER_VALUE_UNIT_PATTERNS) {
@@ -278,23 +376,21 @@ function buildStructuredEvidence(
     let match: RegExpExecArray | null;
 
     while ((match = pattern.exec(content)) !== null) {
-      const parameter = normalizeParameter(match[1] ?? "");
+      const parameter = normalizeParameter(
+        match[1] ?? "",
+      );
+
       const value = (match[2] ?? "").trim();
       const unit = normalizeUnit(match[3] ?? "");
 
-      if (!isPlausibleParameter(parameter)) {
-        continue;
-      }
+      if (!isPlausibleParameter(parameter)) continue;
+      if (!value || !unit) continue;
 
-      if (!value || !unit) {
-        continue;
-      }
+      const rawExcerpt = normalizeText(
+        match[0] ?? "",
+      );
 
-      const rawExcerpt = normalizeText(match[0] ?? "");
-
-      if (!rawExcerpt) {
-        continue;
-      }
+      if (!rawExcerpt) continue;
 
       const section = sectionForIndex(
         sections,
@@ -303,12 +399,11 @@ function buildStructuredEvidence(
 
       candidates.push({
         locator: `document:parameter:${parameter.toLowerCase()}`,
-        excerpt: rawExcerpt.slice(0, MAX_EXCERPT_LENGTH),
-        ...(section
-          ? {
-              section,
-            }
-          : {}),
+        excerpt: rawExcerpt.slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
+        ...(section ? { section } : {}),
         parameter,
         value,
         unit,
@@ -327,7 +422,6 @@ function buildBlockEvidence(
 ): readonly ExtractedEvidenceCandidate[] {
   const content = selectSemanticContent(html);
   const sections = buildSectionMap(content);
-
   const candidates: ExtractedEvidenceCandidate[] = [];
 
   HTML_BLOCK_PATTERN.lastIndex = 0;
@@ -335,11 +429,11 @@ function buildBlockEvidence(
   let match: RegExpExecArray | null;
 
   while ((match = HTML_BLOCK_PATTERN.exec(content)) !== null) {
-    const excerpt = normalizeText(match[1] ?? "");
+    const excerpt = normalizeText(
+      match[1] ?? "",
+    );
 
-    if (!excerpt) {
-      continue;
-    }
+    if (!excerpt) continue;
 
     const section = sectionForIndex(
       sections,
@@ -348,12 +442,11 @@ function buildBlockEvidence(
 
     candidates.push({
       locator: `document:block:${match.index}`,
-      excerpt: excerpt.slice(0, MAX_EXCERPT_LENGTH),
-      ...(section
-        ? {
-            section,
-          }
-        : {}),
+      excerpt: excerpt.slice(
+        0,
+        MAX_EXCERPT_LENGTH,
+      ),
+      ...(section ? { section } : {}),
       extractionConfidence: "MEDIUM",
     });
   }
@@ -379,9 +472,7 @@ function deduplicateEvidence(
       candidate.unit ?? "",
     ].join("\u001f");
 
-    if (seen.has(key)) {
-      continue;
-    }
+    if (seen.has(key)) continue;
 
     seen.add(key);
     output.push(candidate);
@@ -397,14 +488,15 @@ export function extractTextEvidence(
   const content = selectSemanticContent(html);
   const text = decodeHtml(content);
 
-  if (!text) {
-    return [];
-  }
+  if (!text) return [];
 
   return [
     {
       locator,
-      excerpt: text.slice(0, MAX_EXCERPT_LENGTH),
+      excerpt: text.slice(
+        0,
+        MAX_EXCERPT_LENGTH,
+      ),
       extractionConfidence: "MEDIUM",
     },
   ];
@@ -426,7 +518,10 @@ export function extractEvidenceByPattern(
     if (match?.[0]) {
       output.push({
         locator: `document:pattern:${pattern.source}`,
-        excerpt: match[0].slice(0, MAX_EXCERPT_LENGTH),
+        excerpt: match[0].slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
         extractionConfidence: "MEDIUM",
       });
     }
