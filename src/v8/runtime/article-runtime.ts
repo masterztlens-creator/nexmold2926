@@ -523,7 +523,7 @@ export async function runV8ArticleRuntime(
     },
   };
 
-    const truth =
+  const truth =
     truthProducer.produce(
       truthInput,
     );
