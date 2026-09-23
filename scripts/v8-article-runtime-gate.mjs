@@ -111,6 +111,129 @@ const result =
       "Plastic Injection Molding Wall Thickness",
   });
 
+/*
+ * ================================================================
+ * V8 ARTICLE RUNTIME ACQUISITION DIAGNOSTICS
+ * ================================================================
+ *
+ * This diagnostic block is intentionally fail-closed.
+ *
+ * It does NOT:
+ *   - modify acquisition behavior;
+ *   - retry failed requests;
+ *   - bypass HTTP errors;
+ *   - synthesize Evidence;
+ *   - relax any V8 gate;
+ *   - convert failures into successful acquisitions.
+ *
+ * It only exposes the acquisition state already returned by
+ * runV8ArticleRuntime().
+ *
+ * The runtime gate below still requires:
+ *
+ *   acquisition.acquisitions.length > 0
+ *
+ * Therefore this diagnostic cannot make a failing run pass.
+ */
+const acquisition =
+  result.acquisition;
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisition diagnostics begin",
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] query=${opportunity.keyword.keyword}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.candidates=${acquisition.discovery.candidates.length}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.accepted=${acquisition.discovery.accepted}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.rejected=${acquisition.discovery.rejected}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisitions=${acquisition.acquisitions.length}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchErrors=${acquisition.searchErrors.length}`,
+);
+
+for (
+  const [index, error] of acquisition.searchErrors.entries()
+) {
+  console.log(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][SEARCH_ERROR][${index + 1}] ${JSON.stringify({
+      query: error.query ?? null,
+      url: error.url ?? null,
+      error: error.error,
+    })}`,
+  );
+}
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] fetchErrors=${acquisition.fetchErrors.length}`,
+);
+
+for (
+  const [index, error] of acquisition.fetchErrors.entries()
+) {
+  console.log(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][FETCH_ERROR][${index + 1}] ${JSON.stringify({
+      query: error.query ?? null,
+      url: error.url ?? null,
+      error: error.error,
+    })}`,
+  );
+}
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discoveredCandidates=${JSON.stringify(
+    acquisition.discovery.candidates.map(
+      (candidate) => ({
+        url: candidate.url,
+        normalizedUrl: candidate.normalizedUrl,
+        kind: candidate.kind,
+        title: candidate.title ?? null,
+      }),
+    ),
+  )}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] successfulAcquisitions=${JSON.stringify(
+    acquisition.acquisitions.map(
+      (record) => ({
+        candidateUrl: record.candidateUrl,
+        requestedUrl: record.page.requestedUrl,
+        finalUrl: record.page.finalUrl,
+        status: record.page.status,
+        mediaType: record.page.mediaType,
+        bytes: record.page.bytes,
+        evidenceCount: record.acquisition.evidence.length,
+      }),
+    ),
+  )}`,
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisition diagnostics end",
+);
+
+/*
+ * The runtime gate remains fail-closed.
+ *
+ * This assertion is deliberately unchanged in meaning:
+ * an Article Runtime execution without a successful Internet
+ * acquisition is invalid.
+ */
 assert.ok(
   result.acquisition,
   "V8_ARTICLE_RUNTIME_ACQUISITION_MISSING",
