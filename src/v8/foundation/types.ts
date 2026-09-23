@@ -242,7 +242,8 @@ export interface VerificationPayload {
     | "SOURCE"
     | "SNAPSHOT"
     | "EVIDENCE"
-    | "CLAIM";
+    | "CLAIM"
+    | "CONSTRAINT_RESOLUTION";
 
   readonly targetId: string;
 
