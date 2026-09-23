@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "src/v8/**"
+      - "tests/v8/integration/v8-12-problem-decision.test.mjs"
       - "scripts/v8-decision-gate.mjs"
       - ".github/workflows/v8-decision-gate.yml"
       - "tsconfig.v8.json"
@@ -38,6 +39,9 @@ jobs:
 
       - name: Compile V8
         run: npm run v8:compile
+
+      - name: V8-12 Problem Decision Integration Test
+        run: node --test tests/v8/integration/v8-12-problem-decision.test.mjs
 
       - name: Verify V8 Decision build output
         shell: bash
