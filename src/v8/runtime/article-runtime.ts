@@ -523,10 +523,65 @@ export async function runV8ArticleRuntime(
     },
   };
 
-  const truth =
+    const truth =
     truthProducer.produce(
       truthInput,
     );
+
+  if (truth.rejectedCandidates.length > 0) {
+    console.error(
+      "[V8-TRUTH-PRODUCER][DIAGNOSTIC]",
+    );
+
+    console.error(
+      `candidates=${verifiedPayloads.length}`,
+    );
+
+    console.error(
+      `claims=${truth.claims.length}`,
+    );
+
+    console.error(
+      `knowledge=${truth.knowledge.length}`,
+    );
+
+    console.error(
+      `rejectedCandidates=${truth.rejectedCandidates.length}`,
+    );
+
+    for (
+      let index = 0;
+      index < truth.rejectedCandidates.length;
+      index += 1
+    ) {
+      const rejected =
+        truth.rejectedCandidates[index];
+
+      console.error(
+        `[V8-TRUTH-PRODUCER][REJECTED][${index + 1}]`,
+      );
+
+      console.error(
+        `statement=${rejected.statement}`,
+      );
+
+      console.error(
+        `reason=${rejected.reason}`,
+      );
+    }
+  }
+
+  invariant(
+    truth.claims.length > 0,
+    "V8_ARTICLE_RUNTIME_NO_CLAIMS",
+    "Verified Evidence produced no admissible Claims.",
+  );
+
+  invariant(
+    truth.knowledge.length > 0,
+    "V8_ARTICLE_RUNTIME_NO_KNOWLEDGE",
+    "Verified Claims produced no Knowledge records.",
+  );
 
   invariant(
     truth.claims.length > 0,
