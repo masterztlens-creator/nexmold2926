@@ -40,16 +40,13 @@ export interface ConstraintResolution {
 function uniqueSorted<T extends string>(
   values: readonly T[],
 ): readonly T[] {
+  const normalized = values.map(
+    (value) => value.trim() as T,
+  );
+
   return immutable(
     [
-      ...new Set(
-        values
-          .map((value) => value.trim())
-          .filter(
-            (value) =>
-              value.length > 0,
-          ),
-      ),
+      ...new Set<T>(normalized),
     ].sort(),
   );
 }
@@ -61,11 +58,11 @@ function normalizeProof(
     knowledgeIds:
       uniqueSorted(
         proof.knowledgeIds,
-      ) as readonly KnowledgeId[],
+      ),
     claimIds:
       uniqueSorted(
         proof.claimIds,
-      ) as readonly ClaimId[],
+      ),
   });
 }
 
