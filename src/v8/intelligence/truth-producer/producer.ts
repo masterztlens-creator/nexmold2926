@@ -190,41 +190,47 @@ export class TruthProducer {
             typedEvidenceIds,
           );
 
-      const claim = createClaim({
-        id: undefined,
-        statement: candidate.statement,
-        evidenceIds: typedEvidenceIds,
-        status: "VERIFIED",
+        const claim = createClaim({
+          id: undefined,
+          statement: candidate.statement,
+          evidenceIds: typedEvidenceIds,
+          status: "VERIFIED",
+
           ...(candidate.scope
             ? {
                 scope:
                   candidate.scope,
               }
             : {}),
+
           ...(candidate.conditions
             ? {
                 conditions:
                   candidate.conditions,
               }
             : {}),
+
           ...(candidate.units
             ? {
                 units:
                   candidate.units,
               }
             : {}),
+
           ...(candidate.confidence
             ? {
                 confidence:
                   candidate.confidence,
               }
             : {}),
+
           ...(candidate.epistemicLevel
             ? {
                 epistemicLevel:
                   candidate.epistemicLevel,
               }
             : {}),
+
           ...(candidate.isUniversal !==
           undefined
             ? {
@@ -254,16 +260,55 @@ export class TruthProducer {
          * Knowledge is intentionally created only
          * after Claim persistence succeeds.
          *
-         * This prevents a Knowledge record from
-         * existing without a persisted Claim.
+         * The Knowledge record must preserve every
+         * applicability constraint carried by its
+         * supporting Claim. This is required by the
+         * V8-24 Knowledge scope gate.
+         *
+         * Epistemic metadata such as confidence and
+         * epistemicLevel remains Claim-level metadata
+         * and is therefore not copied into Knowledge.
          */
         const knowledgeInput =
           createKnowledge({
-          proposition: candidate.statement,
-          claimIds: [
-          persistedClaimId,
-          ],
-          status: "APPROVED",
+            proposition:
+              candidate.statement,
+
+            claimIds: [
+              persistedClaimId,
+            ],
+
+            status:
+              "APPROVED",
+
+            ...(candidate.scope
+              ? {
+                  scope:
+                    candidate.scope,
+                }
+              : {}),
+
+            ...(candidate.conditions
+              ? {
+                  conditions:
+                    candidate.conditions,
+                }
+              : {}),
+
+            ...(candidate.units
+              ? {
+                  units:
+                    candidate.units,
+                }
+              : {}),
+
+            ...(candidate.isUniversal !==
+            undefined
+              ? {
+                  isUniversal:
+                    candidate.isUniversal,
+                }
+              : {}),
           });
 
         const knowledgeRecord =
@@ -296,10 +341,14 @@ export class TruthProducer {
     }
 
     return Object.freeze({
-      claims: Object.freeze(claims),
+      claims: Object.freeze(
+        claims,
+      ),
+
       knowledge: Object.freeze(
         knowledge,
       ),
+
       rejectedCandidates:
         Object.freeze(
           rejectedCandidates,
