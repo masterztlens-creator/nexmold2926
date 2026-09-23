@@ -8,5 +8,7 @@ export * from "./scope.js";
 export * from "./context.js";
 export * from "./problem.js";
 export * from "./decision.js";
+export * from "./constraint.js";
+export * from "./constraint-resolution.js";
 export * from "./content.js";
 export * from "./observation.js";
