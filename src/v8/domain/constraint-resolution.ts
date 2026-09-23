@@ -1,7 +1,6 @@
 import {
   immutable,
   invariant,
-  requireKnown,
 } from "../constitution/invariants.js";
 
 import {
@@ -66,6 +65,20 @@ function normalizeProof(
   });
 }
 
+function normalizeStatus(
+  status: ConstraintResolutionStatus,
+): ConstraintResolutionStatus {
+  invariant(
+    status === "SATISFIED" ||
+      status === "UNSATISFIED" ||
+      status === "UNKNOWN",
+    "V8_CONSTRAINT_RESOLUTION_INVALID_STATUS",
+    "Constraint resolution status is invalid.",
+  );
+
+  return status;
+}
+
 export function createConstraintResolution(
   input: Omit<
     ConstraintResolution,
@@ -73,11 +86,9 @@ export function createConstraintResolution(
   >,
 ): Readonly<ConstraintResolution> {
   const status =
-    requireKnown(
+    normalizeStatus(
       input.status,
-      "V8_CONSTRAINT_RESOLUTION_UNKNOWN_STATUS",
-      "constraintResolution.status",
-    ) as ConstraintResolutionStatus;
+    );
 
   const constraintId =
     nonEmpty(
