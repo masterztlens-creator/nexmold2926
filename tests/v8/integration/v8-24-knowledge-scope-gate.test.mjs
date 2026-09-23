@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 
 import {
   FoundationService,
@@ -21,12 +22,21 @@ const AUDITOR = {
   role: "AUDITOR",
 };
 
+function fixtureHash(content) {
+  return createHash("sha256")
+    .update(content, "utf8")
+    .digest("hex");
+}
+
 function createVerifiedClaimFixture() {
   const store =
     new InMemoryFoundationStore();
 
   const service =
     new FoundationService(store);
+
+  const sourceContent =
+    "ABS material at 23 C injection molding requires 2.5 mm wall thickness.";
 
   const source = {
     kind: "PUBLIC_WEB",
@@ -44,6 +54,8 @@ function createVerifiedClaimFixture() {
       "https://example.com/v8-24",
     retrievedAt:
       "2026-09-23T00:00:00.000Z",
+    documentHash:
+      fixtureHash(sourceContent),
   };
 
   const registered =
@@ -61,7 +73,7 @@ function createVerifiedClaimFixture() {
         locator:
           source.locator,
         content:
-          "ABS material at 23 C injection molding requires 2.5 mm wall thickness.",
+          sourceContent,
         metadataOnly: false,
       },
       ACTOR,
@@ -84,7 +96,7 @@ function createVerifiedClaimFixture() {
         locator:
           "v8-24:p1",
         excerpt:
-          "ABS material at 23 C injection molding requires 2.5 mm wall thickness.",
+          sourceContent,
         capturedAt:
           snapshot.recordedAt,
         ingestion:
