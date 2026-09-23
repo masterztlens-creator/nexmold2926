@@ -1,12 +1,30 @@
-import { immutable, invariant } from "../constitution/invariants.js";
-import { contentFingerprint } from "../foundation/hash.js";
+import {
+  immutable,
+  invariant,
+} from "../constitution/invariants.js";
+
+import {
+  contentFingerprint,
+} from "../foundation/hash.js";
+
+import {
+  assertProblemConstraintClosure,
+} from "../foundation/problem-constraint-gate.js";
+
 import type {
   FoundationRecord,
   FoundationStore,
   LineageLink,
 } from "../foundation/types.js";
-import { ApplicabilityEngine } from "../applicability/engine.js";
-import type { DecisionValidationInput, DecisionValidationResult } from "./types.js";
+
+import {
+  ApplicabilityEngine,
+} from "../applicability/engine.js";
+
+import type {
+  DecisionValidationInput,
+  DecisionValidationResult,
+} from "./types.js";
 
 interface DecisionPayload {
   readonly problemId: string;
@@ -25,7 +43,9 @@ interface ProblemPayload {
 interface ContextPayload {
   readonly scopeId: string;
   readonly purpose: string;
-  readonly variables: Readonly<Record<string, string>>;
+  readonly variables: Readonly<
+    Record<string, string>
+  >;
 }
 
 interface ScopePayload {
@@ -52,130 +72,272 @@ function lineageOf(
 }
 
 export class DecisionValidator {
-  constructor(private readonly store: FoundationStore) {}
+  constructor(
+    private readonly store: FoundationStore,
+  ) {}
 
-  validate(input: DecisionValidationInput): DecisionValidationResult {
+  validate(
+    input: DecisionValidationInput,
+  ): DecisionValidationResult {
     const reasons: string[] = [];
     const lineage: LineageLink[] = [];
 
-    const decision = this.store.get<DecisionPayload>(
-      "DECISION",
-      input.decisionId,
-    );
+    const decision =
+      this.store.get<DecisionPayload>(
+        "DECISION",
+        input.decisionId,
+      );
 
     if (!decision) {
       return immutable({
         valid: false,
-        decisionId: input.decisionId,
+        decisionId:
+          input.decisionId,
         status: "UNKNOWN",
-        reasons: ["DECISION_NOT_FOUND"],
+        reasons: [
+          "DECISION_NOT_FOUND",
+        ],
         lineage: [],
       });
     }
 
-    lineage.push(lineageOf(decision, "DECISION"));
-
-    const expectedFingerprint = contentFingerprint({
-      problemId: decision.payload.problemId,
-      knowledgeIds: decision.payload.knowledgeIds,
-      outcome: decision.payload.outcome,
-      status: decision.payload.status,
-    });
-
-    if (decision.payload.fingerprint !== expectedFingerprint) {
-      reasons.push("DECISION_FINGERPRINT_MISMATCH");
-    }
-
-    if (decision.state !== "APPROVED") {
-      reasons.push("DECISION_NOT_APPROVED");
-    }
-
-    if (decision.payload.status !== "APPROVED") {
-      reasons.push("DECISION_STATUS_NOT_APPROVED");
-    }
-
-    const problem = this.store.get<ProblemPayload>(
-      "PROBLEM",
-      decision.payload.problemId,
+    lineage.push(
+      lineageOf(
+        decision,
+        "DECISION",
+      ),
     );
 
-    if (!problem) {
-      reasons.push("PROBLEM_NOT_FOUND");
-    } else {
-      lineage.push(lineageOf(problem, "PROBLEM"));
+    const expectedFingerprint =
+      contentFingerprint({
+        problemId:
+          decision.payload.problemId,
+        knowledgeIds:
+          decision.payload.knowledgeIds,
+        outcome:
+          decision.payload.outcome,
+        status:
+          decision.payload.status,
+      });
 
-      if (problem.state !== "REGISTERED") {
-        reasons.push("PROBLEM_NOT_REGISTERED");
-      }
-
-    if (problem.payload.contextId !== input.contextId) {
-      reasons.push("CONTEXT_ID_MISMATCH");
+    if (
+      decision.payload.fingerprint !==
+      expectedFingerprint
+    ) {
+      reasons.push(
+        "DECISION_FINGERPRINT_MISMATCH",
+      );
     }
 
-      const context = this.store.get<ContextPayload>(
-        "CONTEXT",
-        problem.payload.contextId,
+    if (
+      decision.state !==
+      "APPROVED"
+    ) {
+      reasons.push(
+        "DECISION_NOT_APPROVED",
+      );
+    }
+
+    if (
+      decision.payload.status !==
+      "APPROVED"
+    ) {
+      reasons.push(
+        "DECISION_STATUS_NOT_APPROVED",
+      );
+    }
+
+    const problem =
+      this.store.get<ProblemPayload>(
+        "PROBLEM",
+        decision.payload.problemId,
       );
 
-      if (!context) {
-        reasons.push("CONTEXT_NOT_FOUND");
-      } else {
-        lineage.push(lineageOf(context, "CONTEXT"));
+    if (!problem) {
+      reasons.push(
+        "PROBLEM_NOT_FOUND",
+      );
+    } else {
+      lineage.push(
+        lineageOf(
+          problem,
+          "PROBLEM",
+        ),
+      );
 
-        if (context.state !== "REGISTERED") {
-          reasons.push("CONTEXT_NOT_REGISTERED");
-        }
+      if (
+        problem.state !==
+        "REGISTERED"
+      ) {
+        reasons.push(
+          "PROBLEM_NOT_REGISTERED",
+        );
+      }
 
-        if (context.payload.scopeId !== input.scopeId) {
-          reasons.push("CONTEXT_SCOPE_MISMATCH");
-        }
+      /*
+       * V8-26:
+       *
+       * Validation must independently prove that
+       * the Decision remains semantically closed
+       * over the exact Problem record, including
+       * its persisted constraints.
+       *
+       * The validator is result-oriented, so the
+       * fail-closed invariant is converted into a
+       * validation reason instead of escaping as an
+       * exception.
+       */
+      try {
+        assertProblemConstraintClosure(
+          {
+            problemId:
+              decision.payload.problemId,
+          },
+          problem,
+          decision.lineage,
+        );
+      } catch (error) {
+        reasons.push(
+          error instanceof Error
+            ? error.message
+            : "V8_PROBLEM_CONSTRAINT_CLOSURE_FAILED",
+        );
+      }
 
-        const scope = this.store.get<ScopePayload>(
-          "SCOPE",
-          input.scopeId,
+      if (
+        problem.payload.contextId !==
+        input.contextId
+      ) {
+        reasons.push(
+          "CONTEXT_ID_MISMATCH",
+        );
+      }
+
+      const context =
+        this.store.get<ContextPayload>(
+          "CONTEXT",
+          problem.payload.contextId,
         );
 
-        if (!scope) {
-          reasons.push("SCOPE_NOT_FOUND");
-        } else {
-          lineage.push(lineageOf(scope, "SCOPE"));
+      if (!context) {
+        reasons.push(
+          "CONTEXT_NOT_FOUND",
+        );
+      } else {
+        lineage.push(
+          lineageOf(
+            context,
+            "CONTEXT",
+          ),
+        );
 
-          if (scope.state !== "REGISTERED") {
-            reasons.push("SCOPE_NOT_REGISTERED");
-          }
+        if (
+          context.state !==
+          "REGISTERED"
+        ) {
+          reasons.push(
+            "CONTEXT_NOT_REGISTERED",
+          );
         }
 
-        const applicability = new ApplicabilityEngine(this.store);
-
-        if (decision.payload.knowledgeIds.length === 0) {
-          reasons.push("DECISION_NO_KNOWLEDGE");
+        if (
+          context.payload.scopeId !==
+          input.scopeId
+        ) {
+          reasons.push(
+            "CONTEXT_SCOPE_MISMATCH",
+          );
         }
 
-        for (const knowledgeId of decision.payload.knowledgeIds) {
-          const knowledge = this.store.get<KnowledgePayload>(
-            "KNOWLEDGE",
-            knowledgeId,
+        const scope =
+          this.store.get<ScopePayload>(
+            "SCOPE",
+            input.scopeId,
           );
 
+        if (!scope) {
+          reasons.push(
+            "SCOPE_NOT_FOUND",
+          );
+        } else {
+          lineage.push(
+            lineageOf(
+              scope,
+              "SCOPE",
+            ),
+          );
+
+          if (
+            scope.state !==
+            "REGISTERED"
+          ) {
+            reasons.push(
+              "SCOPE_NOT_REGISTERED",
+            );
+          }
+        }
+
+        const applicability =
+          new ApplicabilityEngine(
+            this.store,
+          );
+
+        if (
+          decision.payload
+            .knowledgeIds.length === 0
+        ) {
+          reasons.push(
+            "DECISION_NO_KNOWLEDGE",
+          );
+        }
+
+        for (
+          const knowledgeId of
+          decision.payload
+            .knowledgeIds
+        ) {
+          const knowledge =
+            this.store.get<KnowledgePayload>(
+              "KNOWLEDGE",
+              knowledgeId,
+            );
+
           if (!knowledge) {
-            reasons.push(`KNOWLEDGE_NOT_FOUND:${knowledgeId}`);
+            reasons.push(
+              `KNOWLEDGE_NOT_FOUND:${knowledgeId}`,
+            );
             continue;
           }
 
-          lineage.push(lineageOf(knowledge, "KNOWLEDGE"));
+          lineage.push(
+            lineageOf(
+              knowledge,
+              "KNOWLEDGE",
+            ),
+          );
 
-          if (knowledge.state !== "VERIFIED") {
-            reasons.push(`KNOWLEDGE_NOT_VERIFIED:${knowledgeId}`);
+          if (
+            knowledge.state !==
+            "VERIFIED"
+          ) {
+            reasons.push(
+              `KNOWLEDGE_NOT_VERIFIED:${knowledgeId}`,
+            );
             continue;
           }
 
-          const applicabilityResult = applicability.evaluate({
-            knowledgeId,
-            scopeId: input.scopeId,
-            contextId: problem.payload.contextId,
-          });
+          const applicabilityResult =
+            applicability.evaluate({
+              knowledgeId,
+              scopeId:
+                input.scopeId,
+              contextId:
+                problem.payload.contextId,
+            });
 
-          if (!applicabilityResult.applicable) {
+          if (
+            !applicabilityResult.applicable
+          ) {
             reasons.push(
               `APPLICABILITY_FAILED:${knowledgeId}:${applicabilityResult.reasons.join(",")}`,
             );
@@ -185,16 +347,22 @@ export class DecisionValidator {
     }
 
     return immutable({
-      valid: reasons.length === 0,
-      decisionId: input.decisionId,
-      status: decision.payload.status,
+      valid:
+        reasons.length === 0,
+      decisionId:
+        input.decisionId,
+      status:
+        decision.payload.status,
       reasons,
       lineage,
     });
   }
 
-  assert(input: DecisionValidationInput): void {
-    const result = this.validate(input);
+  assert(
+    input: DecisionValidationInput,
+  ): void {
+    const result =
+      this.validate(input);
 
     invariant(
       result.valid,
@@ -203,4 +371,3 @@ export class DecisionValidator {
     );
   }
 }
-

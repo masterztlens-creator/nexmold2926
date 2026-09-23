@@ -72,6 +72,10 @@ import {
 } from "./knowledge-gate.js";
 
 import {
+  assertProblemConstraintClosure,
+} from "./problem-constraint-gate.js";
+
+import {
   recordVerification,
   hasPassingVerification,
 } from "./verification.js";
@@ -711,6 +715,7 @@ export class FoundationService {
               confidence:
                 (claim as any).confidence,
             }
+          }
           : {}),
 
         ...((claim as any).epistemicLevel
@@ -1050,11 +1055,15 @@ export class FoundationService {
       `Scope ${scopeId} is not registered.`,
     );
 
-    const applicability = new ApplicabilityEngine(
-      this.store,
-    );
+    const applicability =
+      new ApplicabilityEngine(
+        this.store,
+      );
 
-    for (const knowledgeId of decision.knowledgeIds) {
+    for (
+      const knowledgeId of
+      decision.knowledgeIds
+    ) {
       applicability.assert({
         knowledgeId,
         scopeId,
@@ -1062,10 +1071,11 @@ export class FoundationService {
       });
     }
 
-    const prepared = createDecisionDomain({
-      ...decision,
-      status: "APPROVED",
-    });
+    const prepared =
+      createDecisionDomain({
+        ...decision,
+        status: "APPROVED",
+      });
 
     invariant(
       !this.store.get(
@@ -1076,23 +1086,25 @@ export class FoundationService {
       "Decision identity already exists.",
     );
 
-    const knowledgeRecords = prepared.knowledgeIds.map(
-      (knowledgeId) => {
-        const record = this.store.get(
-          "KNOWLEDGE",
-          knowledgeId,
-        );
+    const knowledgeRecords =
+      prepared.knowledgeIds.map(
+        (knowledgeId) => {
+          const record =
+            this.store.get(
+              "KNOWLEDGE",
+              knowledgeId,
+            );
 
-        invariant(
-          record !== null &&
-            record.state === "VERIFIED",
-          "V8_FOUNDATION_DECISION_KNOWLEDGE_NOT_VERIFIED",
-          `Decision knowledge ${knowledgeId} must be verified.`,
-        );
+          invariant(
+            record !== null &&
+              record.state === "VERIFIED",
+            "V8_FOUNDATION_DECISION_KNOWLEDGE_NOT_VERIFIED",
+            `Decision knowledge ${knowledgeId} must be verified.`,
+          );
 
-        return record;
-      },
-    );
+          return record;
+        },
+      );
 
     const lineage: LineageLink[] = [
       {
@@ -1102,12 +1114,14 @@ export class FoundationService {
         fingerprint: problem.fingerprint,
       },
 
-      ...knowledgeRecords.map((record) => ({
-        type: "KNOWLEDGE" as const,
-        id: record.aggregateId,
-        version: record.version,
-        fingerprint: record.fingerprint,
-      })),
+      ...knowledgeRecords.map(
+        (record) => ({
+          type: "KNOWLEDGE" as const,
+          id: record.aggregateId,
+          version: record.version,
+          fingerprint: record.fingerprint,
+        }),
+      ),
 
       {
         type: "CONTEXT",
@@ -1124,13 +1138,32 @@ export class FoundationService {
       },
     ];
 
+    /*
+     * V8-26:
+     *
+     * Problem constraints are already protected by
+     * the Foundation record fingerprint. The closure
+     * gate therefore binds the approved Decision to
+     * the exact registered Problem record rather than
+     * copying constraints into the Decision payload.
+     */
+    assertProblemConstraintClosure(
+      prepared,
+      problem,
+      lineage,
+    );
+
     const payload: DecisionPayload =
       immutable({
-        problemId: prepared.problemId,
-        knowledgeIds: prepared.knowledgeIds,
-        outcome: prepared.outcome,
+        problemId:
+          prepared.problemId,
+        knowledgeIds:
+          prepared.knowledgeIds,
+        outcome:
+          prepared.outcome,
         status: "APPROVED",
-        fingerprint: prepared.fingerprint,
+        fingerprint:
+          prepared.fingerprint,
       });
 
     return this.store.append({
