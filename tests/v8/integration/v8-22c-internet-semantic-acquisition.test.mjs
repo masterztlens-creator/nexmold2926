@@ -86,6 +86,27 @@ const FIXTURE_HTML = `
 </html>
 `;
 
+function canonicalizeEvidenceForDeterminism(evidence) {
+  return evidence.map((payload) => {
+    const {
+      capturedAt: _capturedAt,
+      ...deterministicPayload
+    } = payload;
+
+    return deterministicPayload;
+  });
+}
+
+function assertValidCapturedAt(evidence) {
+  for (const payload of evidence) {
+    assert.match(
+      payload.capturedAt,
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      "Evidence capturedAt must be a valid UTC runtime timestamp",
+    );
+  }
+}
+
 async function withInternetFixture(fn) {
   const originalFetch = globalThis.fetch;
 
@@ -153,6 +174,10 @@ test(
       assert.ok(
         acquired.evidence.length > 0,
         "Semantic extraction must produce Evidence candidates",
+      );
+
+      assertValidCapturedAt(
+        acquired.evidence,
       );
 
       const evidenceRecords =
@@ -349,10 +374,22 @@ test(
         second.snapshot.contentHash,
       );
 
-      assert.deepEqual(
+      assertValidCapturedAt(
         first.evidence,
+      );
+
+      assertValidCapturedAt(
         second.evidence,
-        "Repeated extraction must produce identical Evidence payloads",
+      );
+
+      assert.deepEqual(
+        canonicalizeEvidenceForDeterminism(
+          first.evidence,
+        ),
+        canonicalizeEvidenceForDeterminism(
+          second.evidence,
+        ),
+        "Repeated acquisition must produce identical semantic Evidence payloads",
       );
 
       const firstEvidence =
