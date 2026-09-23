@@ -94,17 +94,36 @@ console.log(
   `[V8-DIAGNOSTIC] plannedQueries=${result.plan.sourceQueries.length}`,
 );
 
+const discovery =
+  result.discovery;
+
+const discoveryCandidates =
+  Array.isArray(discovery?.candidates)
+    ? discovery.candidates
+    : [];
+
+const discoveryKeys =
+  discovery &&
+  typeof discovery === "object"
+    ? Object.keys(discovery)
+    : [];
+
 console.log(
-  `[V8-DIAGNOSTIC] discoveryInputs=${result.discovery.inputs.length}`,
+  `[V8-DIAGNOSTIC] discoveryKeys=${JSON.stringify(discoveryKeys)}`,
 );
 
 console.log(
-  `[V8-DIAGNOSTIC] discoveryCandidates=${result.discovery.candidates.length}`,
+  `[V8-DIAGNOSTIC] discoveryCandidates=${discoveryCandidates.length}`,
 );
 
-console.log(
-  `[V8-DIAGNOSTIC] discoveryRejected=${result.discovery.rejected.length}`,
-);
+if (
+  discovery &&
+  typeof discovery === "object"
+) {
+  console.log(
+    `[V8-DIAGNOSTIC] discovery=${JSON.stringify(discovery, null, 2)}`,
+  );
+}
 
 console.log(
   `[V8-DIAGNOSTIC] acquisitions=${result.acquisitions.length}`,
@@ -147,7 +166,7 @@ console.log(
 );
 
 for (
-  const candidate of result.discovery.candidates
+  const candidate of discoveryCandidates
 ) {
   console.log(
     `[V8-DIAGNOSTIC][CANDIDATE] ${candidate.url}`,
@@ -162,7 +181,7 @@ for (
   const acquisition of result.acquisitions
 ) {
   console.log(
-    `[V8-DIAGNOSTIC][ACQUIRED] ${acquisition.candidateUrl}`,
+    `[V8-DIAGNOSTIC][ACQUIRED] candidateUrl=${acquisition.candidateUrl}`,
   );
 
   console.log(
