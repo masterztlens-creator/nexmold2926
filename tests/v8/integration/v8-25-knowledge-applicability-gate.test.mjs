@@ -157,7 +157,7 @@ function createKnowledgeFixture(svc) {
 }
 
 test(
-  "V8-25 RED: ApplicabilityEngine currently ignores Knowledge applicability constraints",
+  "V8-25 GREEN: ApplicabilityEngine enforces Knowledge applicability constraints",
   () => {
     const store =
       new InMemoryFoundationStore();
