@@ -223,7 +223,7 @@ test(
           "CLAIM",
           "v8-23-universal-claim-rejected",
         ),
-        undefined,
+        null,
         "Rejected universal Claim must never be persisted",
       );
 
