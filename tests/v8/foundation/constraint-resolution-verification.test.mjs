@@ -3,22 +3,22 @@ import test from "node:test";
 
 import {
   InMemoryFoundationStore,
-} from "../../../.v8-build/foundation/store.js";
+} from "../../../.v8-build/src/v8/foundation/store.js";
 
 import {
   createConstraint,
-} from "../../../.v8-build/domain/constraint.js";
+} from "../../../.v8-build/src/v8/domain/constraint.js";
 
 import {
   createConstraintResolution,
-} from "../../../.v8-build/domain/constraint-resolution.js";
+} from "../../../.v8-build/src/v8/domain/constraint-resolution.js";
 
 import {
   recordConstraintResolutionVerification,
   hasPassingConstraintResolutionVerification,
   getConstraintResolutionVerification,
   assertPassingConstraintResolutionVerification,
-} from "../../../.v8-build/foundation/constraint-resolution-verification.js";
+} from "../../../.v8-build/src/v8/foundation/constraint-resolution-verification.js";
 
 const verifier = Object.freeze({
   id: "v8-27-constraint-resolution-verifier",
@@ -405,6 +405,7 @@ test(
       );
 
     assert.ok(found);
+
     assert.equal(
       found.recordId,
       created.recordId,
