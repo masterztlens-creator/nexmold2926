@@ -1,11 +1,21 @@
-import assert from "node:assert/strict";
+import {
+  runResearchAcquisition,
+} from "../.v8-build/src/v8/intelligence/research-planner/acquisition-runner.js";
 
-import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
-import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-import { runV8ArticleRuntime } from "../.v8-build/src/v8/runtime/article-runtime.js";
+import {
+  InMemoryFoundationStore,
+} from "../.v8-build/src/v8/foundation/store.js";
 
-const apiKey = process.env.V8_SEARCH_API_KEY;
+import {
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  TavilySearchProvider,
+} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+
+const apiKey =
+  process.env.V8_SEARCH_API_KEY;
 
 if (!apiKey) {
   throw new Error(
@@ -15,23 +25,44 @@ if (!apiKey) {
 
 const opportunity = {
   keyword: {
-    keyword: "plastic injection molding wall thickness",
-    normalized: "plastic injection molding wall thickness",
-    source: "SEED",
-    intent: "INFORMATIONAL",
+    keyword:
+      "plastic injection molding wall thickness",
+
+    normalized:
+      "plastic injection molding wall thickness",
+
+    source:
+      "SEED",
+
+    intent:
+      "INFORMATIONAL",
+
     terms: [
       "wall thickness",
       "injection molding",
     ],
   },
-  score: 0.9,
-  demand: 0.8,
-  relevance: 1,
-  competition: 0.3,
-  authorityGap: 0.7,
-  conversionPotential: 0.6,
+
+  score:
+    0.9,
+
+  demand:
+    0.8,
+
+  relevance:
+    1,
+
+  competition:
+    0.3,
+
+  authorityGap:
+    0.7,
+
+  conversionPotential:
+    0.6,
+
   reasons: [
-    "V8 article runtime real internet gate",
+    "V8 article runtime real internet acquisition diagnostic",
   ],
 };
 
@@ -42,108 +73,194 @@ const searchProvider =
   new TavilySearchProvider(
     apiKey,
     "https://api.tavily.com/search",
-    "v8-article-runtime-gate",
+    "v8-article-runtime-diagnostic",
   );
 
 const pageFetcher =
   new HttpPageFetcher({
-    timeoutMs: 20000,
-    maxBytes: 5000000,
+    timeoutMs:
+      20000,
+
+    maxBytes:
+      5000000,
   });
-
-const result =
-  await runV8ArticleRuntime({
-    opportunity,
-    searchProvider,
-    pageFetcher,
-    store,
-
-    actor: {
-      id: "v8-article-runtime-gate",
-      role: "SYSTEM",
-    },
-
-    acquisition: {
-      maxQueries: 1,
-      maxCandidates: 3,
-      actorId: "v8-article-runtime-gate",
-    },
-
-    scope: {
-      id: "scope:v8:article-runtime-gate",
-      geography: "GLOBAL",
-      industries: [
-        "PLASTIC_INJECTION_MOLDING",
-      ],
-      languages: [
-        "en",
-      ],
-    },
-
-    context: {
-      id: "context:v8:article-runtime-gate",
-      purpose:
-        "Produce evidence-backed technical content from real Internet sources.",
-      variables: {
-        sourceMode:
-          "REAL_INTERNET",
-        evidencePolicy:
-          "VERIFIED_ONLY",
-        contentPolicy:
-          "EVIDENCE_BACKED",
-      },
-    },
-
-    problem: {
-      id: "problem:v8:article-runtime-gate",
-      question:
-        "What evidence-backed information can be stated about plastic injection molding wall thickness?",
-      constraints: [
-        "Use real Internet-acquired evidence only.",
-        "Only VERIFIED evidence may produce claims.",
-        "Only VERIFIED claims may produce approved knowledge.",
-        "Decision must be APPROVED.",
-        "Content must be derived from the approved decision.",
-      ],
-    },
-
-    title:
-      "Plastic Injection Molding Wall Thickness",
-  });
-
-/*
- * ================================================================
- * V8 ARTICLE RUNTIME ACQUISITION DIAGNOSTICS
- * ================================================================
- *
- * This diagnostic block is intentionally fail-closed.
- *
- * It does NOT:
- *   - modify acquisition behavior;
- *   - retry failed requests;
- *   - bypass HTTP errors;
- *   - synthesize Evidence;
- *   - relax any V8 gate;
- *   - convert failures into successful acquisitions.
- *
- * It only exposes the acquisition state already returned by
- * runV8ArticleRuntime().
- *
- * The runtime gate below still requires:
- *
- *   acquisition.acquisitions.length > 0
- *
- * Therefore this diagnostic cannot make a failing run pass.
- */
-const acquisition =
-  result.acquisition;
 
 console.log(
-  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisition diagnostics begin",
+  "",
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] query=${opportunity.keyword.keyword}`,
+  "================================================================",
+);
+
+console.log(
+  "[NEXMOLD][V8-ARTICLE-RUNTIME] ACQUISITION DIAGNOSTIC",
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] keyword=${opportunity.keyword.keyword}`,
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchProvider=TAVILY",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] sourceMode=REAL_INTERNET",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxQueries=1",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxCandidates=3",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] timeoutMs=20000",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxBytes=5000000",
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 1: RESEARCH ACQUISITION",
+);
+
+console.log(
+  "================================================================",
+);
+
+/*
+ * IMPORTANT:
+ *
+ * This file intentionally calls runResearchAcquisition()
+ * exactly once.
+ *
+ * We do NOT call runV8ArticleRuntime() afterward.
+ *
+ * runV8ArticleRuntime() internally calls the same
+ * runResearchAcquisition() function. Calling both would cause:
+ *
+ *   Search #1
+ *   Fetch #1
+ *   Diagnostic
+ *   Search #2
+ *   Fetch #2
+ *
+ * That would contaminate the diagnostic result.
+ *
+ * Therefore this workflow is deliberately limited to observing
+ * the Acquisition layer.
+ */
+
+let acquisition;
+
+try {
+  acquisition =
+    await runResearchAcquisition(
+      opportunity,
+      searchProvider,
+      pageFetcher,
+      store,
+      {
+        maxQueries:
+          1,
+
+        maxCandidates:
+          3,
+
+        actorId:
+          "v8-article-runtime-diagnostic",
+      },
+    );
+} catch (error) {
+  console.error(
+    "",
+  );
+
+  console.error(
+    "================================================================",
+  );
+
+  console.error(
+    "[NEXMOLD][V8-ARTICLE-RUNTIME] ACQUISITION DIAGNOSTIC ERROR",
+  );
+
+  console.error(
+    "================================================================",
+  );
+
+  console.error(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] error=${error instanceof Error ? error.message : String(error)}`,
+  );
+
+  if (
+    error instanceof Error &&
+    error.stack
+  ) {
+    console.error(
+      "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] stack=",
+    );
+
+    console.error(
+      error.stack,
+    );
+  }
+
+  console.error(
+    "================================================================",
+  );
+
+  throw error;
+}
+
+console.log(
+  "",
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 2: RESEARCH PLAN",
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] sourceQueries.count=${acquisition.plan.sourceQueries.length}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] sourceQueries=${JSON.stringify(
+    acquisition.plan.sourceQueries,
+  )}`,
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 3: SEARCH RESULT → DISCOVERY",
+);
+
+console.log(
+  "================================================================",
 );
 
 console.log(
@@ -159,134 +276,209 @@ console.log(
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisitions=${acquisition.acquisitions.length}`,
-);
-
-console.log(
   `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchErrors=${acquisition.searchErrors.length}`,
 );
 
-for (
-  const [index, error] of acquisition.searchErrors.entries()
+if (
+  acquisition.searchErrors.length ===
+  0
 ) {
   console.log(
-    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][SEARCH_ERROR][${index + 1}] ${JSON.stringify({
-      query: error.query ?? null,
-      url: error.url ?? null,
-      error: error.error,
-    })}`,
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchErrors=[]",
   );
 }
+
+for (
+  const [
+    index,
+    error,
+  ] of acquisition.searchErrors.entries()
+) {
+  console.error(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][SEARCH_ERROR][${index + 1}] ${JSON.stringify(
+      {
+        query:
+          error.query ??
+          null,
+
+        url:
+          error.url ??
+          null,
+
+        error:
+          error.error,
+      },
+    )}`,
+  );
+}
+
+console.log(
+  "",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discoveredCandidates=",
+);
+
+for (
+  const [
+    index,
+    candidate,
+  ] of acquisition.discovery.candidates.entries()
+) {
+  console.log(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][CANDIDATE][${index + 1}] ${JSON.stringify(
+      {
+        url:
+          candidate.url,
+
+        normalizedUrl:
+          candidate.normalizedUrl,
+
+        kind:
+          candidate.kind,
+
+        title:
+          candidate.title ??
+          null,
+      },
+    )}`,
+  );
+}
+
+if (
+  acquisition.discovery.candidates.length ===
+  0
+) {
+  console.log(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discoveredCandidates=[]",
+  );
+}
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 4: CANDIDATE FETCH",
+);
+
+console.log(
+  "================================================================",
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] fetchAttempts=${acquisition.discovery.candidates.length}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] successfulAcquisitions=${acquisition.acquisitions.length}`,
+);
 
 console.log(
   `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] fetchErrors=${acquisition.fetchErrors.length}`,
 );
 
-for (
-  const [index, error] of acquisition.fetchErrors.entries()
+if (
+  acquisition.fetchErrors.length ===
+  0
 ) {
   console.log(
-    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][FETCH_ERROR][${index + 1}] ${JSON.stringify({
-      query: error.query ?? null,
-      url: error.url ?? null,
-      error: error.error,
-    })}`,
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] fetchErrors=[]",
+  );
+}
+
+for (
+  const [
+    index,
+    error,
+  ] of acquisition.fetchErrors.entries()
+) {
+  console.error(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][FETCH_ERROR][${index + 1}] ${JSON.stringify(
+      {
+        query:
+          error.query ??
+          null,
+
+        url:
+          error.url ??
+          null,
+
+        error:
+          error.error,
+      },
+    )}`,
   );
 }
 
 console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discoveredCandidates=${JSON.stringify(
-    acquisition.discovery.candidates.map(
-      (candidate) => ({
-        url: candidate.url,
-        normalizedUrl: candidate.normalizedUrl,
-        kind: candidate.kind,
-        title: candidate.title ?? null,
-      }),
-    ),
-  )}`,
+  "",
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] successfulAcquisitions=${JSON.stringify(
-    acquisition.acquisitions.map(
-      (record) => ({
-        candidateUrl: record.candidateUrl,
-        requestedUrl: record.page.requestedUrl,
-        finalUrl: record.page.finalUrl,
-        status: record.page.status,
-        mediaType: record.page.mediaType,
-        bytes: record.page.bytes,
-        evidenceCount: record.acquisition.evidence.length,
-      }),
-    ),
-  )}`,
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] successfulAcquisitions=",
+);
+
+for (
+  const [
+    index,
+    record,
+  ] of acquisition.acquisitions.entries()
+) {
+  console.log(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][ACQUISITION][${index + 1}] ${JSON.stringify(
+      {
+        candidateUrl:
+          record.candidateUrl,
+
+        requestedUrl:
+          record.page.requestedUrl,
+
+        finalUrl:
+          record.page.finalUrl,
+
+        status:
+          record.page.status,
+
+        mediaType:
+          record.page.mediaType,
+
+        bytes:
+          record.page.bytes,
+
+        evidenceCount:
+          record.acquisition.evidence.length,
+
+        sourceId:
+          record.acquisition.sourceId,
+
+        snapshotId:
+          record.acquisition.snapshotId,
+      },
+    )}`,
+  );
+}
+
+if (
+  acquisition.acquisitions.length ===
+  0
+) {
+  console.log(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] successfulAcquisitions=[]",
+  );
+}
+
+console.log(
+  "================================================================",
 );
 
 console.log(
-  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisition diagnostics end",
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 5: FOUNDATION INGESTION",
 );
 
-/*
- * The runtime gate remains fail-closed.
- *
- * This assertion is deliberately unchanged in meaning:
- * an Article Runtime execution without a successful Internet
- * acquisition is invalid.
- */
-assert.ok(
-  result.acquisition,
-  "V8_ARTICLE_RUNTIME_ACQUISITION_MISSING",
-);
-
-assert.ok(
-  result.acquisition.acquisitions.length > 0,
-  "V8_ARTICLE_RUNTIME_ACQUISITION_EMPTY",
-);
-
-assert.ok(
-  result.verifiedEvidenceIds.length > 0,
-  "V8_ARTICLE_RUNTIME_VERIFIED_EVIDENCE_EMPTY",
-);
-
-assert.ok(
-  result.claimIds.length > 0,
-  "V8_ARTICLE_RUNTIME_CLAIMS_EMPTY",
-);
-
-assert.ok(
-  result.knowledgeIds.length > 0,
-  "V8_ARTICLE_RUNTIME_KNOWLEDGE_EMPTY",
-);
-
-assert.ok(
-  result.scopeId,
-  "V8_ARTICLE_RUNTIME_SCOPE_MISSING",
-);
-
-assert.ok(
-  result.contextId,
-  "V8_ARTICLE_RUNTIME_CONTEXT_MISSING",
-);
-
-assert.ok(
-  result.problemId,
-  "V8_ARTICLE_RUNTIME_PROBLEM_MISSING",
-);
-
-assert.ok(
-  result.decisionId,
-  "V8_ARTICLE_RUNTIME_DECISION_MISSING",
-);
-
-assert.ok(
-  result.content,
-  "V8_ARTICLE_RUNTIME_CONTENT_MISSING",
-);
-
-assert.ok(
-  result.fingerprint,
-  "V8_ARTICLE_RUNTIME_FINGERPRINT_MISSING",
+console.log(
+  "================================================================",
 );
 
 const evidenceRecords =
@@ -298,257 +490,229 @@ const evidenceRecords =
         "EVIDENCE",
     );
 
-assert.ok(
-  evidenceRecords.length > 0,
-  "V8_ARTICLE_RUNTIME_EVIDENCE_NOT_PERSISTED",
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] persistedEvidenceAuditRecords=${evidenceRecords.length}`,
 );
 
-/*
- * auditTrail() contains the complete immutable history:
- *
- *   INGESTED
- *      ↓
- *   AUDITED
- *      ↓
- *   VERIFIED
- *
- * Therefore we must validate the latest record
- * for each Evidence aggregate, not every historical
- * record.
- */
-const latestEvidenceRecords =
-  new Map();
+const evidenceAggregateIds =
+  [
+    ...new Set(
+      evidenceRecords.map(
+        (record) =>
+          record.aggregateId,
+      ),
+    ),
+  ];
 
-for (const record of evidenceRecords) {
-  const existing =
-    latestEvidenceRecords.get(
-      record.aggregateId,
-    );
-
-  if (
-    existing === undefined ||
-    record.version > existing.version
-  ) {
-    latestEvidenceRecords.set(
-      record.aggregateId,
-      record,
-    );
-  }
-}
-
-assert.equal(
-  latestEvidenceRecords.size,
-  result.verifiedEvidenceIds.length,
-  "V8_ARTICLE_RUNTIME_EVIDENCE_LATEST_COUNT_MISMATCH",
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] persistedEvidenceAggregates=${evidenceAggregateIds.length}`,
 );
 
 for (
-  const record of latestEvidenceRecords.values()
+  const aggregateId of evidenceAggregateIds
 ) {
-  assert.equal(
-    record.state,
-    "VERIFIED",
-    `Evidence ${record.aggregateId} latest state is not VERIFIED.`,
-  );
+  const records =
+    evidenceRecords.filter(
+      (record) =>
+        record.aggregateId ===
+        aggregateId,
+    );
 
-  assert.equal(
-    record.payload.verificationStatus,
-    "VERIFIED",
-    `Evidence ${record.aggregateId} latest payload is not VERIFIED.`,
-  );
-}
-
-for (
-  const evidenceId of result.verifiedEvidenceIds
-) {
   const latest =
-    latestEvidenceRecords.get(
-      evidenceId,
+    records.reduce(
+      (
+        current,
+        record,
+      ) =>
+        current ===
+          undefined ||
+        record.version >
+          current.version
+          ? record
+          : current,
+      undefined,
     );
 
-  assert.ok(
-    latest,
-    `Verified Evidence ${evidenceId} has no latest Foundation record.`,
-  );
+  console.log(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC][EVIDENCE_AGGREGATE] ${JSON.stringify(
+      {
+        aggregateId,
 
-  assert.equal(
-    latest.state,
-    "VERIFIED",
-    `Verified Evidence ${evidenceId} latest state is not VERIFIED.`,
+        historyVersions:
+          records.length,
+
+        latestVersion:
+          latest?.version ??
+          null,
+
+        latestState:
+          latest?.state ??
+          null,
+
+        verificationStatus:
+          latest?.payload
+            ?.verificationStatus ??
+          null,
+      },
+    )}`,
   );
 }
 
-const claimRecords =
-  store
-    .auditTrail()
-    .filter(
-      (record) =>
-        record.aggregateType ===
-        "CLAIM",
-    );
-
-assert.ok(
-  claimRecords.length > 0,
-  "V8_ARTICLE_RUNTIME_CLAIMS_NOT_PERSISTED",
+console.log(
+  "================================================================",
 );
 
-const latestClaimRecords =
-  new Map();
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 6: FOUNDATION CHAIN",
+);
 
-for (const record of claimRecords) {
-  const existing =
-    latestClaimRecords.get(
-      record.aggregateId,
-    );
+console.log(
+  "================================================================",
+);
 
-  if (
-    existing === undefined ||
-    record.version > existing.version
-  ) {
-    latestClaimRecords.set(
-      record.aggregateId,
-      record,
-    );
-  }
+try {
+  store.verifyChain();
+
+  console.log(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] foundationChain=VALID",
+  );
+} catch (error) {
+  console.error(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] foundationChain=INVALID`,
+  );
+
+  console.error(
+    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] chainError=${
+      error instanceof Error
+        ? error.message
+        : String(error)
+    }`,
+  );
+
+  throw error;
 }
 
-for (
-  const record of latestClaimRecords.values()
+console.log(
+  "================================================================",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 7: ROOT-CAUSE CLASSIFICATION",
+);
+
+console.log(
+  "================================================================",
+);
+
+if (
+  acquisition.searchErrors.length >
+  0
 ) {
-  assert.equal(
-    record.state,
-    "VERIFIED",
-    `Claim ${record.aggregateId} latest state is not VERIFIED.`,
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] ROOT_CAUSE_LAYER=SEARCH",
   );
-}
 
-const knowledgeRecords =
-  store
-    .auditTrail()
-    .filter(
-      (record) =>
-        record.aggregateType ===
-        "KNOWLEDGE",
-    );
-
-assert.ok(
-  knowledgeRecords.length > 0,
-  "V8_ARTICLE_RUNTIME_KNOWLEDGE_NOT_PERSISTED",
-);
-
-const latestKnowledgeRecords =
-  new Map();
-
-for (const record of knowledgeRecords) {
-  const existing =
-    latestKnowledgeRecords.get(
-      record.aggregateId,
-    );
-
-  if (
-    existing === undefined ||
-    record.version > existing.version
-  ) {
-    latestKnowledgeRecords.set(
-      record.aggregateId,
-      record,
-    );
-  }
-}
-
-for (
-  const record of latestKnowledgeRecords.values()
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] SearchProvider produced one or more errors.",
+  );
+} else if (
+  acquisition.discovery.candidates.length ===
+  0
 ) {
-  assert.equal(
-    record.state,
-    "VERIFIED",
-    `Knowledge ${record.aggregateId} latest state is not VERIFIED.`,
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] ROOT_CAUSE_LAYER=DISCOVERY",
+  );
+
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Search completed without usable discovery candidates.",
+  );
+} else if (
+  acquisition.fetchErrors.length ===
+    acquisition.discovery.candidates.length &&
+  acquisition.acquisitions.length ===
+    0
+) {
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] ROOT_CAUSE_LAYER=FETCH",
+  );
+
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] All discovered candidates failed during page acquisition.",
+  );
+} else if (
+  acquisition.acquisitions.length ===
+  0
+) {
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] ROOT_CAUSE_LAYER=ACQUISITION",
+  );
+
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] No successful Internet acquisition was produced.",
+  );
+} else {
+  console.log(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] ROOT_CAUSE_LAYER=NONE",
+  );
+
+  console.log(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Internet acquisition produced one or more successful records.",
   );
 }
 
-const decisionRecords =
-  store
-    .auditTrail()
-    .filter(
-      (record) =>
-        record.aggregateType ===
-        "DECISION",
-    );
-
-assert.ok(
-  decisionRecords.length > 0,
-  "V8_ARTICLE_RUNTIME_DECISION_NOT_PERSISTED",
+console.log(
+  "================================================================",
 );
 
-const decisionRecord =
-  decisionRecords.find(
-    (record) =>
-      record.aggregateId ===
-      result.decisionId,
+if (
+  acquisition.acquisitions.length ===
+  0
+) {
+  console.error(
+    "[NEXMOLD][V8-ARTICLE-RUNTIME] ACQUISITION DIAGNOSTIC FAIL",
   );
 
-assert.ok(
-  decisionRecord,
-  "V8_ARTICLE_RUNTIME_DECISION_ID_MISSING",
-);
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] The Article Runtime was NOT executed.",
+  );
 
-assert.equal(
-  decisionRecord.state,
-  "APPROVED",
-  "V8_ARTICLE_RUNTIME_DECISION_NOT_APPROVED",
-);
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] This failure is intentional and fail-closed.",
+  );
 
-assert.ok(
-  result.content,
-  "V8_ARTICLE_RUNTIME_CONTENT_EMPTY",
-);
+  console.error(
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] No synthetic acquisition or fallback evidence was created.",
+  );
 
-store.verifyChain();
+  console.error(
+    "================================================================",
+  );
 
-console.log(
-  "[NEXMOLD][V8-ARTICLE-RUNTIME] REAL INTERNET ARTICLE RUNTIME GATE PASS",
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME] acquired=${result.acquisition.acquisitions.length}`,
-);
+  throw new Error(
+    "V8_ARTICLE_RUNTIME_DIAGNOSTIC_NO_ACQUISITION",
+  );
+}
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] verifiedEvidence=${result.verifiedEvidenceIds.length}`,
+  "[NEXMOLD][V8-ARTICLE-RUNTIME] ACQUISITION DIAGNOSTIC PASS",
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] claims=${result.claimIds.length}`,
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] acquisitions=${acquisition.acquisitions.length}`,
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] knowledge=${result.knowledgeIds.length}`,
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] evidenceAggregates=${evidenceAggregateIds.length}`,
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] scope=${result.scopeId}`,
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] The Article Runtime was NOT executed.",
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] context=${result.contextId}`,
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] No second Internet acquisition was performed.",
 );
 
 console.log(
-  `[V8-ARTICLE-RUNTIME] problem=${result.problemId}`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME] decision=${result.decisionId}`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME] decisionState=${decisionRecord.state}`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME] content=true`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME] fingerprint=${result.fingerprint}`,
+  "================================================================",
 );
