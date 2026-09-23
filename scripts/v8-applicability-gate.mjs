@@ -1,55 +1,133 @@
 import assert from "node:assert/strict";
 
-import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
-import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-import { runV8ArticleRuntime } from "../.v8-build/src/v8/runtime/article-runtime.js";
-import { ApplicabilityEngine } from "../.v8-build/src/v8/applicability/engine.js";
+import {
+  InMemoryFoundationStore,
+} from "../.v8-build/src/v8/foundation/store.js";
 
-function assertTruthy(value, message) {
-  assert.ok(value, message);
+import {
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  TavilySearchProvider,
+} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+
+import {
+  runV8ArticleRuntime,
+} from "../.v8-build/src/v8/runtime/article-runtime.js";
+
+import {
+  ApplicabilityEngine,
+} from "../.v8-build/src/v8/applicability/engine.js";
+
+function assertTruthy(
+  value,
+  message,
+) {
+  assert.ok(
+    value,
+    message,
+  );
 }
 
-function recordsOfType(store, type) {
+function recordsOfType(
+  store,
+  type,
+) {
   return store
     .auditTrail()
     .filter(
       (record) =>
-        record.aggregateType === type,
+        record.aggregateType ===
+        type,
     );
 }
 
-function createGetTamperedStore(store, tamper) {
-  return new Proxy(store, {
-    get(target, property, receiver) {
-      if (property !== "get") {
-        return Reflect.get(
-          target,
-          property,
-          receiver,
-        );
-      }
-
-      return (type, id, version) => {
-        const record = target.get(
-          type,
-          id,
-          version,
-        );
-
-        if (!record) {
-          return record;
+function createGetTamperedStore(
+  store,
+  tamper,
+) {
+  return new Proxy(
+    store,
+    {
+      get(
+        target,
+        property,
+        receiver,
+      ) {
+        if (
+          property !==
+          "get"
+        ) {
+          return Reflect.get(
+            target,
+            property,
+            receiver,
+          );
         }
 
-        return tamper(
-          record,
+        return (
           type,
           id,
           version,
-        );
-      };
+        ) => {
+          const record =
+            target.get(
+              type,
+              id,
+              version,
+            );
+
+          if (!record) {
+            return record;
+          }
+
+          return tamper(
+            record,
+            type,
+            id,
+            version,
+          );
+        };
+      },
     },
-  });
+  );
+}
+
+function constraintMismatchReasons(
+  reasons,
+) {
+  return reasons.filter(
+    (reason) =>
+      reason.startsWith(
+        "KNOWLEDGE_CONDITION_MISMATCH:",
+      ) ||
+      reason.startsWith(
+        "KNOWLEDGE_UNIT_MISMATCH:",
+      ),
+  );
+}
+
+function unitMismatchReasons(
+  reasons,
+) {
+  return reasons.filter(
+    (reason) =>
+      reason.startsWith(
+        "KNOWLEDGE_UNIT_MISMATCH:",
+      ),
+  );
+}
+
+function conditionMismatchReasons(
+  reasons,
+) {
+  return reasons.filter(
+    (reason) =>
+      reason.startsWith(
+        "KNOWLEDGE_CONDITION_MISMATCH:",
+      ),
+  );
 }
 
 const apiKey =
@@ -64,7 +142,9 @@ const store =
   new InMemoryFoundationStore();
 
 const searchProvider =
-  new TavilySearchProvider(apiKey);
+  new TavilySearchProvider(
+    apiKey,
+  );
 
 const pageFetcher =
   new HttpPageFetcher();
@@ -77,10 +157,16 @@ try {
       keyword: {
         keyword:
           "plastic injection molding wall thickness",
+
         normalized:
           "plastic injection molding wall thickness",
-        source: "SEED",
-        intent: "INFORMATIONAL",
+
+        source:
+          "SEED",
+
+        intent:
+          "INFORMATIONAL",
+
         terms: [
           "wall thickness",
           "injection molding",
@@ -95,7 +181,7 @@ try {
       conversionPotential: 0.6,
 
       reasons: [
-        "V8-20 fail-closed applicability evaluation against real Internet-derived knowledge",
+        "V8-20 real Internet applicability evaluation with fail-closed Knowledge condition enforcement",
       ],
     },
 
@@ -104,8 +190,10 @@ try {
     store,
 
     actor: {
-      id: "v8:applicability-gate",
-      role: "INGESTOR",
+      id:
+        "v8:applicability-gate",
+      role:
+        "INGESTOR",
     },
 
     acquisition: {
@@ -116,10 +204,13 @@ try {
     },
 
     scope: {
-      geography: "GLOBAL",
+      geography:
+        "GLOBAL",
+
       industries: [
         "INJECTION_MOLDING",
       ],
+
       languages: [
         "en",
       ],
@@ -127,10 +218,12 @@ try {
 
     context: {
       purpose:
-        "V8-20 fail-closed applicability evaluation for verified Internet-derived knowledge",
+        "V8-20 real Internet applicability evaluation for verified Internet-derived knowledge",
 
       variables: {
-        gate: "V8-20",
+        gate:
+          "V8-20",
+
         domain:
           "plastic-injection-molding",
       },
@@ -150,25 +243,64 @@ try {
       "Plastic Injection Molding Wall Thickness",
   });
 } catch (error) {
-  runtimeError = error;
+  runtimeError =
+    error;
 }
 
-assertTruthy(
-  runtimeError,
-  "V8_APPLICABILITY_EXPECTED_RUNTIME_BLOCK",
-);
+/*
+ * V8-25 semantic correction:
+ *
+ * Knowledge.units is currently preserved metadata.
+ * It is NOT an Applicability constraint.
+ *
+ * Knowledge.conditions are the current Applicability
+ * constraints.
+ *
+ * Therefore the real Internet runtime has two valid
+ * outcomes:
+ *
+ * 1. Runtime succeeds.
+ *    The selected Knowledge is applicable to the
+ *    runtime Context.
+ *
+ * 2. Runtime fails closed with
+ *    V8_APPLICABILITY_BLOCKED.
+ *    In that case the block MUST be caused by a
+ *    Knowledge condition mismatch, never by a unit
+ *    mismatch.
+ *
+ * A runtime block caused only by
+ * KNOWLEDGE_UNIT_MISMATCH is invalid under V8-25.
+ */
 
-assert.equal(
-  runtimeError?.code,
-  "V8_APPLICABILITY_BLOCKED",
-  `V8_APPLICABILITY_UNEXPECTED_RUNTIME_ERROR:${runtimeError?.message ?? String(runtimeError)}`,
-);
+if (runtimeError) {
+  assert.equal(
+    runtimeError.code,
+    "V8_APPLICABILITY_BLOCKED",
+    `V8_APPLICABILITY_UNEXPECTED_RUNTIME_ERROR:${
+      runtimeError.message ??
+      String(runtimeError)
+    }`,
+  );
 
-assert.match(
-  runtimeError?.message ?? "",
-  /KNOWLEDGE_(?:UNIT|CONDITION)_MISMATCH:/,
-  "V8_APPLICABILITY_RUNTIME_BLOCK_REASON_MISSING",
-);
+  const runtimeMessage =
+    runtimeError.message ??
+    String(runtimeError);
+
+  assert.ok(
+    !runtimeMessage.includes(
+      "KNOWLEDGE_UNIT_MISMATCH:",
+    ),
+    "V8_APPLICABILITY_RUNTIME_MUST_NOT_BLOCK_ON_UNITS",
+  );
+
+  assert.ok(
+    runtimeMessage.includes(
+      "KNOWLEDGE_CONDITION_MISMATCH:",
+    ),
+    "V8_APPLICABILITY_RUNTIME_BLOCK_MUST_BE_CONDITION_BASED",
+  );
+}
 
 const sourceRecords =
   recordsOfType(
@@ -258,15 +390,17 @@ const constrainedKnowledgeRecord =
     (record) =>
       (
         Array.isArray(
-          record.payload?.units,
+          record.payload?.conditions,
         ) &&
-        record.payload.units.length > 0
+        record.payload.conditions
+          .length > 0
       ) ||
       (
         Array.isArray(
-          record.payload?.conditions,
+          record.payload?.units,
         ) &&
-        record.payload.conditions.length > 0
+        record.payload.units
+          .length > 0
       ),
   );
 
@@ -292,7 +426,8 @@ assertTruthy(
 );
 
 const constrainedKnowledgeId =
-  constrainedKnowledgeRecord.aggregateId;
+  constrainedKnowledgeRecord
+    .aggregateId;
 
 const scopeId =
   scopeRecord.aggregateId;
@@ -309,28 +444,70 @@ const applicability =
   engine.evaluate({
     knowledgeId:
       constrainedKnowledgeId,
+
     scopeId,
+
     contextId,
   });
 
-assert.equal(
-  applicability.applicable,
-  false,
-  "V8_APPLICABILITY_CONSTRAINED_KNOWLEDGE_MUST_FAIL_CLOSED",
+/*
+ * The selected real Internet Knowledge may be:
+ *
+ * - applicable=true, when all Knowledge conditions
+ *   are represented by the Context;
+ *
+ * - applicable=false, when one or more Knowledge
+ *   conditions are not represented by the Context.
+ *
+ * Both outcomes are semantically valid.
+ *
+ * The prohibited outcome is a unit-only applicability
+ * failure because Knowledge.units is metadata rather
+ * than an Applicability constraint.
+ */
+
+const applicabilityUnitMismatches =
+  unitMismatchReasons(
+    applicability.reasons,
+  );
+
+assert.deepEqual(
+  applicabilityUnitMismatches,
+  [],
+  "V8_APPLICABILITY_MUST_NOT_TREAT_UNITS_AS_CONSTRAINTS",
 );
 
-assert.ok(
-  applicability.reasons.some(
-    (reason) =>
-      reason.startsWith(
-        "KNOWLEDGE_UNIT_MISMATCH:",
-      ) ||
-      reason.startsWith(
-        "KNOWLEDGE_CONDITION_MISMATCH:",
-      ),
-  ),
-  "V8_APPLICABILITY_CONSTRAINT_MISMATCH_REASON_MISSING",
-);
+const applicabilityConditionMismatches =
+  conditionMismatchReasons(
+    applicability.reasons,
+  );
+
+if (
+  !applicability.applicable
+) {
+  assert.ok(
+    applicabilityConditionMismatches
+      .length > 0 ||
+    applicability.reasons.some(
+      (reason) =>
+        reason ===
+          "KNOWLEDGE_NOT_FOUND" ||
+        reason ===
+          "KNOWLEDGE_NOT_VERIFIED" ||
+        reason ===
+          "SCOPE_NOT_FOUND" ||
+        reason ===
+          "SCOPE_NOT_REGISTERED" ||
+        reason ===
+          "CONTEXT_NOT_FOUND" ||
+        reason ===
+          "CONTEXT_NOT_REGISTERED" ||
+        reason ===
+          "CONTEXT_SCOPE_MISMATCH",
+    ),
+    "V8_APPLICABILITY_FALSE_RESULT_HAS_NO_VALID_FAIL_CLOSED_REASON",
+  );
+}
 
 assert.equal(
   applicability.knowledgeId,
@@ -358,29 +535,46 @@ assert.equal(
 
 const expectedLineage = [
   {
-    type: "KNOWLEDGE",
+    type:
+      "KNOWLEDGE",
+
     id:
-      constrainedKnowledgeRecord.aggregateId,
+      constrainedKnowledgeRecord
+        .aggregateId,
+
     version:
-      constrainedKnowledgeRecord.version,
+      constrainedKnowledgeRecord
+        .version,
+
     fingerprint:
-      constrainedKnowledgeRecord.fingerprint,
+      constrainedKnowledgeRecord
+        .fingerprint,
   },
+
   {
-    type: "SCOPE",
+    type:
+      "SCOPE",
+
     id:
       scopeRecord.aggregateId,
+
     version:
       scopeRecord.version,
+
     fingerprint:
       scopeRecord.fingerprint,
   },
+
   {
-    type: "CONTEXT",
+    type:
+      "CONTEXT",
+
     id:
       contextRecord.aggregateId,
+
     version:
       contextRecord.version,
+
     fingerprint:
       contextRecord.fingerprint,
   },
@@ -395,15 +589,21 @@ assert.deepEqual(
 const tamperedKnowledgeStore =
   createGetTamperedStore(
     store,
-    (record, type) => {
+    (
+      record,
+      type,
+    ) => {
       if (
-        type === "KNOWLEDGE" &&
+        type ===
+          "KNOWLEDGE" &&
         record.aggregateId ===
           constrainedKnowledgeId
       ) {
         return {
           ...record,
-          state: "REJECTED",
+
+          state:
+            "REJECTED",
         };
       }
 
@@ -417,36 +617,47 @@ const tamperedKnowledgeApplicability =
   ).evaluate({
     knowledgeId:
       constrainedKnowledgeId,
+
     scopeId,
+
     contextId,
   });
 
 assert.equal(
-  tamperedKnowledgeApplicability.applicable,
+  tamperedKnowledgeApplicability
+    .applicable,
   false,
   "V8_APPLICABILITY_KNOWLEDGE_TAMPER_NOT_REJECTED",
 );
 
 assert.ok(
-  tamperedKnowledgeApplicability.reasons.includes(
-    "KNOWLEDGE_NOT_VERIFIED",
-  ),
+  tamperedKnowledgeApplicability
+    .reasons
+    .includes(
+      "KNOWLEDGE_NOT_VERIFIED",
+    ),
   "V8_APPLICABILITY_KNOWLEDGE_TAMPER_REASON_MISSING",
 );
 
 const tamperedContextStore =
   createGetTamperedStore(
     store,
-    (record, type) => {
+    (
+      record,
+      type,
+    ) => {
       if (
-        type === "CONTEXT" &&
+        type ===
+          "CONTEXT" &&
         record.aggregateId ===
           contextId
       ) {
         return {
           ...record,
+
           payload: {
             ...record.payload,
+
             scopeId:
               "scope:v8:tampered",
           },
@@ -463,20 +674,25 @@ const tamperedContextApplicability =
   ).evaluate({
     knowledgeId:
       constrainedKnowledgeId,
+
     scopeId,
+
     contextId,
   });
 
 assert.equal(
-  tamperedContextApplicability.applicable,
+  tamperedContextApplicability
+    .applicable,
   false,
   "V8_APPLICABILITY_CONTEXT_TAMPER_NOT_REJECTED",
 );
 
 assert.ok(
-  tamperedContextApplicability.reasons.includes(
-    "CONTEXT_SCOPE_MISMATCH",
-  ),
+  tamperedContextApplicability
+    .reasons
+    .includes(
+      "CONTEXT_SCOPE_MISMATCH",
+    ),
   "V8_APPLICABILITY_CONTEXT_TAMPER_REASON_MISSING",
 );
 
@@ -484,30 +700,38 @@ const missingKnowledgeApplicability =
   engine.evaluate({
     knowledgeId:
       "knowledge:v8:nonexistent",
+
     scopeId,
+
     contextId,
   });
 
 assert.equal(
-  missingKnowledgeApplicability.applicable,
+  missingKnowledgeApplicability
+    .applicable,
   false,
   "V8_APPLICABILITY_MISSING_KNOWLEDGE_NOT_BLOCKED",
 );
 
 assert.ok(
-  missingKnowledgeApplicability.reasons.includes(
-    "KNOWLEDGE_NOT_FOUND",
-  ),
+  missingKnowledgeApplicability
+    .reasons
+    .includes(
+      "KNOWLEDGE_NOT_FOUND",
+    ),
   "V8_APPLICABILITY_MISSING_KNOWLEDGE_REASON_MISSING",
 );
 
-let assertBlocked = false;
+let assertBlocked =
+  false;
 
 try {
   engine.assert({
     knowledgeId:
       constrainedKnowledgeId,
+
     scopeId,
+
     contextId,
   });
 } catch (error) {
@@ -516,25 +740,66 @@ try {
     "V8_APPLICABILITY_BLOCKED";
 }
 
-assert.equal(
-  assertBlocked,
-  true,
-  "V8_APPLICABILITY_ASSERT_FAIL_CLOSED_FAILED",
-);
+if (
+  applicability.applicable
+) {
+  assert.equal(
+    assertBlocked,
+    false,
+    "V8_APPLICABILITY_ASSERT_REJECTED_VALID_APPLICABILITY",
+  );
+} else {
+  assert.equal(
+    assertBlocked,
+    true,
+    "V8_APPLICABILITY_ASSERT_FAIL_CLOSED_FAILED",
+  );
+}
+
+/*
+ * Knowledge.units must remain persisted and preserved
+ * even though units are not currently Applicability
+ * constraints.
+ *
+ * V8-24 owns this preservation invariant.
+ * V8-25 only verifies that the ApplicabilityEngine
+ * does not reinterpret the metadata as a constraint.
+ */
+const knowledgeUnits =
+  constrainedKnowledgeRecord
+    .payload?.units;
+
+if (
+  Array.isArray(
+    knowledgeUnits,
+  ) &&
+  knowledgeUnits.length > 0
+) {
+  assert.ok(
+    knowledgeUnits.every(
+      (unit) =>
+        typeof unit ===
+          "string" &&
+        unit.trim().length >
+          0,
+    ),
+    "V8_APPLICABILITY_KNOWLEDGE_UNITS_MUST_REMAIN_VALID_METADATA",
+  );
+}
 
 /*
  * InMemoryFoundationStore.verifyChain()
  * is intentionally a void-returning invariant check.
  *
  * Success:
- *   returns undefined
+ *   returns undefined.
  *
  * Failure:
- *   throws V8_FOUNDATION_CHAIN_BROKEN
- *   or V8_FOUNDATION_FINGERPRINT_MISMATCH
+ *   throws a Foundation invariant error.
  *
- * Therefore the correct gate is simply to execute it
- * and allow any thrown invariant to fail the process.
+ * Therefore the correct gate is simply to execute
+ * verifyChain() and allow any thrown invariant to
+ * fail the process.
  */
 store.verifyChain();
 
@@ -543,27 +808,41 @@ console.log(
 );
 
 console.log(
-  `[V8-20] acquired=${runtimeError ? "3" : "UNKNOWN"}`,
+  `[V8-20] runtimeOutcome=${
+    runtimeError
+      ? "BLOCKED"
+      : "APPLICABLE"
+  }`,
 );
 
 console.log(
-  `[V8-20] persistedSources=${sourceRecords.length}`,
+  `[V8-20] persistedSources=${
+    sourceRecords.length
+  }`,
 );
 
 console.log(
-  `[V8-20] persistedSnapshotVersions=${snapshotRecords.length}`,
+  `[V8-20] persistedSnapshotVersions=${
+    snapshotRecords.length
+  }`,
 );
 
 console.log(
-  `[V8-20] persistedEvidence=${evidenceRecords.length}`,
+  `[V8-20] persistedEvidence=${
+    evidenceRecords.length
+  }`,
 );
 
 console.log(
-  `[V8-20] claims=${claimRecords.length}`,
+  `[V8-20] claims=${
+    claimRecords.length
+  }`,
 );
 
 console.log(
-  `[V8-20] knowledge=${knowledgeRecords.length}`,
+  `[V8-20] knowledge=${
+    knowledgeRecords.length
+  }`,
 );
 
 console.log(
@@ -571,19 +850,43 @@ console.log(
 );
 
 console.log(
-  `[V8-20] applicability=${applicability.applicable}`,
+  `[V8-20] applicability=${
+    applicability.applicable
+  }`,
 );
 
 console.log(
-  `[V8-20] applicabilityReasons=${applicability.reasons.join("|")}`,
+  `[V8-20] applicabilityReasons=${
+    applicability.reasons.join("|")
+  }`,
 );
 
 console.log(
-  `[V8-20] lineage=${applicability.lineage.length}`,
+  `[V8-20] conditionMismatchCount=${
+    applicabilityConditionMismatches.length
+  }`,
 );
 
 console.log(
-  "[V8-20] runtimeApplicabilityBlock=true",
+  `[V8-20] unitMismatchCount=${
+    applicabilityUnitMismatches.length
+  }`,
+);
+
+console.log(
+  `[V8-20] lineage=${
+    applicability.lineage.length
+  }`,
+);
+
+console.log(
+  `[V8-20] runtimeApplicabilityBlock=${
+    runtimeError !== null
+  }`,
+);
+
+console.log(
+  "[V8-20] unitsAreNotApplicabilityConstraints=true",
 );
 
 console.log(
