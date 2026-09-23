@@ -1,10 +1,12 @@
 import { invariant } from "../constitution/invariants.js";
 import { nonEmpty } from "../domain/primitives.js";
+
 import type {
   FoundationRecord,
   FoundationStore,
   KnowledgePayload,
 } from "../foundation/types.js";
+
 import type {
   ApplicabilityInput,
   ApplicabilityLineage,
@@ -53,19 +55,6 @@ function evaluateKnowledgeConstraints(
     ) {
       reasons.push(
         `KNOWLEDGE_CONDITION_MISMATCH:${condition}`,
-      );
-    }
-  }
-
-  for (const unit of knowledge.units ?? []) {
-    if (
-      !containsExactContextValue(
-        context,
-        unit,
-      )
-    ) {
-      reasons.push(
-        `KNOWLEDGE_UNIT_MISMATCH:${unit}`,
       );
     }
   }

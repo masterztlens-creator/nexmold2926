@@ -41,12 +41,16 @@ function createKnowledgeFixture(svc) {
 
   const source = createSource({
     kind: "PUBLIC_WEB",
-    locator: "https://example.test/v8-25-applicability",
+    locator:
+      "https://example.test/v8-25-applicability",
     access: "PAYLOAD_ALLOWED",
-    title: "V8-25 Applicability Test Reference",
+    title:
+      "V8-25 Applicability Test Reference",
     version: "1",
-    publisher: "NEXMOLD Test Authority",
-    authority: "ENGINEERING_REFERENCE",
+    publisher:
+      "NEXMOLD Test Authority",
+    authority:
+      "ENGINEERING_REFERENCE",
     canonicalUrl:
       "https://example.test/v8-25-applicability",
     retrievedAt:
@@ -60,92 +64,100 @@ function createKnowledgeFixture(svc) {
     actor,
   );
 
-  const snapshot = svc.captureSnapshot(
-    {
-      source,
-      capturedAt:
-        "2026-09-23T00:00:00.000Z",
-      locator: source.locator,
-      content,
-      metadataOnly: false,
-    },
-    actor,
-  );
+  const snapshot =
+    svc.captureSnapshot(
+      {
+        source,
+        capturedAt:
+          "2026-09-23T00:00:00.000Z",
+        locator: source.locator,
+        content,
+        metadataOnly: false,
+      },
+      actor,
+    );
 
   svc.sealSnapshot(
     snapshot.aggregateId,
     actor,
   );
 
-  const evidence = svc.ingestEvidence(
-    {
-      id: "evidence:v8-25:1",
-      sourceId: source.id,
-      locator: "v8-25:p1",
-      excerpt: content,
-      ingestion: "INGESTED",
-      capturedAt: snapshot.recordedAt,
-      snapshotId: snapshot.aggregateId,
-      materialGrade: "PA66",
-      testCondition: "180 C",
-      unit: "mm",
-    },
-    actor,
-  );
+  const evidence =
+    svc.ingestEvidence(
+      {
+        id: "evidence:v8-25:1",
+        sourceId: source.id,
+        locator: "v8-25:p1",
+        excerpt: content,
+        ingestion: "INGESTED",
+        capturedAt:
+          snapshot.recordedAt,
+        snapshotId:
+          snapshot.aggregateId,
+        materialGrade: "PA66",
+        testCondition: "180 C",
+        unit: "mm",
+      },
+      actor,
+    );
 
   svc.verifyEvidence(
     evidence.aggregateId,
     auditor,
   );
 
-  const claim = svc.createClaim(
-    createClaim({
-      id: "claim:v8-25:1",
-      statement:
-        "PA66 at 180 C requires wall thickness to be expressed in mm for this engineering condition.",
-      evidenceIds: [
-        evidence.aggregateId,
-      ],
-      status: "VERIFIED",
-      fingerprint: "ignored",
-      scope: "injection molding",
-      conditions: [
-        "PA66",
-        "180 C",
-      ],
-      units: [
-        "mm",
-      ],
-      isUniversal: false,
-      epistemicLevel:
-        "ENGINEERING_INFERENCE",
-      confidence: "HIGH",
-    }),
-    auditor,
-  );
+  const claim =
+    svc.createClaim(
+      createClaim({
+        id: "claim:v8-25:1",
+        statement:
+          "PA66 at 180 C requires wall thickness to be expressed in mm for this engineering condition.",
+        evidenceIds: [
+          evidence.aggregateId,
+        ],
+        status: "VERIFIED",
+        fingerprint: "ignored",
+        scope:
+          "injection molding",
+        conditions: [
+          "PA66",
+          "180 C",
+        ],
+        units: [
+          "mm",
+        ],
+        isUniversal: false,
+        epistemicLevel:
+          "ENGINEERING_INFERENCE",
+        confidence: "HIGH",
+      }),
+      auditor,
+    );
 
-  const knowledge = svc.createKnowledge(
-    createKnowledge({
-      id: "knowledge:v8-25:1",
-      proposition:
-        "For injection molding, this knowledge applies to PA66 at 180 C when wall thickness is expressed in mm.",
-      claimIds: [
-        claim.aggregateId,
-      ],
-      status: "APPROVED",
-      fingerprint: "ignored",
-      scope: "injection molding",
-      conditions: [
-        "PA66",
-        "180 C",
-      ],
-      units: [
-        "mm",
-      ],
-      isUniversal: false,
-    }),
-    actor,
-  );
+  const knowledge =
+    svc.createKnowledge(
+      createKnowledge({
+        id: "knowledge:v8-25:1",
+        proposition:
+          "For injection molding, this knowledge applies to PA66 at 180 C when wall thickness is expressed in mm.",
+        claimIds: [
+          claim.aggregateId,
+        ],
+        status: "APPROVED",
+        fingerprint: "ignored",
+        scope:
+          "injection molding",
+        conditions: [
+          "PA66",
+          "180 C",
+        ],
+        units: [
+          "mm",
+        ],
+        isUniversal: false,
+      }),
+      actor,
+    );
 
   return {
     source,
@@ -157,7 +169,7 @@ function createKnowledgeFixture(svc) {
 }
 
 test(
-  "V8-25 GREEN: ApplicabilityEngine enforces Knowledge applicability constraints",
+  "V8-25 GREEN: ApplicabilityEngine enforces Knowledge condition constraints without treating units as applicability constraints",
   () => {
     const store =
       new InMemoryFoundationStore();
@@ -185,14 +197,80 @@ test(
         actor,
       );
 
-    const context =
+    const incompatibleContext =
       svc.registerContext(
         createContext({
-          id: "context:v8-25:1",
+          id:
+            "context:v8-25:incompatible",
           scopeId:
             scope.aggregateId,
           purpose:
-            "Evaluate Knowledge applicability against an incompatible material, condition, and unit.",
+            "Evaluate Knowledge applicability against an incompatible condition.",
+          variables: {
+            materialGrade: "PA66",
+            testCondition: "20 C",
+            unit: "inch",
+          },
+        }),
+        actor,
+      );
+
+    const incompatible =
+      new ApplicabilityEngine(
+        store,
+      ).evaluate({
+        knowledgeId:
+          knowledge.aggregateId,
+        scopeId:
+          scope.aggregateId,
+        contextId:
+          incompatibleContext.aggregateId,
+      });
+
+    assert.equal(
+      incompatible.applicable,
+      false,
+      JSON.stringify(
+        incompatible,
+        null,
+        2,
+      ),
+    );
+
+    assert.ok(
+      incompatible.reasons.includes(
+        "KNOWLEDGE_CONDITION_MISMATCH:180 C",
+      ),
+      JSON.stringify(
+        incompatible,
+        null,
+        2,
+      ),
+    );
+
+    assert.ok(
+      !incompatible.reasons.some(
+        (reason) =>
+          reason.startsWith(
+            "KNOWLEDGE_UNIT_MISMATCH:",
+          ),
+      ),
+      JSON.stringify(
+        incompatible,
+        null,
+        2,
+      ),
+    );
+
+    const compatibleContext =
+      svc.registerContext(
+        createContext({
+          id:
+            "context:v8-25:compatible",
+          scopeId:
+            scope.aggregateId,
+          purpose:
+            "Evaluate Knowledge applicability with matching conditions and different unit metadata.",
           variables: {
             materialGrade: "PA66",
             testCondition: "180 C",
@@ -202,7 +280,7 @@ test(
         actor,
       );
 
-    const result =
+    const compatible =
       new ApplicabilityEngine(
         store,
       ).evaluate({
@@ -211,63 +289,43 @@ test(
         scopeId:
           scope.aggregateId,
         contextId:
-          context.aggregateId,
+          compatibleContext.aggregateId,
       });
 
-    /*
-     * V8-25 semantic requirement:
-     *
-     * Knowledge carries:
-     *   scope       = injection molding
-     *   conditions = PA66, 180 C
-     *   units       = mm
-     *
-     * Context carries:
-     *   materialGrade = PA66
-     *   testCondition = 180 C
-     *   unit          = inch
-     *
-     * The unit is incompatible.
-     *
-     * Therefore applicability MUST eventually be false.
-     *
-     * The current ApplicabilityEngine is expected to return true
-     * because it currently checks only:
-     *
-     *   Knowledge existence/state
-     *   Scope existence/state
-     *   Context existence/state
-     *   Context -> Scope relationship
-     *
-     * and does not yet evaluate Knowledge applicability constraints.
-     */
-
     assert.equal(
-      result.applicable,
-      false,
+      compatible.applicable,
+      true,
       JSON.stringify(
-        {
-          expected:
-            "Knowledge applicability constraints must block incompatible context",
-          actual: result,
-        },
+        compatible,
         null,
         2,
       ),
     );
 
-    assert.ok(
-      result.reasons.some(
-        (reason) =>
-          reason.startsWith(
-            "KNOWLEDGE_",
-          ),
+    assert.deepEqual(
+      compatible.reasons,
+      [],
+    );
+
+    assert.deepEqual(
+      knowledge.payload.units,
+      ["mm"],
+    );
+
+    assert.equal(
+      compatible.lineage.length,
+      3,
+    );
+
+    assert.deepEqual(
+      compatible.lineage.map(
+        (item) => item.type,
       ),
-      JSON.stringify(
-        result,
-        null,
-        2,
-      ),
+      [
+        "KNOWLEDGE",
+        "SCOPE",
+        "CONTEXT",
+      ],
     );
 
     assert.doesNotThrow(() => {
