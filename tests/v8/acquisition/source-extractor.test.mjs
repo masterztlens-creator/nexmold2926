@@ -338,14 +338,16 @@ test("V8-22B structured extraction remains parameter/value/unit aware", () => {
   );
 });
 
-test("V8-22B section attribution remains deterministic", () => {
+test("V8-22B assigns section attribution to structured evidence", () => {
   const html = `
     <body>
       <main>
         <h1>Injection Molding</h1>
 
+        <h2>Machine Requirements</h2>
+
         <p>
-          Wall thickness: 2 mm.
+          Clamp force: 50 kN.
         </p>
 
         <h2>Material Selection</h2>
@@ -353,21 +355,15 @@ test("V8-22B section attribution remains deterministic", () => {
         <p>
           Material temperature: 220 °C.
         </p>
-
-        <h2>Machine Requirements</h2>
-
-        <p>
-          Clamp force: 50 kN.
-        </p>
       </main>
     </body>
   `;
 
   const result = extractStructuredEvidence(html);
 
-  const wallThickness = result.find(
+  const clampForce = result.find(
     (candidate) =>
-      candidate.parameter?.toLowerCase() === "wall thickness",
+      candidate.parameter?.toLowerCase() === "clamp force",
   );
 
   const materialTemperature = result.find(
@@ -376,24 +372,14 @@ test("V8-22B section attribution remains deterministic", () => {
       "material temperature",
   );
 
-  const clampForce = result.find(
-    (candidate) =>
-      candidate.parameter?.toLowerCase() === "clamp force",
-  );
-
   assert.equal(
-    wallThickness?.section,
-    "Injection Molding",
+    clampForce?.section,
+    "Machine Requirements",
   );
 
   assert.equal(
     materialTemperature?.section,
     "Material Selection",
-  );
-
-  assert.equal(
-    clampForce?.section,
-    "Machine Requirements",
   );
 });
 
@@ -1122,7 +1108,7 @@ test("V8-22B-S3 rejects commercial CTA blocks and preserves authoritative sectio
   );
 });
 
-test("V8-22B-S4 excludes hero compliance, jump navigation and footer CTA UI", () => {
+test("V8-22B-S4 excludes hero compliance, real jump navigation and footer CTA UI", () => {
   const html = `
     <body>
       <main>
@@ -1172,55 +1158,144 @@ test("V8-22B-S4 excludes hero compliance, jump navigation and footer CTA UI", ()
           </div>
         </div>
 
-        <div class="jump-navigation">
-          <h5>Jump to Section</h5>
+        <!--
+          Real Protolabs structure:
 
-          <p>
-            <span>→</span>
-            <a href="#capabilities">Capabilities</a>
-            <br />
+          <div>
+            <div class="container">
+              <div class="row clearfix">
+                <div class="col-md-4 column">
+                  <div>
+                    <h5>Jump to Section</h5>
+                    <p>
+                      Capabilities
+                      Materials
+                      Surface Finishes
+                      Quality Inspections
+                      Finishing Options
+                      About Plastic Injection Molding
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-8 column">
+                  ...
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <span>→</span>
-            <a href="#materials">Materials</a>
-            <br />
+          The jump-navigation wrapper deliberately has no
+          semantic UI role, id, or identifying class.
+        -->
 
-            <span>→</span>
-            <a href="#surface-finishes">Surface Finishes</a>
-            <br />
+        <div>
+          <div class="container">
+            <div class="row clearfix">
+              <div class="col-md-4 column">
+                <div>
+                  <h5 style="text-align: left;">
+                    <strong>Jump to Section</strong>
+                  </h5>
 
-            <span>→</span>
-            <a href="#quality-inspections">
-              Quality Inspections
-            </a>
-          </p>
+                  <p style="text-align: left;">
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#capabilities"
+                      title="Plastic Injection Molding"
+                      data-anchor="#capabilities"
+                    >
+                      Capabilities
+                    </a>
+                    <br />
+
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#materials"
+                      title="Plastic Injection Molding"
+                      data-anchor="#materials"
+                    >
+                      Materials
+                    </a>
+                    <br />
+
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#surface"
+                      title="Plastic Injection Molding"
+                      data-anchor="#surface"
+                    >
+                      Surface Finishes
+                    </a>
+                    <br />
+
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#quality"
+                      title="Plastic Injection Molding"
+                      data-anchor="#quality"
+                    >
+                      Quality Inspections
+                    </a>
+                    <br />
+
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#finishing"
+                      title="Plastic Injection Molding"
+                      data-anchor="#finishing"
+                    >
+                      Finishing Options
+                    </a>
+                    <br />
+
+                    <span>→</span>
+                    <a
+                      href="/services/injection-molding/plastic-injection-molding/#about"
+                      title="Plastic Injection Molding"
+                      data-anchor="#about"
+                    >
+                      About Plastic Injection Molding
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              <div class="col-md-8 column">
+                <div>
+                  <h2>About Plastic Injection Molding</h2>
+
+                  <p>
+                    Injection molding is a manufacturing process that fills
+                    a mold cavity with plastic resin to form a finished part.
+                  </p>
+
+                  <p>
+                    Wall thickness: 2 mm.
+                  </p>
+
+                  <h2>
+                    Thermoplastic Material Selection for Injection Molding
+                  </h2>
+
+                  <p>
+                    Material temperature: 220 °C.
+                  </p>
+
+                  <p>
+                    Clamp force: 50 kN.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <h2>About Plastic Injection Molding</h2>
-
-        <p>
-          Injection molding is a manufacturing process that fills
-          a mold cavity with plastic resin to form a finished part.
-        </p>
-
-        <p>
-          Wall thickness: 2 mm.
-        </p>
-
-        <h2>
-          Thermoplastic Material Selection for Injection Molding
-        </h2>
-
-        <p>
-          Material temperature: 220 °C.
-        </p>
-
-        <p>
-          Clamp force: 50 kN.
-        </p>
 
         <div class="hero-container black connect-to-footer center">
           <div class="bg-cover">
-            <img src="/media/process.jpg" alt="" />
+            <img
+              src="/media/process.jpg"
+              alt=""
+            />
           </div>
 
           <div class="container rte">
