@@ -6,7 +6,7 @@ const HTML_HEADING_PATTERN =
   /<h([1-6])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>/gi;
 
 const HTML_BLOCK_PATTERN =
-  /<(?:p|li|dt|dd|td|th|div|section|article|blockquote)(?:\s[^>]*)?>([\s\S]*?)<\/(?:p|li|dt|dd|td|th|div|section|article|blockquote)>/gi;
+  /<(?:p|li|dt|dd|td|th|section|article|blockquote)(?:\s[^>]*)?>([\s\S]*?)<\/(?:p|li|dt|dd|td|th|section|article|blockquote)>/gi;
 
 const MAIN_CONTENT_PATTERN =
   /<main(?:\s[^>]*)?>([\s\S]*?)<\/main>/gi;
