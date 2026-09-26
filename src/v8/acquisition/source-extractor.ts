@@ -205,10 +205,59 @@ function findMatchingElementEnd(
   return html.length;
 }
 
+function isJumpToSectionUiBlock(
+  html: string,
+  openingIndex: number,
+  openingTag: string,
+  tagName: string,
+): boolean {
+  if (tagName.toLowerCase() !== "div") {
+    return false;
+  }
+
+  const subtreeEnd = findMatchingElementEnd(
+    html,
+    openingIndex + openingTag.length,
+    tagName,
+  );
+
+  if (subtreeEnd <= openingIndex) {
+    return false;
+  }
+
+  const subtree = html.slice(
+    openingIndex,
+    subtreeEnd,
+  );
+
+  const hasJumpHeading =
+    /<h[1-6](?:\s[^>]*)?>[\s\S]*?Jump\s+to\s+Section[\s\S]*?<\/h[1-6]>/i.test(
+      subtree,
+    );
+
+  if (!hasJumpHeading) {
+    return false;
+  }
+
+  const anchorCount =
+    (subtree.match(/<a(?:\s[^>]*)?>/gi) ?? []).length;
+
+  const hasAnchorTargets =
+    /(?:data-anchor|href)\s*=\s*["'][^"']*#[^"']+["']/i.test(
+      subtree,
+    );
+
+  return anchorCount >= 2 && hasAnchorTargets;
+}
+
 function removeUiSubtrees(
   html: string,
   openingPattern: RegExp,
-  shouldRemove: (openingTag: string) => boolean,
+  shouldRemove: (
+    openingTag: string,
+    openingIndex: number,
+    tagName: string,
+  ) => boolean,
 ): string {
   const output: string[] = [];
 
@@ -222,11 +271,23 @@ function removeUiSubtrees(
     const openingTag = match[0];
     const tagName = match[1];
 
-    if (!tagName || !shouldRemove(openingTag)) {
+    if (!tagName) {
       continue;
     }
 
-    output.push(html.slice(cursor, match.index));
+    if (
+      !shouldRemove(
+        openingTag,
+        match.index,
+        tagName,
+      )
+    ) {
+      continue;
+    }
+
+    output.push(
+      html.slice(cursor, match.index),
+    );
 
     const subtreeEnd = findMatchingElementEnd(
       html,
@@ -246,7 +307,9 @@ function removeUiSubtrees(
   return output.join("");
 }
 
-function removeSemanticUiSubtrees(html: string): string {
+function removeSemanticUiSubtrees(
+  html: string,
+): string {
   return removeUiSubtrees(
     html,
     SEMANTIC_UI_OPEN_PATTERN,
@@ -254,38 +317,81 @@ function removeSemanticUiSubtrees(html: string): string {
   );
 }
 
-function removeRoleUiSubtrees(html: string): string {
+function removeRoleUiSubtrees(
+  html: string,
+): string {
   return removeUiSubtrees(
     html,
     ROLE_UI_OPEN_PATTERN,
-    (openingTag) => {
+    (
+      openingTag,
+      openingIndex,
+      tagName,
+    ) => {
       const attributes = openingTag
-        .replace(/^<[^ \t\r\n\f>]+/i, "")
+        .replace(
+          /^<[^ \t\r\n\f>]+/i,
+          "",
+        )
         .replace(/\/?>$/i, "");
 
-      return isUiRoleOrMarker(attributes);
+      if (
+        isUiRoleOrMarker(attributes)
+      ) {
+        return true;
+      }
+
+      return isJumpToSectionUiBlock(
+        html,
+        openingIndex,
+        openingTag,
+        tagName,
+      );
     },
   );
 }
 
-function removeNonContentBlocks(html: string): string {
-  const withoutSemanticUi = removeSemanticUiSubtrees(html);
+function removeNonContentBlocks(
+  html: string,
+): string {
+  const withoutSemanticUi =
+    removeSemanticUiSubtrees(html);
 
-  return removeRoleUiSubtrees(withoutSemanticUi);
+  return removeRoleUiSubtrees(
+    withoutSemanticUi,
+  );
 }
 
-function selectSemanticContent(html: string): string {
+function selectSemanticContent(
+  html: string,
+): string {
   const sanitized = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<template[\s\S]*?<\/template>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ");
+    .replace(
+      /<script[\s\S]*?<\/script>/gi,
+      " ",
+    )
+    .replace(
+      /<style[\s\S]*?<\/style>/gi,
+      " ",
+    )
+    .replace(
+      /<noscript[\s\S]*?<\/noscript>/gi,
+      " ",
+    )
+    .replace(
+      /<template[\s\S]*?<\/template>/gi,
+      " ",
+    )
+    .replace(
+      /<svg[\s\S]*?<\/svg>/gi,
+      " ",
+    );
 
-  const mainRegions = extractAllMatchingRegions(
-    sanitized,
-    MAIN_CONTENT_PATTERN,
-  );
+  const mainRegions =
+    extractAllMatchingRegions(
+      sanitized,
+      MAIN_CONTENT_PATTERN,
+    );
 
   if (mainRegions.length > 0) {
     return removeNonContentBlocks(
@@ -293,10 +399,11 @@ function selectSemanticContent(html: string): string {
     );
   }
 
-  const articleRegions = extractAllMatchingRegions(
-    sanitized,
-    ARTICLE_CONTENT_PATTERN,
-  );
+  const articleRegions =
+    extractAllMatchingRegions(
+      sanitized,
+      ARTICLE_CONTENT_PATTERN,
+    );
 
   if (articleRegions.length > 0) {
     return removeNonContentBlocks(
@@ -304,16 +411,21 @@ function selectSemanticContent(html: string): string {
     );
   }
 
-  const bodyRegion = extractFirstMatchingRegion(
-    sanitized,
-    BODY_CONTENT_PATTERN,
-  );
+  const bodyRegion =
+    extractFirstMatchingRegion(
+      sanitized,
+      BODY_CONTENT_PATTERN,
+    );
 
   if (bodyRegion) {
-    return removeNonContentBlocks(bodyRegion);
+    return removeNonContentBlocks(
+      bodyRegion,
+    );
   }
 
-  return removeNonContentBlocks(sanitized);
+  return removeNonContentBlocks(
+    sanitized,
+  );
 }
 
 function buildSectionMap(
@@ -329,8 +441,13 @@ function buildSectionMap(
 
   let match: RegExpExecArray | null;
 
-  while ((match = HTML_HEADING_PATTERN.exec(html)) !== null) {
-    const section = normalizeText(match[2] ?? "");
+  while (
+    (match =
+      HTML_HEADING_PATTERN.exec(html)) !== null
+  ) {
+    const section = normalizeText(
+      match[2] ?? "",
+    );
 
     if (!section) continue;
 
@@ -366,48 +483,75 @@ function sectionForIndex(
 function buildStructuredEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const sections = buildSectionMap(content);
-  const candidates: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
 
-  for (const pattern of PARAMETER_VALUE_UNIT_PATTERNS) {
+  const sections =
+    buildSectionMap(content);
+
+  const candidates: ExtractedEvidenceCandidate[] =
+    [];
+
+  for (
+    const pattern of PARAMETER_VALUE_UNIT_PATTERNS
+  ) {
     pattern.lastIndex = 0;
 
     let match: RegExpExecArray | null;
 
-    while ((match = pattern.exec(content)) !== null) {
-      const parameter = normalizeParameter(
-        match[1] ?? "",
-      );
+    while (
+      (match = pattern.exec(content)) !== null
+    ) {
+      const parameter =
+        normalizeParameter(
+          match[1] ?? "",
+        );
 
-      const value = (match[2] ?? "").trim();
-      const unit = normalizeUnit(match[3] ?? "");
+      const value =
+        (match[2] ?? "").trim();
 
-      if (!isPlausibleParameter(parameter)) continue;
+      const unit =
+        normalizeUnit(
+          match[3] ?? "",
+        );
+
+      if (
+        !isPlausibleParameter(parameter)
+      ) {
+        continue;
+      }
+
       if (!value || !unit) continue;
 
-      const rawExcerpt = normalizeText(
-        match[0] ?? "",
-      );
+      const rawExcerpt =
+        normalizeText(
+          match[0] ?? "",
+        );
 
       if (!rawExcerpt) continue;
 
-      const section = sectionForIndex(
-        sections,
-        match.index,
-      );
+      const section =
+        sectionForIndex(
+          sections,
+          match.index,
+        );
 
       candidates.push({
-        locator: `document:parameter:${parameter.toLowerCase()}`,
-        excerpt: rawExcerpt.slice(
-          0,
-          MAX_EXCERPT_LENGTH,
-        ),
-        ...(section ? { section } : {}),
+        locator:
+          `document:parameter:${parameter.toLowerCase()}`,
+        excerpt:
+          rawExcerpt.slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        ...(section
+          ? { section }
+          : {}),
         parameter,
         value,
         unit,
-        extractionConfidence: "HIGH",
+        extractionConfidence:
+          "HIGH",
       });
     }
 
@@ -420,34 +564,49 @@ function buildStructuredEvidence(
 function buildBlockEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const sections = buildSectionMap(content);
-  const candidates: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
+
+  const sections =
+    buildSectionMap(content);
+
+  const candidates: ExtractedEvidenceCandidate[] =
+    [];
 
   HTML_BLOCK_PATTERN.lastIndex = 0;
 
   let match: RegExpExecArray | null;
 
-  while ((match = HTML_BLOCK_PATTERN.exec(content)) !== null) {
-    const excerpt = normalizeText(
-      match[1] ?? "",
-    );
+  while (
+    (match =
+      HTML_BLOCK_PATTERN.exec(content)) !== null
+  ) {
+    const excerpt =
+      normalizeText(
+        match[1] ?? "",
+      );
 
     if (!excerpt) continue;
 
-    const section = sectionForIndex(
-      sections,
-      match.index,
-    );
+    const section =
+      sectionForIndex(
+        sections,
+        match.index,
+      );
 
     candidates.push({
-      locator: `document:block:${match.index}`,
-      excerpt: excerpt.slice(
-        0,
-        MAX_EXCERPT_LENGTH,
-      ),
-      ...(section ? { section } : {}),
-      extractionConfidence: "MEDIUM",
+      locator:
+        `document:block:${match.index}`,
+      excerpt:
+        excerpt.slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
+      ...(section
+        ? { section }
+        : {}),
+      extractionConfidence:
+        "MEDIUM",
     });
   }
 
@@ -460,7 +619,8 @@ function deduplicateEvidence(
   candidates: readonly ExtractedEvidenceCandidate[],
 ): readonly ExtractedEvidenceCandidate[] {
   const seen = new Set<string>();
-  const output: ExtractedEvidenceCandidate[] = [];
+  const output: ExtractedEvidenceCandidate[] =
+    [];
 
   for (const candidate of candidates) {
     const key = [
@@ -485,19 +645,24 @@ export function extractTextEvidence(
   html: string,
   locator = "document:text",
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const text = decodeHtml(content);
+  const content =
+    selectSemanticContent(html);
+
+  const text =
+    decodeHtml(content);
 
   if (!text) return [];
 
   return [
     {
       locator,
-      excerpt: text.slice(
-        0,
-        MAX_EXCERPT_LENGTH,
-      ),
-      extractionConfidence: "MEDIUM",
+      excerpt:
+        text.slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
+      extractionConfidence:
+        "MEDIUM",
     },
   ];
 }
@@ -506,23 +671,32 @@ export function extractEvidenceByPattern(
   html: string,
   patterns: readonly RegExp[],
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const text = decodeHtml(content);
-  const output: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
+
+  const text =
+    decodeHtml(content);
+
+  const output: ExtractedEvidenceCandidate[] =
+    [];
 
   for (const pattern of patterns) {
     pattern.lastIndex = 0;
 
-    const match = pattern.exec(text);
+    const match =
+      pattern.exec(text);
 
     if (match?.[0]) {
       output.push({
-        locator: `document:pattern:${pattern.source}`,
-        excerpt: match[0].slice(
-          0,
-          MAX_EXCERPT_LENGTH,
-        ),
-        extractionConfidence: "MEDIUM",
+        locator:
+          `document:pattern:${pattern.source}`,
+        excerpt:
+          match[0].slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        extractionConfidence:
+          "MEDIUM",
       });
     }
 
