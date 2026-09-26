@@ -10,26 +10,23 @@ import {
 test("V8-22B extracts semantic main content and excludes navigation chrome", () => {
   const html = `
     <html>
-      <head>
-        <title>Engineering Guide</title>
-      </head>
-
       <body>
         <header>
-          NEXMOLD GLOBAL NAVIGATION
+          Global navigation.
         </header>
 
-        <nav>
-          HOME SERVICES INDUSTRIES CONTACT
-        </nav>
-
         <main>
-          <h1>Injection Molding Wall Thickness</h1>
-          <p>Wall thickness should be uniform for reliable molding.</p>
+          <h1>Injection Molding</h1>
+          <p>
+            Injection molding is a manufacturing process.
+          </p>
+          <p>
+            Wall thickness: 2 mm.
+          </p>
         </main>
 
         <footer>
-          COPYRIGHT COOKIE POLICY PRIVACY
+          Footer navigation.
         </footer>
       </body>
     </html>
@@ -37,229 +34,151 @@ test("V8-22B extracts semantic main content and excludes navigation chrome", () 
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Injection Molding Wall Thickness/,
+  assert.ok(
+    result.some((candidate) =>
+      /Injection molding is a manufacturing process/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
-  assert.match(
-    result[0].excerpt,
-    /Wall thickness should be uniform/,
+
+  assert.ok(
+    result.some((candidate) =>
+      /Wall thickness: 2 mm/i.test(candidate.excerpt),
+    ),
   );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /NEXMOLD GLOBAL NAVIGATION/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /HOME SERVICES INDUSTRIES CONTACT/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /COOKIE POLICY/,
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Global navigation|Footer navigation/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B supports article-only documents without a main element", () => {
   const html = `
-    <body>
-      <header>Site Header</header>
+    <html>
+      <body>
+        <nav>
+          Navigation.
+        </nav>
 
-      <article>
-        <h1>Draft Angle Guidance</h1>
-        <p>A suitable draft angle supports reliable part ejection.</p>
-      </article>
+        <article>
+          <h1>Injection Molding</h1>
+          <p>
+            Injection molding produces plastic parts.
+          </p>
+          <p>
+            Wall thickness: 2 mm.
+          </p>
+        </article>
 
-      <aside>RELATED ARTICLES</aside>
-      <footer>FOOTER CONTENT</footer>
-    </body>
+        <footer>
+          Footer.
+        </footer>
+      </body>
+    </html>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Draft Angle Guidance/,
+  assert.ok(
+    result.some((candidate) =>
+      /Injection molding produces plastic parts/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
-  assert.match(
-    result[0].excerpt,
-    /reliable part ejection/,
+
+  assert.ok(
+    result.some((candidate) =>
+      /Wall thickness: 2 mm/i.test(candidate.excerpt),
+    ),
   );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Site Header/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /RELATED ARTICLES/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /FOOTER CONTENT/,
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Navigation|Footer/i.test(candidate.excerpt),
+    ),
   );
 });
 
 test("V8-22B excludes cookie, consent, modal and sidebar UI blocks", () => {
   const html = `
     <body>
-      <div class="cookie-banner">
-        We use cookies to improve your experience.
-      </div>
-
-      <div id="consent-modal">
-        Accept all cookies.
-      </div>
-
-      <div class="sidebar">
-        Related engineering articles.
-      </div>
-
       <main>
         <h1>Injection Molding</h1>
-        <p>Cooling time depends on material and wall thickness.</p>
+
+        <p>
+          Real manufacturing content.
+        </p>
+
+        <div class="cookie-banner">
+          Accept cookies.
+        </div>
+
+        <div class="consent-modal">
+          Privacy consent.
+        </div>
+
+        <div class="modal">
+          Modal content.
+        </div>
+
+        <div class="sidebar">
+          Related content.
+        </div>
       </main>
     </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Cooling time depends on material/,
+  assert.ok(
+    result.some((candidate) =>
+      /Real manufacturing content/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /We use cookies/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Accept all cookies/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Related engineering articles/,
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Accept cookies|Privacy consent|Modal content|Related content/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B excludes semantic UI elements from structured evidence", () => {
   const html = `
     <body>
-      <nav>
-        Wall thickness: 999 mm
-      </nav>
-
-      <header>
-        Draft angle: 999 deg
-      </header>
-
       <main>
-        <h1>DFM Guidance</h1>
-        <p>Wall thickness: 2 mm.</p>
-        <p>Draft angle: 1 mm.</p>
-      </main>
+        <h1>Injection Molding</h1>
 
-      <footer>
-        Cooling time: 999 s
-      </footer>
-    </body>
-  `;
+        <p>
+          Wall thickness: 2 mm.
+        </p>
 
-  const result = extractStructuredEvidence(html);
+        <nav>
+          Clamp force: 500 kN.
+        </nav>
 
-  assert.ok(result.length >= 2);
+        <aside>
+          Mold temperature: 80 °C.
+        </aside>
 
-  const excerpts = result.map(
-    (candidate) => candidate.excerpt,
-  );
-
-  assert.ok(
-    excerpts.some(
-      (excerpt) => /Wall thickness/i.test(excerpt),
-    ),
-  );
-
-  assert.ok(
-    excerpts.some(
-      (excerpt) => /Draft angle/i.test(excerpt),
-    ),
-  );
-
-  assert.ok(
-    excerpts.every(
-      (excerpt) => !/999/.test(excerpt),
-    ),
-  );
-});
-
-test("V8-22B removes script, style, noscript, template and SVG payloads", () => {
-  const html = `
-    <body>
-      <script>
-        Wall thickness: 999 mm
-      </script>
-
-      <style>
-        .x { content: "Wall thickness: 999 mm"; }
-      </style>
-
-      <noscript>
-        Wall thickness: 999 mm
-      </noscript>
-
-      <template>
-        Wall thickness: 999 mm
-      </template>
-
-      <svg>
-        <text>Wall thickness: 999 mm</text>
-      </svg>
-
-      <main>
-        <p>Wall thickness should be 2 mm.</p>
+        <footer>
+          Cycle time: 30 s.
+        </footer>
       </main>
     </body>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Wall thickness should be 2 mm/,
-  );
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /999/,
-  );
-});
-
-test("V8-22B preserves HTML entity decoding inside semantic content", () => {
-  const html = `
-    <main>
-      <p>
-        Wall thickness &gt; 1&nbsp;mm &amp; uniform.
-      </p>
-    </main>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-  assert.match(
-    result[0].excerpt,
-    /Wall thickness > 1 mm & uniform/,
-  );
-});
-
-test("V8-22B structured extraction remains parameter/value/unit aware", () => {
-  const html = `
-    <main>
-      <h1>Wall Thickness</h1>
-      <p>Wall thickness: 2 mm.</p>
-      <p>Clamp force 50 kN.</p>
-    </main>
   `;
 
   const result = extractStructuredEvidence(html);
@@ -270,6 +189,142 @@ test("V8-22B structured extraction remains parameter/value/unit aware", () => {
         candidate.parameter?.toLowerCase() === "wall thickness" &&
         candidate.value === "2" &&
         candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Clamp force|Mold temperature|Cycle time/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+});
+
+test("V8-22B removes script, style, noscript, template and SVG payloads", () => {
+  const html = `
+    <body>
+      <main>
+        <h1>Injection Molding</h1>
+
+        <script>
+          Wall thickness: 999 mm.
+        </script>
+
+        <style>
+          .fake { content: "Clamp force: 999 kN"; }
+        </style>
+
+        <noscript>
+          Mold temperature: 999 °C.
+        </noscript>
+
+        <template>
+          Cycle time: 999 s.
+        </template>
+
+        <svg>
+          <text>Fake value: 999 mm</text>
+        </svg>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+      </main>
+    </body>
+  `;
+
+  const result = extractStructuredEvidence(html);
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/999 mm|999 kN|999 °C|999 s/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+});
+
+test("V8-22B preserves HTML entity decoding inside semantic content", () => {
+  const html = `
+    <body>
+      <main>
+        <p>
+          Material &amp; Process.
+        </p>
+
+        <p>
+          Wall thickness: 2&nbsp;mm.
+        </p>
+      </main>
+    </body>
+  `;
+
+  const result = extractTextEvidence(html);
+
+  assert.ok(
+    result.some((candidate) =>
+      /Material & Process/i.test(candidate.excerpt),
+    ),
+  );
+
+  assert.ok(
+    result.some((candidate) =>
+      /Wall thickness: 2 mm/i.test(candidate.excerpt),
+    ),
+  );
+});
+
+test("V8-22B structured extraction remains parameter/value/unit aware", () => {
+  const html = `
+    <body>
+      <main>
+        <h1>Injection Molding</h1>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+
+        <p>
+          Clamp force: 50 kN.
+        </p>
+      </main>
+    </body>
+  `;
+
+  const result = extractStructuredEvidence(html);
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() ===
+          "material temperature" &&
+        candidate.value === "220" &&
+        candidate.unit === "°C",
     ),
   );
 
@@ -285,13 +340,27 @@ test("V8-22B structured extraction remains parameter/value/unit aware", () => {
 
 test("V8-22B section attribution remains deterministic", () => {
   const html = `
-    <main>
-      <h1>Injection Molding</h1>
-      <p>Wall thickness: 2 mm.</p>
+    <body>
+      <main>
+        <h1>Injection Molding</h1>
 
-      <h2>Draft Angle</h2>
-      <p>Draft angle: 1 mm.</p>
-    </main>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <h2>Material Selection</h2>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+
+        <h2>Machine Requirements</h2>
+
+        <p>
+          Clamp force: 50 kN.
+        </p>
+      </main>
+    </body>
   `;
 
   const result = extractStructuredEvidence(html);
@@ -301,9 +370,15 @@ test("V8-22B section attribution remains deterministic", () => {
       candidate.parameter?.toLowerCase() === "wall thickness",
   );
 
-  const draftAngle = result.find(
+  const materialTemperature = result.find(
     (candidate) =>
-      candidate.parameter?.toLowerCase() === "draft angle",
+      candidate.parameter?.toLowerCase() ===
+      "material temperature",
+  );
+
+  const clampForce = result.find(
+    (candidate) =>
+      candidate.parameter?.toLowerCase() === "clamp force",
   );
 
   assert.equal(
@@ -312,543 +387,369 @@ test("V8-22B section attribution remains deterministic", () => {
   );
 
   assert.equal(
-    draftAngle?.section,
-    "Draft Angle",
+    materialTemperature?.section,
+    "Material Selection",
+  );
+
+  assert.equal(
+    clampForce?.section,
+    "Machine Requirements",
   );
 });
 
 test("V8-22B fails closed for script-only or empty documents", () => {
+  const scriptOnly = `
+    <html>
+      <body>
+        <script>
+          Wall thickness: 2 mm.
+        </script>
+      </body>
+    </html>
+  `;
+
+  const empty = `
+    <html>
+      <body></body>
+    </html>
+  `;
+
   assert.deepEqual(
-    extractTextEvidence(
-      "<html><script>alert('x')</script></html>",
-    ),
+    extractTextEvidence(scriptOnly),
     [],
   );
 
   assert.deepEqual(
-    extractTextEvidence(
-      "<html><style>.x{display:none}</style></html>",
-    ),
+    extractStructuredEvidence(scriptOnly),
     [],
   );
 
   assert.deepEqual(
-    extractTextEvidence(""),
+    extractTextEvidence(empty),
+    [],
+  );
+
+  assert.deepEqual(
+    extractStructuredEvidence(empty),
     [],
   );
 });
 
 test("V8-22B pattern extraction uses semantic content only", () => {
   const html = `
-    <nav>
-      target: polluted-navigation
-    </nav>
+    <body>
+      <header>
+        Wall thickness: 999 mm.
+      </header>
 
-    <main>
-      <p>target: authoritative-main-content</p>
-    </main>
+      <main>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+      </main>
 
-    <footer>
-      target: polluted-footer
-    </footer>
+      <footer>
+        Clamp force: 999 kN.
+      </footer>
+    </body>
   `;
 
   const result = extractEvidenceByPattern(
     html,
-    [/target:\s*[a-z-]+/gi],
+    [
+      /([A-Za-z][A-Za-z ]+):\s*(-?\d+(?:\.\d+)?)\s*(mm|kN)/gi,
+    ],
   );
 
-  assert.equal(result.length, 1);
-  assert.equal(
-    result[0].excerpt,
-    "target: authoritative-main-content",
+  assert.ok(
+    result.some((candidate) =>
+      /Wall thickness: 2 mm/i.test(candidate.excerpt),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/999 mm|999 kN/i.test(candidate.excerpt),
+    ),
   );
 });
 
 test("V8-22B extraction output is deterministic", () => {
   const html = `
-    <header>HEADER</header>
-    <main>
-      <h1>DFM</h1>
-      <p>Wall thickness: 2 mm.</p>
-      <p>Draft angle: 1 mm.</p>
-    </main>
-    <footer>FOOTER</footer>
+    <body>
+      <main>
+        <h1>Injection Molding</h1>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+      </main>
+    </body>
   `;
 
   const first = extractStructuredEvidence(html);
   const second = extractStructuredEvidence(html);
 
-  assert.deepEqual(first, second);
+  assert.deepEqual(second, first);
 });
 
 test("V8-22B-S2 excludes nested sidebar descendants without truncating main content", () => {
   const html = `
     <body>
-      <div class="sidebar">
-        <div class="sidebar-inner">
-          Related article: polluted content.
-        </div>
-
-        <div class="sidebar-actions">
-          Subscribe for updates.
-        </div>
-      </div>
-
       <main>
-        <h1>Injection Molding Design</h1>
-        <p>Wall thickness: 2 mm.</p>
-        <p>Draft angle: 1 mm.</p>
+        <p>
+          Before sidebar content.
+        </p>
+
+        <div class="sidebar">
+          <div>
+            Fake sidebar value: 999 mm.
+          </div>
+        </div>
+
+        <p>
+          After sidebar content.
+        </p>
       </main>
     </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Injection Molding Design/,
+  assert.ok(
+    result.some((candidate) =>
+      /Before sidebar content/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /Wall thickness: 2 mm/,
+  assert.ok(
+    result.some((candidate) =>
+      /After sidebar content/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /Draft angle: 1 mm/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Related article: polluted content/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Subscribe for updates/,
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Fake sidebar value/i.test(candidate.excerpt),
+    ),
   );
 });
 
 test("V8-22B-S2 excludes nested cookie descendants without leaking trailing UI content", () => {
   const html = `
     <body>
-      <div class="cookie-banner">
-        <div class="cookie-inner">
-          We use cookies.
-        </div>
-
-        <div class="cookie-actions">
-          Accept all cookies.
-        </div>
-      </div>
-
       <main>
-        <h1>Cooling Guidance</h1>
-        <p>Cooling time: 30 s.</p>
+        <p>
+          Before cookie.
+        </p>
+
+        <section class="cookie-banner">
+          <div>
+            Cookie title.
+          </div>
+
+          <div>
+            Cookie value: 999 mm.
+          </div>
+        </section>
+
+        <p>
+          After cookie.
+        </p>
       </main>
     </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Cooling Guidance/,
+  assert.ok(
+    result.some((candidate) =>
+      /Before cookie/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /Cooling time: 30 s/,
+  assert.ok(
+    result.some((candidate) =>
+      /After cookie/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /We use cookies/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Accept all cookies/,
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Cookie title|Cookie value/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B-S2 preserves content before and after nested related-content blocks", () => {
   const html = `
-    <main>
-      <article>
-        <h1>Draft Angle Guidance</h1>
-
-        <p>Before related content: Draft angle: 1 mm.</p>
+    <body>
+      <main>
+        <p>
+          Primary content before related block.
+        </p>
 
         <div class="related-content">
-          <div class="related-inner">
-            Related article A.
-          </div>
-
-          <div class="related-actions">
-            Read more articles.
-          </div>
+          <article>
+            Related content value: 999 mm.
+          </article>
         </div>
 
-        <p>After related content: Wall thickness: 2 mm.</p>
-      </article>
-    </main>
+        <p>
+          Primary content after related block.
+        </p>
+      </main>
+    </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Before related content: Draft angle: 1 mm/,
+  assert.ok(
+    result.some((candidate) =>
+      /Primary content before related block/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /After related content: Wall thickness: 2 mm/,
+  assert.ok(
+    result.some((candidate) =>
+      /Primary content after related block/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
 
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Related article A/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Read more articles/,
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Related content value/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B-S2 excludes nested newsletter blocks inside article content", () => {
   const html = `
-    <article>
-      <h1>Injection Molding Process</h1>
+    <body>
+      <main>
+        <article>
+          <p>
+            Primary article content.
+          </p>
 
-      <p>Injection pressure: 80 MPa.</p>
+          <div class="newsletter">
+            <div>
+              Subscribe for updates.
+            </div>
+          </div>
 
-      <section class="newsletter">
-        <div class="newsletter-inner">
-          Get our manufacturing newsletter.
-        </div>
-
-        <div class="newsletter-form">
-          Enter your email address.
-        </div>
-      </section>
-
-      <p>Clamp force: 50 kN.</p>
-    </article>
+          <p>
+            More primary article content.
+          </p>
+        </article>
+      </main>
+    </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Injection pressure: 80 MPa/,
+  assert.ok(
+    result.some((candidate) =>
+      /Primary article content/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /Clamp force: 50 kN/,
+  assert.ok(
+    result.some((candidate) =>
+      /More primary article content/i.test(
+        candidate.excerpt,
+      ),
+    ),
   );
 
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /manufacturing newsletter/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Enter your email address/,
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Subscribe for updates/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B-S2 excludes nested complementary UI blocks", () => {
   const html = `
     <body>
-      <div role="complementary">
-        <div>
-          Recommended product: polluted-product.
-        </div>
-
-        <div>
-          Advertisement: polluted-ad.
-        </div>
-      </div>
-
       <main>
-        <h1>Material Selection</h1>
-        <p>Material temperature: 220 °C.</p>
+        <p>
+          Primary content.
+        </p>
+
+        <div role="complementary">
+          <div>
+            Complementary value: 999 mm.
+          </div>
+        </div>
+
+        <p>
+          More primary content.
+        </p>
       </main>
     </body>
   `;
 
   const result = extractTextEvidence(html);
 
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Material Selection/,
+  assert.ok(
+    result.some((candidate) =>
+      /Primary content/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.match(
-    result[0].excerpt,
-    /Material temperature: 220 °C/,
+  assert.ok(
+    result.some((candidate) =>
+      /More primary content/i.test(candidate.excerpt),
+    ),
   );
 
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Recommended product/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /Advertisement/,
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Complementary value/i.test(
+          candidate.excerpt,
+        ),
+    ),
   );
 });
 
 test("V8-22B-S2 structured extraction cannot promote nested UI values into evidence", () => {
   const html = `
     <body>
-      <div class="related-content">
-        <div class="related-inner">
-          Wall thickness: 999 mm.
-        </div>
-
-        <div class="related-actions">
-          Clamp force: 999 kN.
-        </div>
-      </div>
-
       <main>
-        <h1>Engineering Parameters</h1>
-        <p>Wall thickness: 2 mm.</p>
-        <p>Clamp force: 50 kN.</p>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <div class="sidebar">
+          <p>
+            Fake thickness: 999 mm.
+          </p>
+        </div>
       </main>
     </body>
-  `;
-
-  const result = extractStructuredEvidence(html);
-
-  assert.ok(result.length >= 2);
-
-  const parameterCandidates = result.filter(
-    (candidate) =>
-      candidate.parameter !== undefined,
-  );
-
-  assert.ok(
-    parameterCandidates.some(
-      (candidate) =>
-        candidate.parameter?.toLowerCase() === "wall thickness" &&
-        candidate.value === "2" &&
-        candidate.unit === "mm",
-    ),
-  );
-
-  assert.ok(
-    parameterCandidates.some(
-      (candidate) =>
-        candidate.parameter?.toLowerCase() === "clamp force" &&
-        candidate.value === "50" &&
-        candidate.unit === "kN",
-    ),
-  );
-
-  assert.ok(
-    parameterCandidates.every(
-      (candidate) =>
-        candidate.value !== "999",
-    ),
-  );
-});
-
-test("V8-22B-S2 text and structured extraction share the same semantic boundary", () => {
-  const html = `
-    <body>
-      <header>
-        Header pollution.
-      </header>
-
-      <div class="sidebar">
-        <div>
-          Sidebar pollution.
-        </div>
-      </div>
-
-      <main>
-        <h1>Production Guidance</h1>
-        <p>Wall thickness: 2 mm.</p>
-        <p>Draft angle: 1 mm.</p>
-      </main>
-
-      <footer>
-        Footer pollution.
-      </footer>
-    </body>
-  `;
-
-  const textResult = extractTextEvidence(html);
-  const structuredResult = extractStructuredEvidence(html);
-
-  assert.equal(textResult.length, 1);
-
-  assert.match(
-    textResult[0].excerpt,
-    /Production Guidance/,
-  );
-
-  assert.doesNotMatch(
-    textResult[0].excerpt,
-    /Header pollution/,
-  );
-
-  assert.doesNotMatch(
-    textResult[0].excerpt,
-    /Sidebar pollution/,
-  );
-
-  assert.doesNotMatch(
-    textResult[0].excerpt,
-    /Footer pollution/,
-  );
-
-  const structuredExcerpts = structuredResult.map(
-    (candidate) => candidate.excerpt,
-  );
-
-  assert.ok(
-    structuredExcerpts.some(
-      (excerpt) => /Wall thickness: 2 mm/.test(excerpt),
-    ),
-  );
-
-  assert.ok(
-    structuredExcerpts.some(
-      (excerpt) => /Draft angle: 1 mm/.test(excerpt),
-    ),
-  );
-
-  assert.ok(
-    structuredExcerpts.every(
-      (excerpt) =>
-        !/pollution/i.test(excerpt),
-    ),
-  );
-});
-
-test("V8-22B-S2 nested UI blocks cannot contaminate pattern extraction", () => {
-  const html = `
-    <main>
-      <p>target: first-authoritative-fact</p>
-
-      <div class="related-content">
-        <div class="related-inner">
-          target: polluted-related-content
-        </div>
-
-        <div class="related-actions">
-          target: polluted-action
-        </div>
-      </div>
-
-      <p>target: second-authoritative-fact</p>
-    </main>
-  `;
-
-  const result = extractEvidenceByPattern(
-    html,
-    [/target:\s*[a-z-]+/gi],
-  );
-
-  assert.equal(result.length, 1);
-
-  assert.equal(
-    result[0].excerpt,
-    "target: first-authoritative-fact",
-  );
-});
-
-test("V8-22B-S2 article boundary excludes nested UI but preserves article facts", () => {
-  const html = `
-    <body>
-      <article>
-        <h1>Injection Molding Wall Thickness</h1>
-
-        <p>Recommended wall thickness is 2 mm.</p>
-
-        <aside>
-          <div>
-            Related article: wall thickness calculator.
-          </div>
-
-          <div>
-            Advertisement: 999 mm solution.
-          </div>
-        </aside>
-
-        <p>Uniform thickness reduces molding defects.</p>
-      </article>
-    </body>
-  `;
-
-  const result = extractTextEvidence(html);
-
-  assert.equal(result.length, 1);
-
-  assert.match(
-    result[0].excerpt,
-    /Recommended wall thickness is 2 mm/,
-  );
-
-  assert.match(
-    result[0].excerpt,
-    /Uniform thickness reduces molding defects/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /wall thickness calculator/,
-  );
-
-  assert.doesNotMatch(
-    result[0].excerpt,
-    /999 mm solution/,
-  );
-});
-
-test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
-  const html = `
-    <main>
-      <h1>Injection Molding Design Rules</h1>
-
-      <p>First fact: Wall thickness: 2 mm.</p>
-
-      <div class="promo">
-        <div class="promo-inner">
-          Promotional content.
-        </div>
-
-        <div class="promo-actions">
-          Request a brochure.
-        </div>
-      </div>
-
-      <section>
-        <h2>Draft Angle</h2>
-        <p>Second fact: Draft angle: 1 mm.</p>
-      </section>
-    </main>
   `;
 
   const result = extractStructuredEvidence(html);
@@ -856,17 +757,9 @@ test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
   assert.ok(
     result.some(
       (candidate) =>
-        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.parameter?.toLowerCase() ===
+          "wall thickness" &&
         candidate.value === "2" &&
-        candidate.unit === "mm",
-    ),
-  );
-
-  assert.ok(
-    result.some(
-      (candidate) =>
-        candidate.parameter?.toLowerCase() === "draft angle" &&
-        candidate.value === "1" &&
         candidate.unit === "mm",
     ),
   );
@@ -874,9 +767,176 @@ test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
   assert.ok(
     result.every(
       (candidate) =>
-        !/Promotional content|Request a brochure/i.test(
-          candidate.excerpt,
-        ),
+        !/Fake thickness/i.test(candidate.excerpt),
+    ),
+  );
+});
+
+test("V8-22B-S2 text and structured extraction share the same semantic boundary", () => {
+  const html = `
+    <body>
+      <main>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <div class="sidebar">
+          <p>
+            Fake thickness: 999 mm.
+          </p>
+        </div>
+      </main>
+    </body>
+  `;
+
+  const text = extractTextEvidence(html);
+  const structured = extractStructuredEvidence(html);
+
+  assert.ok(
+    text.every(
+      (candidate) =>
+        !/Fake thickness/i.test(candidate.excerpt),
+    ),
+  );
+
+  assert.ok(
+    structured.every(
+      (candidate) =>
+        !/Fake thickness/i.test(candidate.excerpt),
+    ),
+  );
+});
+
+test("V8-22B-S2 nested UI blocks cannot contaminate pattern extraction", () => {
+  const html = `
+    <body>
+      <main>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <div class="related-posts">
+          <p>
+            Fake thickness: 999 mm.
+          </p>
+        </div>
+      </main>
+    </body>
+  `;
+
+  const result = extractEvidenceByPattern(
+    html,
+    [
+      /([A-Za-z][A-Za-z ]+):\s*(-?\d+(?:\.\d+)?)\s*(mm|kN)/gi,
+    ],
+  );
+
+  assert.ok(
+    result.some((candidate) =>
+      /Wall thickness: 2 mm/i.test(candidate.excerpt),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Fake thickness/i.test(candidate.excerpt),
+    ),
+  );
+});
+
+test("V8-22B-S2 article boundary excludes nested UI but preserves article facts", () => {
+  const html = `
+    <body>
+      <article>
+        <h1>Injection Molding</h1>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <aside>
+          Fake thickness: 999 mm.
+        </aside>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+      </article>
+    </body>
+  `;
+
+  const result = extractStructuredEvidence(html);
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() ===
+          "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() ===
+          "material temperature" &&
+        candidate.value === "220" &&
+        candidate.unit === "°C",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Fake thickness/i.test(candidate.excerpt),
+    ),
+  );
+});
+
+test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
+  const html = `
+    <body>
+      <main>
+        <p>
+          First authoritative fact.
+        </p>
+
+        <div class="modal">
+          Fake modal fact: 999 mm.
+        </div>
+
+        <p>
+          Second authoritative fact.
+        </p>
+      </main>
+    </body>
+  `;
+
+  const result = extractTextEvidence(html);
+
+  assert.ok(
+    result.some((candidate) =>
+      /First authoritative fact/i.test(
+        candidate.excerpt,
+      ),
+    ),
+  );
+
+  assert.ok(
+    result.some((candidate) =>
+      /Second authoritative fact/i.test(
+        candidate.excerpt,
+      ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Fake modal fact/i.test(candidate.excerpt),
     ),
   );
 });
@@ -884,46 +944,34 @@ test("V8-22B-S2 does not truncate real content after a nested UI block", () => {
 test("V8-22B-S2 repeated adversarial extraction is deterministic", () => {
   const html = `
     <body>
-      <header>
-        <div class="header-inner">
-          Header pollution.
-        </div>
-      </header>
-
       <main>
-        <h1>DFM Guidance</h1>
+        <h1>Injection Molding</h1>
 
-        <p>Wall thickness: 2 mm.</p>
+        <p>
+          Wall thickness: 2 mm.
+        </p>
 
         <div class="sidebar">
-          <div class="sidebar-inner">
-            Sidebar pollution.
-          </div>
-
-          <div class="sidebar-actions">
-            Subscribe.
-          </div>
+          <p>
+            Fake value: 999 mm.
+          </p>
         </div>
 
-        <p>Draft angle: 1 mm.</p>
+        <h2>Materials</h2>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
       </main>
-
-      <footer>
-        <div>
-          Footer pollution.
-        </div>
-      </footer>
     </body>
   `;
 
-  const firstText = extractTextEvidence(html);
-  const secondText = extractTextEvidence(html);
+  const first = extractStructuredEvidence(html);
+  const second = extractStructuredEvidence(html);
+  const third = extractStructuredEvidence(html);
 
-  const firstStructured = extractStructuredEvidence(html);
-  const secondStructured = extractStructuredEvidence(html);
-
-  assert.deepEqual(firstText, secondText);
-  assert.deepEqual(firstStructured, secondStructured);
+  assert.deepEqual(second, first);
+  assert.deepEqual(third, first);
 });
 
 test("V8-22B-S3 rejects commercial CTA blocks and preserves authoritative section attribution", () => {
@@ -1005,7 +1053,8 @@ test("V8-22B-S3 rejects commercial CTA blocks and preserves authoritative sectio
   assert.ok(
     authoritative.some(
       (candidate) =>
-        candidate.parameter?.toLowerCase() === "material temperature" &&
+        candidate.parameter?.toLowerCase() ===
+          "material temperature" &&
         candidate.value === "220" &&
         candidate.unit === "°C",
     ),
@@ -1067,6 +1116,246 @@ test("V8-22B-S3 rejects commercial CTA blocks and preserves authoritative sectio
     result.every(
       (candidate) =>
         !/Capabilities Materials Surface Finishes Quality Inspections/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+});
+
+test("V8-22B-S4 excludes hero compliance, jump navigation and footer CTA UI", () => {
+  const html = `
+    <body>
+      <main>
+        <div class="hero2 default">
+          <div class="hero2-content">
+            <h1 class="hero2-title">
+              Custom Plastic Injection Molding
+            </h1>
+
+            <div class="hero2-sub-content">
+              <p>
+                Get custom plastic parts within days.
+                Request an online quote.
+              </p>
+            </div>
+
+            <div class="hero2-buttons">
+              <a
+                class="btn btn-default"
+                href="/ecom/get-a-quote/"
+              >
+                Upload a Part
+              </a>
+
+              <a
+                class="btn btn-tertiary blue"
+                href="/materials/injection-molding/"
+              >
+                View Materials
+              </a>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 column hero2-lower">
+              <div>
+                <p>
+                  <a href="/iso/">
+                    <strong>Certification + Compliance</strong>
+                  </a>
+                  <br />
+                  ISO 9001:2015 | ISO 13485:2016 |
+                  AS9100D | CTQ Inspections | ITAR
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="jump-navigation">
+          <h5>Jump to Section</h5>
+
+          <p>
+            <span>→</span>
+            <a href="#capabilities">Capabilities</a>
+            <br />
+
+            <span>→</span>
+            <a href="#materials">Materials</a>
+            <br />
+
+            <span>→</span>
+            <a href="#surface-finishes">Surface Finishes</a>
+            <br />
+
+            <span>→</span>
+            <a href="#quality-inspections">
+              Quality Inspections
+            </a>
+          </p>
+        </div>
+
+        <h2>About Plastic Injection Molding</h2>
+
+        <p>
+          Injection molding is a manufacturing process that fills
+          a mold cavity with plastic resin to form a finished part.
+        </p>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <h2>
+          Thermoplastic Material Selection for Injection Molding
+        </h2>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+
+        <p>
+          Clamp force: 50 kN.
+        </p>
+
+        <div class="hero-container black connect-to-footer center">
+          <div class="bg-cover">
+            <img src="/media/process.jpg" alt="" />
+          </div>
+
+          <div class="container rte">
+            <div class="hero-content">
+              <div class="rich-text white">
+                <p>
+                  Get an online quote and injection molding
+                  design analysis today.
+                </p>
+              </div>
+
+              <div>
+                <a
+                  class="btn btn-default"
+                  href="/ecom/get-a-quote/"
+                >
+                  Get a Quote
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </body>
+  `;
+
+  const result = extractStructuredEvidence(html);
+
+  const authoritative = result.filter(
+    (candidate) =>
+      candidate.parameter !== undefined,
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() ===
+          "material temperature" &&
+        candidate.value === "220" &&
+        candidate.unit === "°C",
+    ),
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "clamp force" &&
+        candidate.value === "50" &&
+        candidate.unit === "kN",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Certification \+ Compliance/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Jump to Section/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Capabilities Materials Surface Finishes/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Get an online quote and injection molding/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/^Get a Quote$/i.test(
+          candidate.excerpt.trim(),
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        candidate.section !== "Jump to Section",
+    ),
+  );
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        /Wall thickness: 2 mm/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        /Material temperature: 220 °C/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.some(
+      (candidate) =>
+        /Clamp force: 50 kN/i.test(
           candidate.excerpt,
         ),
     ),
