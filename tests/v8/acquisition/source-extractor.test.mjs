@@ -925,3 +925,150 @@ test("V8-22B-S2 repeated adversarial extraction is deterministic", () => {
   assert.deepEqual(firstText, secondText);
   assert.deepEqual(firstStructured, secondStructured);
 });
+
+test("V8-22B-S3 rejects commercial CTA blocks and preserves authoritative section attribution", () => {
+  const html = `
+    <body>
+      <header>
+        Global navigation.
+      </header>
+
+      <main>
+        <h1>Custom Plastic Injection Molding</h1>
+
+        <div>
+          Upload a Part View Materials
+        </div>
+
+        <div>
+          Certification + Compliance ISO 9001:2015 | ISO 13485:2016
+        </div>
+
+        <h2>Jump to Section</h2>
+
+        <div>
+          Capabilities Materials Surface Finishes Quality Inspections
+        </div>
+
+        <h2>About Plastic Injection Molding</h2>
+
+        <p>
+          Injection molding is a manufacturing process that fills a mold
+          cavity with plastic resin to form a finished part.
+        </p>
+
+        <p>
+          Wall thickness: 2 mm.
+        </p>
+
+        <div>
+          Get an online quote and injection molding design analysis today.
+        </div>
+
+        <div>
+          Get a Quote
+        </div>
+
+        <h2>Thermoplastic Material Selection for Injection Molding</h2>
+
+        <p>
+          Material temperature: 220 °C.
+        </p>
+
+        <p>
+          Clamp force: 50 kN.
+        </p>
+      </main>
+
+      <footer>
+        Privacy Policy Cookie Policy.
+      </footer>
+    </body>
+  `;
+
+  const result = extractStructuredEvidence(html);
+
+  const authoritative = result.filter(
+    (candidate) =>
+      candidate.parameter !== undefined,
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "wall thickness" &&
+        candidate.value === "2" &&
+        candidate.unit === "mm",
+    ),
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "material temperature" &&
+        candidate.value === "220" &&
+        candidate.unit === "°C",
+    ),
+  );
+
+  assert.ok(
+    authoritative.some(
+      (candidate) =>
+        candidate.parameter?.toLowerCase() === "clamp force" &&
+        candidate.value === "50" &&
+        candidate.unit === "kN",
+    ),
+  );
+
+  assert.ok(
+    authoritative.every(
+      (candidate) =>
+        candidate.section !== "Jump to Section",
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Upload a Part View Materials/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Certification \+ Compliance/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Get an online quote/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/^Get a Quote$/i.test(
+          candidate.excerpt.trim(),
+        ),
+    ),
+  );
+
+  assert.ok(
+    result.every(
+      (candidate) =>
+        !/Capabilities Materials Surface Finishes Quality Inspections/i.test(
+          candidate.excerpt,
+        ),
+    ),
+  );
+});
