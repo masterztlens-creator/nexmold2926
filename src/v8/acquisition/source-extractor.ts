@@ -163,7 +163,7 @@ function isUiRoleOrMarker(
     /\brole\s*=\s*["'](?:banner|navigation|contentinfo|complementary|dialog)["']/i.test(
       attributes,
     ) ||
-    /(?:id|class)\s*=\s*["'][^"']*(?:cookie|cookies|consent|gdpr|privacy-banner|privacy-consent|cookie-banner|cookie-consent|modal|popup|overlay|sidebar|side-bar|related-content|related-posts|advertisement|advert|promo|promotional|newsletter|subscribe|breadcrumb|breadcrumbs)[^"']*["']/i.test(
+    /(?:id|class)\s*=\s*["'][^"']*(?:cookie|cookies|consent|gdpr|privacy-banner|privacy-consent|cookie-banner|cookie-consent|modal|popup|overlay|sidebar|side-bar|related-content|related-posts|advertisement|advert|promo|promotional|newsletter|subscribe|breadcrumb|breadcrumbs|hero2-lower|jump-navigation|connect-to-footer)[^"']*["']/i.test(
       attributes,
     )
   );
