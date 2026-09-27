@@ -96,8 +96,8 @@ function baseResearchAction(overrides = {}) {
   });
 }
 
-function baseDecision(overrides = {}) {
-  return createMarketDecision({
+function baseDecisionInput(overrides = {}) {
+  return {
     id: "market-decision:test:001",
     demandId: "market-demand:test:001",
     state: "EVALUATING",
@@ -110,7 +110,13 @@ function baseDecision(overrides = {}) {
     confidence: "MEDIUM",
     uncertainty: false,
     ...overrides,
-  });
+  };
+}
+
+function baseDecision(overrides = {}) {
+  return createMarketDecision(
+    baseDecisionInput(overrides),
+  );
 }
 
 test(
@@ -304,20 +310,21 @@ test(
       baseResearchAction();
 
     const researchRequired =
-      createMarketDecision({
-        ...baseDecision(),
-        state: "RESEARCH_REQUIRED",
-        rationale:
-          "Available evidence is insufficient; additional research is required.",
-        researchActions: [
-          researchAction.id,
-        ],
-        evidenceRequirements: [
-          "authoritative engineering evidence",
-        ],
-        confidence: "LOW",
-        uncertainty: true,
-      });
+      createMarketDecision(
+        baseDecisionInput({
+          state: "RESEARCH_REQUIRED",
+          rationale:
+            "Available evidence is insufficient; additional research is required.",
+          researchActions: [
+            researchAction.id,
+          ],
+          evidenceRequirements: [
+            "authoritative engineering evidence",
+          ],
+          confidence: "LOW",
+          uncertainty: true,
+        }),
+      );
 
     assert.equal(
       researchRequired.state,
@@ -341,21 +348,22 @@ test(
     );
 
     const covered =
-      createMarketDecision({
-        ...baseDecision(),
-        state: "COVER",
-        rationale:
-          "Evidence is sufficient and uncertainty has been resolved.",
-        evidenceRequirements: [
-          "authoritative engineering evidence",
-        ],
-        researchActions: [
-          researchAction.id,
-        ],
-        targetAsset: "ARTICLE",
-        confidence: "HIGH",
-        uncertainty: false,
-      });
+      createMarketDecision(
+        baseDecisionInput({
+          state: "COVER",
+          rationale:
+            "Evidence is sufficient and uncertainty has been resolved.",
+          evidenceRequirements: [
+            "authoritative engineering evidence",
+          ],
+          researchActions: [
+            researchAction.id,
+          ],
+          targetAsset: "ARTICLE",
+          confidence: "HIGH",
+          uncertainty: false,
+        }),
+      );
 
     assert.equal(
       covered.state,
