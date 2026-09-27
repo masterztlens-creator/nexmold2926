@@ -1,0 +1,9 @@
+import { immutable } from "../../constitution/invariants.js";
+import type { MarketDemand } from "./demand.js";
+export interface CoverageObservation { readonly ref:string; readonly query?:string; readonly title?:string; readonly entities?:readonly string[]; readonly problem?:string; }
+export type CoverageRelation="NONE"|"RELATED"|"EQUIVALENT";
+export interface CoverageAssessment { readonly relation:CoverageRelation; readonly equivalentRefs:readonly string[]; readonly relatedRefs:readonly string[]; readonly reasons:readonly string[]; }
+function norm(v:string):string{return v.trim().replace(/\s+/g," ").toLowerCase();}
+function tokens(v:string):Set<string>{return new Set(norm(v).split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>2));}
+function overlap(a:Set<string>,b:Set<string>):number{let n=0;for(const x of a)if(b.has(x))n++;return Math.min(a.size,b.size)?n/Math.min(a.size,b.size):0;}
+export function assessCoverage(demand:MarketDemand,observations:readonly CoverageObservation[]):CoverageAssessment{const target=tokens(`${demand.problem} ${demand.entities.join(" ")} ${demand.queryObservations.map(x=>x.normalizedQuery).join(" ")}`);const eq:string[]=[],rel:string[]=[];for(const item of observations){const own=tokens(`${item.problem??""} ${item.title??""} ${(item.entities??[]).join(" ")} ${item.query??""}`);const o=overlap(target,own);if(o===1||demand.existingCoverage.includes(item.ref))eq.push(item.ref);else if(o>=0.5)rel.push(item.ref);}const relation=eq.length?"EQUIVALENT":rel.length?"RELATED":"NONE";return immutable({relation,equivalentRefs:immutable([...new Set(eq)].sort()),relatedRefs:immutable([...new Set(rel)].sort()),reasons:immutable(relation==="EQUIVALENT"?["equivalent demand/entity/problem coverage detected"]:relation==="RELATED"?["related coverage detected"]:["no equivalent or related coverage detected"]) });}

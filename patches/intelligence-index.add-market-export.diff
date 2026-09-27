@@ -1,0 +1,6 @@
+diff --git a/src/v8/intelligence/index.ts b/src/v8/intelligence/index.ts
+--- a/src/v8/intelligence/index.ts
++++ b/src/v8/intelligence/index.ts
+@@
+ export * from "./truth-producer/index.js";
++export * from "./market/index.js";

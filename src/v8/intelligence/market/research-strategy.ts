@@ -1,0 +1,8 @@
+import { immutable, invariant } from "../../constitution/invariants.js";
+import type { MarketDemand } from "./demand.js";
+import type { ResearchAction } from "./research-action.js";
+export interface MarketResearchQuery { readonly actionId:string; readonly query:string; readonly reason:string; readonly priority:ResearchAction["priority"]; }
+export interface MarketResearchPlan { readonly demandId:string; readonly queries:readonly MarketResearchQuery[]; readonly stopConditions:readonly string[]; }
+function clean(v:string):string{return v.trim().replace(/\s+/g," ");}
+function variants(action:ResearchAction,demand:MarketDemand):string[]{const q=clean(action.question);const t=clean(action.target);const out=[q,t];if(action.type==="SEARCH_STANDARD")out.push(`${t} standards`);if(action.type==="SEARCH_COMPETITOR")out.push(`${t} supplier competitor`);if(action.type==="SEARCH_ENTITY")out.push(`${t} technical specification`);if(action.type==="SEARCH_CONTRADICTION")out.push(`${t} conflicting evidence`);return [...new Set(out.filter(Boolean))];}
+export function compileMarketResearchPlan(demand:MarketDemand,actions:readonly ResearchAction[]):MarketResearchPlan{invariant(actions.length>0,"V8_MARKET_RESEARCH_NO_ACTIONS","Research plan requires actions.");const queries=actions.flatMap(a=>variants(a,demand).map(q=>({actionId:String(a.id),query:q,reason:a.question,priority:a.priority})));return immutable({demandId:String(demand.id),queries:immutable(queries),stopConditions:immutable(["no usable search results","conflicting evidence unresolved","abort signal","equivalent coverage confirmed"]) });}
