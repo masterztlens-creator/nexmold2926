@@ -1378,7 +1378,7 @@ test("V8-22B-S4 excludes hero compliance, real jump navigation and footer CTA UI
   assert.ok(
     result.every(
       (candidate) =>
-        !/Capabilities Materials Surface Finishes/i.test(
+        !/Capabilities Materials Surface Finishes Quality Inspections Finishing Options About Plastic Injection Molding/i.test(
           candidate.excerpt,
         ),
     ),
