@@ -296,6 +296,39 @@ function researchActions(
     );
   }
 
+  /*
+   * UNKNOWN demand uncertainty is fail-closed.
+   *
+   * evaluate() deliberately maps UNKNOWN to
+   * RESEARCH_REQUIRED. Therefore this branch must
+   * create a concrete research action even when
+   * there is no explicit missing-evidence item,
+   * contradiction, or unresolved question.
+   *
+   * Without this branch:
+   *
+   *   UNKNOWN
+   *      -> RESEARCH_REQUIRED
+   *      -> []
+   *
+   * which violates the MarketDecision invariant
+   * that RESEARCH_REQUIRED must contain research
+   * actions.
+   */
+  if (
+    out.length === 0 &&
+    input.demand.uncertainty ===
+      "UNKNOWN"
+  ) {
+    out.push(
+      makeAction(
+        input,
+        decisionId,
+        out.length,
+      ),
+    );
+  }
+
   if (
     out.length === 0 &&
     hasSignal(
@@ -307,7 +340,7 @@ function researchActions(
       makeAction(
         input,
         decisionId,
-        0,
+        out.length,
       ),
     );
   }
