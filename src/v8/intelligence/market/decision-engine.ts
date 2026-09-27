@@ -21,7 +21,6 @@ import {
   type ResearchActionId,
   type ResearchActionPriority,
   type ResearchActionType,
-  type MarketDecisionId as ResearchMarketDecisionId,
 } from "./research-action.js";
 
 import {
@@ -81,12 +80,6 @@ function marketDecisionId(
   value: string,
 ): MarketDecisionId {
   return value as MarketDecisionId;
-}
-
-function researchDecisionId(
-  value: string,
-): ResearchMarketDecisionId {
-  return value as ResearchMarketDecisionId;
 }
 
 function researchActionId(
@@ -196,7 +189,7 @@ function makeAction(
       `research-action:${decisionId}:${type.toLowerCase()}:${index + 1}`,
     ),
     decisionId:
-      researchDecisionId(
+      marketDecisionId(
         decisionId,
       ),
     type,
@@ -254,7 +247,7 @@ function researchActions(
           `research-action:${decisionId}:question:${out.length + 1}`,
         ),
         decisionId:
-          researchDecisionId(
+          marketDecisionId(
             decisionId,
           ),
         type: "SEARCH_EVIDENCE",
@@ -283,7 +276,7 @@ function researchActions(
           `research-action:${decisionId}:evidence:${out.length + 1}`,
         ),
         decisionId:
-          researchDecisionId(
+          marketDecisionId(
             decisionId,
           ),
         type: "SEARCH_EVIDENCE",
@@ -503,9 +496,11 @@ export function evaluateMarketDecision(
               : `Market policy selected terminal state ${state}.`,
       evidenceRequirements:
         unique([
-          ...(input
-            .evidenceRequirements ??
-            []),
+          ...(
+            input
+              .evidenceRequirements ??
+            []
+          ),
           ...input.evidence
             .availableEvidence,
           ...input.evidence

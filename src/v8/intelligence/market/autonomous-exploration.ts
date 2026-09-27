@@ -6,11 +6,14 @@ import type {
   MarketDemand,
 } from "./demand.js";
 
+import type {
+  MarketDecisionId,
+} from "./decision.js";
+
 import {
   createResearchAction,
   type ResearchAction,
   type ResearchActionId,
-  type MarketDecisionId,
 } from "./research-action.js";
 
 export interface ExplorationInput {
