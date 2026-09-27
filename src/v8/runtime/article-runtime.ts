@@ -380,11 +380,65 @@ export async function runV8ArticleRuntime(
       },
     );
 
-  invariant(
-    acquisition.acquisitions.length > 0,
-    "V8_ARTICLE_RUNTIME_NO_ACQUISITION",
-    "No Internet acquisition result was produced.",
+if (acquisition.acquisitions.length === 0) {
+  console.error(
+    "[V8-21][ACQUISITION-DIAGNOSTIC]",
   );
+
+  console.error(
+    `queries=${acquisition.plan.sourceQueries.length}`,
+  );
+
+  console.error(
+    `discoveryCandidates=${acquisition.discovery.candidates.length}`,
+  );
+
+  console.error(
+    `searchErrors=${acquisition.searchErrors.length}`,
+  );
+
+  for (
+    let index = 0;
+    index < acquisition.searchErrors.length;
+    index += 1
+  ) {
+    const error =
+      acquisition.searchErrors[index];
+
+    console.error(
+      `[V8-21][SEARCH-ERROR][${index + 1}] query=${error.query ?? ""}`,
+    );
+
+    console.error(
+      `[V8-21][SEARCH-ERROR][${index + 1}] error=${error.error}`,
+    );
+  }
+
+  console.error(
+    `fetchErrors=${acquisition.fetchErrors.length}`,
+  );
+
+  for (
+    let index = 0;
+    index < acquisition.fetchErrors.length;
+    index += 1
+  ) {
+    const error =
+      acquisition.fetchErrors[index];
+
+    console.error(
+      `[V8-21][FETCH-ERROR][${index + 1}] url=${error.url ?? ""}`,
+    );
+
+    console.error(
+      `[V8-21][FETCH-ERROR][${index + 1}] error=${error.error}`,
+    );
+  }
+
+  throw new Error(
+    "V8_ARTICLE_RUNTIME_NO_ACQUISITION",
+  );
+}
 
   const evidencePayloads =
     acquisition.acquisitions.flatMap(
