@@ -1158,35 +1158,6 @@ test("V8-22B-S4 excludes hero compliance, real jump navigation and footer CTA UI
           </div>
         </div>
 
-        <!--
-          Real Protolabs structure:
-
-          <div>
-            <div class="container">
-              <div class="row clearfix">
-                <div class="col-md-4 column">
-                  <div>
-                    <h5>Jump to Section</h5>
-                    <p>
-                      Capabilities
-                      Materials
-                      Surface Finishes
-                      Quality Inspections
-                      Finishing Options
-                      About Plastic Injection Molding
-                    </p>
-                  </div>
-                </div>
-                <div class="col-md-8 column">
-                  ...
-                </div>
-              </div>
-            </div>
-          </div>
-
-          The jump-navigation wrapper deliberately has no
-          semantic UI role, id, or identifying class.
-        -->
 
         <div>
           <div class="container">
