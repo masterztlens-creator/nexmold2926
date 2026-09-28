@@ -4,20 +4,7 @@ import { canonicalizeUrl } from "./discovery.js";
 import { crawl, type CrawlOptions } from "./crawler.js";
 
 export interface SelfOwnedDiscoveryOptions extends CrawlOptions {
-  /**
-   * Maximum number of discovery candidates returned.
-   *
-   * This is independent from crawler maxPages because one fetched
-   * document can expose multiple unique links.
-   */
   readonly maxCandidates?: number;
-
-  /**
-   * Optional source hint attached to every discovered candidate.
-   *
-   * This is descriptive metadata only. It does not establish authority,
-   * verification, or Evidence status.
-   */
   readonly sourceHint?: string;
 }
 
@@ -28,22 +15,6 @@ export interface SelfOwnedDiscoveryResult {
   readonly pagesFetched: number;
 }
 
-/**
- * Converts crawler observations into provider-independent
- * DiscoveryCandidate records.
- *
- * This layer intentionally does NOT:
- *
- * - create Evidence;
- * - create Claims;
- * - assign authority;
- * - verify source truth;
- * - rank factual claims;
- * - call a third-party search provider.
- *
- * The output remains discovery metadata until it enters the existing
- * acquisition/foundation pipeline.
- */
 export async function discoverWithSelfOwnedCrawl(
   seedUrls: readonly string[],
   fetcher: PageFetcher,
@@ -69,6 +40,8 @@ export async function discoverWithSelfOwnedCrawl(
   const candidates: DiscoveryCandidate[] = [];
   const seen = new Set<string>();
 
+  const discoveryRoot = normalizedSeeds[0];
+
   for (const page of pages) {
     const pageCanonicalUrl = canonicalizeUrl(page.url);
 
@@ -80,15 +53,9 @@ export async function discoverWithSelfOwnedCrawl(
         canonicalUrl: pageCanonicalUrl,
         provider: "DIRECT",
         discoveredAt: page.fetchedAt,
-        ...(page.title
-          ? {
-              title: page.title,
-            }
-          : {}),
+        ...(page.title ? { title: page.title } : {}),
         ...(options.sourceHint
-          ? {
-              sourceHint: options.sourceHint,
-            }
+          ? { sourceHint: options.sourceHint }
           : {}),
       },
       maxCandidates,
@@ -115,8 +82,9 @@ export async function discoverWithSelfOwnedCrawl(
           canonicalUrl,
           provider: "DIRECT",
           discoveredAt: page.fetchedAt,
-          sourceHint:
-            options.sourceHint ?? pageCanonicalUrl,
+          ...(discoveryRoot
+            ? { sourceHint: discoveryRoot }
+            : {}),
         },
         maxCandidates,
       });
@@ -137,62 +105,55 @@ export async function discoverWithSelfOwnedCrawl(
 
 function normalizeSeeds(
   seedUrls: readonly string[],
-): string[] {
-  const result: string[] = [];
+): readonly string[] {
+  const normalized: string[] = [];
   const seen = new Set<string>();
 
-  for (const raw of seedUrls) {
-    if (typeof raw !== "string") {
-      continue;
-    }
+  for (const seedUrl of seedUrls) {
+    let canonicalUrl: string;
 
     try {
-      const canonicalUrl = canonicalizeUrl(raw);
-
-      if (seen.has(canonicalUrl)) {
-        continue;
-      }
-
-      seen.add(canonicalUrl);
-      result.push(canonicalUrl);
+      canonicalUrl = canonicalizeUrl(seedUrl);
     } catch {
       continue;
     }
+
+    if (seen.has(canonicalUrl)) {
+      continue;
+    }
+
+    seen.add(canonicalUrl);
+    normalized.push(canonicalUrl);
   }
 
-  return result;
+  return Object.freeze(normalized);
 }
 
-function addCandidate(input: {
+function addCandidate(args: {
   readonly candidates: DiscoveryCandidate[];
   readonly seen: Set<string>;
   readonly candidate: DiscoveryCandidate;
   readonly maxCandidates: number;
 }): void {
-  if (input.candidates.length >= input.maxCandidates) {
+  if (args.candidates.length >= args.maxCandidates) {
     return;
   }
 
-  if (input.seen.has(input.candidate.canonicalUrl)) {
+  if (args.seen.has(args.candidate.canonicalUrl)) {
     return;
   }
 
-  input.seen.add(input.candidate.canonicalUrl);
-
-  input.candidates.push(
-    Object.freeze({
-      ...input.candidate,
-    }),
-  );
+  args.seen.add(args.candidate.canonicalUrl);
+  args.candidates.push(Object.freeze(args.candidate));
 }
 
 function normalizePositiveInteger(
   value: number,
-  name: string,
+  fieldName: string,
 ): number {
-  if (!Number.isInteger(value) || value < 1) {
+  if (!Number.isInteger(value) || value <= 0) {
     throw new Error(
-      `V8_RESEARCH_SELF_OWNED_${name.toUpperCase()}_INVALID`,
+      `V8_RESEARCH_SELF_OWNED_INVALID_${fieldName.toUpperCase()}`,
     );
   }
 
