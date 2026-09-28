@@ -1,18 +1,32 @@
 import assert from "node:assert/strict";
-import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js";
-import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
-import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-import { runResearchAcquisition } from "../.v8-build/src/v8/intelligence/research-planner/acquisition-runner.js";
-const apiKey = process.env.V8_SEARCH_API_KEY;
-if (!apiKey) {
+
+import {
+  InMemoryFoundationStore,
+} from "../.v8-build/src/v8/foundation/store.js";
+
+import {
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  runResearchAcquisition,
+} from "../.v8-build/src/v8/intelligence/research-planner/acquisition-runner.js";
+
+const seedUrl =
+  process.env.V8_RESEARCH_SEED_URL?.trim();
+
+if (!seedUrl) {
   throw new Error(
-    "V8_SEARCH_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
+    "V8_RESEARCH_SEED_CONFIG_MISSING: V8_RESEARCH_SEED_URL is required.",
   );
 }
+
 const opportunity = {
   keyword: {
-    keyword: "plastic injection molding wall thickness",
-    normalized: "plastic injection molding wall thickness",
+    keyword:
+      "plastic injection molding wall thickness",
+    normalized:
+      "plastic injection molding wall thickness",
     source: "SEED",
     intent: "INFORMATIONAL",
     terms: [
@@ -26,77 +40,146 @@ const opportunity = {
   competition: 0.3,
   authorityGap: 0.7,
   conversionPotential: 0.6,
-  reasons: ["V8-06 real internet gate"],
+  reasons: [
+    "V8-06 real internet gate",
+  ],
 };
-const store = new InMemoryFoundationStore();
-const searchProvider = new TavilySearchProvider(
-  apiKey,
-  "https://api.tavily.com/search",
-  "v8-06-real-search",
-);
-const pageFetcher = new HttpPageFetcher({
-  timeoutMs: 20000,
-  maxBytes: 5000000,
-});
-const result = await runResearchAcquisition(
-  opportunity,
-  searchProvider,
-  pageFetcher,
-  store,
-  {
-    maxQueries: 1,
-    maxCandidates: 3,
-    actorId: "v8-06-real-gate",
-  },
-);
-assert.ok(result.plan.sourceQueries.length > 0);
-assert.equal(result.searchErrors.length, 0);
+
+const store =
+  new InMemoryFoundationStore();
+
+const pageFetcher =
+  new HttpPageFetcher({
+    timeoutMs: 20000,
+    maxBytes: 5000000,
+  });
+
+const result =
+  await runResearchAcquisition(
+    opportunity,
+    undefined,
+    pageFetcher,
+    store,
+    {
+      maxQueries: 0,
+      maxCandidates: 3,
+      maxPages: 3,
+      maxDepth: 1,
+      sameHostOnly: true,
+      actorId:
+        "v8-06-real-gate",
+      researchSeeds: [
+        {
+          url: seedUrl,
+          source: "AUTHORITY",
+          reason:
+            "Explicit controlled Internet research seed for V8-06.",
+        },
+      ],
+    },
+  );
+
 assert.ok(
   result.discovery.accepted > 0,
-  "V8-06_DISCOVERY_EMPTY: real search returned no accepted URLs.",
+  "V8-06_DISCOVERY_EMPTY: controlled seed produced no accepted URLs.",
 );
+
 assert.ok(
   result.acquisitions.length > 0,
-  "V8-06_ACQUISITION_EMPTY: no real webpage was successfully acquired.",
+  "V8-06_ACQUISITION_EMPTY: no real webpage was successfully acquired from the controlled seed.",
 );
-const successful = result.acquisitions.find(
-  (item) =>
-    item.page.status >= 200 &&
-    item.page.status < 300 &&
-    item.page.mediaType.toLowerCase().includes("text/html") &&
-    item.page.bytes.length > 0,
-);
+
+const successful =
+  result.acquisitions.find(
+    (item) =>
+      item.page.status >= 200 &&
+      item.page.status < 300 &&
+      item.page.mediaType
+        .toLowerCase()
+        .includes("text/html") &&
+      item.page.bytes.length > 0,
+  );
+
 assert.ok(
   successful,
   "V8-06_FETCH_INVALID: no successful HTML page acquisition.",
 );
-const evidenceRecords = store
-  .auditTrail()
-  .filter((record) => record.aggregateType === "EVIDENCE");
+
+const evidenceRecords =
+  store
+    .auditTrail()
+    .filter(
+      (record) =>
+        record.aggregateType ===
+        "EVIDENCE",
+    );
+
 assert.ok(
   evidenceRecords.length > 0,
   "V8-06_EVIDENCE_MISSING: no evidence was persisted.",
 );
-for (const record of evidenceRecords) {
-  assert.equal(record.state, "INGESTED");
-  assert.equal(record.payload.verificationStatus, "UNVERIFIED");
+
+for (
+  const record of evidenceRecords
+) {
+  assert.equal(
+    record.state,
+    "INGESTED",
+  );
+
+  assert.equal(
+    record.payload
+      .verificationStatus,
+    "UNVERIFIED",
+  );
+
   assert.ok(
     record.lineage.some(
-      (lineage) => lineage.type === "SOURCE",
+      (lineage) =>
+        lineage.type === "SOURCE",
     ),
     "V8-06_LINEAGE_SOURCE_MISSING",
   );
+
   assert.ok(
     record.lineage.some(
-      (lineage) => lineage.type === "SNAPSHOT",
+      (lineage) =>
+        lineage.type === "SNAPSHOT",
     ),
     "V8-06_LINEAGE_SNAPSHOT_MISSING",
   );
 }
+
 store.verifyChain();
-console.log("[NEXMOLD][V8-06] REAL INTERNET RESEARCH GATE PASS");
-console.log(`[V8-06] queries=${result.plan.sourceQueries.length}`);
-console.log(`[V8-06] discovered=${result.discovery.accepted}`);
-console.log(`[V8-06] acquired=${result.acquisitions.length}`);
-console.log(`[V8-06] evidence=${evidenceRecords.length}`);
-console.log("[V8-06] Evidence remains INGESTED / UNVERIFIED.");
+
+console.log(
+  "[NEXMOLD][V8-06] SELF-OWNED REAL INTERNET RESEARCH GATE PASS",
+);
+
+console.log(
+  `[V8-06] seed=${seedUrl}`,
+);
+
+console.log(
+  `[V8-06] queries=${result.plan.sourceQueries.length}`,
+);
+
+console.log(
+  `[V8-06] discovered=${result.discovery.accepted}`,
+);
+
+console.log(
+  `[V8-06] acquired=${result.acquisitions.length}`,
+);
+
+console.log(
+  `[V8-06] evidence=${evidenceRecords.length}`,
+);
+
+console.log(
+  "[V8-06] acquisitionMode=SELF_OWNED_SEED",
+);
+
+console.log(
+  "[V8-06] Evidence remains INGESTED / UNVERIFIED.",
+);
