@@ -30,7 +30,11 @@ export type ResearchActionType =
   | "SEARCH_STANDARD"
   | "SEARCH_EVIDENCE"
   | "SEARCH_CONTRADICTION"
-  | "SEARCH_COVERAGE";
+  | "SEARCH_COVERAGE"
+  | "OPEN_SOURCE"
+  | "FOLLOW_LINK"
+  | "FOLLOW_REFERENCE"
+  | "EXPLORE_SITEMAP";
 
 export type ResearchActionStatus =
   | "PLANNED"
@@ -83,6 +87,10 @@ const ACTION_TYPES: readonly ResearchActionType[] = [
   "SEARCH_EVIDENCE",
   "SEARCH_CONTRADICTION",
   "SEARCH_COVERAGE",
+  "OPEN_SOURCE",
+  "FOLLOW_LINK",
+  "FOLLOW_REFERENCE",
+  "EXPLORE_SITEMAP",
 ];
 
 const ACTION_STATUSES: readonly ResearchActionStatus[] = [
