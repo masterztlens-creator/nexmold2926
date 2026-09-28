@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createIndustryModel, buildCoverageSnapshot, buildDecisionGraph, resolveClaimConflicts } from "../../.v8-build/src/v8/industry/index.js";
+import { canonicalizeUrl, ResearchFrontier } from "../../.v8-build/src/v8/research/index.js";
+test("industry model enforces one root",()=>{assert.throws(()=>createIndustryModel({id:"x",name:"X",rootNodeId:"a",nodes:[{id:"a",kind:"DOMAIN",label:"A"},{id:"b",kind:"DOMAIN",label:"B"}]}),/SINGLE_ROOT/)});
+test("coverage is fail-closed for missing observations",()=>{const m=createIndustryModel({id:"x",name:"X",rootNodeId:"a",nodes:[{id:"a",kind:"DOMAIN",label:"A"}]}); const c=buildCoverageSnapshot(m,[]); assert.equal(c.records[0].gap,true);});
+test("decision graph rejects cycles",()=>{assert.throws(()=>buildDecisionGraph([{id:"a",problemId:"p",requiredKnowledgeIds:[],outcome:"a"},{id:"b",problemId:"p",requiredKnowledgeIds:[],outcome:"b"}],[{from:"a",to:"b",kind:"PREREQUISITE"},{from:"b",to:"a",kind:"PREREQUISITE"}]),/CYCLE/)});
+test("conflict engine never silently merges divergent values",()=>{const r=resolveClaimConflicts([{claimId:"a",conflictKey:"k",proposition:"P",value:"A",evidenceIds:["e1"]},{claimId:"b",conflictKey:"k",proposition:"P",value:"B",evidenceIds:["e2"]}]); assert.equal(r[0].status,"EVIDENCE_CONFLICT");});
+test("url canonicalization removes tracking parameters",()=>{assert.equal(canonicalizeUrl("HTTPS://Example.COM/a/?utm_source=x&b=2#x"),"https://example.com/a?b=2");});
+test("frontier is deterministic",()=>{const f=new ResearchFrontier();f.enqueue([{url:"b",depth:1,priority:1},{url:"a",depth:1,priority:2},{url:"b",depth:2,priority:9}]);assert.equal(f.next().url,"a");assert.equal(f.next().url,"b");});
