@@ -89,8 +89,10 @@ const RESEARCH_SEEDS = Object.freeze([
   Object.freeze({
     url:
       "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
-    sourceHint:
-      "protolabs-injection-molding-design-guidelines",
+    source:
+      "DIRECT",
+    reason:
+      "Explicit Internet research entry point for V8 Evidence Trace real Internet validation of plastic injection molding wall thickness.",
   }),
 ]);
 
