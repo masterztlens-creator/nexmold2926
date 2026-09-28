@@ -5,16 +5,15 @@ import type {
 
 import {
   discoverCandidates,
-  type DiscoveryCandidate,
 } from "../intelligence/web-discovery/discovery.js";
+
+import type {
+  DiscoveryCandidate,
+} from "../intelligence/web-discovery/types.js";
 
 import {
   expandSourceReferences,
 } from "../intelligence/web-discovery/source-expansion.js";
-
-import type {
-  DiscoveryCandidateKind,
-} from "../intelligence/web-discovery/types.js";
 
 import {
   ResearchFrontier,
@@ -75,7 +74,10 @@ function toFrontierItem(
   return {
     url: candidate.normalizedUrl,
     depth,
-    priority: depth === 0 ? 100 : Math.max(1, 100 - depth),
+    priority:
+      depth === 0
+        ? 100
+        : Math.max(1, 100 - depth),
     ...(candidate.sourceUrl === undefined
       ? {}
       : {
@@ -92,24 +94,24 @@ function toFrontierItem(
   };
 }
 
-function toDiscoveryCandidate(
-  item: DiscoveryCandidate,
+function cloneCandidate(
+  candidate: DiscoveryCandidate,
 ): DiscoveryCandidate {
   return Object.freeze({
-    url: item.url,
-    normalizedUrl: item.normalizedUrl,
-    kind: item.kind,
-    ...(item.sourceUrl === undefined
+    url: candidate.url,
+    normalizedUrl: candidate.normalizedUrl,
+    kind: candidate.kind,
+    ...(candidate.sourceUrl === undefined
       ? {}
       : {
-          sourceUrl: item.sourceUrl,
+          sourceUrl: candidate.sourceUrl,
         }),
-    ...(item.title === undefined
+    ...(candidate.title === undefined
       ? {}
       : {
-          title: item.title,
+          title: candidate.title,
         }),
-    discoveredAt: item.discoveredAt,
+    discoveredAt: candidate.discoveredAt,
   });
 }
 
@@ -139,38 +141,49 @@ export async function executeResearchFrontier(
   pageFetcher: PageFetcher,
   options: ResearchFrontierExecutorOptions = {},
 ): Promise<ResearchFrontierExecutionResult> {
-  const maxPages = normalizePositiveInteger(
-    options.maxPages ?? 50,
-    "maxPages",
-  );
+  const maxPages =
+    normalizePositiveInteger(
+      options.maxPages ?? 50,
+      "maxPages",
+    );
 
-  const maxDepth = normalizeNonNegativeInteger(
-    options.maxDepth ?? 2,
-    "maxDepth",
-  );
+  const maxDepth =
+    normalizeNonNegativeInteger(
+      options.maxDepth ?? 2,
+      "maxDepth",
+    );
 
   const sameHostOnly =
     options.sameHostOnly ?? true;
 
-  const frontier = new ResearchFrontier();
+  const frontier =
+    new ResearchFrontier();
 
   const initialCandidates =
-    seeds.map(toDiscoveryCandidate);
+    seeds.map(cloneCandidate);
 
   frontier.enqueue(
     initialCandidates.map(
       (candidate) =>
-        toFrontierItem(candidate, 0),
+        toFrontierItem(
+          candidate,
+          0,
+        ),
     ),
   );
 
-  const allowedHosts = new Set<string>();
+  const allowedHosts =
+    new Set<string>();
 
   if (sameHostOnly) {
-    for (const candidate of initialCandidates) {
+    for (
+      const candidate of initialCandidates
+    ) {
       try {
         allowedHosts.add(
-          new URL(candidate.normalizedUrl).host,
+          new URL(
+            candidate.normalizedUrl,
+          ).host,
         );
       } catch {
         continue;
@@ -178,28 +191,37 @@ export async function executeResearchFrontier(
     }
   }
 
-  const candidates: DiscoveryCandidate[] = [
-    ...initialCandidates,
-  ];
+  const candidates:
+    DiscoveryCandidate[] = [
+      ...initialCandidates,
+    ];
 
-  const candidateKeys = new Set(
-    initialCandidates.map(
-      (candidate) => candidate.normalizedUrl,
-    ),
-  );
+  const candidateKeys =
+    new Set(
+      initialCandidates.map(
+        (candidate) =>
+          candidate.normalizedUrl,
+      ),
+    );
 
-  const fetchedPages: FetchedPage[] = [];
-  const errors: ResearchFrontierExecutionError[] = [];
+  const fetchedPages:
+    FetchedPage[] = [];
+
+  const errors:
+    ResearchFrontierExecutionError[] = [];
 
   while (
     frontier.size > 0 &&
     fetchedPages.length < maxPages
   ) {
     if (options.signal?.aborted) {
-      throw new Error("V8_RESEARCH_ABORTED");
+      throw new Error(
+        "V8_RESEARCH_ABORTED",
+      );
     }
 
-    const item = frontier.next();
+    const item =
+      frontier.next();
 
     if (!item) {
       break;
@@ -222,18 +244,21 @@ export async function executeResearchFrontier(
     let page: FetchedPage;
 
     try {
-      page = await pageFetcher.fetch(
-        item.url,
-        {
-          signal: options.signal,
-        },
-      );
+      page =
+        await pageFetcher.fetch(
+          item.url,
+          {
+            signal:
+              options.signal,
+          },
+        );
     } catch (error) {
       errors.push(
         Object.freeze({
           url: item.url,
           depth: item.depth,
-          error: errorMessage(error),
+          error:
+            errorMessage(error),
         }),
       );
 
@@ -243,9 +268,13 @@ export async function executeResearchFrontier(
     fetchedPages.push(page);
 
     const expandedInputs =
-      expandSourceReferences(page);
+      expandSourceReferences(
+        page,
+      );
 
-    if (expandedInputs.length === 0) {
+    if (
+      expandedInputs.length === 0
+    ) {
       continue;
     }
 
@@ -254,10 +283,12 @@ export async function executeResearchFrontier(
         expandedInputs,
       );
 
-    const nextFrontier: FrontierItem[] = [];
+    const nextFrontier:
+      FrontierItem[] = [];
 
     for (
-      const candidate of discovered.candidates
+      const candidate
+      of discovered.candidates
     ) {
       if (
         sameHostOnly &&
@@ -277,39 +308,51 @@ export async function executeResearchFrontier(
         continue;
       }
 
+      const normalizedCandidate =
+        cloneCandidate(
+          candidate,
+        );
+
       candidateKeys.add(
-        candidate.normalizedUrl,
+        normalizedCandidate.normalizedUrl,
       );
 
-      candidates.push(candidate);
+      candidates.push(
+        normalizedCandidate,
+      );
 
-      if (item.depth < maxDepth) {
+      if (
+        item.depth < maxDepth
+      ) {
         nextFrontier.push(
           toFrontierItem(
-            candidate,
+            normalizedCandidate,
             item.depth + 1,
           ),
         );
       }
     }
 
-    frontier.enqueue(nextFrontier);
+    frontier.enqueue(
+      nextFrontier,
+    );
   }
 
   return Object.freeze({
-    candidates: Object.freeze(
-      candidates.map(
-        (candidate) =>
-          toDiscoveryCandidate(candidate),
-      ),
-    ),
-    fetchedPages: Object.freeze([
-      ...fetchedPages,
-    ]),
-    errors: Object.freeze([
-      ...errors,
-    ]),
-    pagesFetched: fetchedPages.length,
+    candidates:
+      Object.freeze([
+        ...candidates,
+      ]),
+    fetchedPages:
+      Object.freeze([
+        ...fetchedPages,
+      ]),
+    errors:
+      Object.freeze([
+        ...errors,
+      ]),
+    pagesFetched:
+      fetchedPages.length,
     candidatesDiscovered:
       Math.max(
         0,
