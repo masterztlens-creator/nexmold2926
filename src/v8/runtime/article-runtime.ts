@@ -165,9 +165,9 @@ export class ConservativeClaimInterpreter
       }
 
       const confidence:
-        "HIGH" |
-        "MEDIUM" |
-        "LOW" =
+        | "HIGH"
+        | "MEDIUM"
+        | "LOW" =
         item.extractionConfidence ===
         "HIGH"
           ? "HIGH"
@@ -380,65 +380,73 @@ export async function runV8ArticleRuntime(
       },
     );
 
-if (acquisition.acquisitions.length === 0) {
-  console.error(
-    "[V8-21][ACQUISITION-DIAGNOSTIC]",
-  );
-
-  console.error(
-    `queries=${acquisition.plan.sourceQueries.length}`,
-  );
-
-  console.error(
-    `discoveryCandidates=${acquisition.discovery.candidates.length}`,
-  );
-
-  console.error(
-    `searchErrors=${acquisition.searchErrors.length}`,
-  );
-
-  for (
-    let index = 0;
-    index < acquisition.searchErrors.length;
-    index += 1
-  ) {
-    const error =
-      acquisition.searchErrors[index];
-
+  if (acquisition.acquisitions.length === 0) {
     console.error(
-      `[V8-21][SEARCH-ERROR][${index + 1}] query=${error.query ?? ""}`,
+      "[V8-21][ACQUISITION-DIAGNOSTIC]",
     );
 
     console.error(
-      `[V8-21][SEARCH-ERROR][${index + 1}] error=${error.error}`,
+      `queries=${acquisition.plan.sourceQueries.length}`,
+    );
+
+    console.error(
+      `discoveryCandidates=${acquisition.discovery.candidates.length}`,
+    );
+
+    console.error(
+      `searchErrors=${acquisition.searchErrors.length}`,
+    );
+
+    for (
+      let index = 0;
+      index < acquisition.searchErrors.length;
+      index += 1
+    ) {
+      const error =
+        acquisition.searchErrors[index];
+
+      console.error(
+        `[V8-21][SEARCH-ERROR][${index + 1}] query=${error.query ?? ""}`,
+      );
+
+      console.error(
+        `[V8-21][SEARCH-ERROR][${index + 1}] error=${error.error}`,
+      );
+    }
+
+    console.error(
+      `fetchErrors=${acquisition.fetchErrors.length}`,
+    );
+
+    for (
+      let index = 0;
+      index < acquisition.fetchErrors.length;
+      index += 1
+    ) {
+      const error =
+        acquisition.fetchErrors[index];
+
+      console.error(
+        `[V8-21][FETCH-ERROR][${index + 1}] url=${error.url ?? ""}`,
+      );
+
+      console.error(
+        `[V8-21][FETCH-ERROR][${index + 1}] error=${error.error}`,
+      );
+    }
+
+    invariant(
+      false,
+      "V8_ARTICLE_RUNTIME_NO_ACQUISITION",
+      [
+        "Internet acquisition produced no successful acquisition records.",
+        `queries=${acquisition.plan.sourceQueries.length}`,
+        `discoveryCandidates=${acquisition.discovery.candidates.length}`,
+        `searchErrors=${acquisition.searchErrors.length}`,
+        `fetchErrors=${acquisition.fetchErrors.length}`,
+      ].join("; "),
     );
   }
-
-  console.error(
-    `fetchErrors=${acquisition.fetchErrors.length}`,
-  );
-
-  for (
-    let index = 0;
-    index < acquisition.fetchErrors.length;
-    index += 1
-  ) {
-    const error =
-      acquisition.fetchErrors[index];
-
-    console.error(
-      `[V8-21][FETCH-ERROR][${index + 1}] url=${error.url ?? ""}`,
-    );
-
-    console.error(
-      `[V8-21][FETCH-ERROR][${index + 1}] error=${error.error}`,
-    );
-  }
-
-  throw new Error(
-    "V8_ARTICLE_RUNTIME_NO_ACQUISITION",
-  );
-}
 
   const evidencePayloads =
     acquisition.acquisitions.flatMap(

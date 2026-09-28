@@ -94,20 +94,6 @@ function createGetTamperedStore(
   );
 }
 
-function constraintMismatchReasons(
-  reasons,
-) {
-  return reasons.filter(
-    (reason) =>
-      reason.startsWith(
-        "KNOWLEDGE_CONDITION_MISMATCH:",
-      ) ||
-      reason.startsWith(
-        "KNOWLEDGE_UNIT_MISMATCH:",
-      ),
-  );
-}
-
 function unitMismatchReasons(
   reasons,
 ) {
@@ -149,158 +135,196 @@ const searchProvider =
 const pageFetcher =
   new HttpPageFetcher();
 
+let runtimeResult = null;
 let runtimeError = null;
 
 try {
-  await runV8ArticleRuntime({
-    opportunity: {
-      keyword: {
-        keyword:
-          "plastic injection molding wall thickness",
+  runtimeResult =
+    await runV8ArticleRuntime({
+      opportunity: {
+        keyword: {
+          keyword:
+            "plastic injection molding wall thickness",
 
-        normalized:
-          "plastic injection molding wall thickness",
+          normalized:
+            "plastic injection molding wall thickness",
 
-        source:
-          "SEED",
+          source:
+            "SEED",
 
-        intent:
-          "INFORMATIONAL",
+          intent:
+            "INFORMATIONAL",
 
-        terms: [
-          "wall thickness",
-          "injection molding",
+          terms: [
+            "wall thickness",
+            "injection molding",
+          ],
+        },
+
+        score: 0.9,
+        demand: 0.8,
+        relevance: 1,
+        competition: 0.3,
+        authorityGap: 0.7,
+        conversionPotential: 0.6,
+
+        reasons: [
+          "V8-20 real Internet applicability evaluation with fail-closed Knowledge condition enforcement",
         ],
       },
 
-      score: 0.9,
-      demand: 0.8,
-      relevance: 1,
-      competition: 0.3,
-      authorityGap: 0.7,
-      conversionPotential: 0.6,
+      searchProvider,
+      pageFetcher,
+      store,
 
-      reasons: [
-        "V8-20 real Internet applicability evaluation with fail-closed Knowledge condition enforcement",
-      ],
-    },
-
-    searchProvider,
-    pageFetcher,
-    store,
-
-    actor: {
-      id:
-        "v8:applicability-gate",
-      role:
-        "INGESTOR",
-    },
-
-    acquisition: {
-      maxQueries: 1,
-      maxCandidates: 3,
-      actorId:
-        "v8:applicability-gate",
-    },
-
-    scope: {
-      geography:
-        "GLOBAL",
-
-      industries: [
-        "INJECTION_MOLDING",
-      ],
-
-      languages: [
-        "en",
-      ],
-    },
-
-    context: {
-      purpose:
-        "V8-20 real Internet applicability evaluation for verified Internet-derived knowledge",
-
-      variables: {
-        gate:
-          "V8-20",
-
-        domain:
-          "plastic-injection-molding",
+      actor: {
+        id:
+          "v8:applicability-gate",
+        role:
+          "INGESTOR",
       },
-    },
 
-    problem: {
-      question:
-        "What wall thickness considerations apply to plastic injection molding?",
+      acquisition: {
+        maxQueries: 1,
+        maxCandidates: 3,
+        actorId:
+          "v8:applicability-gate",
+      },
 
-      constraints: [
-        "Use only verified evidence.",
-        "Do not infer universal applicability.",
-      ],
-    },
+      scope: {
+        geography:
+          "GLOBAL",
 
-    title:
-      "Plastic Injection Molding Wall Thickness",
-  });
+        industries: [
+          "INJECTION_MOLDING",
+        ],
+
+        languages: [
+          "en",
+        ],
+      },
+
+      context: {
+        purpose:
+          "V8-20 real Internet applicability evaluation for verified Internet-derived knowledge",
+
+        variables: {
+          gate:
+            "V8-20",
+
+          domain:
+            "plastic-injection-molding",
+        },
+      },
+
+      problem: {
+        question:
+          "What wall thickness considerations apply to plastic injection molding?",
+
+        constraints: [
+          "Use only verified evidence.",
+          "Do not infer universal applicability.",
+        ],
+      },
+
+      title:
+        "Plastic Injection Molding Wall Thickness",
+    });
 } catch (error) {
   runtimeError =
     error;
 }
 
 /*
- * V8-25 semantic correction:
+ * V8-25 semantic boundary:
  *
- * Knowledge.units is currently preserved metadata.
- * It is NOT an Applicability constraint.
+ * Article Runtime owns acquisition, evidence verification,
+ * truth production, Knowledge creation, and runtime assembly.
  *
- * Knowledge.conditions are the current Applicability
- * constraints.
+ * ApplicabilityEngine owns Applicability evaluation.
  *
- * Therefore the real Internet runtime has two valid
- * outcomes:
+ * Therefore:
  *
- * 1. Runtime succeeds.
- *    The selected Knowledge is applicable to the
- *    runtime Context.
+ *   V8_ARTICLE_RUNTIME_NO_ACQUISITION
+ *       !=
+ *   V8_APPLICABILITY_BLOCKED
  *
- * 2. Runtime fails closed with
- *    V8_APPLICABILITY_BLOCKED.
- *    In that case the block MUST be caused by a
- *    Knowledge condition mismatch, never by a unit
- *    mismatch.
+ * Acquisition failure must never be relabeled as an
+ * Applicability failure.
  *
- * A runtime block caused only by
- * KNOWLEDGE_UNIT_MISMATCH is invalid under V8-25.
+ * A Tavily HTTP 432, network failure, or equivalent
+ * acquisition failure is a real Internet dependency
+ * failure and must fail this gate explicitly.
+ *
+ * The gate must not continue into Source/Snapshot/Claim/
+ * Knowledge cardinality assertions when Runtime did not
+ * complete successfully.
  */
 
 if (runtimeError) {
-  assert.equal(
-    runtimeError.code,
-    "V8_APPLICABILITY_BLOCKED",
-    `V8_APPLICABILITY_UNEXPECTED_RUNTIME_ERROR:${
-      runtimeError.message ??
-      String(runtimeError)
-    }`,
-  );
+  const runtimeCode =
+    runtimeError.code;
 
   const runtimeMessage =
     runtimeError.message ??
     String(runtimeError);
 
-  assert.ok(
-    !runtimeMessage.includes(
-      "KNOWLEDGE_UNIT_MISMATCH:",
-    ),
-    "V8_APPLICABILITY_RUNTIME_MUST_NOT_BLOCK_ON_UNITS",
-  );
+  if (
+    runtimeCode ===
+    "V8_ARTICLE_RUNTIME_NO_ACQUISITION"
+  ) {
+    console.error(
+      "[V8-20][ACQUISITION-GATE][BLOCKED]",
+    );
 
-  assert.ok(
-    runtimeMessage.includes(
-      "KNOWLEDGE_CONDITION_MISMATCH:",
-    ),
-    "V8_APPLICABILITY_RUNTIME_BLOCK_MUST_BE_CONDITION_BASED",
+    console.error(
+      "The Article Runtime could not acquire any Internet source.",
+    );
+
+    console.error(
+      `code=${runtimeCode}`,
+    );
+
+    console.error(
+      `message=${runtimeMessage}`,
+    );
+
+    console.error(
+      "Applicability was not evaluated because no verified Internet-derived Knowledge chain exists.",
+    );
+
+    process.exitCode = 1;
+
+    process.exit();
+  }
+
+  if (
+    runtimeCode ===
+    "V8_APPLICABILITY_BLOCKED"
+  ) {
+    throw new Error(
+      [
+        "V8_APPLICABILITY_RUNTIME_BOUNDARY_VIOLATION:",
+        "Article Runtime must not convert Applicability evaluation into an acquisition/runtime failure.",
+        runtimeMessage,
+      ].join(" "),
+    );
+  }
+
+  throw new Error(
+    [
+      "V8_APPLICABILITY_UNEXPECTED_RUNTIME_ERROR:",
+      runtimeCode ??
+        "UNCODED_RUNTIME_ERROR",
+      runtimeMessage,
+    ].join(" "),
   );
 }
+
+assertTruthy(
+  runtimeResult,
+  "V8_APPLICABILITY_RUNTIME_RESULT_MISSING",
+);
 
 const sourceRecords =
   recordsOfType(
@@ -385,6 +409,24 @@ assert.equal(
   "V8_APPLICABILITY_EXPECTED_ONE_CONTEXT",
 );
 
+assert.equal(
+  runtimeResult.verifiedEvidenceIds.length,
+  3,
+  "V8_APPLICABILITY_EXPECTED_THREE_VERIFIED_EVIDENCE",
+);
+
+assert.equal(
+  runtimeResult.claimIds.length,
+  3,
+  "V8_APPLICABILITY_RUNTIME_CLAIM_COUNT_MISMATCH",
+);
+
+assert.equal(
+  runtimeResult.knowledgeIds.length,
+  3,
+  "V8_APPLICABILITY_RUNTIME_KNOWLEDGE_COUNT_MISMATCH",
+);
+
 const constrainedKnowledgeRecord =
   knowledgeRecords.find(
     (record) =>
@@ -451,19 +493,19 @@ const applicability =
   });
 
 /*
- * The selected real Internet Knowledge may be:
+ * Applicability is evaluated only after the complete
+ * Internet-derived Knowledge chain exists.
  *
- * - applicable=true, when all Knowledge conditions
- *   are represented by the Context;
+ * Valid outcomes:
  *
- * - applicable=false, when one or more Knowledge
- *   conditions are not represented by the Context.
+ *   applicable === true
+ *       Knowledge is applicable to the supplied Context.
  *
- * Both outcomes are semantically valid.
+ *   applicable === false
+ *       Fail-closed Applicability result.
  *
- * The prohibited outcome is a unit-only applicability
- * failure because Knowledge.units is metadata rather
- * than an Applicability constraint.
+ * Units are metadata and are never treated as an
+ * Applicability constraint by V8-25.
  */
 
 const applicabilityUnitMismatches =
@@ -619,7 +661,6 @@ const tamperedKnowledgeApplicability =
       constrainedKnowledgeId,
 
     scopeId,
-
     contextId,
   });
 
@@ -676,7 +717,6 @@ const tamperedContextApplicability =
       constrainedKnowledgeId,
 
     scopeId,
-
     contextId,
   });
 
@@ -702,7 +742,6 @@ const missingKnowledgeApplicability =
       "knowledge:v8:nonexistent",
 
     scopeId,
-
     contextId,
   });
 
@@ -809,9 +848,9 @@ console.log(
 
 console.log(
   `[V8-20] runtimeOutcome=${
-    runtimeError
-      ? "BLOCKED"
-      : "APPLICABLE"
+    runtimeResult
+      ? "ACQUIRED"
+      : "UNKNOWN"
   }`,
 );
 
@@ -834,6 +873,12 @@ console.log(
 );
 
 console.log(
+  `[V8-20] verifiedEvidence=${
+    runtimeResult.verifiedEvidenceIds.length
+  }`,
+);
+
+console.log(
   `[V8-20] claims=${
     claimRecords.length
   }`,
@@ -843,10 +888,6 @@ console.log(
   `[V8-20] knowledge=${
     knowledgeRecords.length
   }`,
-);
-
-console.log(
-  "[V8-20] verifiedEvidenceMinimum=3",
 );
 
 console.log(
@@ -880,9 +921,7 @@ console.log(
 );
 
 console.log(
-  `[V8-20] runtimeApplicabilityBlock=${
-    runtimeError !== null
-  }`,
+  "[V8-20] runtimeAcquisitionBoundary=true",
 );
 
 console.log(
