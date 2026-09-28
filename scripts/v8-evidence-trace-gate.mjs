@@ -13,10 +13,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   evidenceId,
 } from "../.v8-build/src/v8/domain/primitives.js";
 
@@ -89,14 +85,14 @@ import {
  * ============================================================================
  */
 
-const apiKey =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!apiKey) {
-  throw new Error(
-    "V8_EVIDENCE_TRACE_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
-  );
-}
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    sourceHint:
+      "protolabs-injection-molding-design-guidelines",
+  }),
+]);
 
 
 /*
@@ -152,13 +148,6 @@ const opportunity = {
 const store =
   new InMemoryFoundationStore();
 
-const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-    "https://api.tavily.com/search",
-    "v8-evidence-trace-gate",
-  );
-
 const pageFetcher =
   new HttpPageFetcher({
     timeoutMs: 20000,
@@ -176,7 +165,7 @@ const result =
   await runV8ArticleRuntime({
     opportunity,
 
-    searchProvider,
+    searchProvider: undefined,
 
     pageFetcher,
 
@@ -194,6 +183,15 @@ const result =
       maxQueries: 1,
 
       maxCandidates: 3,
+
+      maxPages: 3,
+
+      maxDepth: 0,
+
+      sameHostOnly: true,
+
+      researchSeeds:
+        RESEARCH_SEEDS,
 
       actorId:
         "v8-evidence-trace-gate",
