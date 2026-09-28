@@ -7,5 +7,4 @@ export * from "./conflict.js";
 export * from "./knowledge-gap.js";
 
 export * from "./frontier.js";
-export * from "./canonicalizer.js";
 export * from "./crawler.js";
