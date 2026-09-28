@@ -184,9 +184,9 @@ const result =
     acquisition: {
       maxQueries: 1,
 
-      maxCandidates: 3,
+      maxCandidates: 1,
 
-      maxPages: 3,
+      maxPages: 1,
 
       maxDepth: 0,
 
