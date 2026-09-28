@@ -203,7 +203,7 @@ async function runSelfOwnedDiscovery(
 
 export async function runResearchAcquisition(
   opportunity: Opportunity,
-  searchProvider: SearchProvider,
+  searchProvider: SearchProvider | undefined,
   pageFetcher: PageFetcher,
   store: FoundationStore,
   config: ResearchAcquisitionConfig = {},
@@ -315,6 +315,20 @@ export async function runResearchAcquisition(
       searchErrors: [],
       fetchErrors,
     };
+  }
+
+  /*
+   * Traditional query-based discovery is a separate execution path.
+   *
+   * Self-owned acquisition does not require a SearchProvider.
+   * If no explicit self-owned seeds were supplied, the caller
+   * must explicitly provide a SearchProvider rather than allowing
+   * the runtime to fabricate or silently bypass Internet discovery.
+   */
+  if (!searchProvider) {
+    throw new Error(
+      "V8_RESEARCH_SEARCH_PROVIDER_REQUIRED",
+    );
   }
 
   const discoveryInputs: DiscoveryInput[] =
