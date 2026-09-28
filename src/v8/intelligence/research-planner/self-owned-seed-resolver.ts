@@ -71,6 +71,9 @@ function resolveSeed(
     );
   }
 
+  const normalizedInputUrl =
+    seed.url.trim();
+
   const reason = normalizeReason(
     seed.reason,
   );
@@ -80,7 +83,9 @@ function resolveSeed(
   );
 
   const policy =
-    evaluateSourceUrl(seed.url);
+    evaluateSourceUrl(
+      normalizedInputUrl,
+    );
 
   if (
     policy.status !== "ELIGIBLE" ||
@@ -98,15 +103,15 @@ function resolveSeed(
     );
 
   /*
-   * canonicalizeUrl() is intentionally applied after
-   * evaluateSourceUrl().
+   * The original normalized seed URL remains the
+   * externally supplied research target.
    *
-   * The acquisition policy remains the authoritative
-   * Internet-source eligibility boundary, while research
-   * canonicalization provides deterministic identity.
+   * canonicalUrl is a separate deterministic identity
+   * representation used for deduplication and identity
+   * comparison. It must not replace the explicit seed URL.
    */
   return Object.freeze({
-    url: policy.normalizedUrl,
+    url: normalizedInputUrl,
     canonicalUrl,
     source,
     reason,
