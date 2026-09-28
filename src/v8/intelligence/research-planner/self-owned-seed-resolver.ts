@@ -97,21 +97,19 @@ function resolveSeed(
     );
   }
 
+  const parsedInputUrl =
+    new URL(normalizedInputUrl);
+
+  const normalizedSeedUrl =
+    `${policy.normalizedUrl}${parsedInputUrl.hash}`;
+
   const canonicalUrl =
     canonicalizeUrl(
       policy.normalizedUrl,
     );
 
-  /*
-   * The original normalized seed URL remains the
-   * externally supplied research target.
-   *
-   * canonicalUrl is a separate deterministic identity
-   * representation used for deduplication and identity
-   * comparison. It must not replace the explicit seed URL.
-   */
   return Object.freeze({
-    url: normalizedInputUrl,
+    url: normalizedSeedUrl,
     canonicalUrl,
     source,
     reason,
