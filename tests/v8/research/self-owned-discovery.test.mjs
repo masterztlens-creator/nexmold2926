@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  canonicalizeUrl,
   discoverWithSelfOwnedCrawl,
 } from "../../../.v8-build/src/v8/research/self-owned-discovery.js";
+
+import {
+  canonicalizeUrl,
+} from "../../../.v8-build/src/v8/research/discovery.js";
 
 function createPageFetcher(pages) {
   return {
@@ -103,7 +106,9 @@ test("V8-28A self-owned discovery crawls seeds and emits direct candidates", asy
   assert.ok(result.pagesFetched >= 1);
   assert.ok(result.candidates.length >= 4);
 
-  const urls = result.candidates.map((candidate) => candidate.canonicalUrl);
+  const urls = result.candidates.map(
+    (candidate) => candidate.canonicalUrl,
+  );
 
   assert.ok(urls.includes("https://example.com/start"));
   assert.ok(urls.includes("https://example.com/article"));
@@ -112,8 +117,16 @@ test("V8-28A self-owned discovery crawls seeds and emits direct candidates", asy
 
   for (const candidate of result.candidates) {
     assert.equal(candidate.provider, "DIRECT");
-    assert.equal(candidate.sourceHint, "V8-28A");
     assert.equal(candidate.canonicalUrl, canonicalizeUrl(candidate.url));
+
+    if (candidate.canonicalUrl === "https://example.com/start") {
+      assert.equal(candidate.sourceHint, "V8-28A");
+    } else {
+      assert.equal(
+        candidate.sourceHint,
+        "https://example.com/start",
+      );
+    }
   }
 });
 
