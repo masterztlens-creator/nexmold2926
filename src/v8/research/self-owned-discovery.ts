@@ -29,8 +29,8 @@ export interface SelfOwnedDiscoveryResult {
 }
 
 /**
- * Converts crawler observations into provider-independent DiscoveryCandidate
- * records.
+ * Converts crawler observations into provider-independent
+ * DiscoveryCandidate records.
  *
  * This layer intentionally does NOT:
  *
@@ -113,7 +113,7 @@ export async function discoverWithSelfOwnedCrawl(
         candidate: {
           url: link,
           canonicalUrl,
-          provider: "SEARCH",
+          provider: "DIRECT",
           discoveredAt: page.fetchedAt,
           sourceHint: pageCanonicalUrl,
         },
@@ -177,6 +177,7 @@ function addCandidate(input: {
   }
 
   input.seen.add(input.candidate.canonicalUrl);
+
   input.candidates.push(
     Object.freeze({
       ...input.candidate,
