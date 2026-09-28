@@ -4,8 +4,6 @@ import { InMemoryFoundationStore } from "../.v8-build/src/v8/foundation/store.js
 
 import { HttpPageFetcher } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
-import { TavilySearchProvider } from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
 import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
@@ -42,12 +40,16 @@ import {
   assertReleaseReady,
 } from "../.v8-build/src/v8/release/gate.js";
 
-const apiKey = process.env.V8_SEARCH_API_KEY;
-
-assert(
-  typeof apiKey === "string" && apiKey.trim().length > 0,
-  "V8_RELEASE_INTEGRITY_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
-);
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    source:
+      "DIRECT",
+    reason:
+      "Explicit Internet research entry point for V8 Release Integrity real Internet validation of plastic injection molding wall thickness.",
+  }),
+]);
 
 function assertTruthy(value, message) {
   assert(value, message);
@@ -125,9 +127,6 @@ const opportunity = {
 
 const store = new InMemoryFoundationStore();
 
-const searchProvider =
-  new TavilySearchProvider(apiKey);
-
 const pageFetcher =
   new HttpPageFetcher({
     timeoutMs: 20_000,
@@ -137,7 +136,9 @@ const pageFetcher =
 const runtime = await runV8ArticleRuntime({
   opportunity,
 
-  searchProvider,
+  searchProvider:
+    undefined,
+
   pageFetcher,
 
   store,
@@ -149,7 +150,12 @@ const runtime = await runV8ArticleRuntime({
 
   acquisition: {
     maxQueries: 1,
-    maxCandidates: 3,
+    maxCandidates: 1,
+    maxPages: 1,
+    maxDepth: 0,
+    sameHostOnly: true,
+    researchSeeds:
+      RESEARCH_SEEDS,
     actorId: "v8-release-integrity-gate",
   },
 

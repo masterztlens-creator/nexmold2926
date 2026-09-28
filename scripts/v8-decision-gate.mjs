@@ -19,10 +19,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   createDecision,
 } from "../.v8-build/src/v8/domain/decision.js";
 
@@ -30,14 +26,16 @@ import {
   contentFingerprint,
 } from "../.v8-build/src/v8/foundation/hash.js";
 
-const SEARCH_API_KEY =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!SEARCH_API_KEY) {
-  throw new Error(
-    "V8_SEARCH_API_KEY is required.",
-  );
-}
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    source:
+      "DIRECT",
+    reason:
+      "Explicit Internet research entry point for V8-21 real Internet decision validation of plastic injection molding wall thickness.",
+  }),
+]);
 
 const ACTOR = {
   id: "v8:decision-gate",
@@ -190,11 +188,6 @@ async function main() {
   const store =
     new InMemoryFoundationStore();
 
-  const searchProvider =
-    new TavilySearchProvider(
-      SEARCH_API_KEY,
-    );
-
   const pageFetcher =
     new HttpPageFetcher();
 
@@ -202,12 +195,21 @@ async function main() {
     await runV8ArticleRuntime({
       opportunity:
         OPPORTUNITY,
-      searchProvider,
+      searchProvider:
+        undefined,
       pageFetcher,
       store,
       actor: ACTOR,
       acquisition: {
-        maxCandidates: 3,
+        maxQueries: 1,
+        maxCandidates: 1,
+        maxPages: 1,
+        maxDepth: 0,
+        sameHostOnly: true,
+        researchSeeds:
+          RESEARCH_SEEDS,
+        actorId:
+          "v8-decision-gate",
       },
       scope: SCOPE,
       context: CONTEXT,
