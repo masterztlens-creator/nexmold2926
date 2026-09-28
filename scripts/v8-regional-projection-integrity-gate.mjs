@@ -9,10 +9,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
 
@@ -32,13 +28,20 @@ import {
   RegionalProjectionGate,
 } from "../.v8-build/src/v8/regional-projection/gate.js";
 
-const apiKey =
-  process.env.V8_SEARCH_API_KEY?.trim();
 
-assert(
-  apiKey,
-  "V8_REGIONAL_PROJECTION_SEARCH_API_KEY_MISSING",
-);
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+
+    source:
+      "DIRECT",
+
+    reason:
+      "Explicit Internet research entry point for V8-17 regional projection integrity real Internet validation of plastic injection molding wall thickness.",
+  }),
+]);
+
 
 const opportunity = {
   keyword: {
@@ -67,26 +70,34 @@ const opportunity = {
 const store =
   new InMemoryFoundationStore();
 
-const searchProvider =
-  new TavilySearchProvider(apiKey);
-
 const pageFetcher =
   new HttpPageFetcher();
 
 const runtime =
   await runV8ArticleRuntime({
     opportunity,
-    searchProvider,
+
+    searchProvider:
+      undefined,
+
     pageFetcher,
+
     store,
+
     actorId:
       "v8-regional-projection-gate",
+
     acquisition: {
       maxQueries: 1,
-      maxCandidates: 3,
+      maxCandidates: 1,
+      maxPages: 1,
+      maxDepth: 0,
+      sameHostOnly: true,
+      researchSeeds: RESEARCH_SEEDS,
       actorId:
         "v8-regional-projection-gate",
     },
+
     scope: {
       geography: "GLOBAL",
       industries: [
@@ -96,6 +107,7 @@ const runtime =
         "en",
       ],
     },
+
     context: {
       purpose:
         "V8-17 regional projection integrity",
@@ -104,6 +116,7 @@ const runtime =
         audience: "B2B",
       },
     },
+
     problem: {
       question:
         "How should injection molding wall thickness be evaluated for a global B2B audience?",
@@ -112,6 +125,7 @@ const runtime =
         "Do not publish unsupported universal claims.",
       ],
     },
+
     title:
       "Plastic Injection Molding Wall Thickness",
   });

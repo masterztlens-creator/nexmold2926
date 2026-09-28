@@ -9,10 +9,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
 
@@ -32,6 +28,21 @@ import {
   RouteMetadataProjector,
   RouteMetadataGate,
 } from "../.v8-build/src/v8/route-metadata/index.js";
+
+
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+
+    source:
+      "DIRECT",
+
+    reason:
+      "Explicit Internet research entry point for V8-18.1 cross-locale reciprocal hreflang integrity real Internet validation of plastic injection molding wall thickness.",
+  }),
+]);
+
 
 function assertTruthy(value, message) {
   assert.ok(value, message);
@@ -213,18 +224,8 @@ function emitAcquisitionDiagnostics(
   );
 }
 
-const apiKey = process.env.V8_SEARCH_API_KEY;
-
-assertTruthy(
-  apiKey,
-  "V8_ROUTE_METADATA_RECIPROCAL_SEARCH_API_KEY_MISSING",
-);
 
 const store = new InMemoryFoundationStore();
-
-const searchProvider = new TavilySearchProvider(
-  apiKey,
-);
 
 const pageFetcher = new HttpPageFetcher();
 
@@ -254,7 +255,10 @@ const opportunity = {
 
 const runtime = await runV8ArticleRuntime({
   opportunity,
-  searchProvider,
+
+  searchProvider:
+    undefined,
+
   pageFetcher,
   store,
 
@@ -265,7 +269,11 @@ const runtime = await runV8ArticleRuntime({
 
   acquisition: {
     maxQueries: 1,
-    maxCandidates: 3,
+    maxCandidates: 1,
+    maxPages: 1,
+    maxDepth: 0,
+    sameHostOnly: true,
+    researchSeeds: RESEARCH_SEEDS,
     actorId: "v8:route-metadata-reciprocal-gate",
   },
 

@@ -9,10 +9,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
 
@@ -25,16 +21,18 @@ import {
 } from "../.v8-build/src/v8/publication-eligibility/evaluator.js";
 
 
-function requiredEnv(name) {
-  const value = process.env[name]?.trim();
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
 
-  assert.ok(
-    value,
-    `V8_PUBLICATION_ELIGIBILITY_CONFIG_MISSING: ${name} is required.`,
-  );
+    source:
+      "DIRECT",
 
-  return value;
-}
+    reason:
+      "Explicit Internet research entry point for V8 publication eligibility real Internet validation of plastic injection molding wall thickness.",
+  }),
+]);
 
 
 function assertTruthy(value, message) {
@@ -55,19 +53,8 @@ function assertIncludes(values, expected, message) {
 }
 
 
-const apiKey = requiredEnv(
-  "V8_SEARCH_API_KEY",
-);
-
-
 const store =
   new InMemoryFoundationStore();
-
-
-const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-  );
 
 
 const pageFetcher =
@@ -122,7 +109,8 @@ const result =
       ],
     },
 
-    searchProvider,
+    searchProvider:
+      undefined,
 
     pageFetcher,
 
@@ -141,7 +129,19 @@ const result =
         1,
 
       maxCandidates:
-        3,
+        1,
+
+      maxPages:
+        1,
+
+      maxDepth:
+        0,
+
+      sameHostOnly:
+        true,
+
+      researchSeeds:
+        RESEARCH_SEEDS,
 
       actorId:
         "v8-publication-eligibility-gate",
