@@ -85,10 +85,9 @@ export async function discoverWithSelfOwnedCrawl(
               title: page.title,
             }
           : {}),
-        ...(page.discoveredFrom ?? options.sourceHint
+        ...(options.sourceHint
           ? {
-              sourceHint:
-                page.discoveredFrom ?? options.sourceHint,
+              sourceHint: options.sourceHint,
             }
           : {}),
       },
@@ -116,7 +115,8 @@ export async function discoverWithSelfOwnedCrawl(
           canonicalUrl,
           provider: "DIRECT",
           discoveredAt: page.fetchedAt,
-          sourceHint: pageCanonicalUrl,
+          sourceHint:
+            options.sourceHint ?? pageCanonicalUrl,
         },
         maxCandidates,
       });
