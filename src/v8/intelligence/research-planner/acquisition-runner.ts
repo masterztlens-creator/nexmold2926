@@ -1,208 +1,270 @@
-import type { FoundationStore } from "../../foundation/types.js";
-import { ingestFetchedPage } from "../../acquisition/foundation-adapter.js";
 import type {
-  ExtractedEvidenceCandidate,
-  FetchedPage,
   PageFetcher,
   SearchProvider,
 } from "../../acquisition/types.js";
+
+import type {
+  EvidenceStore,
+} from "../../acquisition/evidence-store.js";
+
 import {
-  extractStructuredEvidence,
-  extractTextEvidence,
-} from "../../acquisition/source-extractor.js";
-import type { Opportunity } from "../shared.js";
+  discoverWithSelfOwnedCrawl,
+  type SelfOwnedDiscoveryCandidate,
+} from "../../research/self-owned-discovery.js";
+
+import {
+  resolveResearchSeeds,
+  type ResearchSeedResolution,
+} from "./self-owned-seed-resolver.js";
+
 import {
   discoverCandidates,
   type DiscoveryInput,
 } from "../web-discovery/discovery.js";
-import type { DiscoveryBatch } from "../web-discovery/types.js";
+
+import type {
+  DiscoveryBatch,
+} from "../web-discovery/types.js";
+
+import {
+  ingestFetchedPage,
+} from "../../acquisition/internet-acquisition.js";
+
 import {
   planResearch,
-  type ResearchPlan,
 } from "./planner.js";
 
+import type {
+  ResearchOpportunity,
+  ResearchPlan,
+} from "./types.js";
+
 export interface ResearchAcquisitionConfig {
-  readonly actorId?: string;
-  readonly maxQueries?: number;
-  readonly maxCandidates?: number;
   readonly signal?: AbortSignal;
-}
-
-export interface ResearchAcquisitionRecord {
-  readonly candidateUrl: string;
-  readonly page: FetchedPage;
-  readonly acquisition: ReturnType<typeof ingestFetchedPage>;
-}
-
-export interface ResearchAcquisitionError {
-  readonly query?: string;
-  readonly url?: string;
-  readonly error: string;
+  readonly maxPages?: number;
+  readonly maxDepth?: number;
+  readonly sameHostOnly?: boolean;
 }
 
 export interface ResearchAcquisitionResult {
   readonly plan: ResearchPlan;
+  readonly seedResolution: ResearchSeedResolution;
   readonly discovery: DiscoveryBatch;
-  readonly acquisitions: readonly ResearchAcquisitionRecord[];
-  readonly searchErrors: readonly ResearchAcquisitionError[];
-  readonly fetchErrors: readonly ResearchAcquisitionError[];
+  readonly acquisitions: readonly string[];
+  readonly searchErrors: readonly string[];
+  readonly fetchErrors: readonly string[];
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function throwIfAborted(signal?: AbortSignal): void {
+function assertNotAborted(signal?: AbortSignal): void {
   if (signal?.aborted) {
-    throw new Error("V8_RESEARCH_ACQUISITION_ABORTED");
+    throw new DOMException(
+      "Research acquisition aborted.",
+      "AbortError",
+    );
   }
 }
 
-function evidenceKey(
-  candidate: ExtractedEvidenceCandidate,
-): string {
-  return [
-    candidate.locator,
-    candidate.excerpt,
-    candidate.section ?? "",
-    candidate.parameter ?? "",
-    candidate.value ?? "",
-    candidate.unit ?? "",
-  ].join("\u001f");
+function discoveryBatchFromSelfOwnedCandidates(
+  candidates: readonly SelfOwnedDiscoveryCandidate[],
+): DiscoveryBatch {
+  const inputs: DiscoveryInput[] = candidates.map((candidate) => ({
+    url: candidate.url,
+    kind: candidate.kind === "SEED" ? "SEED" : "LINK",
+    ...(candidate.sourceHint === undefined
+      ? {}
+      : { sourceUrl: candidate.sourceHint }),
+    ...(candidate.title === undefined
+      ? {}
+      : { title: candidate.title }),
+    discoveredAt: candidate.discoveredAt,
+  }));
+
+  return discoverCandidates(inputs);
 }
 
-function deduplicateEvidence(
-  candidates: readonly ExtractedEvidenceCandidate[],
-): readonly ExtractedEvidenceCandidate[] {
-  const seen = new Set<string>();
-  const output: ExtractedEvidenceCandidate[] = [];
+async function acquireCandidates(
+  discovery: DiscoveryBatch,
+  pageFetcher: PageFetcher,
+  store: EvidenceStore,
+  signal?: AbortSignal,
+): Promise<{
+  acquisitions: readonly string[];
+  fetchErrors: readonly string[];
+}> {
+  const acquisitions: string[] = [];
+  const fetchErrors: string[] = [];
 
-  for (const candidate of candidates) {
-    const key = evidenceKey(candidate);
+  for (const candidate of discovery.candidates) {
+    assertNotAborted(signal);
 
-    if (seen.has(key)) {
-      continue;
+    try {
+      const fetched = await pageFetcher.fetch(
+        candidate.url,
+        signal,
+      );
+
+      assertNotAborted(signal);
+
+      const evidenceAggregateId = await ingestFetchedPage(
+        fetched,
+        store,
+      );
+
+      acquisitions.push(evidenceAggregateId);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      fetchErrors.push(
+        `${candidate.url}: ${message}`,
+      );
     }
-
-    seen.add(key);
-    output.push(candidate);
   }
 
-  return output;
+  return Object.freeze({
+    acquisitions: Object.freeze(acquisitions),
+    fetchErrors: Object.freeze(fetchErrors),
+  });
 }
 
-function extractResearchEvidence(
-  page: FetchedPage,
-): readonly ExtractedEvidenceCandidate[] {
-  const structured = extractStructuredEvidence(page.body);
+export async function runSelfOwnedResearchAcquisition(
+  opportunity: ResearchOpportunity,
+  pageFetcher: PageFetcher,
+  store: EvidenceStore,
+  config: ResearchAcquisitionConfig = {},
+): Promise<ResearchAcquisitionResult> {
+  assertNotAborted(config.signal);
 
-  const documentText = extractTextEvidence(
-    page.body,
-    page.finalUrl,
+  const plan = planResearch(opportunity);
+
+  const seedResolution = resolveResearchSeeds(
+    opportunity,
   );
 
-  return deduplicateEvidence([
-    ...structured,
-    ...documentText,
-  ]);
+  if (seedResolution.accepted.length === 0) {
+    throw new Error(
+      "V8_RESEARCH_SEED_NO_VALID_SEEDS: " +
+      "Research opportunity produced no valid self-owned research seeds.",
+    );
+  }
+
+  assertNotAborted(config.signal);
+
+  const selfOwnedDiscovery =
+    await discoverWithSelfOwnedCrawl(
+      seedResolution.accepted,
+      pageFetcher,
+      {
+        signal: config.signal,
+        maxPages: config.maxPages,
+        maxDepth: config.maxDepth,
+        sameHostOnly: config.sameHostOnly,
+      },
+    );
+
+  assertNotAborted(config.signal);
+
+  const discovery =
+    discoveryBatchFromSelfOwnedCandidates(
+      selfOwnedDiscovery.candidates,
+    );
+
+  const acquisition =
+    await acquireCandidates(
+      discovery,
+      pageFetcher,
+      store,
+      config.signal,
+    );
+
+  return Object.freeze({
+    plan,
+    seedResolution,
+    discovery,
+    acquisitions: acquisition.acquisitions,
+    searchErrors: Object.freeze([]),
+    fetchErrors: acquisition.fetchErrors,
+  });
 }
 
 export async function runResearchAcquisition(
-  opportunity: Opportunity,
+  opportunity: ResearchOpportunity,
   searchProvider: SearchProvider,
   pageFetcher: PageFetcher,
-  store: FoundationStore,
+  store: EvidenceStore,
   config: ResearchAcquisitionConfig = {},
 ): Promise<ResearchAcquisitionResult> {
+  assertNotAborted(config.signal);
+
   const plan = planResearch(opportunity);
 
-  const maxQueries = Math.max(
-    1,
-    config.maxQueries ?? plan.sourceQueries.length,
-  );
-
-  const maxCandidates = Math.max(
-    1,
-    config.maxCandidates ?? 10,
-  );
-
+  const searchErrors: string[] = [];
   const discoveryInputs: DiscoveryInput[] = [];
-  const searchErrors: ResearchAcquisitionError[] = [];
 
-  for (const query of plan.sourceQueries.slice(0, maxQueries)) {
-    throwIfAborted(config.signal);
+  for (const query of plan.sourceQueries) {
+    assertNotAborted(config.signal);
 
     try {
-      const results = await searchProvider.search(query, {
-        signal: config.signal,
-      });
-
-      for (const result of results) {
-        discoveryInputs.push({
-          url: result.url,
-          kind: "SERP_RESULT",
-          title: result.title,
-        });
-      }
-    } catch (error) {
-      searchErrors.push({
+      const results = await searchProvider.search(
         query,
-        error: errorMessage(error),
-      });
-    }
-  }
-
-  const discovery = discoverCandidates(discoveryInputs);
-
-  const acquisitions: ResearchAcquisitionRecord[] = [];
-  const fetchErrors: ResearchAcquisitionError[] = [];
-
-  for (const candidate of discovery.candidates) {
-    if (acquisitions.length >= maxCandidates) {
-      break;
-    }
-
-    throwIfAborted(config.signal);
-
-    try {
-      const page = await pageFetcher.fetch(
-        candidate.url,
         {
           signal: config.signal,
         },
       );
 
-      const extracted =
-        extractResearchEvidence(page);
-
-      const acquisition =
-        ingestFetchedPage(
-          store,
-          page,
-          extracted,
-          {
-            actorId: config.actorId,
-          },
-        );
-
-      acquisitions.push({
-        candidateUrl: candidate.url,
-        page,
-        acquisition,
-      });
+      for (const result of results) {
+        discoveryInputs.push({
+          url: result.url,
+          kind: "SERP_RESULT",
+          ...(result.title === undefined
+            ? {}
+            : { title: result.title }),
+        });
+      }
     } catch (error) {
-      fetchErrors.push({
-        url: candidate.url,
-        error: errorMessage(error),
-      });
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      searchErrors.push(
+        `${query}: ${message}`,
+      );
     }
   }
 
-  return {
-    plan,
+  assertNotAborted(config.signal);
+
+  const discovery = discoverCandidates(
+    discoveryInputs,
+  );
+
+  const acquisition = await acquireCandidates(
     discovery,
-    acquisitions,
-    searchErrors,
-    fetchErrors,
-  };
+    pageFetcher,
+    store,
+    config.signal,
+  );
+
+  return Object.freeze({
+    plan,
+    seedResolution: Object.freeze({
+      accepted: Object.freeze([]),
+      rejected: Object.freeze([]),
+    }),
+    discovery,
+    acquisitions: acquisition.acquisitions,
+    searchErrors: Object.freeze(searchErrors),
+    fetchErrors: acquisition.fetchErrors,
+  });
 }
