@@ -63,20 +63,17 @@ export async function discoverWithSelfOwnedCrawl(
   const seen =
     new Set<string>();
 
+  const discoveryRoot =
+    normalizedSeeds[0];
+
   /*
    * Phase 1:
    *
    * Materialize crawled page candidates first.
    *
-   * This preserves explicit research-entry priority:
-   *
-   *   crawled seed/page
-   *          >
-   *   discovered navigation link
-   *
-   * A bounded candidate budget therefore cannot allow
-   * navigation links to displace explicitly supplied
-   * research sources.
+   * Explicitly supplied research-entry pages must
+   * receive candidate-budget priority over discovered
+   * navigation links.
    */
   for (
     const page of pages
@@ -126,8 +123,15 @@ export async function discoverWithSelfOwnedCrawl(
    * Phase 2:
    *
    * Materialize discovered links only after all
-   * crawled page candidates have had an opportunity
-   * to enter the bounded candidate set.
+   * crawled page candidates have entered the bounded
+   * candidate set.
+   *
+   * LINK candidates retain their original provenance:
+   *
+   *   sourceHint = discoveryRoot
+   *
+   * This is distinct from the explicit seed/page
+   * sourceHint and is part of the V8-28A contract.
    */
   for (
     const page of pages
@@ -171,10 +175,10 @@ export async function discoverWithSelfOwnedCrawl(
             "DIRECT",
           discoveredAt:
             page.fetchedAt,
-          ...(options.sourceHint
+          ...(discoveryRoot
             ? {
                 sourceHint:
-                  options.sourceHint,
+                  discoveryRoot,
               }
             : {}),
         },
