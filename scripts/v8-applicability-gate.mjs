@@ -16,6 +16,36 @@ import {
   ApplicabilityEngine,
 } from "../.v8-build/src/v8/applicability/engine.js";
 
+const RESEARCH_SEEDS =
+  Object.freeze([
+    Object.freeze({
+      url:
+        "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+      source:
+        "DIRECT",
+      reason:
+        "Explicit Internet research entry point for V8-20 real Internet applicability validation of plastic injection molding wall thickness.",
+    }),
+
+    Object.freeze({
+      url:
+        "https://www.protolabs.com/services/injection-molding/",
+      source:
+        "DIRECT",
+      reason:
+        "Explicit Internet research entry point for V8-20 real Internet applicability validation of injection molding process knowledge.",
+    }),
+
+    Object.freeze({
+      url:
+        "https://www.protolabs.com/materials/",
+      source:
+        "DIRECT",
+      reason:
+        "Explicit Internet research entry point for V8-20 real Internet applicability validation of injection molding material knowledge.",
+    }),
+  ]);
+
 function assertTruthy(
   value,
   message,
@@ -112,52 +142,17 @@ function conditionMismatchReasons(
   );
 }
 
-/*
- * --------------------------------------------------------------------------
- * V8-20 SELF-OWNED INTERNET RESEARCH ENTRY POINT
- *
- * This gate intentionally does not depend on a third-party search provider.
- *
- * The research entry point is explicit and auditable:
- *
- *   DIRECT seed
- *       ->
- *   self-owned discovery
- *       ->
- *   bounded acquisition
- *       ->
- *   Source / Snapshot / Evidence
- *       ->
- *   Claim
- *       ->
- *   Knowledge
- *       ->
- *   Applicability
- *
- * The seed is not itself treated as evidence.
- * It is only the deterministic entry point into Internet acquisition.
- * --------------------------------------------------------------------------
- */
-
-const RESEARCH_SEEDS = Object.freeze([
-  Object.freeze({
-    url:
-      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
-    source:
-      "DIRECT",
-    reason:
-      "Explicit Internet research entry point for V8-20 real Internet applicability validation of plastic injection molding wall thickness.",
-  }),
-]);
-
 const store =
   new InMemoryFoundationStore();
 
 const pageFetcher =
   new HttpPageFetcher();
 
-let runtimeResult = null;
-let runtimeError = null;
+let runtimeResult =
+  null;
+
+let runtimeError =
+  null;
 
 try {
   runtimeResult =
@@ -195,6 +190,7 @@ try {
       },
 
       pageFetcher,
+
       store,
 
       actor: {
@@ -207,11 +203,25 @@ try {
       acquisition: {
         maxQueries: 1,
         maxCandidates: 3,
+
+        /*
+         * The gate intentionally acquires only the
+         * explicitly selected Internet research pages.
+         *
+         * maxDepth=0 prevents navigation links from
+         * becoming additional crawl pages.
+         *
+         * maxCandidates=3 is required because V8-20
+         * verifies three independent Source /
+         * Claim / Knowledge chains.
+         */
         maxPages: 3,
-        maxDepth: 1,
+        maxDepth: 0,
         sameHostOnly: true,
+
         researchSeeds:
           RESEARCH_SEEDS,
+
         actorId:
           "v8:applicability-gate",
       },
@@ -261,20 +271,12 @@ try {
 }
 
 /*
- * --------------------------------------------------------------------------
- * V8-25 SEMANTIC BOUNDARY
+ * V8-25 semantic boundary:
  *
- * Article Runtime owns:
+ * Article Runtime owns acquisition, evidence verification,
+ * truth production, Knowledge creation, and runtime assembly.
  *
- *   acquisition
- *   evidence verification
- *   truth production
- *   Knowledge creation
- *   runtime assembly
- *
- * ApplicabilityEngine owns:
- *
- *   Applicability evaluation
+ * ApplicabilityEngine owns Applicability evaluation.
  *
  * Therefore:
  *
@@ -284,11 +286,6 @@ try {
  *
  * Acquisition failure must never be relabeled as an
  * Applicability failure.
- *
- * The gate must not continue into Source / Snapshot / Claim /
- * Knowledge cardinality assertions when Runtime did not
- * complete successfully.
- * --------------------------------------------------------------------------
  */
 
 if (runtimeError) {
@@ -323,7 +320,8 @@ if (runtimeError) {
       "Applicability was not evaluated because no verified Internet-derived Knowledge chain exists.",
     );
 
-    process.exitCode = 1;
+    process.exitCode =
+      1;
 
     process.exit();
   }
@@ -522,23 +520,6 @@ const applicability =
     contextId,
   });
 
-/*
- * --------------------------------------------------------------------------
- * APPLICABILITY SEMANTICS
- *
- * Valid outcomes:
- *
- *   applicable === true
- *       Knowledge is applicable to the supplied Context.
- *
- *   applicable === false
- *       Fail-closed Applicability result.
- *
- * Units are metadata and are never treated as an
- * Applicability constraint by V8-25.
- * --------------------------------------------------------------------------
- */
-
 const applicabilityUnitMismatches =
   unitMismatchReasons(
     applicability.reasons,
@@ -659,12 +640,6 @@ assert.deepEqual(
   "V8_APPLICABILITY_LINEAGE_INTEGRITY_FAILED",
 );
 
-/*
- * --------------------------------------------------------------------------
- * KNOWLEDGE TAMPER REJECTION
- * --------------------------------------------------------------------------
- */
-
 const tamperedKnowledgeStore =
   createGetTamperedStore(
     store,
@@ -716,12 +691,6 @@ assert.ok(
     ),
   "V8_APPLICABILITY_KNOWLEDGE_TAMPER_REASON_MISSING",
 );
-
-/*
- * --------------------------------------------------------------------------
- * CONTEXT SCOPE TAMPER REJECTION
- * --------------------------------------------------------------------------
- */
 
 const tamperedContextStore =
   createGetTamperedStore(
@@ -779,12 +748,6 @@ assert.ok(
   "V8_APPLICABILITY_CONTEXT_TAMPER_REASON_MISSING",
 );
 
-/*
- * --------------------------------------------------------------------------
- * MISSING KNOWLEDGE MUST FAIL CLOSED
- * --------------------------------------------------------------------------
- */
-
 const missingKnowledgeApplicability =
   engine.evaluate({
     knowledgeId:
@@ -809,12 +772,6 @@ assert.ok(
     ),
   "V8_APPLICABILITY_MISSING_KNOWLEDGE_REASON_MISSING",
 );
-
-/*
- * --------------------------------------------------------------------------
- * ASSERT() MUST PRESERVE FAIL-CLOSED SEMANTICS
- * --------------------------------------------------------------------------
- */
 
 let assertBlocked =
   false;
@@ -850,16 +807,6 @@ if (
   );
 }
 
-/*
- * --------------------------------------------------------------------------
- * KNOWLEDGE UNITS PRESERVATION
- *
- * V8-24 owns unit preservation.
- * V8-25 verifies only that units are not reinterpreted
- * as Applicability constraints.
- * --------------------------------------------------------------------------
- */
-
 const knowledgeUnits =
   constrainedKnowledgeRecord
     .payload?.units;
@@ -882,22 +829,6 @@ if (
   );
 }
 
-/*
- * --------------------------------------------------------------------------
- * FOUNDATION CHAIN
- *
- * verifyChain() is void-returning.
- *
- * Success:
- *   returns undefined.
- *
- * Failure:
- *   throws a Foundation invariant error.
- *
- * Therefore execution itself is the assertion.
- * --------------------------------------------------------------------------
- */
-
 store.verifyChain();
 
 console.log(
@@ -913,7 +844,7 @@ console.log(
 );
 
 console.log(
-  `[V8-20] researchSeeds=${
+  `[V8-20] selfOwnedResearchSeeds=${
     RESEARCH_SEEDS.length
   }`,
 );
@@ -986,10 +917,6 @@ console.log(
 
 console.log(
   "[V8-20] runtimeAcquisitionBoundary=true",
-);
-
-console.log(
-  "[V8-20] selfOwnedResearchSeed=true",
 );
 
 console.log(

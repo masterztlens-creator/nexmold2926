@@ -23,13 +23,16 @@ export async function discoverWithSelfOwnedCrawl(
   const normalizedSeeds = normalizeSeeds(seedUrls);
 
   if (normalizedSeeds.length === 0) {
-    throw new Error("V8_RESEARCH_SELF_OWNED_NO_VALID_SEEDS");
+    throw new Error(
+      "V8_RESEARCH_SELF_OWNED_NO_VALID_SEEDS",
+    );
   }
 
-  const maxCandidates = normalizePositiveInteger(
-    options.maxCandidates ?? 200,
-    "maxCandidates",
-  );
+  const maxCandidates =
+    normalizePositiveInteger(
+      options.maxCandidates ?? 200,
+      "maxCandidates",
+    );
 
   const pages = await crawl(
     normalizedSeeds,
@@ -40,36 +43,92 @@ export async function discoverWithSelfOwnedCrawl(
   const candidates: DiscoveryCandidate[] = [];
   const seen = new Set<string>();
 
-  const discoveryRoot = normalizedSeeds[0];
+  const discoveryRoot =
+    normalizedSeeds[0];
 
+  /*
+   * Phase 1:
+   *
+   * Explicitly supplied research seeds are always
+   * materialized as candidates before any discovered
+   * LINK candidate.
+   *
+   * This is a deterministic priority boundary:
+   *
+   *   explicit research source
+   *          >
+   *   discovered navigation/reference link
+   *
+   * A bounded acquisition budget must never allow a
+   * navigation link to displace an explicitly selected
+   * research source.
+   */
   for (const page of pages) {
-    const pageCanonicalUrl = canonicalizeUrl(page.url);
+    if (
+      candidates.length >=
+      maxCandidates
+    ) {
+      break;
+    }
+
+    const pageCanonicalUrl =
+      canonicalizeUrl(page.url);
 
     addCandidate({
       candidates,
       seen,
       candidate: {
         url: page.url,
-        canonicalUrl: pageCanonicalUrl,
+        canonicalUrl:
+          pageCanonicalUrl,
         provider: "DIRECT",
-        discoveredAt: page.fetchedAt,
-        ...(page.title ? { title: page.title } : {}),
+        discoveredAt:
+          page.fetchedAt,
+        ...(page.title
+          ? {
+              title:
+                page.title,
+            }
+          : {}),
         ...(options.sourceHint
-          ? { sourceHint: options.sourceHint }
+          ? {
+              sourceHint:
+                options.sourceHint,
+            }
           : {}),
       },
       maxCandidates,
     });
+  }
+
+  /*
+   * Phase 2:
+   *
+   * Only after all crawled seed/page candidates have
+   * been admitted may discovered links consume the
+   * remaining candidate budget.
+   */
+  for (const page of pages) {
+    if (
+      candidates.length >=
+      maxCandidates
+    ) {
+      break;
+    }
 
     for (const link of page.links) {
-      if (candidates.length >= maxCandidates) {
+      if (
+        candidates.length >=
+        maxCandidates
+      ) {
         break;
       }
 
       let canonicalUrl: string;
 
       try {
-        canonicalUrl = canonicalizeUrl(link);
+        canonicalUrl =
+          canonicalizeUrl(link);
       } catch {
         continue;
       }
@@ -81,25 +140,33 @@ export async function discoverWithSelfOwnedCrawl(
           url: link,
           canonicalUrl,
           provider: "DIRECT",
-          discoveredAt: page.fetchedAt,
+          discoveredAt:
+            page.fetchedAt,
           ...(discoveryRoot
-            ? { sourceHint: discoveryRoot }
+            ? {
+                sourceHint:
+                  discoveryRoot,
+              }
             : {}),
         },
         maxCandidates,
       });
     }
-
-    if (candidates.length >= maxCandidates) {
-      break;
-    }
   }
 
   return Object.freeze({
-    provider: "SELF_OWNED_CRAWL",
-    seeds: Object.freeze([...normalizedSeeds]),
-    candidates: Object.freeze(candidates),
-    pagesFetched: pages.length,
+    provider:
+      "SELF_OWNED_CRAWL",
+    seeds:
+      Object.freeze([
+        ...normalizedSeeds,
+      ]),
+    candidates:
+      Object.freeze([
+        ...candidates,
+      ]),
+    pagesFetched:
+      pages.length,
   });
 }
 
@@ -113,7 +180,8 @@ function normalizeSeeds(
     let canonicalUrl: string;
 
     try {
-      canonicalUrl = canonicalizeUrl(seedUrl);
+      canonicalUrl =
+        canonicalizeUrl(seedUrl);
     } catch {
       continue;
     }
@@ -126,7 +194,9 @@ function normalizeSeeds(
     normalized.push(canonicalUrl);
   }
 
-  return Object.freeze(normalized);
+  return Object.freeze(
+    normalized,
+  );
 }
 
 function addCandidate(args: {
@@ -135,23 +205,40 @@ function addCandidate(args: {
   readonly candidate: DiscoveryCandidate;
   readonly maxCandidates: number;
 }): void {
-  if (args.candidates.length >= args.maxCandidates) {
+  if (
+    args.candidates.length >=
+    args.maxCandidates
+  ) {
     return;
   }
 
-  if (args.seen.has(args.candidate.canonicalUrl)) {
+  if (
+    args.seen.has(
+      args.candidate.canonicalUrl,
+    )
+  ) {
     return;
   }
 
-  args.seen.add(args.candidate.canonicalUrl);
-  args.candidates.push(Object.freeze(args.candidate));
+  args.seen.add(
+    args.candidate.canonicalUrl,
+  );
+
+  args.candidates.push(
+    Object.freeze(
+      args.candidate,
+    ),
+  );
 }
 
 function normalizePositiveInteger(
   value: number,
   fieldName: string,
 ): number {
-  if (!Number.isInteger(value) || value <= 0) {
+  if (
+    !Number.isInteger(value) ||
+    value <= 0
+  ) {
     throw new Error(
       `V8_RESEARCH_SELF_OWNED_INVALID_${fieldName.toUpperCase()}`,
     );
