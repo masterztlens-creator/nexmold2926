@@ -1,478 +1,363 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import type {
+  FetchedPage,
+  PageFetcher,
+} from "../acquisition/types.js";
 
 import {
-  executeResearchFrontier,
-} from "../../../.v8-build/src/v8/research/index.js";
+  discoverCandidates,
+} from "../intelligence/web-discovery/discovery.js";
 
-function createPageFetcher(pages) {
+import type {
+  DiscoveryCandidate,
+} from "../intelligence/web-discovery/types.js";
+
+import {
+  expandSourceReferences,
+} from "../intelligence/web-discovery/source-expansion.js";
+
+import {
+  ResearchFrontier,
+  type FrontierItem,
+} from "./frontier.js";
+
+export interface ResearchFrontierExecutorOptions {
+  readonly maxPages?: number;
+  readonly maxDepth?: number;
+  readonly sameHostOnly?: boolean;
+  readonly signal?: AbortSignal;
+}
+
+export interface ResearchFrontierExecutionError {
+  readonly url: string;
+  readonly depth: number;
+  readonly error: string;
+}
+
+export interface ResearchFrontierExecutionResult {
+  readonly candidates: readonly DiscoveryCandidate[];
+  readonly fetchedPages: readonly FetchedPage[];
+  readonly errors: readonly ResearchFrontierExecutionError[];
+  readonly pagesFetched: number;
+  readonly candidatesDiscovered: number;
+}
+
+function normalizePositiveInteger(
+  value: number,
+  fieldName: string,
+): number {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(
+      `V8_RESEARCH_FRONTIER_INVALID_${fieldName.toUpperCase()}`,
+    );
+  }
+
+  return value;
+}
+
+function normalizeNonNegativeInteger(
+  value: number,
+  fieldName: string,
+): number {
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(
+      `V8_RESEARCH_FRONTIER_INVALID_${fieldName.toUpperCase()}`,
+    );
+  }
+
+  return value;
+}
+
+function toFrontierItem(
+  candidate: DiscoveryCandidate,
+  depth: number,
+): FrontierItem {
   return {
-    async fetch(url) {
-      const page = pages[url];
+    url: candidate.normalizedUrl,
+    depth,
+    priority:
+      depth === 0
+        ? 100
+        : Math.max(1, 100 - depth),
+    ...(candidate.sourceUrl === undefined
+      ? {}
+      : {
+          discoveredFrom: candidate.sourceUrl,
+          sourceUrl: candidate.sourceUrl,
+        }),
+    kind: candidate.kind,
+    ...(candidate.title === undefined
+      ? {}
+      : {
+          title: candidate.title,
+        }),
+    discoveredAt: candidate.discoveredAt,
+  };
+}
 
-      if (!page) {
-        throw new Error(`PAGE_NOT_FOUND:${url}`);
+function cloneCandidate(
+  candidate: DiscoveryCandidate,
+): DiscoveryCandidate {
+  return Object.freeze({
+    url: candidate.url,
+    normalizedUrl: candidate.normalizedUrl,
+    kind: candidate.kind,
+    ...(candidate.sourceUrl === undefined
+      ? {}
+      : {
+          sourceUrl: candidate.sourceUrl,
+        }),
+    ...(candidate.title === undefined
+      ? {}
+      : {
+          title: candidate.title,
+        }),
+    discoveredAt: candidate.discoveredAt,
+  });
+}
+
+function isAllowedHost(
+  url: string,
+  allowedHosts: ReadonlySet<string>,
+): boolean {
+  try {
+    return allowedHosts.has(
+      new URL(url).host,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function errorMessage(
+  error: unknown,
+): string {
+  return error instanceof Error
+    ? error.message
+    : String(error);
+}
+
+export async function executeResearchFrontier(
+  seeds: readonly DiscoveryCandidate[],
+  pageFetcher: PageFetcher,
+  options: ResearchFrontierExecutorOptions = {},
+): Promise<ResearchFrontierExecutionResult> {
+  const maxPages =
+    normalizePositiveInteger(
+      options.maxPages ?? 50,
+      "maxPages",
+    );
+
+  const maxDepth =
+    normalizeNonNegativeInteger(
+      options.maxDepth ?? 2,
+      "maxDepth",
+    );
+
+  const sameHostOnly =
+    options.sameHostOnly ?? true;
+
+  const frontier =
+    new ResearchFrontier();
+
+  const initialCandidates =
+    seeds.map(cloneCandidate);
+
+  frontier.enqueue(
+    initialCandidates.map(
+      (candidate) =>
+        toFrontierItem(
+          candidate,
+          0,
+        ),
+    ),
+  );
+
+  const allowedHosts =
+    new Set<string>();
+
+  if (sameHostOnly) {
+    for (
+      const candidate of initialCandidates
+    ) {
+      try {
+        allowedHosts.add(
+          new URL(
+            candidate.normalizedUrl,
+          ).host,
+        );
+      } catch {
+        continue;
       }
+    }
+  }
 
-      return {
-        requestedUrl: url,
-        finalUrl: url,
-        redirectChain: [],
-        status: 200,
-        mediaType: page.mediaType ?? "text/html",
-        body: page.body,
-        bytes: new TextEncoder().encode(page.body),
-        fetchedAt:
-          page.fetchedAt ??
-          "2026-09-28T00:00:00.000Z",
-      };
-    },
-  };
-}
+  const candidates:
+    DiscoveryCandidate[] = [
+      ...initialCandidates,
+    ];
 
-function seed(url) {
-  return {
-    url,
-    normalizedUrl: url,
-    kind: "SEED",
-    discoveredAt:
-      "2026-09-28T00:00:00.000Z",
-  };
-}
-
-test(
-  "frontier executor closes discovery loop through links",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body: `
-          <html>
-            <body>
-              <a href="/article">Article</a>
-            </body>
-          </html>
-        `,
-      },
-
-      "https://example.com/article": {
-        body: `
-          <html>
-            <body>
-              <a href="/reference">Reference</a>
-            </body>
-          </html>
-        `,
-      },
-
-      "https://example.com/reference": {
-        body: `
-          <html>
-            <body>
-              <p>Evidence page.</p>
-            </body>
-          </html>
-        `,
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 10,
-          maxDepth: 2,
-          sameHostOnly: true,
-        },
-      );
-
-    assert.equal(
-      result.pagesFetched,
-      3,
-    );
-
-    assert.equal(
-      result.errors.length,
-      0,
-    );
-
-    assert.equal(
-      result.candidatesDiscovered,
-      2,
-    );
-
-    assert.deepEqual(
-      result.candidates.map(
+  const candidateKeys =
+    new Set(
+      initialCandidates.map(
         (candidate) =>
           candidate.normalizedUrl,
       ),
-      [
-        "https://example.com/start",
-        "https://example.com/article",
-        "https://example.com/reference",
-      ],
     );
-  },
-);
 
-test(
-  "frontier executor preserves discovery provenance",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body: `
-          <a
-            href="/engineering"
-            title="Engineering Guide"
-          >
-            Engineering
-          </a>
-        `,
-        fetchedAt:
-          "2026-09-28T01:00:00.000Z",
-      },
+  const fetchedPages:
+    FetchedPage[] = [];
 
-      "https://example.com/engineering": {
-        body: "<p>Engineering</p>",
-      },
-    });
+  const errors:
+    ResearchFrontierExecutionError[] = [];
 
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
+  while (
+    frontier.size > 0 &&
+    fetchedPages.length < maxPages
+  ) {
+    if (options.signal?.aborted) {
+      throw new Error(
+        "V8_RESEARCH_ABORTED",
+      );
+    }
+
+    const item =
+      frontier.next();
+
+    if (!item) {
+      break;
+    }
+
+    if (item.depth > maxDepth) {
+      continue;
+    }
+
+    if (
+      sameHostOnly &&
+      !isAllowedHost(
+        item.url,
+        allowedHosts,
+      )
+    ) {
+      continue;
+    }
+
+    let page: FetchedPage;
+
+    try {
+      page =
+        await pageFetcher.fetch(
+          item.url,
+          {
+            signal:
+              options.signal,
+          },
+        );
+    } catch (error) {
+      errors.push(
+        Object.freeze({
+          url: item.url,
+          depth: item.depth,
+          error:
+            errorMessage(error),
+        }),
+      );
+
+      continue;
+    }
+
+    fetchedPages.push(page);
+
+    const expandedInputs =
+      expandSourceReferences(
+        page,
+      );
+
+    if (
+      expandedInputs.length === 0
+    ) {
+      continue;
+    }
+
+    const discovered =
+      discoverCandidates(
+        expandedInputs,
+      );
+
+    const nextFrontier:
+      FrontierItem[] = [];
+
+    for (
+      const candidate
+      of discovered.candidates
+    ) {
+      if (
+        sameHostOnly &&
+        !isAllowedHost(
+          candidate.normalizedUrl,
+          allowedHosts,
+        )
+      ) {
+        continue;
+      }
+
+      if (
+        candidateKeys.has(
+          candidate.normalizedUrl,
+        )
+      ) {
+        continue;
+      }
+
+      const normalizedCandidate =
+        cloneCandidate(
+          candidate,
+        );
+
+      candidateKeys.add(
+        normalizedCandidate.normalizedUrl,
+      );
+
+      candidates.push(
+        normalizedCandidate,
+      );
+
+      if (
+        item.depth < maxDepth
+      ) {
+        nextFrontier.push(
+          toFrontierItem(
+            normalizedCandidate,
+            item.depth + 1,
           ),
-        ],
-        fetcher,
-        {
-          maxPages: 5,
-          maxDepth: 1,
-        },
-      );
+        );
+      }
+    }
 
-    const candidate =
-      result.candidates.find(
-        (item) =>
-          item.normalizedUrl ===
-          "https://example.com/engineering",
-      );
-
-    assert.ok(candidate);
-
-    assert.equal(
-      candidate.kind,
-      "LINK",
+    frontier.enqueue(
+      nextFrontier,
     );
+  }
 
-    assert.equal(
-      candidate.sourceUrl,
-      "https://example.com/start",
-    );
-
-    assert.equal(
-      candidate.title,
-      "Engineering Guide",
-    );
-
-    assert.equal(
-      candidate.discoveredAt,
-      "2026-09-28T01:00:00.000Z",
-    );
-  },
-);
-
-test(
-  "frontier executor enforces maxDepth",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body:
-          '<a href="/level-1">Level 1</a>',
-      },
-
-      "https://example.com/level-1": {
-        body:
-          '<a href="/level-2">Level 2</a>',
-      },
-
-      "https://example.com/level-2": {
-        body:
-          '<a href="/level-3">Level 3</a>',
-      },
-
-      "https://example.com/level-3": {
-        body: "<p>Level 3</p>",
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 20,
-          maxDepth: 1,
-        },
-      );
-
-    assert.deepEqual(
-      result.fetchedPages.map(
-        (page) => page.finalUrl,
+  return Object.freeze({
+    candidates:
+      Object.freeze([
+        ...candidates,
+      ]),
+    fetchedPages:
+      Object.freeze([
+        ...fetchedPages,
+      ]),
+    errors:
+      Object.freeze([
+        ...errors,
+      ]),
+    pagesFetched:
+      fetchedPages.length,
+    candidatesDiscovered:
+      Math.max(
+        0,
+        candidates.length -
+          initialCandidates.length,
       ),
-      [
-        "https://example.com/start",
-        "https://example.com/level-1",
-      ],
-    );
-
-    assert.equal(
-      result.candidates.some(
-        (candidate) =>
-          candidate.normalizedUrl ===
-          "https://example.com/level-2",
-      ),
-      true,
-    );
-
-    assert.equal(
-      result.pagesFetched,
-      2,
-    );
-  },
-);
-
-test(
-  "frontier executor enforces maxPages",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body: `
-          <a href="/a">A</a>
-          <a href="/b">B</a>
-          <a href="/c">C</a>
-        `,
-      },
-
-      "https://example.com/a": {
-        body: "<p>A</p>",
-      },
-
-      "https://example.com/b": {
-        body: "<p>B</p>",
-      },
-
-      "https://example.com/c": {
-        body: "<p>C</p>",
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 2,
-          maxDepth: 2,
-        },
-      );
-
-    assert.equal(
-      result.pagesFetched,
-      2,
-    );
-  },
-);
-
-test(
-  "frontier executor records fetch failures without fabricating discovery",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body:
-          '<a href="/missing">Missing</a>',
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 5,
-          maxDepth: 1,
-        },
-      );
-
-    assert.equal(
-      result.pagesFetched,
-      1,
-    );
-
-    assert.equal(
-      result.errors.length,
-      1,
-    );
-
-    assert.equal(
-      result.errors[0].url,
-      "https://example.com/missing",
-    );
-
-    assert.equal(
-      result.errors[0].error,
-      "PAGE_NOT_FOUND:https://example.com/missing",
-    );
-  },
-);
-
-test(
-  "frontier executor rejects cross-host expansion when sameHostOnly is enabled",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body: `
-          <a href="https://other.example/article">
-            External
-          </a>
-          <a href="/internal">
-            Internal
-          </a>
-        `,
-      },
-
-      "https://example.com/internal": {
-        body: "<p>Internal</p>",
-      },
-
-      "https://other.example/article": {
-        body: "<p>External</p>",
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 10,
-          maxDepth: 2,
-          sameHostOnly: true,
-        },
-      );
-
-    assert.equal(
-      result.pagesFetched,
-      2,
-    );
-
-    assert.equal(
-      result.candidates.some(
-        (candidate) =>
-          candidate.normalizedUrl ===
-          "https://other.example/article",
-      ),
-      false,
-    );
-  },
-);
-
-test(
-  "frontier executor supports sitemap expansion",
-  async () => {
-    const fetcher = createPageFetcher({
-      "https://example.com/start": {
-        body: `
-          <link
-            rel="sitemap"
-            href="/sitemap.xml"
-          />
-        `,
-      },
-
-      "https://example.com/sitemap.xml": {
-        mediaType: "application/xml",
-        body: `
-          <urlset>
-            <url>
-              <loc>
-                https://example.com/article-a
-              </loc>
-            </url>
-            <url>
-              <loc>
-                https://example.com/article-b
-              </loc>
-            </url>
-          </urlset>
-        `,
-      },
-
-      "https://example.com/article-a": {
-        body: "<p>A</p>",
-      },
-
-      "https://example.com/article-b": {
-        body: "<p>B</p>",
-      },
-    });
-
-    const result =
-      await executeResearchFrontier(
-        [
-          seed(
-            "https://example.com/start",
-          ),
-        ],
-        fetcher,
-        {
-          maxPages: 10,
-          maxDepth: 2,
-          sameHostOnly: true,
-        },
-      );
-
-    assert.equal(
-      result.pagesFetched,
-      4,
-    );
-
-    assert.equal(
-      result.candidates.some(
-        (candidate) =>
-          candidate.normalizedUrl ===
-          "https://example.com/article-a",
-      ),
-      true,
-    );
-
-    assert.equal(
-      result.candidates.some(
-        (candidate) =>
-          candidate.normalizedUrl ===
-          "https://example.com/article-b",
-      ),
-      true,
-    );
-  },
-);
+  });
+}
