@@ -10,18 +10,16 @@ import {
   HttpPageFetcher,
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
-import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-const apiKey =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!apiKey) {
-  throw new Error(
-    "V8_ARTICLE_RUNTIME_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
-  );
-}
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    source:
+      "DIRECT",
+    reason:
+      "Explicit Internet research entry point for V8 Article Runtime real Internet acquisition validation of plastic injection molding wall thickness.",
+  }),
+]);
 
 const opportunity = {
   keyword: {
@@ -69,13 +67,6 @@ const opportunity = {
 const store =
   new InMemoryFoundationStore();
 
-const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-    "https://api.tavily.com/search",
-    "v8-article-runtime-diagnostic",
-  );
-
 const pageFetcher =
   new HttpPageFetcher({
     timeoutMs:
@@ -106,11 +97,24 @@ console.log(
 );
 
 console.log(
-  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchProvider=TAVILY",
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] searchProvider=SELF_OWNED_CRAWL",
 );
 
 console.log(
   "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] sourceMode=REAL_INTERNET",
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] researchSeeds=${RESEARCH_SEEDS.length}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] seedUrls=${JSON.stringify(
+    RESEARCH_SEEDS.map(
+      (seed) =>
+        seed.url,
+    ),
+  )}`,
 );
 
 console.log(
@@ -119,6 +123,18 @@ console.log(
 
 console.log(
   "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxCandidates=3",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxPages=3",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] maxDepth=0",
+);
+
+console.log(
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] sameHostOnly=true",
 );
 
 console.log(
@@ -134,7 +150,7 @@ console.log(
 );
 
 console.log(
-  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 1: RESEARCH ACQUISITION",
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 1: SELF-OWNED RESEARCH ACQUISITION",
 );
 
 console.log(
@@ -150,18 +166,28 @@ console.log(
  * We do NOT call runV8ArticleRuntime() afterward.
  *
  * runV8ArticleRuntime() internally calls the same
- * runResearchAcquisition() function. Calling both would cause:
+ * runResearchAcquisition() function. Calling both would cause
+ * a second Internet acquisition and would contaminate this
+ * diagnostic.
  *
- *   Search #1
- *   Fetch #1
- *   Diagnostic
- *   Search #2
- *   Fetch #2
+ * The Article Runtime workflow therefore observes the
+ * Acquisition boundary only.
  *
- * That would contaminate the diagnostic result.
+ * Acquisition source:
  *
- * Therefore this workflow is deliberately limited to observing
- * the Acquisition layer.
+ *   Explicit Research Seed
+ *        ↓
+ *   Self-Owned Discovery
+ *        ↓
+ *   PageFetcher
+ *        ↓
+ *   Semantic Extraction
+ *        ↓
+ *   Foundation Ingestion
+ *        ↓
+ *   Evidence
+ *
+ * No third-party search provider is used.
  */
 
 let acquisition;
@@ -170,7 +196,7 @@ try {
   acquisition =
     await runResearchAcquisition(
       opportunity,
-      searchProvider,
+      undefined,
       pageFetcher,
       store,
       {
@@ -179,6 +205,18 @@ try {
 
         maxCandidates:
           3,
+
+        maxPages:
+          3,
+
+        maxDepth:
+          0,
+
+        sameHostOnly:
+          true,
+
+        researchSeeds:
+          RESEARCH_SEEDS,
 
         actorId:
           "v8-article-runtime-diagnostic",
@@ -256,7 +294,7 @@ console.log(
 );
 
 console.log(
-  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 3: SEARCH RESULT → DISCOVERY",
+  "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] PHASE 3: SELF-OWNED DISCOVERY",
 );
 
 console.log(
@@ -264,15 +302,24 @@ console.log(
 );
 
 console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.provider=${acquisition.discovery.provider ?? "SELF_OWNED_CRAWL"}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.seeds=${JSON.stringify(
+    acquisition.discovery.seeds ?? RESEARCH_SEEDS.map(
+      (seed) =>
+        seed.url,
+    ),
+  )}`,
+);
+
+console.log(
+  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.pagesFetched=${acquisition.discovery.pagesFetched ?? 0}`,
+);
+
+console.log(
   `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.candidates=${acquisition.discovery.candidates.length}`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.accepted=${acquisition.discovery.accepted}`,
-);
-
-console.log(
-  `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] discovery.rejected=${acquisition.discovery.rejected}`,
 );
 
 console.log(
@@ -341,6 +388,13 @@ for (
         title:
           candidate.title ??
           null,
+
+        sourceUrl:
+          candidate.sourceUrl ??
+          null,
+
+        discoveredAt:
+          candidate.discoveredAt,
       },
     )}`,
   );
@@ -437,6 +491,9 @@ for (
 
         finalUrl:
           record.page.finalUrl,
+
+        redirectChain:
+          record.page.redirectChain,
 
         status:
           record.page.status,
@@ -578,7 +635,7 @@ try {
   );
 } catch (error) {
   console.error(
-    `[V8-ARTICLE-RUNTIME][DIAGNOSTIC] foundationChain=INVALID`,
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] foundationChain=INVALID",
   );
 
   console.error(
@@ -613,7 +670,7 @@ if (
   );
 
   console.error(
-    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] SearchProvider produced one or more errors.",
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Self-owned acquisition reported one or more discovery errors.",
   );
 } else if (
   acquisition.discovery.candidates.length ===
@@ -624,7 +681,7 @@ if (
   );
 
   console.error(
-    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Search completed without usable discovery candidates.",
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Explicit research seeds produced no usable discovery candidates.",
   );
 } else if (
   acquisition.fetchErrors.length ===
@@ -656,7 +713,7 @@ if (
   );
 
   console.log(
-    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Internet acquisition produced one or more successful records.",
+    "[V8-ARTICLE-RUNTIME][DIAGNOSTIC] Self-owned Internet acquisition produced one or more successful records.",
   );
 }
 
