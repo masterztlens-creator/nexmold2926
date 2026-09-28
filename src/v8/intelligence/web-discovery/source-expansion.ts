@@ -177,15 +177,32 @@ function extractAnchorLinks(
       continue;
     }
 
+    const rawTitle = attribute(
+      attributes,
+      "title",
+    );
+
+    const titleFromAttribute =
+      rawTitle === undefined
+        ? undefined
+        : normalizeWhitespace(
+            decodeHtmlEntities(rawTitle),
+          );
+
     const rawText =
       match[2]
         ?.replace(/<[^>]+>/g, " ")
         ?? "";
 
-    const title =
+    const titleFromAnchorText =
       normalizeWhitespace(
-        rawText,
-      ) || undefined;
+        decodeHtmlEntities(rawText),
+      );
+
+    const title =
+      titleFromAttribute ||
+      titleFromAnchorText ||
+      undefined;
 
     references.push({
       url,
