@@ -8,3 +8,4 @@ export * from "./knowledge-gap.js";
 
 export * from "./frontier.js";
 export * from "./crawler.js";
+export * from "./self-owned-discovery.js";
