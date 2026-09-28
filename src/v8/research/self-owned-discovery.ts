@@ -69,11 +69,16 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 1:
    *
-   * Materialize crawled page candidates first.
+   * Materialize crawled page candidates before
+   * discovered links can consume the candidate budget.
    *
-   * Explicitly supplied research-entry pages must
-   * receive candidate-budget priority over discovered
-   * navigation links.
+   * Provenance contract:
+   *
+   *   explicit seed page
+   *       -> options.sourceHint
+   *
+   *   subsequently crawled page
+   *       -> discoveryRoot
    */
   for (
     const page of pages
@@ -89,6 +94,10 @@ export async function discoverWithSelfOwnedCrawl(
       canonicalizeUrl(
         page.url,
       );
+
+    const isExplicitSeed =
+      pageCanonicalUrl ===
+      discoveryRoot;
 
     addCandidate({
       candidates,
@@ -108,12 +117,19 @@ export async function discoverWithSelfOwnedCrawl(
                 page.title,
             }
           : {}),
-        ...(options.sourceHint
-          ? {
-              sourceHint:
-                options.sourceHint,
-            }
-          : {}),
+        ...(isExplicitSeed
+          ? options.sourceHint
+            ? {
+                sourceHint:
+                  options.sourceHint,
+              }
+            : {}
+          : discoveryRoot
+            ? {
+                sourceHint:
+                  discoveryRoot,
+              }
+            : {}),
       },
       maxCandidates,
     });
@@ -123,15 +139,11 @@ export async function discoverWithSelfOwnedCrawl(
    * Phase 2:
    *
    * Materialize discovered links only after all
-   * crawled page candidates have entered the bounded
-   * candidate set.
+   * crawled page candidates have had an opportunity
+   * to enter the bounded candidate set.
    *
-   * LINK candidates retain their original provenance:
-   *
-   *   sourceHint = discoveryRoot
-   *
-   * This is distinct from the explicit seed/page
-   * sourceHint and is part of the V8-28A contract.
+   * Every discovered link is attributed to the
+   * self-owned discovery root.
    */
   for (
     const page of pages
