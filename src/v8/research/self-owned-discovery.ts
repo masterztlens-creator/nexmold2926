@@ -85,9 +85,10 @@ export async function discoverWithSelfOwnedCrawl(
               title: page.title,
             }
           : {}),
-        ...(options.sourceHint
+        ...(page.discoveredFrom ?? options.sourceHint
           ? {
-              sourceHint: options.sourceHint,
+              sourceHint:
+                page.discoveredFrom ?? options.sourceHint,
             }
           : {}),
       },

@@ -9,6 +9,7 @@ export interface CrawlPage {
   readonly links: readonly string[];
   readonly body: string;
   readonly fetchedAt: string;
+  readonly discoveredFrom?: string;
 }
 
 export interface CrawlOptions {
@@ -129,6 +130,11 @@ export async function crawl(
           links: Object.freeze(links),
           body: page.body,
           fetchedAt: page.fetchedAt,
+          ...(item.discoveredFrom
+            ? {
+                discoveredFrom: item.discoveredFrom,
+              }
+            : {}),
         }),
       );
 
