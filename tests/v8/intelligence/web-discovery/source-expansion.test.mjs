@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   expandSourceReferences,
-} from "../../../../src/v8/intelligence/web-discovery/source-expansion.js";
+} from "../../../../.v8-build/src/v8/intelligence/web-discovery/source-expansion.js";
 
 function createFetchedPage({
   body,
@@ -596,6 +596,180 @@ test(
       result.map((item) => item.url),
       [
         "https://example.com/search?q=plastic&page=2",
+      ],
+    );
+  },
+);
+
+test(
+  "V8 source expansion extracts link titles deterministically",
+  () => {
+    const page = createFetchedPage({
+      body: `
+        <a
+          href="/engineering"
+          title="Engineering Guide"
+        >
+          Engineering
+        </a>
+      `,
+    });
+
+    const result =
+      expandSourceReferences(page);
+
+    assert.deepEqual(
+      result,
+      [
+        {
+          url:
+            "https://example.com/engineering",
+          kind: "LINK",
+          sourceUrl:
+            "https://example.com/original",
+          title:
+            "Engineering Guide",
+          discoveredAt:
+            "2026-09-28T03:00:00.000Z",
+        },
+      ],
+    );
+  },
+);
+
+test(
+  "V8 source expansion falls back to anchor text when title is absent",
+  () => {
+    const page = createFetchedPage({
+      body: `
+        <a href="/engineering">
+          Engineering Guide
+        </a>
+      `,
+    });
+
+    const result =
+      expandSourceReferences(page);
+
+    assert.deepEqual(
+      result,
+      [
+        {
+          url:
+            "https://example.com/engineering",
+          kind: "LINK",
+          sourceUrl:
+            "https://example.com/original",
+          title:
+            "Engineering Guide",
+          discoveredAt:
+            "2026-09-28T03:00:00.000Z",
+        },
+      ],
+    );
+  },
+);
+
+test(
+  "V8 source expansion decodes HTML entities in link titles",
+  () => {
+    const page = createFetchedPage({
+      body: `
+        <a
+          href="/engineering"
+          title="Engineering &amp; Design"
+        >
+          Engineering
+        </a>
+      `,
+    });
+
+    const result =
+      expandSourceReferences(page);
+
+    assert.deepEqual(
+      result,
+      [
+        {
+          url:
+            "https://example.com/engineering",
+          kind: "LINK",
+          sourceUrl:
+            "https://example.com/original",
+          title:
+            "Engineering & Design",
+          discoveredAt:
+            "2026-09-28T03:00:00.000Z",
+        },
+      ],
+    );
+  },
+);
+
+test(
+  "V8 source expansion ignores links without usable href values",
+  () => {
+    const page = createFetchedPage({
+      body: `
+        <a>Missing href</a>
+        <a href="">Empty href</a>
+        <a href="   ">Whitespace href</a>
+        <a href="/valid">Valid</a>
+      `,
+    });
+
+    const result =
+      expandSourceReferences(page);
+
+    assert.deepEqual(
+      result.map((item) => item.url),
+      [
+        "https://example.com/valid",
+      ],
+    );
+  },
+);
+
+test(
+  "V8 source expansion preserves deterministic discovery metadata",
+  () => {
+    const page = createFetchedPage({
+      finalUrl:
+        "https://example.com/final",
+      fetchedAt:
+        "2026-09-28T05:00:00.000Z",
+      body: `
+        <a href="/one">One</a>
+        <a href="/two">Two</a>
+      `,
+    });
+
+    const result =
+      expandSourceReferences(page);
+
+    assert.deepEqual(
+      result,
+      [
+        {
+          url:
+            "https://example.com/one",
+          kind: "LINK",
+          sourceUrl:
+            "https://example.com/final",
+          title: "One",
+          discoveredAt:
+            "2026-09-28T05:00:00.000Z",
+        },
+        {
+          url:
+            "https://example.com/two",
+          kind: "LINK",
+          sourceUrl:
+            "https://example.com/final",
+          title: "Two",
+          discoveredAt:
+            "2026-09-28T05:00:00.000Z",
+        },
       ],
     );
   },
