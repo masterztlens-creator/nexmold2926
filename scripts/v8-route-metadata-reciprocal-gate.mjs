@@ -41,6 +41,28 @@ const RESEARCH_SEEDS = Object.freeze([
     reason:
       "Explicit Internet research entry point for V8-18.1 cross-locale reciprocal hreflang integrity real Internet validation of plastic injection molding wall thickness.",
   }),
+
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/",
+
+    source:
+      "DIRECT",
+
+    reason:
+      "Independent Internet research entry point for V8-18.1 cross-locale reciprocal hreflang integrity real Internet validation of plastic injection molding process and capabilities.",
+  }),
+
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/resources/guides-and-trend-reports/injection-molding-guide-process-design-tips-materials/",
+
+    source:
+      "DIRECT",
+
+    reason:
+      "Independent Internet research entry point for V8-18.1 cross-locale reciprocal hreflang integrity real Internet validation of injection molding design, material selection, and manufacturing guidance.",
+  }),
 ]);
 
 
@@ -269,8 +291,8 @@ const runtime = await runV8ArticleRuntime({
 
   acquisition: {
     maxQueries: 1,
-    maxCandidates: 1,
-    maxPages: 1,
+    maxCandidates: 3,
+    maxPages: 3,
     maxDepth: 0,
     sameHostOnly: true,
     researchSeeds: RESEARCH_SEEDS,
