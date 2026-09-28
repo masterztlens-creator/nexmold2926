@@ -3,7 +3,8 @@ import type { DiscoveryCandidate } from "./types.js";
 import { canonicalizeUrl } from "./discovery.js";
 import { crawl, type CrawlOptions } from "./crawler.js";
 
-export interface SelfOwnedDiscoveryOptions extends CrawlOptions {
+export interface SelfOwnedDiscoveryOptions
+  extends CrawlOptions {
   readonly maxCandidates?: number;
   readonly sourceHint?: string;
 }
@@ -20,7 +21,8 @@ export async function discoverWithSelfOwnedCrawl(
   fetcher: PageFetcher,
   options: SelfOwnedDiscoveryOptions = {},
 ): Promise<SelfOwnedDiscoveryResult> {
-  const normalizedSeeds = normalizeSeeds(seedUrls);
+  const normalizedSeeds =
+    normalizeSeeds(seedUrls);
 
   if (normalizedSeeds.length === 0) {
     throw new Error(
@@ -49,19 +51,19 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 1:
    *
-   * Explicitly supplied research seeds are always
-   * materialized as candidates before any discovered
-   * LINK candidate.
+   * Materialize every crawled page before allowing
+   * discovered links to consume the candidate budget.
    *
-   * This preserves a deterministic priority boundary:
+   * This establishes the deterministic priority:
    *
-   *   explicit research source
+   *   crawled research page
    *          >
    *   discovered navigation/reference link
    *
-   * A bounded acquisition budget must never allow a
-   * navigation link to displace an explicitly selected
-   * research source.
+   * The sourceHint of a self-owned candidate represents
+   * the actual discovery root, not an arbitrary caller
+   * supplied label. This preserves the V8-28A provenance
+   * contract.
    */
   for (const page of pages) {
     if (
@@ -90,17 +92,12 @@ export async function discoverWithSelfOwnedCrawl(
                 page.title,
             }
           : {}),
-        ...(options.sourceHint
+        ...(discoveryRoot
           ? {
               sourceHint:
-                options.sourceHint,
+                discoveryRoot,
             }
-          : discoveryRoot
-            ? {
-                sourceHint:
-                  discoveryRoot,
-              }
-            : {}),
+          : {}),
       },
       maxCandidates,
     });
@@ -109,9 +106,9 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 2:
    *
-   * Only after all crawled seed/page candidates have
-   * been admitted may discovered links consume the
-   * remaining candidate budget.
+   * Only after all crawled page candidates have been
+   * admitted may discovered links consume the remaining
+   * candidate budget.
    */
   for (const page of pages) {
     if (
