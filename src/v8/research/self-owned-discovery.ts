@@ -53,7 +53,7 @@ export async function discoverWithSelfOwnedCrawl(
    * materialized as candidates before any discovered
    * LINK candidate.
    *
-   * This is a deterministic priority boundary:
+   * This preserves a deterministic priority boundary:
    *
    *   explicit research source
    *          >
@@ -95,7 +95,12 @@ export async function discoverWithSelfOwnedCrawl(
               sourceHint:
                 options.sourceHint,
             }
-          : {}),
+          : discoveryRoot
+            ? {
+                sourceHint:
+                  discoveryRoot,
+              }
+            : {}),
       },
       maxCandidates,
     });
