@@ -1,7 +1,19 @@
-import type { PageFetcher } from "../acquisition/types.js";
-import type { DiscoveryCandidate } from "./types.js";
-import { canonicalizeUrl } from "./discovery.js";
-import { crawl, type CrawlOptions } from "./crawler.js";
+import type {
+  PageFetcher,
+} from "../acquisition/types.js";
+
+import type {
+  DiscoveryCandidate,
+} from "./types.js";
+
+import {
+  canonicalizeUrl,
+} from "./discovery.js";
+
+import {
+  crawl,
+  type CrawlOptions,
+} from "./crawler.js";
 
 export interface SelfOwnedDiscoveryOptions
   extends CrawlOptions {
@@ -24,7 +36,9 @@ export async function discoverWithSelfOwnedCrawl(
   const normalizedSeeds =
     normalizeSeeds(seedUrls);
 
-  if (normalizedSeeds.length === 0) {
+  if (
+    normalizedSeeds.length === 0
+  ) {
     throw new Error(
       "V8_RESEARCH_SELF_OWNED_NO_VALID_SEEDS",
     );
@@ -36,36 +50,37 @@ export async function discoverWithSelfOwnedCrawl(
       "maxCandidates",
     );
 
-  const pages = await crawl(
-    normalizedSeeds,
-    fetcher,
-    options,
-  );
+  const pages =
+    await crawl(
+      normalizedSeeds,
+      fetcher,
+      options,
+    );
 
-  const candidates: DiscoveryCandidate[] = [];
-  const seen = new Set<string>();
+  const candidates:
+    DiscoveryCandidate[] = [];
 
-  const discoveryRoot =
-    normalizedSeeds[0];
+  const seen =
+    new Set<string>();
 
   /*
    * Phase 1:
    *
-   * Materialize every crawled page before allowing
-   * discovered links to consume the candidate budget.
+   * Materialize crawled page candidates first.
    *
-   * This establishes the deterministic priority:
+   * This preserves explicit research-entry priority:
    *
-   *   crawled research page
+   *   crawled seed/page
    *          >
-   *   discovered navigation/reference link
+   *   discovered navigation link
    *
-   * The sourceHint of a self-owned candidate represents
-   * the actual discovery root, not an arbitrary caller
-   * supplied label. This preserves the V8-28A provenance
-   * contract.
+   * A bounded candidate budget therefore cannot allow
+   * navigation links to displace explicitly supplied
+   * research sources.
    */
-  for (const page of pages) {
+  for (
+    const page of pages
+  ) {
     if (
       candidates.length >=
       maxCandidates
@@ -74,16 +89,20 @@ export async function discoverWithSelfOwnedCrawl(
     }
 
     const pageCanonicalUrl =
-      canonicalizeUrl(page.url);
+      canonicalizeUrl(
+        page.url,
+      );
 
     addCandidate({
       candidates,
       seen,
       candidate: {
-        url: page.url,
+        url:
+          page.url,
         canonicalUrl:
           pageCanonicalUrl,
-        provider: "DIRECT",
+        provider:
+          "DIRECT",
         discoveredAt:
           page.fetchedAt,
         ...(page.title
@@ -92,10 +111,10 @@ export async function discoverWithSelfOwnedCrawl(
                 page.title,
             }
           : {}),
-        ...(discoveryRoot
+        ...(options.sourceHint
           ? {
               sourceHint:
-                discoveryRoot,
+                options.sourceHint,
             }
           : {}),
       },
@@ -106,11 +125,13 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 2:
    *
-   * Only after all crawled page candidates have been
-   * admitted may discovered links consume the remaining
-   * candidate budget.
+   * Materialize discovered links only after all
+   * crawled page candidates have had an opportunity
+   * to enter the bounded candidate set.
    */
-  for (const page of pages) {
+  for (
+    const page of pages
+  ) {
     if (
       candidates.length >=
       maxCandidates
@@ -118,7 +139,9 @@ export async function discoverWithSelfOwnedCrawl(
       break;
     }
 
-    for (const link of page.links) {
+    for (
+      const link of page.links
+    ) {
       if (
         candidates.length >=
         maxCandidates
@@ -130,7 +153,9 @@ export async function discoverWithSelfOwnedCrawl(
 
       try {
         canonicalUrl =
-          canonicalizeUrl(link);
+          canonicalizeUrl(
+            link,
+          );
       } catch {
         continue;
       }
@@ -139,15 +164,17 @@ export async function discoverWithSelfOwnedCrawl(
         candidates,
         seen,
         candidate: {
-          url: link,
+          url:
+            link,
           canonicalUrl,
-          provider: "DIRECT",
+          provider:
+            "DIRECT",
           discoveredAt:
             page.fetchedAt,
-          ...(discoveryRoot
+          ...(options.sourceHint
             ? {
                 sourceHint:
-                  discoveryRoot,
+                  options.sourceHint,
               }
             : {}),
         },
@@ -159,14 +186,17 @@ export async function discoverWithSelfOwnedCrawl(
   return Object.freeze({
     provider:
       "SELF_OWNED_CRAWL",
+
     seeds:
       Object.freeze([
         ...normalizedSeeds,
       ]),
+
     candidates:
       Object.freeze([
         ...candidates,
       ]),
+
     pagesFetched:
       pages.length,
   });
@@ -175,25 +205,41 @@ export async function discoverWithSelfOwnedCrawl(
 function normalizeSeeds(
   seedUrls: readonly string[],
 ): readonly string[] {
-  const normalized: string[] = [];
-  const seen = new Set<string>();
+  const normalized:
+    string[] = [];
 
-  for (const seedUrl of seedUrls) {
+  const seen =
+    new Set<string>();
+
+  for (
+    const seedUrl of seedUrls
+  ) {
     let canonicalUrl: string;
 
     try {
       canonicalUrl =
-        canonicalizeUrl(seedUrl);
+        canonicalizeUrl(
+          seedUrl,
+        );
     } catch {
       continue;
     }
 
-    if (seen.has(canonicalUrl)) {
+    if (
+      seen.has(
+        canonicalUrl,
+      )
+    ) {
       continue;
     }
 
-    seen.add(canonicalUrl);
-    normalized.push(canonicalUrl);
+    seen.add(
+      canonicalUrl,
+    );
+
+    normalized.push(
+      canonicalUrl,
+    );
   }
 
   return Object.freeze(
