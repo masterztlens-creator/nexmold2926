@@ -56,7 +56,10 @@ function safeResolveUrl(
     rawValue.trim(),
   );
 
-  if (!decoded || UNSUPPORTED_SCHEMES.test(decoded)) {
+  if (
+    !decoded ||
+    UNSUPPORTED_SCHEMES.test(decoded)
+  ) {
     return null;
   }
 
@@ -86,7 +89,10 @@ function attribute(
   name: string,
 ): string | undefined {
   const escapedName =
-    name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    name.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    );
 
   const pattern = new RegExp(
     `\\b${escapedName}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
@@ -110,8 +116,14 @@ function tagAttributes(
   tag: string,
 ): string {
   return tag
-    .replace(/^<\s*[a-z0-9:-]+/i, "")
-    .replace(/\/?>\s*$/i, "");
+    .replace(
+      /^<\s*[a-z0-9:-]+/i,
+      "",
+    )
+    .replace(
+      /\/?>\s*$/i,
+      "",
+    );
 }
 
 function relTokens(
@@ -144,7 +156,9 @@ function extractAnchorLinks(
     match !== null;
     match = anchorPattern.exec(body)
   ) {
-    const attributes = match[1] ?? "";
+    const attributes =
+      match[1] ?? "";
+
     const rawHref = attribute(
       attributes,
       "href",
@@ -199,7 +213,8 @@ function extractReferenceLinks(
     match !== null;
     match = linkPattern.exec(body)
   ) {
-    const attributes = match[1] ?? "";
+    const attributes =
+      match[1] ?? "";
 
     const rawHref = attribute(
       attributes,
@@ -275,7 +290,8 @@ function extractOpenGraphReference(
     match !== null;
     match = metaPattern.exec(body)
   ) {
-    const attributes = match[1] ?? "";
+    const attributes =
+      match[1] ?? "";
 
     const property =
       attribute(
@@ -427,14 +443,22 @@ export function expandSourceReferences(
 
   const references: ExtractedReference[] = [];
 
-  if (isSitemapDocument(page.mediaType)) {
+  if (
+    isSitemapDocument(
+      page.mediaType,
+    )
+  ) {
     references.push(
       ...extractSitemapLocations(
         body,
         page.finalUrl,
       ),
     );
-  } else if (isHtmlPage(page.mediaType)) {
+  } else if (
+    isHtmlPage(
+      page.mediaType,
+    )
+  ) {
     references.push(
       ...extractAnchorLinks(
         body,
@@ -471,13 +495,17 @@ export function expandSourceReferences(
 
   return Object.freeze(
     unique.map(
-      (reference): DiscoveryInput => ({
+      (
+        reference,
+      ): DiscoveryInput => ({
         url: reference.url,
         kind: reference.kind,
         sourceUrl: page.finalUrl,
         ...(reference.title === undefined
           ? {}
-          : { title: reference.title }),
+          : {
+              title: reference.title,
+            }),
         discoveredAt: page.fetchedAt,
       }),
     ),
