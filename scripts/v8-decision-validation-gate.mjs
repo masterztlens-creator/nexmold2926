@@ -176,9 +176,9 @@ async function main() {
 
       acquisition: {
         maxQueries: 1,
-        maxCandidates: 3,
-        maxPages: 3,
-        maxDepth: 1,
+        maxCandidates: 1,
+        maxPages: 1,
+        maxDepth: 0,
         sameHostOnly: true,
         researchSeeds:
           RESEARCH_SEEDS,
