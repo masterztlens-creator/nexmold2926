@@ -9,10 +9,6 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
-
-import {
   runV8ArticleRuntime,
 } from "../.v8-build/src/v8/runtime/article-runtime.js";
 
@@ -32,15 +28,6 @@ import {
   createRule,
   createPolicy,
 } from "../.v8-build/src/v8/governance/index.js";
-
-const apiKey =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!apiKey) {
-  throw new Error(
-    "V8_PUBLICATION_ARTIFACT_CONFIG_MISSING: V8_SEARCH_API_KEY is required.",
-  );
-}
 
 function lineageLink(record) {
   return {
@@ -108,15 +95,19 @@ const opportunity = {
   ],
 };
 
+const researchSeeds = [
+  {
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    source:
+      "DIRECT",
+    reason:
+      "Explicit Internet research entry point for V8 publication artifact validation of plastic injection molding wall thickness.",
+  },
+];
+
 const store =
   new InMemoryFoundationStore();
-
-const searchProvider =
-  new TavilySearchProvider(
-    apiKey,
-    "https://api.tavily.com/search",
-    "v8-publication-artifact-gate",
-  );
 
 const pageFetcher =
   new HttpPageFetcher({
@@ -127,7 +118,6 @@ const pageFetcher =
 const result =
   await runV8ArticleRuntime({
     opportunity,
-    searchProvider,
     pageFetcher,
     store,
 
@@ -139,6 +129,10 @@ const result =
     acquisition: {
       maxQueries: 1,
       maxCandidates: 3,
+      maxPages: 3,
+      maxDepth: 1,
+      sameHostOnly: true,
+      researchSeeds,
       actorId:
         "v8-publication-artifact-gate",
     },

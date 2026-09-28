@@ -81,7 +81,7 @@ import type {
 
 export interface ArticleRuntimeInput {
   readonly opportunity: Opportunity;
-  readonly searchProvider: SearchProvider;
+  readonly searchProvider?: SearchProvider;
   readonly pageFetcher: PageFetcher;
   readonly store?: FoundationStore;
   readonly actor?: AuditActor;
