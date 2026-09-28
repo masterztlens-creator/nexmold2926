@@ -62,6 +62,4 @@ jobs:
           done
 
       - name: Real Internet Decision Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-decision-gate.mjs
