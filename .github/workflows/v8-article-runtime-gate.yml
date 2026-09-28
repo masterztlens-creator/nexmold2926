@@ -1,6 +1,17 @@
 name: V8 Article Runtime Gate
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "scripts/v8-article-runtime-gate.mjs"
+      - ".github/workflows/v8-article-runtime-gate.yml"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+
   workflow_dispatch:
 
 jobs:
@@ -66,10 +77,7 @@ jobs:
 
           test -f .v8-build/src/v8/foundation/store.js
           test -f .v8-build/src/v8/acquisition/page-fetcher.js
-          test -f .v8-build/src/v8/acquisition/tavily-search-provider.js
           test -f .v8-build/src/v8/runtime/article-runtime.js
 
       - name: Real Internet Article Runtime Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-article-runtime-gate.mjs

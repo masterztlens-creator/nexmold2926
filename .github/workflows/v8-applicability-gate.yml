@@ -58,7 +58,4 @@ jobs:
           done
 
       - name: Real Internet Applicability Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
-        run: |
-          node scripts/v8-applicability-gate.mjs
+        run: node scripts/v8-applicability-gate.mjs

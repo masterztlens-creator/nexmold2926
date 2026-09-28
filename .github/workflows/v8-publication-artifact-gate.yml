@@ -59,6 +59,4 @@ jobs:
           echo "V8 build output: PASS"
 
       - name: Real Internet Publication Artifact Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-publication-artifact-gate.mjs

@@ -57,6 +57,4 @@ jobs:
           done
 
       - name: Real Internet Decision Validation Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-decision-validation-gate.mjs

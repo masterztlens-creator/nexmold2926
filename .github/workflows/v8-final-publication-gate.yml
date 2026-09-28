@@ -62,8 +62,6 @@ jobs:
           done
 
       - name: Real Internet Final Publication Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: |
           node scripts/v8-final-publication-gate.mjs
 
@@ -133,13 +131,8 @@ jobs:
             }
           }
 
-          console.log(
-            `[V8-PREVIEW] handoff=${file}`,
-          );
-
-          console.log(
-            `[V8-PREVIEW] pages=${handoff.pages.length}`,
-          );
+          console.log(`[V8-PREVIEW] handoff=${file}`);
+          console.log(`[V8-PREVIEW] pages=${handoff.pages.length}`);
 
           for (const [index, page] of handoff.pages.entries()) {
             console.log(
