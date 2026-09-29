@@ -332,7 +332,7 @@ test(
     const result =
       await expandEvidenceFromInternet(
         [
-          "plastic injection molding wall thickness",
+          "engineering source",
         ],
 
         undefined,
@@ -467,7 +467,10 @@ test(
     const store =
       new InMemoryFoundationStore();
 
-    const blockedSeed =
+    const validSeed =
+      "https://example.com/seed";
+
+    const blockedLink =
       "http://127.0.0.1/blocked";
 
     let acquisitionFetches =
@@ -477,12 +480,47 @@ test(
       async fetch(
         url: string,
       ) {
-        acquisitionFetches += 1;
+        if (
+          url ===
+          validSeed
+        ) {
+          const body =
+            `<html><head><title>Engineering Source</title></head><body><a href="${blockedLink}">blocked source</a></body></html>`;
+
+          return {
+            requestedUrl:
+              url,
+
+            finalUrl:
+              url,
+
+            redirectChain:
+              [],
+
+            status:
+              200,
+
+            mediaType:
+              "text/html",
+
+            body,
+
+            bytes:
+              new TextEncoder().encode(
+                body,
+              ),
+
+            fetchedAt:
+              "2026-01-01T00:00:00.000Z",
+          };
+        }
 
         if (
           url ===
-          blockedSeed
+          blockedLink
         ) {
+          acquisitionFetches += 1;
+
           const body =
             "<html><head><title>Blocked</title></head><body>Wall thickness 2 mm.</body></html>";
 
@@ -515,7 +553,7 @@ test(
         }
 
         throw new Error(
-          `Unexpected acquisition URL: ${url}`,
+          `Unexpected URL: ${url}`,
         );
       },
     };
@@ -523,7 +561,7 @@ test(
     const result =
       await expandEvidenceFromInternet(
         [
-          "wall thickness",
+          "blocked source",
         ],
 
         undefined,
@@ -537,38 +575,43 @@ test(
             "V8-08-REJECTION-TEST",
 
           maxCandidates:
-            1,
+            2,
 
           maxPages:
             1,
 
           maxDepth:
-            0,
+            1,
 
           sameHostOnly:
-            true,
+            false,
 
           researchSeeds:
             [
               {
                 url:
-                  blockedSeed,
+                  validSeed,
 
                 source:
                   "DIRECT",
 
                 reason:
-                  "Intentional source-policy rejection test.",
+                  "Explicit valid seed for source-policy rejection test.",
               },
             ],
         },
       );
 
-    /*
-     * The crawler itself may fetch the seed during discovery.
-     * The important V8-08 assertion is that the rejected candidate does not
-     * receive a second acquisition call and no Foundation evidence is made.
-     */
+    assert.equal(
+      result.searchErrors.length,
+      0,
+    );
+
+    assert.equal(
+      result.fetchErrors.length,
+      0,
+    );
+
     assert.equal(
       result.qualifiedCandidates.length,
       0,
@@ -584,11 +627,6 @@ test(
       0,
     );
 
-    assert.equal(
-      result.fetchErrors.length,
-      0,
-    );
-
     assert.ok(
       result.rejectedCandidates[0]
         ?.qualification
@@ -597,23 +635,37 @@ test(
         ),
     );
 
-    assert.equal(
-      store.getAll("EVIDENCE").length,
-      0,
-    );
-
-    assert.equal(
-      store.getAll("SNAPSHOT").length,
-      0,
-    );
-
     /*
-     * Discovery itself may have fetched the page once. There must not be
-     * another fetch caused by the acquisition stage.
+     * The blocked URL may be fetched during self-owned discovery because
+     * discovery operates before candidate qualification.
+     *
+     * The V8-08 boundary assertion is that the rejected candidate never
+     * crosses into expansion acquisition / Foundation ingestion.
      */
     assert.equal(
       acquisitionFetches,
-      1,
+      0,
+    );
+
+    const auditRecords =
+      store.auditTrail();
+
+    assert.equal(
+      auditRecords.filter(
+        (record) =>
+          record.aggregateType ===
+          "EVIDENCE",
+      ).length,
+      0,
+    );
+
+    assert.equal(
+      auditRecords.filter(
+        (record) =>
+          record.aggregateType ===
+          "SNAPSHOT",
+      ).length,
+      0,
     );
 
     store.verifyChain();
@@ -734,6 +786,13 @@ test(
     assert.equal(
       fetchCount,
       0,
+    );
+
+    assert.equal(
+      result.rejectedCandidates[0]
+        ?.qualification
+        ?.provenance,
+      "SEARCH_PROVIDER_RESULT",
     );
 
     assert.ok(

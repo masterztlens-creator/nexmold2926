@@ -174,6 +174,19 @@ function throwIfAborted(
 function provenanceForDiscoveryCandidate(
   candidate: DiscoveryCandidate,
 ): ProvenanceStatus {
+  /*
+   * Provider identity is authoritative for provenance classification.
+   *
+   * A SEARCH result must never become a seed descendant merely because a
+   * SearchProvider supplies a non-empty sourceHint.
+   */
+  if (
+    candidate.provider ===
+    "SEARCH"
+  ) {
+    return "SEARCH_PROVIDER_RESULT";
+  }
+
   if (
     candidate.sourceHint ===
     "V8_RESEARCH_SEED"
@@ -182,6 +195,8 @@ function provenanceForDiscoveryCandidate(
   }
 
   if (
+    candidate.provider ===
+      "DIRECT" &&
     candidate.sourceHint &&
     candidate.sourceHint.trim()
   ) {
@@ -390,7 +405,8 @@ export async function expandEvidenceFromInternet(
     EvidenceCandidate[] = [];
 
   const searchErrors:
-    EvidenceExpansionError[] = [];
+    EvidenceExpansionError[] =
+    [];
 
   /*
    * Explicit ResearchSeed input is the self-owned discovery path.
@@ -490,24 +506,24 @@ export async function expandEvidenceFromInternet(
 
           const candidate:
             DiscoveryCandidate = {
-              url:
-                result.url,
+            url:
+              result.url,
 
-              canonicalUrl:
-                result.url,
+            canonicalUrl:
+              result.url,
 
-              provider:
-                "SEARCH",
+            provider:
+              "SEARCH",
 
-              discoveredAt:
-                new Date().toISOString(),
+            discoveredAt:
+              new Date().toISOString(),
 
-              title:
-                result.title,
+            title:
+              result.title,
 
-              sourceHint:
-                searchProvider.name,
-            };
+            sourceHint:
+              searchProvider.name,
+          };
 
           candidates.push(
             toEvidenceCandidate(
