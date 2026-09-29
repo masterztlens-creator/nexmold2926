@@ -188,7 +188,7 @@ test(
         (
           candidate,
         ) =>
-          candidate.canonicalUrl,
+          candidate.normalizedUrl,
       );
 
     assert.ok(
@@ -221,27 +221,27 @@ test(
     ) {
       assert.equal(
         candidate.provider,
-        "DIRECT",
+        "SELF_OWNED_CRAWL",
       );
 
       assert.equal(
-        candidate.canonicalUrl,
+        candidate.normalizedUrl,
         canonicalizeUrl(
           candidate.url,
         ),
       );
 
       if (
-        candidate.canonicalUrl ===
+        candidate.normalizedUrl ===
         "https://example.com/start"
       ) {
         assert.equal(
-          candidate.sourceHint,
+          candidate.sourceUrl,
           "V8-28A",
         );
       } else {
         assert.equal(
-          candidate.sourceHint,
+          candidate.sourceUrl,
           "https://example.com/start",
         );
       }
@@ -341,8 +341,8 @@ test(
               url:
                 candidate.url,
 
-              canonicalUrl:
-                candidate.canonicalUrl,
+              normalizedUrl:
+                candidate.normalizedUrl,
 
               provider:
                 candidate.provider,
@@ -350,8 +350,8 @@ test(
               title:
                 candidate.title,
 
-              sourceHint:
-                candidate.sourceHint,
+              sourceUrl:
+                candidate.sourceUrl,
             }),
           ),
       });
@@ -506,7 +506,7 @@ test(
           (
             candidate,
           ) => [
-            candidate.canonicalUrl,
+            candidate.normalizedUrl,
             candidate,
           ],
         ),
@@ -554,21 +554,21 @@ test(
 
     /*
      * Explicit ResearchSeed pages use the controlled
-     * sourceHint supplied by the discovery caller.
+     * sourceUrl supplied by the discovery caller.
      *
      * Their own ResearchSeed URL is represented by the
      * discoveryRoot internally and is used for descendants.
      */
     assert.equal(
-      seedACandidate.sourceHint,
+      seedACandidate.sourceUrl,
       "V8-28A",
-      "Seed A must use the controlled discovery source hint",
+      "Seed A must use the controlled discovery source URL",
     );
 
     assert.equal(
-      seedBCandidate.sourceHint,
+      seedBCandidate.sourceUrl,
       "V8-28A",
-      "Seed B must use the controlled discovery source hint",
+      "Seed B must use the controlled discovery source URL",
     );
 
     /*
@@ -576,13 +576,13 @@ test(
      * that originated the page from which they were found.
      */
     assert.equal(
-      childACandidate.sourceHint,
+      childACandidate.sourceUrl,
       seedA,
       "Seed A child must inherit Seed A provenance",
     );
 
     assert.equal(
-      childBCandidate.sourceHint,
+      childBCandidate.sourceUrl,
       seedB,
       "Seed B child must inherit Seed B provenance",
     );
@@ -592,13 +592,13 @@ test(
      * cross-contaminate provenance.
      */
     assert.notEqual(
-      childACandidate.sourceHint,
+      childACandidate.sourceUrl,
       seedB,
       "Seed A child must never inherit Seed B provenance",
     );
 
     assert.notEqual(
-      childBCandidate.sourceHint,
+      childBCandidate.sourceUrl,
       seedA,
       "Seed B child must never inherit Seed A provenance",
     );

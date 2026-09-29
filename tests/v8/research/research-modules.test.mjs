@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import {
   canonicalizeUrl,
   mergeDiscoveryCandidates,
@@ -8,36 +9,47 @@ import {
   detectClaimConflict,
   detectKnowledgeGaps,
 } from "../../../.v8-build/src/v8/research/index.js";
+
 test("canonicalizeUrl removes fragments and trailing slash", () => {
   const result = canonicalizeUrl(
     "https://example.com/source/#section",
   );
+
   assert.equal(
     result,
     "https://example.com/source",
   );
 });
-test("mergeDiscoveryCandidates deduplicates canonical URLs", () => {
+
+test("mergeDiscoveryCandidates deduplicates normalized URLs", () => {
   const result = mergeDiscoveryCandidates([
     {
       url: "https://example.com/a#one",
-      canonicalUrl: "",
+      normalizedUrl: "https://example.com/a",
+      kind: "SEED",
       provider: "SEARCH",
       discoveredAt: "2026-01-01T00:00:00.000Z",
     },
     {
       url: "https://example.com/a#two",
-      canonicalUrl: "",
+      normalizedUrl: "https://example.com/a",
+      kind: "SITEMAP",
       provider: "SITEMAP",
       discoveredAt: "2026-01-01T00:00:00.000Z",
     },
   ]);
-  assert.equal(result.length, 1);
+
   assert.equal(
-    result[0].canonicalUrl,
+    result.length,
+    1,
+  );
+
+  assert.equal(
+    result[0].normalizedUrl,
     "https://example.com/a",
   );
 });
+
 test("evaluateFreshness returns NEW without previous hash", () => {
   const document = {
     requestedUrl: "https://example.com",
@@ -48,10 +60,21 @@ test("evaluateFreshness returns NEW without previous hash", () => {
     contentHash: "placeholder",
     normalizedAt: "2026-01-01T00:00:00.000Z",
   };
-  const result = evaluateFreshness(document);
-  assert.equal(result.status, "NEW");
-  assert.ok(result.contentHash.length === 64);
+
+  const result = evaluateFreshness(
+    document,
+  );
+
+  assert.equal(
+    result.status,
+    "NEW",
+  );
+
+  assert.ok(
+    result.contentHash.length === 64,
+  );
 });
+
 test("extractEvidenceCandidates finds engineering evidence candidates", () => {
   const document = {
     requestedUrl: "https://example.com/dfm",
@@ -64,17 +87,27 @@ test("extractEvidenceCandidates finds engineering evidence candidates", () => {
     contentHash: "placeholder",
     normalizedAt: "2026-01-01T00:00:00.000Z",
   };
-  const result = extractEvidenceCandidates(document);
-  assert.ok(result.length >= 1);
+
+  const result =
+    extractEvidenceCandidates(
+      document,
+    );
+
+  assert.ok(
+    result.length >= 1,
+  );
+
   assert.notEqual(
     result[0].evidence.extractionMethod,
     undefined,
   );
+
   assert.notEqual(
     result[0].evidence.extractionConfidence,
     undefined,
   );
 });
+
 test("detectClaimConflict never auto-publishes a conflict", () => {
   const result = detectClaimConflict([
     {
@@ -88,12 +121,20 @@ test("detectClaimConflict never auto-publishes a conflict", () => {
       authorityScore: 0.8,
     },
   ]);
-  assert.equal(result.status, "CONFLICT");
+
+  assert.equal(
+    result.status,
+    "CONFLICT",
+  );
+
   assert.ok(
-    result.resolution === "HIGHEST_AUTHORITY_CANDIDATE" ||
-    result.resolution === "REQUIRES_REVIEW",
+    result.resolution ===
+      "HIGHEST_AUTHORITY_CANDIDATE" ||
+    result.resolution ===
+      "REQUIRES_REVIEW",
   );
 });
+
 test("detectKnowledgeGaps identifies missing signals", () => {
   const result = detectKnowledgeGaps(
     [
@@ -107,12 +148,26 @@ test("detectKnowledgeGaps identifies missing signals", () => {
         ],
       },
     ],
-    ["material", "process"],
+    [
+      "material",
+      "process",
+    ],
   );
-  assert.equal(result.length, 1);
-  assert.equal(result[0].status, "OPEN");
+
+  assert.equal(
+    result.length,
+    1,
+  );
+
+  assert.equal(
+    result[0].status,
+    "OPEN",
+  );
+
   assert.deepEqual(
     result[0].missingSignals,
-    ["wall-thickness"],
+    [
+      "wall-thickness",
+    ],
   );
 });
