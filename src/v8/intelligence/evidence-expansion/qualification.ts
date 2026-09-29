@@ -1,5 +1,10 @@
-import type { DiscoveryCandidate } from "../../research/types.js";
-import { evaluateSourceUrl } from "../../acquisition/source-policy.js";
+import type {
+  DiscoveryCandidate,
+} from "../../research/types.js";
+
+import {
+  evaluateSourceUrl,
+} from "../../acquisition/source-policy.js";
 
 export type QualificationStatus =
   | "QUALIFIED"
@@ -89,18 +94,26 @@ export interface QualificationInput {
   readonly policy?: CandidateQualificationPolicy;
 }
 
-function clampScore(value: number): number {
+function clampScore(
+  value: number,
+): number {
   if (!Number.isFinite(value)) {
     return 0;
   }
 
-  return Math.max(0, Math.min(1, value));
+  return Math.max(
+    0,
+    Math.min(1, value),
+  );
 }
 
 function normalizeAuthorityScore(
   value: number | null | undefined,
 ): number | null {
-  if (value === null || value === undefined) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
     return null;
   }
 
@@ -115,15 +128,43 @@ function inferProvenance(
   candidate: DiscoveryCandidate,
 ): ProvenanceStatus {
   if (
-    candidate.sourceHint ===
-    "V8_RESEARCH_SEED"
+    candidate.provider ===
+    "SEARCH"
+  ) {
+    return "SEARCH_PROVIDER_RESULT";
+  }
+
+  if (
+    candidate.provider ===
+      "SELF_OWNED_CRAWL" &&
+    candidate.kind ===
+      "SEED"
   ) {
     return "EXPLICIT_RESEARCH_SEED";
   }
 
   if (
-    candidate.sourceHint &&
-    candidate.sourceHint.trim()
+    candidate.provider ===
+      "SELF_OWNED_CRAWL" &&
+    (
+      candidate.kind ===
+        "LINK" ||
+      candidate.kind ===
+        "REFERENCE"
+    ) &&
+    typeof candidate.sourceUrl ===
+      "string" &&
+    candidate.sourceUrl.trim()
+  ) {
+    return "CRAWLED_FROM_RESEARCH_SEED";
+  }
+
+  if (
+    candidate.provider ===
+      "DIRECT" &&
+    typeof candidate.sourceUrl ===
+      "string" &&
+    candidate.sourceUrl.trim()
   ) {
     return "CRAWLED_FROM_RESEARCH_SEED";
   }
@@ -218,10 +259,12 @@ export function qualifyDiscoveryCandidate(
     "NOT_OBSERVED";
 
   const reasons:
-    QualificationReasonCode[] = [];
+    QualificationReasonCode[] =
+    [];
 
   let normalizedUrl = "";
-  let sourcePolicyBlocked = false;
+  let sourcePolicyBlocked =
+    false;
 
   try {
     const decision =
@@ -231,10 +274,11 @@ export function qualifyDiscoveryCandidate(
 
     if (
       decision.status !==
-      "ELIGIBLE" ||
+        "ELIGIBLE" ||
       !decision.normalizedUrl
     ) {
-      sourcePolicyBlocked = true;
+      sourcePolicyBlocked =
+        true;
 
       reasons.push(
         "SOURCE_POLICY_BLOCKED",
@@ -297,7 +341,7 @@ export function qualifyDiscoveryCandidate(
    */
   void freshnessStatus;
 
-  if (
+  const rejected =
     sourcePolicyBlocked ||
     reasons.includes(
       "INVALID_URL",
@@ -310,34 +354,40 @@ export function qualifyDiscoveryCandidate(
     ) ||
     reasons.includes(
       "AUTHORITY_UNKNOWN",
-    )
-  ) {
-    return Object.freeze({
-      status: "REJECTED",
-      canonicalUrl:
-        input.candidate.canonicalUrl,
-      normalizedUrl,
-      provenance,
-      authorityStatus,
-      authorityScore,
-      relevanceScore,
-      freshnessStatus,
-      reasons: Object.freeze([
-        ...reasons,
-      ]),
-    });
-  }
+    );
 
   return Object.freeze({
-    status: "QUALIFIED",
+    status:
+      rejected
+        ? "REJECTED"
+        : "QUALIFIED",
+
+    /*
+     * Research DiscoveryCandidate has already migrated to normalizedUrl.
+     *
+     * CandidateQualification retains the historical canonicalUrl field
+     * because downstream qualification consumers use that terminology.
+     * The value is therefore the exact normalized discovery identity.
+     */
     canonicalUrl:
-      input.candidate.canonicalUrl,
+      input.candidate.normalizedUrl,
+
     normalizedUrl,
+
     provenance,
+
     authorityStatus,
+
     authorityScore,
+
     relevanceScore,
+
     freshnessStatus,
-    reasons: Object.freeze([]),
+
+    reasons: Object.freeze(
+      rejected
+        ? [...reasons]
+        : [],
+    ),
   });
 }

@@ -53,13 +53,7 @@ export interface EvidenceCandidate {
   readonly authority: number;
   readonly relevance: number;
   readonly query: string;
-
   readonly qualification?: CandidateQualification;
-
-  /**
-   * Discovery provenance is retained from the research layer until the
-   * acquisition boundary. It is not exposed as Source identity.
-   */
   readonly discoveryProvenance?: DiscoveryProvenance;
 }
 
@@ -68,13 +62,10 @@ export interface EvidenceExpansionConfig {
   readonly maxQueries?: number;
   readonly maxCandidates?: number;
   readonly signal?: AbortSignal;
-
   readonly researchSeeds?: readonly ResearchSeed[];
-
   readonly maxPages?: number;
   readonly maxDepth?: number;
   readonly sameHostOnly?: boolean;
-
   readonly qualification?: CandidateQualificationPolicy;
 }
 
@@ -179,22 +170,69 @@ function provenanceForDiscoveryCandidate(
   }
 
   if (
-    candidate.sourceHint ===
-    "V8_RESEARCH_SEED"
+    candidate.provider ===
+      "SELF_OWNED_CRAWL" &&
+    candidate.kind ===
+      "SEED"
   ) {
     return "EXPLICIT_RESEARCH_SEED";
   }
 
   if (
     candidate.provider ===
+      "SELF_OWNED_CRAWL" &&
+    (
+      candidate.kind ===
+        "LINK" ||
+      candidate.kind ===
+        "REFERENCE"
+    ) &&
+    typeof candidate.sourceUrl ===
+      "string" &&
+    candidate.sourceUrl.trim()
+  ) {
+    return "CRAWLED_FROM_RESEARCH_SEED";
+  }
+
+  if (
+    candidate.provider ===
       "DIRECT" &&
-    candidate.sourceHint &&
-    candidate.sourceHint.trim()
+    typeof candidate.sourceUrl ===
+      "string" &&
+    candidate.sourceUrl.trim()
   ) {
     return "CRAWLED_FROM_RESEARCH_SEED";
   }
 
   return "UNKNOWN";
+}
+
+/**
+ * Foundation currently has no SELF_OWNED_CRAWL provider.
+ *
+ * SELF_OWNED_CRAWL describes the Research discovery mechanism.
+ * At the Foundation acquisition boundary that mechanism is represented
+ * by the existing DIRECT provider.
+ *
+ * This is an explicit semantic mapping, not a type cast.
+ */
+function foundationProviderForDiscoveryCandidate(
+  candidate: DiscoveryCandidate,
+): "SEARCH" | "SITEMAP" | "DIRECT" {
+  switch (candidate.provider) {
+    case "SEARCH":
+      return "SEARCH";
+
+    case "SITEMAP":
+      return "SITEMAP";
+
+    case "DIRECT":
+    case "SELF_OWNED_CRAWL":
+      return "DIRECT";
+
+    default:
+      return "DIRECT";
+  }
 }
 
 function discoveryProvenanceForCandidate(
@@ -206,70 +244,101 @@ function discoveryProvenanceForCandidate(
     );
 
   if (
-    status === "EXPLICIT_RESEARCH_SEED"
+    status ===
+    "EXPLICIT_RESEARCH_SEED"
   ) {
     return Object.freeze({
       status,
+
       provider:
-        candidate.provider,
+        foundationProviderForDiscoveryCandidate(
+          candidate,
+        ),
+
       discoveredUrl:
         candidate.url,
+
       canonicalUrl:
-        candidate.canonicalUrl,
+        candidate.normalizedUrl,
+
       discoveredAt:
         candidate.discoveredAt,
+
       researchSeedUrl:
-        candidate.canonicalUrl,
-      ...(candidate.sourceHint
+        candidate.normalizedUrl,
+
+      ...(candidate.sourceUrl
         ? {
             sourceHint:
-              candidate.sourceHint,
+              candidate.sourceUrl,
           }
         : {}),
     });
   }
 
   if (
-    status === "CRAWLED_FROM_RESEARCH_SEED"
+    status ===
+    "CRAWLED_FROM_RESEARCH_SEED"
   ) {
+    if (
+      !candidate.sourceUrl ||
+      !candidate.sourceUrl.trim()
+    ) {
+      throw new Error(
+        "V8_EVIDENCE_EXPANSION_CRAWL_PROVENANCE_SOURCE_MISSING",
+      );
+    }
+
     return Object.freeze({
       status,
+
       provider:
-        candidate.provider,
+        foundationProviderForDiscoveryCandidate(
+          candidate,
+        ),
+
       discoveredUrl:
         candidate.url,
+
       canonicalUrl:
-        candidate.canonicalUrl,
+        candidate.normalizedUrl,
+
       discoveredAt:
         candidate.discoveredAt,
+
       researchSeedUrl:
-        candidate.sourceHint,
-      ...(candidate.sourceHint
-        ? {
-            sourceHint:
-              candidate.sourceHint,
-          }
-        : {}),
+        candidate.sourceUrl,
+
+      sourceHint:
+        candidate.sourceUrl,
     });
   }
 
   if (
-    status === "SEARCH_PROVIDER_RESULT"
+    status ===
+    "SEARCH_PROVIDER_RESULT"
   ) {
     return Object.freeze({
       status,
+
       provider:
-        candidate.provider,
+        foundationProviderForDiscoveryCandidate(
+          candidate,
+        ),
+
       discoveredUrl:
         candidate.url,
+
       canonicalUrl:
-        candidate.canonicalUrl,
+        candidate.normalizedUrl,
+
       discoveredAt:
         candidate.discoveredAt,
-      ...(candidate.sourceHint
+
+      ...(candidate.sourceUrl
         ? {
             sourceHint:
-              candidate.sourceHint,
+              candidate.sourceUrl,
           }
         : {}),
     });
@@ -574,8 +643,11 @@ export async function expandEvidenceFromInternet(
             url:
               result.url,
 
-            canonicalUrl:
+            normalizedUrl:
               result.url,
+
+            kind:
+              "SERP_RESULT",
 
             provider:
               "SEARCH",
@@ -586,7 +658,7 @@ export async function expandEvidenceFromInternet(
             title:
               result.title,
 
-            sourceHint:
+            sourceUrl:
               searchProvider.name,
           };
 

@@ -14,11 +14,6 @@ import type {
   SearchProvider,
 } from "../../acquisition/types.js";
 
-import {
-  extractStructuredEvidence,
-  extractTextEvidence,
-} from "../../acquisition/source-extractor.js";
-
 import type {
   Opportunity,
 } from "../shared.js";
@@ -187,8 +182,8 @@ function extractResearchEvidence(
 function selfOwnedDiscoveryInputs(
   candidates: readonly {
     readonly url: string;
-    readonly canonicalUrl: string;
-    readonly sourceHint?: string;
+    readonly normalizedUrl: string;
+    readonly sourceUrl?: string;
     readonly title?: string;
     readonly discoveredAt: string;
   }[],
@@ -211,17 +206,17 @@ function selfOwnedDiscoveryInputs(
 
       kind:
         seedCanonicalUrls.has(
-          candidate.canonicalUrl,
+          candidate.normalizedUrl,
         )
           ? "SEED"
           : "LINK",
 
-      ...(candidate.sourceHint ===
+      ...(candidate.sourceUrl ===
       undefined
         ? {}
         : {
             sourceUrl:
-              candidate.sourceHint,
+              candidate.sourceUrl,
           }),
 
       ...(candidate.title ===
@@ -243,16 +238,11 @@ function discoveryProvenanceForSelfOwnedCandidate(
   seeds: readonly ResolvedResearchSeed[],
 ): DiscoveryProvenance {
   /*
-   * This function is exclusively for the self-owned
-   * acquisition path.
+   * This function consumes the intelligence/web-discovery candidate.
    *
-   * The upstream discovery type is intentionally broader
-   * than this function's semantic domain because the same
-   * DiscoveryCandidate type also represents sitemap,
-   * search-provider, and reference candidates.
-   *
-   * Reject every non-self-owned kind explicitly rather
-   * than narrowing the TypeScript type unsafely.
+   * SELF_OWNED_CRAWL provenance has already been materialized by the
+   * Research layer and is represented in the intelligence candidate
+   * through its kind/sourceUrl fields.
    */
   if (
     candidate.kind !==
@@ -469,13 +459,13 @@ export async function runResearchAcquisition(
 
     const acquisitions:
       ResearchAcquisitionRecord[] =
-        [];
+      [];
 
     const fetchErrors:
       ResearchAcquisitionError[] =
-        [
-          ...selfOwned.fetchErrors,
-        ];
+      [
+        ...selfOwned.fetchErrors,
+      ];
 
     for (
       const candidate of
@@ -599,11 +589,11 @@ export async function runResearchAcquisition(
 
   const discoveryInputs:
     DiscoveryInput[] =
-      [];
+    [];
 
   const searchErrors:
     ResearchAcquisitionError[] =
-      [];
+    [];
 
   for (
     const query of
@@ -639,6 +629,9 @@ export async function runResearchAcquisition(
 
           title:
             result.title,
+
+          sourceUrl:
+            searchProvider.name,
         });
       }
     } catch (
@@ -662,11 +655,11 @@ export async function runResearchAcquisition(
 
   const acquisitions:
     ResearchAcquisitionRecord[] =
-      [];
+    [];
 
   const fetchErrors:
     ResearchAcquisitionError[] =
-      [];
+    [];
 
   for (
     const candidate of
