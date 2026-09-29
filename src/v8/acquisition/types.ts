@@ -1,4 +1,5 @@
 import type {
+  DiscoveryProvenance,
   EvidencePayload,
   FoundationStore,
   SnapshotPayload,
@@ -79,6 +80,15 @@ export interface AcquisitionConfig {
   readonly actorId?: string;
   readonly timeoutMs?: number;
   readonly maxBytes?: number;
+
+  /**
+   * Discovery provenance supplied by the research layer.
+   *
+   * Acquisition does not infer provenance from URL shape. It persists
+   * only the provenance explicitly supplied by the discovery/qualification
+   * boundary.
+   */
+  readonly discoveryProvenance?: DiscoveryProvenance;
 }
 
 export interface AcquisitionResult {
@@ -93,5 +103,6 @@ export interface FoundationAcquisitionAdapter {
     url: string,
     store: FoundationStore,
     candidates: readonly ExtractedEvidenceCandidate[],
+    config?: AcquisitionConfig,
   ): Promise<AcquisitionResult>;
 }

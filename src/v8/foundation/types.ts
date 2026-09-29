@@ -120,6 +120,63 @@ export interface SnapshotPayload {
   readonly payload?: string;
 }
 
+/**
+ * Discovery provenance is acquisition metadata, not Source identity.
+ *
+ * It records how the Internet document entered the V8 evidence pipeline
+ * without changing Source identity or Evidence domain semantics.
+ *
+ * The provenance is persisted inside EvidencePayload, which means the
+ * immutable Foundation record fingerprint binds it to the exact Evidence
+ * version used by downstream Claim lineage.
+ */
+export type DiscoveryProvenanceStatus =
+  | "EXPLICIT_RESEARCH_SEED"
+  | "CRAWLED_FROM_RESEARCH_SEED"
+  | "SEARCH_PROVIDER_RESULT";
+
+export type DiscoveryProvenanceProvider =
+  | "SEARCH"
+  | "SITEMAP"
+  | "DIRECT";
+
+export interface DiscoveryProvenance {
+  readonly status: DiscoveryProvenanceStatus;
+  readonly provider: DiscoveryProvenanceProvider;
+
+  /**
+   * URL that was observed as the discovery candidate URL.
+   */
+  readonly discoveredUrl: string;
+
+  /**
+   * Canonical URL associated with the discovery candidate.
+   */
+  readonly canonicalUrl: string;
+
+  /**
+   * Exact discovery timestamp supplied by the research layer.
+   */
+  readonly discoveredAt: string;
+
+  /**
+   * Explicit ResearchSeed URL when the candidate is a seed descendant.
+   *
+   * This is intentionally absent for SearchProvider candidates.
+   */
+  readonly researchSeedUrl?: string;
+
+  /**
+   * Original discovery-layer hint.
+   *
+   * For an explicit seed this may be the controlled
+   * V8_RESEARCH_SEED marker.
+   *
+   * For a crawled candidate this is the discovery root URL.
+   */
+  readonly sourceHint?: string;
+}
+
 export interface EvidencePayload {
   readonly sourceId: SourceId;
   readonly snapshotId: string;
@@ -136,6 +193,14 @@ export interface EvidencePayload {
     | "NOT_COMPARABLE"
     | "INSUFFICIENT_EVIDENCE"
     | "CONFLICTING_EVIDENCE";
+
+  /**
+   * Exact Internet discovery provenance for this Evidence.
+   *
+   * This is optional for legacy/direct Foundation ingestion paths.
+   * V8 research/acquisition paths should provide it.
+   */
+  readonly discoveryProvenance?: DiscoveryProvenance;
 
   readonly page?: number;
   readonly printedPage?: string;

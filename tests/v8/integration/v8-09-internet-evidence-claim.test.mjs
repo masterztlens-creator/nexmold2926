@@ -12,6 +12,10 @@ import {
   evidenceAggregateId,
 } from "../../../.v8-build/src/v8/acquisition/index.js";
 
+import {
+  expandEvidenceFromInternet,
+} from "../../../.v8-build/src/v8/intelligence/evidence-expansion/expansion.js";
+
 const ingestor = {
   id: "v8-09-internet-ingestor",
   role: "INGESTOR",
@@ -25,10 +29,11 @@ const auditor = {
 /*
  * The acquisition boundary deliberately rejects loopback/private hosts.
  *
- * These integration tests therefore use an eligible public HTTPS URL while
+ * These integration tests therefore use eligible public HTTPS URLs while
  * intercepting the actual network call locally through globalThis.fetch.
  *
  * This preserves:
+ *
  * public-source policy evaluation
  * -> HttpPageFetcher
  * -> fetched page
@@ -39,36 +44,50 @@ const auditor = {
  *
  * without weakening SSRF protection or depending on external network state.
  */
-async function withInternetFixture(body, fn) {
-  const originalFetch = globalThis.fetch;
-  const fixtureUrl = "https://example.com/fixture";
+async function withInternetFixture(
+  body,
+  fn,
+) {
+  const originalFetch =
+    globalThis.fetch;
 
-  globalThis.fetch = async (input) => {
-    const requestedUrl =
-      typeof input === "string"
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url;
+  const fixtureUrl =
+    "https://example.com/fixture";
 
-    assert.equal(
-      requestedUrl,
-      fixtureUrl,
-      "Fixture acquisition must use the eligible public test URL",
-    );
+  globalThis.fetch =
+    async (input) => {
+      const requestedUrl =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
 
-    return new Response(body, {
-      status: 200,
-      headers: {
-        "content-type": "text/plain; charset=utf-8",
-      },
-    });
-  };
+      assert.equal(
+        requestedUrl,
+        fixtureUrl,
+        "Fixture acquisition must use the eligible public test URL",
+      );
+
+      return new Response(
+        body,
+        {
+          status: 200,
+          headers: {
+            "content-type":
+              "text/plain; charset=utf-8",
+          },
+        },
+      );
+    };
 
   try {
-    return await fn(fixtureUrl);
+    return await fn(
+      fixtureUrl,
+    );
   } finally {
-    globalThis.fetch = originalFetch;
+    globalThis.fetch =
+      originalFetch;
   }
 }
 
@@ -76,17 +95,29 @@ async function acquireInternetFixture(
   url,
   store,
   candidate,
+  discoveryProvenance,
 ) {
-  const fetcher = new HttpPageFetcher();
+  const fetcher =
+    new HttpPageFetcher();
 
-  const page = await fetcher.fetch(url);
+  const page =
+    await fetcher.fetch(
+      url,
+    );
 
   return ingestFetchedPage(
     store,
     page,
     [candidate],
     {
-      actorId: ingestor.id,
+      actorId:
+        ingestor.id,
+
+      ...(discoveryProvenance
+        ? {
+            discoveryProvenance,
+          }
+        : {}),
     },
   );
 }
@@ -101,7 +132,9 @@ test(
           new InMemoryFoundationStore();
 
         const service =
-          new FoundationService(store);
+          new FoundationService(
+            store,
+          );
 
         const candidate = {
           locator: "body",
@@ -111,7 +144,8 @@ test(
           value: "governed",
           unit: "text",
           section: "body",
-          extractionConfidence: "HIGH",
+          extractionConfidence:
+            "HIGH",
         };
 
         const acquired =
@@ -142,7 +176,9 @@ test(
             acquired.snapshotId,
           );
 
-        assert.ok(snapshotRecord);
+        assert.ok(
+          snapshotRecord,
+        );
 
         assert.equal(
           snapshotRecord.state,
@@ -168,7 +204,9 @@ test(
             evidenceId,
           );
 
-        assert.ok(ingestedEvidence);
+        assert.ok(
+          ingestedEvidence,
+        );
 
         assert.equal(
           ingestedEvidence.state,
@@ -192,8 +230,10 @@ test(
                 evidenceIds: [
                   evidenceId,
                 ],
-                status: "VERIFIED",
-                fingerprint: "ignored",
+                status:
+                  "VERIFIED",
+                fingerprint:
+                  "ignored",
               },
               auditor,
             ),
@@ -225,7 +265,8 @@ test(
 
         assert.deepEqual(
           evidenceHistory.map(
-            (record) => record.state,
+            (record) =>
+              record.state,
           ),
           [
             "INGESTED",
@@ -237,14 +278,21 @@ test(
         const claim =
           service.createClaim(
             {
-              id: "v8-09-claim",
+              id:
+                "v8-09-claim",
+
               statement:
                 "The fixture is governed evidence.",
+
               evidenceIds: [
                 evidenceId,
               ],
-              status: "VERIFIED",
-              fingerprint: "ignored",
+
+              status:
+                "VERIFIED",
+
+              fingerprint:
+                "ignored",
             },
             auditor,
           );
@@ -262,25 +310,287 @@ test(
         assert.ok(
           claim.lineage.some(
             (item) =>
-              item.type === "EVIDENCE",
+              item.type ===
+              "EVIDENCE",
           ),
         );
 
         assert.ok(
           claim.lineage.some(
             (item) =>
-              item.type === "SNAPSHOT",
+              item.type ===
+              "SNAPSHOT",
           ),
         );
 
         assert.ok(
           claim.lineage.some(
             (item) =>
-              item.type === "SOURCE",
+              item.type ===
+              "SOURCE",
           ),
         );
 
         store.verifyChain();
+      },
+    );
+  },
+);
+
+test(
+  "V8-09: self-owned ResearchSeed provenance reaches persisted Evidence",
+  async () => {
+    await withInternetFixture(
+      "V8-09 self-owned discovery provenance fixture",
+      async (url) => {
+        const store =
+          new InMemoryFoundationStore();
+
+        const seedUrl =
+          url.replace(
+            "/fixture",
+            "/plastic-injection-molding-wall-thickness",
+          );
+
+        const originalFetch =
+          globalThis.fetch;
+
+        globalThis.fetch =
+          async (input) => {
+            const requestedUrl =
+              typeof input === "string"
+                ? input
+                : input instanceof URL
+                  ? input.toString()
+                  : input.url;
+
+            assert.equal(
+              requestedUrl,
+              seedUrl,
+              "Self-owned discovery must acquire the explicit ResearchSeed URL",
+            );
+
+            return new Response(
+              "V8-09 self-owned discovery provenance fixture",
+              {
+                status: 200,
+                headers: {
+                  "content-type":
+                    "text/plain; charset=utf-8",
+                },
+              },
+            );
+          };
+
+        try {
+          const result =
+            await expandEvidenceFromInternet(
+              [
+                "plastic injection molding wall thickness",
+              ],
+              undefined,
+              new HttpPageFetcher(),
+              store,
+              {
+                actorId:
+                  ingestor.id,
+
+                researchSeeds: [
+                  {
+                    url:
+                      seedUrl,
+
+                    source:
+                      "DIRECT",
+
+                    reason:
+                      "V8-09 self-owned provenance integration fixture",
+                  },
+                ],
+
+                maxPages: 1,
+                maxDepth: 0,
+                sameHostOnly: true,
+                maxCandidates: 1,
+              },
+            );
+
+          assert.equal(
+            result.searchErrors.length,
+            0,
+          );
+
+          assert.equal(
+            result.fetchErrors.length,
+            0,
+          );
+
+          assert.equal(
+            result.acquisitions.length,
+            1,
+          );
+
+          const acquisition =
+            result.acquisitions[0];
+
+          assert.ok(
+            acquisition,
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .qualification
+              ?.status,
+            "QUALIFIED",
+          );
+
+          assert.ok(
+            acquisition.candidate
+              .discoveryProvenance,
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .discoveryProvenance
+              .status,
+            "EXPLICIT_RESEARCH_SEED",
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .discoveryProvenance
+              .provider,
+            "DIRECT",
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .discoveryProvenance
+              .researchSeedUrl,
+            seedUrl,
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .discoveryProvenance
+              .discoveredUrl,
+            seedUrl,
+          );
+
+          assert.equal(
+            acquisition.candidate
+              .discoveryProvenance
+              .canonicalUrl,
+            seedUrl,
+          );
+
+          assert.ok(
+            acquisition.evidence
+              .evidence.length > 0,
+          );
+
+          const evidenceId =
+            acquisition.evidence
+              .evidence[0]
+              .sourceId;
+
+          assert.ok(
+            evidenceId,
+          );
+
+          const evidenceRecords =
+            store
+              .auditTrail()
+              .filter(
+                (record) =>
+                  record.aggregateType ===
+                    "EVIDENCE" &&
+                  record.state ===
+                    "INGESTED",
+              );
+
+          assert.equal(
+            evidenceRecords.length,
+            1,
+          );
+
+          const evidence =
+            evidenceRecords[0];
+
+          assert.ok(
+            evidence.payload
+              .discoveryProvenance,
+          );
+
+          assert.equal(
+            evidence.payload
+              .discoveryProvenance
+              .status,
+            "EXPLICIT_RESEARCH_SEED",
+          );
+
+          assert.equal(
+            evidence.payload
+              .discoveryProvenance
+              .provider,
+            "DIRECT",
+          );
+
+          assert.equal(
+            evidence.payload
+              .discoveryProvenance
+              .researchSeedUrl,
+            seedUrl,
+          );
+
+          assert.equal(
+            evidence.payload
+              .discoveryProvenance
+              .discoveredUrl,
+            seedUrl,
+          );
+
+          assert.equal(
+            evidence.payload
+              .discoveryProvenance
+              .canonicalUrl,
+            seedUrl,
+          );
+
+          assert.ok(
+            evidence.payload
+              .discoveryProvenance
+              .discoveredAt,
+          );
+
+          /*
+           * The provenance is part of the immutable Evidence payload.
+           * Therefore the Foundation record fingerprint binds it to the
+           * exact Evidence version.
+           */
+          const persistedEvidence =
+            store.get(
+              "EVIDENCE",
+              evidence.aggregateId,
+            );
+
+          assert.ok(
+            persistedEvidence,
+          );
+
+          assert.deepEqual(
+            persistedEvidence
+              .payload
+              .discoveryProvenance,
+            evidence.payload
+              .discoveryProvenance,
+          );
+
+          store.verifyChain();
+        } finally {
+          globalThis.fetch =
+            originalFetch;
+        }
       },
     );
   },
@@ -296,7 +606,9 @@ test(
           new InMemoryFoundationStore();
 
         const service =
-          new FoundationService(store);
+          new FoundationService(
+            store,
+          );
 
         const candidate = {
           locator: "body",
@@ -306,7 +618,8 @@ test(
           value: "original",
           unit: "text",
           section: "body",
-          extractionConfidence: "HIGH",
+          extractionConfidence:
+            "HIGH",
         };
 
         const acquired =
@@ -338,14 +651,21 @@ test(
         const claim =
           service.createClaim(
             {
-              id: "v8-11-claim",
+              id:
+                "v8-11-claim",
+
               statement:
                 "The fixture contains the original governed value.",
+
               evidenceIds: [
                 evidenceId,
               ],
-              status: "VERIFIED",
-              fingerprint: "ignored",
+
+              status:
+                "VERIFIED",
+
+              fingerprint:
+                "ignored",
             },
             auditor,
           );
@@ -353,8 +673,10 @@ test(
         const claimEvidenceLineage =
           claim.lineage.find(
             (item) =>
-              item.type === "EVIDENCE" &&
-              item.id === evidenceId,
+              item.type ===
+                "EVIDENCE" &&
+              item.id ===
+                evidenceId,
           );
 
         assert.ok(
@@ -380,36 +702,40 @@ test(
         const originalFingerprint =
           verifiedEvidence.fingerprint;
 
-        /*
-         * Create a later Evidence history version
-         * through the actual Foundation state machine.
-         *
-         * The Foundation contract permits:
-         *
-         * VERIFIED -> RETIRED
-         *
-         * This intentionally creates a later Evidence
-         * record without modifying the already-created
-         * Claim lineage.
-         */
         const laterEvidence =
           store.append({
-            aggregateType: "EVIDENCE",
-            aggregateId: evidenceId,
+            aggregateType:
+              "EVIDENCE",
+
+            aggregateId:
+              evidenceId,
+
             version:
-              verifiedEvidence.version + 1,
-            state: "RETIRED",
+              verifiedEvidence.version +
+              1,
+
+            state:
+              "RETIRED",
+
             payload: {
               ...verifiedEvidence.payload,
-              value: "replacement",
+
+              value:
+                "replacement",
+
               excerpt:
                 "V8-11 replacement evidence content",
+
               evidenceHash:
                 `${verifiedEvidence.payload.evidenceHash}:replacement`,
             },
+
             lineage:
               verifiedEvidence.lineage,
-            actor: auditor,
+
+            actor:
+              auditor,
+
             reason:
               "V8-11 evidence history retirement fixture",
           });
@@ -443,8 +769,10 @@ test(
         const persistedClaimEvidenceLineage =
           persistedClaim.lineage.find(
             (item) =>
-              item.type === "EVIDENCE" &&
-              item.id === evidenceId,
+              item.type ===
+                "EVIDENCE" &&
+              item.id ===
+                evidenceId,
           );
 
         assert.ok(
@@ -489,7 +817,8 @@ test(
 
         assert.deepEqual(
           evidenceHistory.map(
-            (record) => record.state,
+            (record) =>
+              record.state,
           ),
           [
             "INGESTED",
@@ -501,7 +830,8 @@ test(
 
         assert.equal(
           evidenceHistory[
-            evidenceHistory.length - 1
+            evidenceHistory.length -
+              1
           ].version,
           laterEvidence.version,
         );

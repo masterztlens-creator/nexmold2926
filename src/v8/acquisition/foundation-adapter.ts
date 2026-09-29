@@ -1,19 +1,23 @@
 import { contentFingerprint } from "../foundation/hash.js";
 import { sourceId } from "../domain/primitives.js";
+
 import type {
   FoundationStore,
   SnapshotPayload,
 } from "../foundation/types.js";
+
 import type {
   ExtractedEvidenceCandidate,
   FetchedPage,
   AcquisitionConfig,
   AcquisitionResult,
 } from "./types.js";
+
 import {
   evidenceAggregateId,
   buildEvidencePayloads,
 } from "./evidence-builder.js";
+
 import { HttpPageFetcher } from "./page-fetcher.js";
 
 export function ingestFetchedPage(
@@ -22,24 +26,53 @@ export function ingestFetchedPage(
   candidates: readonly ExtractedEvidenceCandidate[],
   config: AcquisitionConfig = {},
 ): AcquisitionResult {
-  const actorId = config.actorId ?? "v8-acquisition";
-  const maxBytes = config.maxBytes ?? 5_000_000;
+  const actorId =
+    config.actorId ??
+    "v8-acquisition";
 
-  if (page.status < 200 || page.status >= 300) {
-    throw new Error(`V8_ACQUISITION_HTTP_STATUS_${page.status}`);
+  const maxBytes =
+    config.maxBytes ??
+    5_000_000;
+
+  if (
+    page.status < 200 ||
+    page.status >= 300
+  ) {
+    throw new Error(
+      `V8_ACQUISITION_HTTP_STATUS_${page.status}`,
+    );
   }
 
-  if (page.bytes.byteLength > maxBytes) {
-    throw new Error("V8_ACQUISITION_RESPONSE_TOO_LARGE");
+  if (
+    page.bytes.byteLength >
+    maxBytes
+  ) {
+    throw new Error(
+      "V8_ACQUISITION_RESPONSE_TOO_LARGE",
+    );
   }
 
-  const contentHash = HttpPageFetcher.contentHash(page.bytes);
+  const contentHash =
+    HttpPageFetcher.contentHash(
+      page.bytes,
+    );
 
-  // SOURCE identity is the normalized requested source, not the resolved redirect target.
-  // Redirect resolution belongs to Snapshot provenance.
-  const sid = sourceId(page.requestedUrl).toString();
+  /*
+   * SOURCE identity is the normalized requested source,
+   * not the resolved redirect target.
+   *
+   * Redirect resolution belongs to Snapshot provenance.
+   */
+  const sid =
+    sourceId(
+      page.requestedUrl,
+    ).toString();
 
-  const existingSource = store.get("SOURCE", sid);
+  const existingSource =
+    store.get(
+      "SOURCE",
+      sid,
+    );
 
   if (!existingSource) {
     store.append({
@@ -48,98 +81,184 @@ export function ingestFetchedPage(
       version: 1,
       state: "REGISTERED",
       payload: {
-        url: page.requestedUrl,
+        url:
+          page.requestedUrl,
         kind: "WEB",
-        firstSeenAt: page.fetchedAt,
+        firstSeenAt:
+          page.fetchedAt,
       },
       lineage: [],
       actor: {
         id: actorId,
         role: "INGESTOR",
       },
-      reason: "V8-05 web source registration",
+      reason:
+        "V8-05 web source registration",
     });
   }
 
-  const snapshotId = `snapshot:${contentFingerprint({
-    sourceId: sid,
-    requestedUrl: page.requestedUrl,
-    finalUrl: page.finalUrl,
-    contentHash,
-  })}`;
+  const snapshotId =
+    `snapshot:${contentFingerprint({
+      sourceId: sid,
+      requestedUrl:
+        page.requestedUrl,
+      finalUrl:
+        page.finalUrl,
+      contentHash,
+    })}`;
 
-  const snapshot: SnapshotPayload = {
-    sourceId: sourceId(sid),
-    capturedAt: page.fetchedAt,
-    locator: page.finalUrl,
+  const snapshot:
+    SnapshotPayload = {
+    sourceId:
+      sourceId(sid),
+
+    capturedAt:
+      page.fetchedAt,
+
+    locator:
+      page.finalUrl,
+
     contentHash,
-    metadataOnly: false,
-    requestedUrl: page.requestedUrl,
-    finalUrl: page.finalUrl,
-    redirectChain: page.redirectChain,
-    mediaType: page.mediaType,
-    byteLength: page.bytes.byteLength,
-    payload: page.body,
+
+    metadataOnly:
+      false,
+
+    requestedUrl:
+      page.requestedUrl,
+
+    finalUrl:
+      page.finalUrl,
+
+    redirectChain:
+      page.redirectChain,
+
+    mediaType:
+      page.mediaType,
+
+    byteLength:
+      page.bytes.byteLength,
+
+    payload:
+      page.body,
   };
 
-  const existingSnapshot = store.get("SNAPSHOT", snapshotId);
+  const existingSnapshot =
+    store.get(
+      "SNAPSHOT",
+      snapshotId,
+    );
 
   if (!existingSnapshot) {
-    const sourceRecord = store.get("SOURCE", sid);
+    const sourceRecord =
+      store.get(
+        "SOURCE",
+        sid,
+      );
 
     if (!sourceRecord) {
-      throw new Error("V8_ACQUISITION_SOURCE_NOT_FOUND");
+      throw new Error(
+        "V8_ACQUISITION_SOURCE_NOT_FOUND",
+      );
     }
 
     store.append({
-      aggregateType: "SNAPSHOT",
-      aggregateId: snapshotId,
+      aggregateType:
+        "SNAPSHOT",
+
+      aggregateId:
+        snapshotId,
+
       version: 1,
-      state: "CAPTURED",
-      payload: snapshot,
+
+      state:
+        "CAPTURED",
+
+      payload:
+        snapshot,
+
       lineage: [
         {
-          type: "SOURCE",
-          id: sid,
-          version: sourceRecord.version,
-          fingerprint: sourceRecord.fingerprint,
+          type:
+            "SOURCE",
+
+          id:
+            sid,
+
+          version:
+            sourceRecord.version,
+
+          fingerprint:
+            sourceRecord.fingerprint,
         },
       ],
+
       actor: {
-        id: actorId,
-        role: "INGESTOR",
+        id:
+          actorId,
+
+        role:
+          "INGESTOR",
       },
-      reason: "V8-05 web page capture",
+
+      reason:
+        "V8-05 web page capture",
     });
 
     store.append({
-      aggregateType: "SNAPSHOT",
-      aggregateId: snapshotId,
+      aggregateType:
+        "SNAPSHOT",
+
+      aggregateId:
+        snapshotId,
+
       version: 2,
-      state: "SEALED",
-      payload: snapshot,
+
+      state:
+        "SEALED",
+
+      payload:
+        snapshot,
+
       lineage: [
         {
-          type: "SOURCE",
-          id: sid,
-          version: sourceRecord.version,
-          fingerprint: sourceRecord.fingerprint,
+          type:
+            "SOURCE",
+
+          id:
+            sid,
+
+          version:
+            sourceRecord.version,
+
+          fingerprint:
+            sourceRecord.fingerprint,
         },
       ],
+
       actor: {
-        id: actorId,
-        role: "INGESTOR",
+        id:
+          actorId,
+
+        role:
+          "INGESTOR",
       },
-      reason: "V8-05 immutable snapshot seal",
+
+      reason:
+        "V8-05 immutable snapshot seal",
     });
   }
 
-  const sealed = store.get<SnapshotPayload>(
-    "SNAPSHOT",
-    snapshotId,
-  );
+  const sealed =
+    store.get<SnapshotPayload>(
+      "SNAPSHOT",
+      snapshotId,
+    );
 
-  if (!sealed || sealed.state !== "SEALED") {
+  if (
+    !sealed ||
+    sealed.state !==
+      "SEALED"
+  ) {
     throw new Error(
       "V8_ACQUISITION_SNAPSHOT_NOT_SEALED",
     );
@@ -147,6 +266,7 @@ export function ingestFetchedPage(
 
   /*
    * V8-10-C:
+   *
    * Once a Snapshot identity already exists, the persisted SEALED payload
    * is the authoritative immutable representation.
    *
@@ -154,16 +274,45 @@ export function ingestFetchedPage(
    * because fields such as capturedAt / redirectChain may differ from the
    * original immutable record even though snapshotId is identical.
    */
-  const persistedSnapshot = sealed.payload;
+  const persistedSnapshot =
+    sealed.payload;
 
-  const evidence = buildEvidencePayloads(
-    sid,
-    snapshotId,
-    persistedSnapshot,
-    candidates,
-  );
+  /*
+   * The Evidence identity remains bound to the exact extracted evidence,
+   * Source, Snapshot, and Snapshot content hash.
+   *
+   * Discovery provenance is deliberately NOT part of evidenceAggregateId:
+   * the same physical Evidence may be discovered through more than one
+   * legitimate route. Provenance is instead persisted as immutable
+   * Evidence metadata and becomes part of the Foundation record fingerprint.
+   */
+  const builtEvidence =
+    buildEvidencePayloads(
+      sid,
+      snapshotId,
+      persistedSnapshot,
+      candidates,
+    );
 
-  const sourceRecord = store.get("SOURCE", sid);
+  const evidence =
+    builtEvidence.map(
+      (payload) => ({
+        ...payload,
+
+        ...(config.discoveryProvenance
+          ? {
+              discoveryProvenance:
+                config.discoveryProvenance,
+            }
+          : {}),
+      }),
+    );
+
+  const sourceRecord =
+    store.get(
+      "SOURCE",
+      sid,
+    );
 
   if (!sourceRecord) {
     throw new Error(
@@ -171,68 +320,123 @@ export function ingestFetchedPage(
     );
   }
 
-  for (const payload of evidence) {
-    const aggregateId = evidenceAggregateId(
-      sid,
-      snapshotId,
-      {
-        locator: payload.locator,
-        excerpt: payload.excerpt,
+  for (
+    const payload of evidence
+  ) {
+    const aggregateId =
+      evidenceAggregateId(
+        sid,
+        snapshotId,
+        {
+          locator:
+            payload.locator,
 
-        page: payload.page,
-        printedPage: payload.printedPage,
+          excerpt:
+            payload.excerpt,
 
-        section: payload.section,
-        table: payload.table,
-        row: payload.row,
+          page:
+            payload.page,
 
-        parameter: payload.parameter,
-        value: payload.value,
-        unit: payload.unit,
+          printedPage:
+            payload.printedPage,
 
-        materialManufacturer:
-          payload.materialManufacturer,
-        materialGrade:
-          payload.materialGrade,
+          section:
+            payload.section,
 
-        testMethod:
-          payload.testMethod,
-        testCondition:
-          payload.testCondition,
-        flowDirection:
-          payload.flowDirection,
+          table:
+            payload.table,
 
-        extractionConfidence:
-          payload.extractionConfidence ?? "LOW",
-      },
-      persistedSnapshot.contentHash,
-    );
+          row:
+            payload.row,
 
-    if (!store.get("EVIDENCE", aggregateId)) {
-      store.append({
-        aggregateType: "EVIDENCE",
+          parameter:
+            payload.parameter,
+
+          value:
+            payload.value,
+
+          unit:
+            payload.unit,
+
+          materialManufacturer:
+            payload.materialManufacturer,
+
+          materialGrade:
+            payload.materialGrade,
+
+          testMethod:
+            payload.testMethod,
+
+          testCondition:
+            payload.testCondition,
+
+          flowDirection:
+            payload.flowDirection,
+
+          extractionConfidence:
+            payload.extractionConfidence ??
+            "LOW",
+        },
+        persistedSnapshot.contentHash,
+      );
+
+    if (
+      !store.get(
+        "EVIDENCE",
         aggregateId,
+      )
+    ) {
+      store.append({
+        aggregateType:
+          "EVIDENCE",
+
+        aggregateId,
+
         version: 1,
-        state: "INGESTED",
+
+        state:
+          "INGESTED",
+
         payload,
+
         lineage: [
           {
-            type: "SOURCE",
-            id: sid,
-            version: sourceRecord.version,
-            fingerprint: sourceRecord.fingerprint,
+            type:
+              "SOURCE",
+
+            id:
+              sid,
+
+            version:
+              sourceRecord.version,
+
+            fingerprint:
+              sourceRecord.fingerprint,
           },
+
           {
-            type: "SNAPSHOT",
-            id: snapshotId,
-            version: sealed.version,
-            fingerprint: sealed.fingerprint,
+            type:
+              "SNAPSHOT",
+
+            id:
+              snapshotId,
+
+            version:
+              sealed.version,
+
+            fingerprint:
+              sealed.fingerprint,
           },
         ],
+
         actor: {
-          id: actorId,
-          role: "INGESTOR",
+          id:
+            actorId,
+
+          role:
+            "INGESTOR",
         },
+
         reason:
           "V8-05 extracted web evidence ingestion",
       });
@@ -240,9 +444,14 @@ export function ingestFetchedPage(
   }
 
   return {
-    sourceId: sid,
+    sourceId:
+      sid,
+
     snapshotId,
-    snapshot: persistedSnapshot,
+
+    snapshot:
+      persistedSnapshot,
+
     evidence,
   };
 }

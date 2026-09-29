@@ -20,6 +20,7 @@ import type {
 } from "../../research/types.js";
 
 import type {
+  DiscoveryProvenance,
   FoundationStore,
 } from "../../foundation/types.js";
 
@@ -53,14 +54,13 @@ export interface EvidenceCandidate {
   readonly relevance: number;
   readonly query: string;
 
-  /**
-   * V8-08 qualification result.
-   *
-   * Legacy callers may construct EvidenceCandidate objects without this
-   * property. Such candidates are treated as unqualified by the expansion
-   * acquisition gate.
-   */
   readonly qualification?: CandidateQualification;
+
+  /**
+   * Discovery provenance is retained from the research layer until the
+   * acquisition boundary. It is not exposed as Source identity.
+   */
+  readonly discoveryProvenance?: DiscoveryProvenance;
 }
 
 export interface EvidenceExpansionConfig {
@@ -75,9 +75,6 @@ export interface EvidenceExpansionConfig {
   readonly maxDepth?: number;
   readonly sameHostOnly?: boolean;
 
-  /**
-   * V8-08 candidate qualification policy.
-   */
   readonly qualification?: CandidateQualificationPolicy;
 }
 
@@ -174,12 +171,6 @@ function throwIfAborted(
 function provenanceForDiscoveryCandidate(
   candidate: DiscoveryCandidate,
 ): ProvenanceStatus {
-  /*
-   * Provider identity is authoritative for provenance classification.
-   *
-   * A SEARCH result must never become a seed descendant merely because a
-   * SearchProvider supplies a non-empty sourceHint.
-   */
   if (
     candidate.provider ===
     "SEARCH"
@@ -204,6 +195,89 @@ function provenanceForDiscoveryCandidate(
   }
 
   return "UNKNOWN";
+}
+
+function discoveryProvenanceForCandidate(
+  candidate: DiscoveryCandidate,
+): DiscoveryProvenance {
+  const status =
+    provenanceForDiscoveryCandidate(
+      candidate,
+    );
+
+  if (
+    status === "EXPLICIT_RESEARCH_SEED"
+  ) {
+    return Object.freeze({
+      status,
+      provider:
+        candidate.provider,
+      discoveredUrl:
+        candidate.url,
+      canonicalUrl:
+        candidate.canonicalUrl,
+      discoveredAt:
+        candidate.discoveredAt,
+      researchSeedUrl:
+        candidate.canonicalUrl,
+      ...(candidate.sourceHint
+        ? {
+            sourceHint:
+              candidate.sourceHint,
+          }
+        : {}),
+    });
+  }
+
+  if (
+    status === "CRAWLED_FROM_RESEARCH_SEED"
+  ) {
+    return Object.freeze({
+      status,
+      provider:
+        candidate.provider,
+      discoveredUrl:
+        candidate.url,
+      canonicalUrl:
+        candidate.canonicalUrl,
+      discoveredAt:
+        candidate.discoveredAt,
+      researchSeedUrl:
+        candidate.sourceHint,
+      ...(candidate.sourceHint
+        ? {
+            sourceHint:
+              candidate.sourceHint,
+          }
+        : {}),
+    });
+  }
+
+  if (
+    status === "SEARCH_PROVIDER_RESULT"
+  ) {
+    return Object.freeze({
+      status,
+      provider:
+        candidate.provider,
+      discoveredUrl:
+        candidate.url,
+      canonicalUrl:
+        candidate.canonicalUrl,
+      discoveredAt:
+        candidate.discoveredAt,
+      ...(candidate.sourceHint
+        ? {
+            sourceHint:
+              candidate.sourceHint,
+          }
+        : {}),
+    });
+  }
+
+  throw new Error(
+    "V8_EVIDENCE_EXPANSION_PROVENANCE_UNKNOWN",
+  );
 }
 
 function toEvidenceCandidate(
@@ -253,13 +327,6 @@ function toEvidenceCandidate(
         candidate.url,
       ),
 
-    /*
-     * IMPORTANT:
-     * Unknown authority remains 0 only for the legacy numeric ranking field.
-     * The authoritative V8-08 value is qualification.authorityScore === null.
-     *
-     * This field is retained solely for compatibility with the V8-07 API.
-     */
     authority:
       qualification.authorityScore ??
       0,
@@ -269,6 +336,14 @@ function toEvidenceCandidate(
     query,
 
     qualification,
+
+    discoveryProvenance:
+      qualification.status ===
+      "QUALIFIED"
+        ? discoveryProvenanceForCandidate(
+            candidate,
+          )
+        : undefined,
   });
 }
 
@@ -402,17 +477,13 @@ export async function expandEvidenceFromInternet(
     );
 
   const candidates:
-    EvidenceCandidate[] = [];
+    EvidenceCandidate[] =
+    [];
 
   const searchErrors:
     EvidenceExpansionError[] =
     [];
 
-  /*
-   * Explicit ResearchSeed input is the self-owned discovery path.
-   *
-   * The query is only a relevance signal. It never determines the URL.
-   */
   if (
     config.researchSeeds &&
     config.researchSeeds.length > 0
@@ -464,12 +535,6 @@ export async function expandEvidenceFromInternet(
       );
     }
   } else {
-    /*
-     * Compatibility path.
-     *
-     * The production V8 self-owned path does not need a SearchProvider.
-     * Existing callers that explicitly supply one remain supported.
-     */
     if (!searchProvider) {
       throw new Error(
         "V8_EVIDENCE_EXPANSION_SEARCH_PROVIDER_REQUIRED",
@@ -543,10 +608,6 @@ export async function expandEvidenceFromInternet(
     }
   }
 
-  /*
-   * Canonical URL deduplication is deliberately performed after candidate
-   * creation so qualification is retained with the surviving candidate.
-   */
   const deduped =
     [
       ...new Map(
@@ -590,13 +651,6 @@ export async function expandEvidenceFromInternet(
     EvidenceExpansionError[] =
     [];
 
-  /*
-   * V8-08 hard boundary:
-   *
-   * Only QUALIFIED candidates may cross into HTTP acquisition.
-   *
-   * Rejected candidates never reach ingestFetchedPage().
-   */
   for (
     const candidate of
       qualifiedCandidates
@@ -604,6 +658,19 @@ export async function expandEvidenceFromInternet(
     throwIfAborted(
       config.signal,
     );
+
+    if (
+      !candidate.discoveryProvenance
+    ) {
+      fetchErrors.push({
+        url:
+          candidate.url,
+        error:
+          "V8_EVIDENCE_EXPANSION_PROVENANCE_MISSING",
+      });
+
+      continue;
+    }
 
     try {
       const page =
@@ -629,6 +696,8 @@ export async function expandEvidenceFromInternet(
           {
             actorId:
               config.actorId,
+            discoveryProvenance:
+              candidate.discoveryProvenance,
           },
         );
 
