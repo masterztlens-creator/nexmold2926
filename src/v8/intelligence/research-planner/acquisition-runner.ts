@@ -14,6 +14,11 @@ import type {
   SearchProvider,
 } from "../../acquisition/types.js";
 
+import {
+  extractStructuredEvidence,
+  extractTextEvidence,
+} from "../../acquisition/source-extractor.js";
+
 import type {
   Opportunity,
 } from "../shared.js";
