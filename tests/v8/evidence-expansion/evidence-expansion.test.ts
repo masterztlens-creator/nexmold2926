@@ -7,6 +7,10 @@ import {
 } from "../../../.v8-build/src/v8/intelligence/evidence-expansion/expansion.js";
 
 import {
+  qualifyDiscoveryCandidate,
+} from "../../../.v8-build/src/v8/intelligence/evidence-expansion/qualification.js";
+
+import {
   InMemoryFoundationStore,
 } from "../../../.v8-build/src/v8/foundation/store.js";
 
@@ -20,12 +24,19 @@ test(
           {
             url:
               "https://example.com/a",
+
             title:
               "Wall thickness design",
+
             publisher:
               "example.com",
-            authority: 0,
-            relevance: 0.7,
+
+            authority:
+              0,
+
+            relevance:
+              0.7,
+
             query:
               "wall thickness",
           },
@@ -33,12 +44,19 @@ test(
           {
             url:
               "https://example.com/b",
+
             title:
               "Other topic",
+
             publisher:
               "example.com",
-            authority: 0,
-            relevance: 0.8,
+
+            authority:
+              0,
+
+            relevance:
+              0.8,
+
             query:
               "wall thickness",
           },
@@ -58,152 +76,211 @@ test(
 );
 
 test(
-  "V8-07 isolates search and fetch failures",
-  async () => {
-    const store =
-      new InMemoryFoundationStore();
-
-    const searchProvider = {
-      name:
-        "test-search",
-
-      async search(
-        query: string,
-      ) {
-        if (
-          query === "bad"
-        ) {
-          throw new Error(
-            "search failed",
-          );
-        }
-
-        return [
-          {
-            url:
-              "https://example.com/good",
-
-            title:
-              "Good engineering source",
-
-            snippet:
-              "engineering evidence",
-          },
-
-          {
-            url:
-              "https://example.com/good",
-
-            title:
-              "Duplicate",
-          },
-        ];
-      },
-    };
-
-    const pageFetcher = {
-      async fetch(
-        url: string,
-      ) {
-        if (
-          url.endsWith(
-            "/good",
-          )
-        ) {
-          const body =
-            "<html><body>Engineering evidence</body></html>";
-
-          return {
-            requestedUrl:
-              url,
-
-            finalUrl:
-              url,
-
-            redirectChain:
-              [],
-
-            status:
-              200,
-
-            mediaType:
-              "text/html",
-
-            body,
-
-            bytes:
-              new TextEncoder().encode(
-                body,
-              ),
-
-            fetchedAt:
-              new Date().toISOString(),
-          };
-        }
-
-        throw new Error(
-          "fetch failed",
-        );
-      },
-    };
-
+  "V8-08 rejects a candidate blocked by source policy",
+  () => {
     const result =
-      await expandEvidenceFromInternet(
-        [
-          "good",
-          "bad",
-        ],
+      qualifyDiscoveryCandidate({
+        candidate: {
+          url:
+            "http://127.0.0.1/internal",
 
-        searchProvider,
+          canonicalUrl:
+            "http://127.0.0.1/internal",
 
-        pageFetcher,
+          provider:
+            "DIRECT",
 
-        store,
+          discoveredAt:
+            "2026-01-01T00:00:00.000Z",
 
-        {
-          actorId:
-            "V8-07-TEST",
-
-          maxQueries:
-            2,
-
-          maxCandidates:
-            2,
+          sourceHint:
+            "V8_RESEARCH_SEED",
         },
-      );
+
+        relevanceScore:
+          1,
+
+        provenance:
+          "EXPLICIT_RESEARCH_SEED",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
 
     assert.equal(
-      result.searchErrors.length,
-      1,
+      result.status,
+      "REJECTED",
     );
 
-    assert.equal(
-      result.candidates.length,
-      1,
+    assert.ok(
+      result.reasons.includes(
+        "SOURCE_POLICY_BLOCKED",
+      ),
     );
-
-    assert.equal(
-      result.acquisitions.length,
-      1,
-    );
-
-    assert.equal(
-      result.fetchErrors.length,
-      0,
-    );
-
-    assert.equal(
-      result.acquisitions[0]
-        ?.evidence.evidence.length,
-      1,
-    );
-
-    store.verifyChain();
   },
 );
 
 test(
-  "V8-07 self-owned expansion works without SearchProvider",
+  "V8-08 rejects unknown provenance",
+  () => {
+    const result =
+      qualifyDiscoveryCandidate({
+        candidate: {
+          url:
+            "https://example.com/source",
+
+          canonicalUrl:
+            "https://example.com/source",
+
+          provider:
+            "DIRECT",
+
+          discoveredAt:
+            "2026-01-01T00:00:00.000Z",
+        },
+
+        relevanceScore:
+          1,
+
+        provenance:
+          "UNKNOWN",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
+
+    assert.equal(
+      result.status,
+      "REJECTED",
+    );
+
+    assert.ok(
+      result.reasons.includes(
+        "PROVENANCE_UNKNOWN",
+      ),
+    );
+
+    assert.ok(
+      result.reasons.includes(
+        "AUTHORITY_UNKNOWN",
+      ),
+    );
+  },
+);
+
+test(
+  "V8-08 does not fabricate authority for an explicit seed",
+  () => {
+    const result =
+      qualifyDiscoveryCandidate({
+        candidate: {
+          url:
+            "https://example.com/authority",
+
+          canonicalUrl:
+            "https://example.com/authority",
+
+          provider:
+            "DIRECT",
+
+          discoveredAt:
+            "2026-01-01T00:00:00.000Z",
+
+          sourceHint:
+            "V8_RESEARCH_SEED",
+        },
+
+        relevanceScore:
+          1,
+
+        provenance:
+          "EXPLICIT_RESEARCH_SEED",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
+
+    assert.equal(
+      result.status,
+      "QUALIFIED",
+    );
+
+    assert.equal(
+      result.authorityStatus,
+      "UNKNOWN",
+    );
+
+    assert.equal(
+      result.authorityScore,
+      null,
+    );
+
+    assert.equal(
+      result.freshnessStatus,
+      "NOT_OBSERVED",
+    );
+  },
+);
+
+test(
+  "V8-08 rejects relevance below threshold",
+  () => {
+    const result =
+      qualifyDiscoveryCandidate({
+        candidate: {
+          url:
+            "https://example.com/unrelated",
+
+          canonicalUrl:
+            "https://example.com/unrelated",
+
+          provider:
+            "DIRECT",
+
+          discoveredAt:
+            "2026-01-01T00:00:00.000Z",
+
+          sourceHint:
+            "V8_RESEARCH_SEED",
+        },
+
+        relevanceScore:
+          0.05,
+
+        provenance:
+          "EXPLICIT_RESEARCH_SEED",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
+
+    assert.equal(
+      result.status,
+      "REJECTED",
+    );
+
+    assert.ok(
+      result.reasons.includes(
+        "RELEVANCE_BELOW_THRESHOLD",
+      ),
+    );
+  },
+);
+
+test(
+  "V8-08 self-owned expansion works without SearchProvider",
   async () => {
     const store =
       new InMemoryFoundationStore();
@@ -247,7 +324,7 @@ test(
             ),
 
           fetchedAt:
-            new Date().toISOString(),
+            "2026-01-01T00:00:00.000Z",
         };
       },
     };
@@ -266,7 +343,7 @@ test(
 
         {
           actorId:
-            "V8-07-SELF-OWNED-TEST",
+            "V8-08-SELF-OWNED-TEST",
 
           maxCandidates:
             1,
@@ -317,8 +394,50 @@ test(
     );
 
     assert.equal(
+      result.qualifiedCandidates.length,
+      1,
+    );
+
+    assert.equal(
+      result.rejectedCandidates.length,
+      0,
+    );
+
+    assert.equal(
       result.acquisitions.length,
       1,
+    );
+
+    assert.equal(
+      result.acquisitions[0]
+        ?.candidate
+        .qualification
+        ?.status,
+      "QUALIFIED",
+    );
+
+    assert.equal(
+      result.acquisitions[0]
+        ?.candidate
+        .qualification
+        ?.authorityStatus,
+      "UNKNOWN",
+    );
+
+    assert.equal(
+      result.acquisitions[0]
+        ?.candidate
+        .qualification
+        ?.authorityScore,
+      null,
+    );
+
+    assert.equal(
+      result.acquisitions[0]
+        ?.candidate
+        .qualification
+        ?.freshnessStatus,
+      "NOT_OBSERVED",
     );
 
     assert.equal(
@@ -327,10 +446,10 @@ test(
       seed,
     );
 
-    assert.ok(
+    assert.equal(
       result.acquisitions[0]
-        ?.evidence.evidence.length ===
-        1,
+        ?.evidence.evidence.length,
+      1,
     );
 
     assert.ok(
@@ -339,5 +458,351 @@ test(
     );
 
     store.verifyChain();
+  },
+);
+
+test(
+  "V8-08 rejected candidates never cross the acquisition boundary",
+  async () => {
+    const store =
+      new InMemoryFoundationStore();
+
+    const blockedSeed =
+      "http://127.0.0.1/blocked";
+
+    let acquisitionFetches =
+      0;
+
+    const pageFetcher = {
+      async fetch(
+        url: string,
+      ) {
+        acquisitionFetches += 1;
+
+        if (
+          url ===
+          blockedSeed
+        ) {
+          const body =
+            "<html><head><title>Blocked</title></head><body>Wall thickness 2 mm.</body></html>";
+
+          return {
+            requestedUrl:
+              url,
+
+            finalUrl:
+              url,
+
+            redirectChain:
+              [],
+
+            status:
+              200,
+
+            mediaType:
+              "text/html",
+
+            body,
+
+            bytes:
+              new TextEncoder().encode(
+                body,
+              ),
+
+            fetchedAt:
+              "2026-01-01T00:00:00.000Z",
+          };
+        }
+
+        throw new Error(
+          `Unexpected acquisition URL: ${url}`,
+        );
+      },
+    };
+
+    const result =
+      await expandEvidenceFromInternet(
+        [
+          "wall thickness",
+        ],
+
+        undefined,
+
+        pageFetcher,
+
+        store,
+
+        {
+          actorId:
+            "V8-08-REJECTION-TEST",
+
+          maxCandidates:
+            1,
+
+          maxPages:
+            1,
+
+          maxDepth:
+            0,
+
+          sameHostOnly:
+            true,
+
+          researchSeeds:
+            [
+              {
+                url:
+                  blockedSeed,
+
+                source:
+                  "DIRECT",
+
+                reason:
+                  "Intentional source-policy rejection test.",
+              },
+            ],
+        },
+      );
+
+    /*
+     * The crawler itself may fetch the seed during discovery.
+     * The important V8-08 assertion is that the rejected candidate does not
+     * receive a second acquisition call and no Foundation evidence is made.
+     */
+    assert.equal(
+      result.qualifiedCandidates.length,
+      0,
+    );
+
+    assert.equal(
+      result.rejectedCandidates.length,
+      1,
+    );
+
+    assert.equal(
+      result.acquisitions.length,
+      0,
+    );
+
+    assert.equal(
+      result.fetchErrors.length,
+      0,
+    );
+
+    assert.ok(
+      result.rejectedCandidates[0]
+        ?.qualification
+        ?.reasons.includes(
+          "SOURCE_POLICY_BLOCKED",
+        ),
+    );
+
+    assert.equal(
+      store.getAll("EVIDENCE").length,
+      0,
+    );
+
+    assert.equal(
+      store.getAll("SNAPSHOT").length,
+      0,
+    );
+
+    /*
+     * Discovery itself may have fetched the page once. There must not be
+     * another fetch caused by the acquisition stage.
+     */
+    assert.equal(
+      acquisitionFetches,
+      1,
+    );
+
+    store.verifyChain();
+  },
+);
+
+test(
+  "V8-08 SearchProvider compatibility path fails closed on unknown authority",
+  async () => {
+    const store =
+      new InMemoryFoundationStore();
+
+    let fetchCount =
+      0;
+
+    const searchProvider = {
+      name:
+        "test-search",
+
+      async search() {
+        return [
+          {
+            url:
+              "https://example.com/search-result",
+
+            title:
+              "Wall thickness engineering source",
+
+            snippet:
+              "wall thickness injection molding",
+          },
+        ];
+      },
+    };
+
+    const pageFetcher = {
+      async fetch(
+        url: string,
+      ) {
+        fetchCount += 1;
+
+        const body =
+          "<html><body>Wall thickness 2 mm.</body></html>";
+
+        return {
+          requestedUrl:
+            url,
+
+          finalUrl:
+            url,
+
+          redirectChain:
+            [],
+
+          status:
+            200,
+
+          mediaType:
+            "text/html",
+
+          body,
+
+          bytes:
+            new TextEncoder().encode(
+              body,
+            ),
+
+          fetchedAt:
+            "2026-01-01T00:00:00.000Z",
+        };
+      },
+    };
+
+    const result =
+      await expandEvidenceFromInternet(
+        [
+          "wall thickness injection molding",
+        ],
+
+        searchProvider,
+
+        pageFetcher,
+
+        store,
+
+        {
+          actorId:
+            "V8-08-SEARCH-BOUNDARY",
+
+          maxQueries:
+            1,
+
+          maxCandidates:
+            1,
+        },
+      );
+
+    assert.equal(
+      result.candidates.length,
+      1,
+    );
+
+    assert.equal(
+      result.qualifiedCandidates.length,
+      0,
+    );
+
+    assert.equal(
+      result.rejectedCandidates.length,
+      1,
+    );
+
+    assert.equal(
+      result.acquisitions.length,
+      0,
+    );
+
+    assert.equal(
+      fetchCount,
+      0,
+    );
+
+    assert.ok(
+      result.rejectedCandidates[0]
+        ?.qualification
+        ?.reasons.includes(
+          "AUTHORITY_UNKNOWN",
+        ),
+    );
+
+    store.verifyChain();
+  },
+);
+
+test(
+  "V8-08 qualification is deterministic",
+  () => {
+    const candidate = {
+      url:
+        "https://example.com/dfm",
+
+      canonicalUrl:
+        "https://example.com/dfm",
+
+      provider:
+        "DIRECT" as const,
+
+      discoveredAt:
+        "2026-01-01T00:00:00.000Z",
+
+      sourceHint:
+        "V8_RESEARCH_SEED",
+    };
+
+    const first =
+      qualifyDiscoveryCandidate({
+        candidate,
+        relevanceScore:
+          0.8,
+
+        provenance:
+          "EXPLICIT_RESEARCH_SEED",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
+
+    const second =
+      qualifyDiscoveryCandidate({
+        candidate,
+        relevanceScore:
+          0.8,
+
+        provenance:
+          "EXPLICIT_RESEARCH_SEED",
+
+        authorityScore:
+          null,
+
+        freshnessStatus:
+          "NOT_OBSERVED",
+      });
+
+    assert.deepEqual(
+      first,
+      second,
+    );
   },
 );

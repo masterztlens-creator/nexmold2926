@@ -1,21 +1,49 @@
-import { normalizeText, type EvidenceRef } from "../shared.js";
-import type { ResearchSeed } from "../research-planner/self-owned-seed-resolver.js";
+import {
+  normalizeText,
+  type EvidenceRef,
+} from "../shared.js";
+
+import type {
+  ResearchSeed,
+} from "../research-planner/self-owned-seed-resolver.js";
+
 import {
   requireResearchSeeds,
 } from "../research-planner/self-owned-seed-resolver.js";
+
 import {
   discoverWithSelfOwnedCrawl,
 } from "../../research/self-owned-discovery.js";
-import type { DiscoveryCandidate } from "../../research/types.js";
-import type { FoundationStore } from "../../foundation/types.js";
-import { ingestFetchedPage } from "../../acquisition/foundation-adapter.js";
-import { extractTextEvidence } from "../../acquisition/source-extractor.js";
+
+import type {
+  DiscoveryCandidate,
+} from "../../research/types.js";
+
+import type {
+  FoundationStore,
+} from "../../foundation/types.js";
+
+import {
+  ingestFetchedPage,
+} from "../../acquisition/foundation-adapter.js";
+
+import {
+  extractTextEvidence,
+} from "../../acquisition/source-extractor.js";
+
 import type {
   FetchedPage,
   PageFetcher,
   SearchProvider,
   SearchResult,
 } from "../../acquisition/types.js";
+
+import {
+  qualifyDiscoveryCandidate,
+  type CandidateQualification,
+  type CandidateQualificationPolicy,
+  type ProvenanceStatus,
+} from "./qualification.js";
 
 export interface EvidenceCandidate {
   readonly url: string;
@@ -24,6 +52,15 @@ export interface EvidenceCandidate {
   readonly authority: number;
   readonly relevance: number;
   readonly query: string;
+
+  /**
+   * V8-08 qualification result.
+   *
+   * Legacy callers may construct EvidenceCandidate objects without this
+   * property. Such candidates are treated as unqualified by the expansion
+   * acquisition gate.
+   */
+  readonly qualification?: CandidateQualification;
 }
 
 export interface EvidenceExpansionConfig {
@@ -31,10 +68,17 @@ export interface EvidenceExpansionConfig {
   readonly maxQueries?: number;
   readonly maxCandidates?: number;
   readonly signal?: AbortSignal;
+
   readonly researchSeeds?: readonly ResearchSeed[];
+
   readonly maxPages?: number;
   readonly maxDepth?: number;
   readonly sameHostOnly?: boolean;
+
+  /**
+   * V8-08 candidate qualification policy.
+   */
+  readonly qualification?: CandidateQualificationPolicy;
 }
 
 export interface EvidenceExpansionError {
@@ -46,19 +90,25 @@ export interface EvidenceExpansionError {
 export interface EvidenceExpansionRecord {
   readonly candidate: EvidenceCandidate;
   readonly page: FetchedPage;
-  readonly evidence: ReturnType<typeof ingestFetchedPage>;
+  readonly evidence: ReturnType<
+    typeof ingestFetchedPage
+  >;
 }
 
 export interface EvidenceExpansionResult {
   readonly candidates: readonly EvidenceCandidate[];
   readonly rankedCandidates: readonly EvidenceCandidate[];
+  readonly qualifiedCandidates: readonly EvidenceCandidate[];
+  readonly rejectedCandidates: readonly EvidenceCandidate[];
   readonly evidenceRefs: readonly EvidenceRef[];
   readonly acquisitions: readonly EvidenceExpansionRecord[];
   readonly searchErrors: readonly EvidenceExpansionError[];
   readonly fetchErrors: readonly EvidenceExpansionError[];
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(
+  error: unknown,
+): string {
   return error instanceof Error
     ? error.message
     : String(error);
@@ -85,7 +135,9 @@ function relevanceFor(
   );
 
   const text = normalizeText(
-    `${result.title ?? ""} ${result.snippet ?? ""}`,
+    `${result.title ?? ""} ${
+      result.snippet ?? ""
+    }`,
   );
 
   if (
@@ -97,12 +149,8 @@ function relevanceFor(
 
   let matches = 0;
 
-  for (
-    const term of terms
-  ) {
-    if (
-      text.includes(term)
-    ) {
+  for (const term of terms) {
+    if (text.includes(term)) {
       matches += 1;
     }
   }
@@ -123,32 +171,100 @@ function throwIfAborted(
   }
 }
 
+function provenanceForDiscoveryCandidate(
+  candidate: DiscoveryCandidate,
+): ProvenanceStatus {
+  if (
+    candidate.sourceHint ===
+    "V8_RESEARCH_SEED"
+  ) {
+    return "EXPLICIT_RESEARCH_SEED";
+  }
+
+  if (
+    candidate.sourceHint &&
+    candidate.sourceHint.trim()
+  ) {
+    return "CRAWLED_FROM_RESEARCH_SEED";
+  }
+
+  return "UNKNOWN";
+}
+
 function toEvidenceCandidate(
   query: string,
   candidate: DiscoveryCandidate,
+  qualificationPolicy?: CandidateQualificationPolicy,
 ): EvidenceCandidate {
   const title =
     candidate.title?.trim() ||
     candidate.url;
 
+  const relevance =
+    relevanceFor(
+      query,
+      {
+        url:
+          candidate.url,
+        title,
+      },
+    );
+
+  const qualification =
+    qualifyDiscoveryCandidate({
+      candidate,
+      relevanceScore:
+        relevance,
+      provenance:
+        provenanceForDiscoveryCandidate(
+          candidate,
+        ),
+      authorityScore:
+        null,
+      freshnessStatus:
+        "NOT_OBSERVED",
+      policy:
+        qualificationPolicy,
+    });
+
   return Object.freeze({
-    url: candidate.url,
+    url:
+      candidate.url,
+
     title,
+
     publisher:
       publisherFromUrl(
         candidate.url,
       ),
-    authority: 0,
-    relevance:
-      relevanceFor(
-        query,
-        {
-          url: candidate.url,
-          title,
-        },
-      ),
+
+    /*
+     * IMPORTANT:
+     * Unknown authority remains 0 only for the legacy numeric ranking field.
+     * The authoritative V8-08 value is qualification.authorityScore === null.
+     *
+     * This field is retained solely for compatibility with the V8-07 API.
+     */
+    authority:
+      qualification.authorityScore ??
+      0,
+
+    relevance,
+
     query,
+
+    qualification,
   });
+}
+
+function isQualified(
+  candidate: EvidenceCandidate,
+): boolean {
+  return (
+    candidate.qualification
+      ?.status ===
+    "QUALIFIED"
+  );
 }
 
 export function rankEvidenceCandidates(
@@ -157,32 +273,69 @@ export function rankEvidenceCandidates(
 ): readonly EvidenceCandidate[] {
   return Object.freeze(
     [...candidates]
-      .map((candidate) => ({
-        ...candidate,
-        relevance: Math.min(
-          1,
-          candidate.relevance +
-            (
-              normalizeText(
-                candidate.title,
-              ).includes(
-                normalizeText(
-                  query,
+      .map(
+        (candidate) => ({
+          ...candidate,
+          relevance:
+            Math.min(
+              1,
+              candidate.relevance +
+                (
+                  normalizeText(
+                    candidate.title,
+                  ).includes(
+                    normalizeText(
+                      query,
+                    ),
+                  )
+                    ? 0.15
+                    : 0
                 ),
-              )
-                ? 0.15
-                : 0
             ),
-        ),
-      }))
+        }),
+      )
       .sort(
-        (a, b) =>
-          b.authority +
-          b.relevance -
-          (
-            a.authority +
-            a.relevance
-          ),
+        (a, b) => {
+          const authorityA =
+            a.qualification
+              ?.authorityScore ??
+            (
+              a.qualification
+                ? 0
+                : a.authority
+            );
+
+          const authorityB =
+            b.qualification
+              ?.authorityScore ??
+            (
+              b.qualification
+                ? 0
+                : b.authority
+            );
+
+          const scoreA =
+            authorityA +
+            a.relevance;
+
+          const scoreB =
+            authorityB +
+            b.relevance;
+
+          if (
+            scoreB !==
+            scoreA
+          ) {
+            return (
+              scoreB -
+              scoreA
+            );
+          }
+
+          return a.url.localeCompare(
+            b.url,
+          );
+        },
       ),
   );
 }
@@ -229,7 +382,8 @@ export async function expandEvidenceFromInternet(
   const maxCandidates =
     Math.max(
       1,
-      config.maxCandidates ?? 8,
+      config.maxCandidates ??
+        8,
     );
 
   const candidates:
@@ -239,12 +393,9 @@ export async function expandEvidenceFromInternet(
     EvidenceExpansionError[] = [];
 
   /*
-   * Explicit ResearchSeed input is the self-owned
-   * discovery path.
+   * Explicit ResearchSeed input is the self-owned discovery path.
    *
-   * The research query is retained only as a
-   * relevance/ranking signal. It is never used
-   * to infer a URL.
+   * The query is only a relevance signal. It never determines the URL.
    */
   if (
     config.researchSeeds &&
@@ -292,16 +443,16 @@ export async function expandEvidenceFromInternet(
         toEvidenceCandidate(
           query,
           candidate,
+          config.qualification,
         ),
       );
     }
   } else {
     /*
-     * Compatibility path for callers that
-     * explicitly provide a SearchProvider.
+     * Compatibility path.
      *
-     * No provider means fail closed when
-     * self-owned seeds were not supplied.
+     * The production V8 self-owned path does not need a SearchProvider.
+     * Existing callers that explicitly supply one remain supported.
      */
     if (!searchProvider) {
       throw new Error(
@@ -330,30 +481,41 @@ export async function expandEvidenceFromInternet(
           );
 
         for (
-          const result of results
+          const result of
+            results
         ) {
           if (!result.url) {
             continue;
           }
 
-          candidates.push({
-            url:
-              result.url,
-            title:
-              result.title?.trim() ||
-              result.url,
-            publisher:
-              publisherFromUrl(
+          const candidate:
+            DiscoveryCandidate = {
+              url:
                 result.url,
-              ),
-            authority: 0,
-            relevance:
-              relevanceFor(
-                query,
-                result,
-              ),
-            query,
-          });
+
+              canonicalUrl:
+                result.url,
+
+              provider:
+                "SEARCH",
+
+              discoveredAt:
+                new Date().toISOString(),
+
+              title:
+                result.title,
+
+              sourceHint:
+                searchProvider.name,
+            };
+
+          candidates.push(
+            toEvidenceCandidate(
+              query,
+              candidate,
+              config.qualification,
+            ),
+          );
         }
       } catch (error) {
         searchErrors.push({
@@ -365,14 +527,19 @@ export async function expandEvidenceFromInternet(
     }
   }
 
+  /*
+   * Canonical URL deduplication is deliberately performed after candidate
+   * creation so qualification is retained with the surviving candidate.
+   */
   const deduped =
     [
       ...new Map(
         candidates.map(
           (candidate) => [
-            normalizeText(
+            candidate
+              .qualification
+              ?.canonicalUrl ||
               candidate.url,
-            ),
             candidate,
           ],
         ),
@@ -388,15 +555,35 @@ export async function expandEvidenceFromInternet(
       maxCandidates,
     );
 
+  const qualifiedCandidates =
+    rankedCandidates.filter(
+      isQualified,
+    );
+
+  const rejectedCandidates =
+    rankedCandidates.filter(
+      (candidate) =>
+        !isQualified(candidate),
+    );
+
   const acquisitions:
-    EvidenceExpansionRecord[] = [];
+    EvidenceExpansionRecord[] =
+    [];
 
   const fetchErrors:
-    EvidenceExpansionError[] = [];
+    EvidenceExpansionError[] =
+    [];
 
+  /*
+   * V8-08 hard boundary:
+   *
+   * Only QUALIFIED candidates may cross into HTTP acquisition.
+   *
+   * Rejected candidates never reach ingestFetchedPage().
+   */
   for (
     const candidate of
-      rankedCandidates
+      qualifiedCandidates
   ) {
     throwIfAborted(
       config.signal,
@@ -446,33 +633,43 @@ export async function expandEvidenceFromInternet(
 
   return Object.freeze({
     candidates:
-      Object.freeze(
-        deduped,
-      ),
+      Object.freeze([
+        ...deduped,
+      ]),
 
     rankedCandidates:
       Object.freeze([
         ...rankedCandidates,
       ]),
 
+    qualifiedCandidates:
+      Object.freeze([
+        ...qualifiedCandidates,
+      ]),
+
+    rejectedCandidates:
+      Object.freeze([
+        ...rejectedCandidates,
+      ]),
+
     evidenceRefs:
       toEvidenceRefs(
-        rankedCandidates,
+        qualifiedCandidates,
       ),
 
     acquisitions:
-      Object.freeze(
-        acquisitions,
-      ),
+      Object.freeze([
+        ...acquisitions,
+      ]),
 
     searchErrors:
-      Object.freeze(
-        searchErrors,
-      ),
+      Object.freeze([
+        ...searchErrors,
+      ]),
 
     fetchErrors:
-      Object.freeze(
-        fetchErrors,
-      ),
+      Object.freeze([
+        ...fetchErrors,
+      ]),
   });
 }
