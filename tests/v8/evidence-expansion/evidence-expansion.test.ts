@@ -24,39 +24,28 @@ test(
           {
             url:
               "https://example.com/a",
-
             title:
               "Wall thickness design",
-
             publisher:
               "example.com",
-
             authority:
               0,
-
             relevance:
               0.7,
-
             query:
               "wall thickness",
           },
-
           {
             url:
               "https://example.com/b",
-
             title:
               "Other topic",
-
             publisher:
               "example.com",
-
             authority:
               0,
-
             relevance:
               0.8,
-
             query:
               "wall thickness",
           },
@@ -83,29 +72,21 @@ test(
         candidate: {
           url:
             "http://127.0.0.1/internal",
-
           canonicalUrl:
             "http://127.0.0.1/internal",
-
           provider:
             "DIRECT",
-
           discoveredAt:
             "2026-01-01T00:00:00.000Z",
-
           sourceHint:
             "V8_RESEARCH_SEED",
         },
-
         relevanceScore:
           1,
-
         provenance:
           "EXPLICIT_RESEARCH_SEED",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
@@ -131,26 +112,19 @@ test(
         candidate: {
           url:
             "https://example.com/source",
-
           canonicalUrl:
             "https://example.com/source",
-
           provider:
             "DIRECT",
-
           discoveredAt:
             "2026-01-01T00:00:00.000Z",
         },
-
         relevanceScore:
           1,
-
         provenance:
           "UNKNOWN",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
@@ -182,29 +156,21 @@ test(
         candidate: {
           url:
             "https://example.com/authority",
-
           canonicalUrl:
             "https://example.com/authority",
-
           provider:
             "DIRECT",
-
           discoveredAt:
             "2026-01-01T00:00:00.000Z",
-
           sourceHint:
             "V8_RESEARCH_SEED",
         },
-
         relevanceScore:
           1,
-
         provenance:
           "EXPLICIT_RESEARCH_SEED",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
@@ -239,29 +205,21 @@ test(
         candidate: {
           url:
             "https://example.com/unrelated",
-
           canonicalUrl:
             "https://example.com/unrelated",
-
           provider:
             "DIRECT",
-
           discoveredAt:
             "2026-01-01T00:00:00.000Z",
-
           sourceHint:
             "V8_RESEARCH_SEED",
         },
-
         relevanceScore:
           0.05,
-
         provenance:
           "EXPLICIT_RESEARCH_SEED",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
@@ -298,31 +256,24 @@ test(
         fetchCount += 1;
 
         const body =
-          "<html><head><title>Engineering Source</title></head><body>Injection molding wall thickness engineering evidence.</body></html>";
+          "<html><head><title>Plastic Injection Molding Wall Thickness Engineering Source</title></head><body>Injection molding wall thickness engineering evidence.</body></html>";
 
         return {
           requestedUrl:
             url,
-
           finalUrl:
             url,
-
           redirectChain:
             [],
-
           status:
             200,
-
           mediaType:
             "text/html",
-
           body,
-
           bytes:
             new TextEncoder().encode(
               body,
             ),
-
           fetchedAt:
             "2026-01-01T00:00:00.000Z",
         };
@@ -334,38 +285,27 @@ test(
         [
           "plastic injection molding wall thickness",
         ],
-
         undefined,
-
         pageFetcher,
-
         store,
-
         {
           actorId:
             "V8-08-SELF-OWNED-TEST",
-
           maxCandidates:
             1,
-
           maxPages:
             1,
-
           maxDepth:
             0,
-
           sameHostOnly:
             true,
-
           researchSeeds:
             [
               {
                 url:
                   seed,
-
                 source:
                   "DIRECT",
-
                 reason:
                   "Explicit test seed for self-owned Internet discovery.",
               },
@@ -462,6 +402,9 @@ test(
       new InMemoryFoundationStore();
 
     const blockedSeed =
+      "https://example.com/blocked";
+
+    const blockedFinalUrl =
       "http://127.0.0.1/blocked";
 
     let acquisitionFetches =
@@ -478,31 +421,27 @@ test(
           blockedSeed
         ) {
           const body =
-            "<html><head><title>Blocked</title></head><body>Wall thickness 2 mm.</body></html>";
+            "<html><head><title>Wall Thickness Injection Molding</title></head><body>Wall thickness 2 mm.</body></html>";
 
           return {
             requestedUrl:
               url,
-
             finalUrl:
-              url,
-
+              blockedFinalUrl,
             redirectChain:
-              [],
-
+              [
+                url,
+                blockedFinalUrl,
+              ],
             status:
               200,
-
             mediaType:
               "text/html",
-
             body,
-
             bytes:
               new TextEncoder().encode(
                 body,
               ),
-
             fetchedAt:
               "2026-01-01T00:00:00.000Z",
           };
@@ -517,40 +456,29 @@ test(
     const result =
       await expandEvidenceFromInternet(
         [
-          "wall thickness",
+          "wall thickness injection molding",
         ],
-
         undefined,
-
         pageFetcher,
-
         store,
-
         {
           actorId:
             "V8-08-REJECTION-TEST",
-
           maxCandidates:
             1,
-
           maxPages:
             1,
-
           maxDepth:
             0,
-
           sameHostOnly:
             true,
-
           researchSeeds:
             [
               {
                 url:
                   blockedSeed,
-
                 source:
                   "DIRECT",
-
                 reason:
                   "Intentional source-policy rejection test.",
               },
@@ -559,9 +487,9 @@ test(
       );
 
     /*
-     * The crawler itself may fetch the seed during discovery.
-     * The important V8-08 assertion is that the rejected candidate does not
-     * receive a second acquisition call and no Foundation evidence is made.
+     * The seed itself is valid and may be fetched by the self-owned
+     * discovery layer. The resulting canonical/final URL is blocked
+     * by source policy and therefore must never enter acquisition.
      */
     assert.equal(
       result.qualifiedCandidates.length,
@@ -613,8 +541,8 @@ test(
     );
 
     /*
-     * Discovery itself may have fetched the page once. There must not be
-     * another fetch caused by the acquisition stage.
+     * Discovery may fetch the valid seed once.
+     * Acquisition must not fetch the rejected candidate.
      */
     assert.equal(
       acquisitionFetches,
@@ -637,16 +565,13 @@ test(
     const searchProvider = {
       name:
         "test-search",
-
       async search() {
         return [
           {
             url:
               "https://example.com/search-result",
-
             title:
               "Wall thickness engineering source",
-
             snippet:
               "wall thickness injection molding",
           },
@@ -666,26 +591,19 @@ test(
         return {
           requestedUrl:
             url,
-
           finalUrl:
             url,
-
           redirectChain:
             [],
-
           status:
             200,
-
           mediaType:
             "text/html",
-
           body,
-
           bytes:
             new TextEncoder().encode(
               body,
             ),
-
           fetchedAt:
             "2026-01-01T00:00:00.000Z",
         };
@@ -697,20 +615,14 @@ test(
         [
           "wall thickness injection molding",
         ],
-
         searchProvider,
-
         pageFetcher,
-
         store,
-
         {
           actorId:
             "V8-08-SEARCH-BOUNDARY",
-
           maxQueries:
             1,
-
           maxCandidates:
             1,
         },
@@ -759,16 +671,12 @@ test(
     const candidate = {
       url:
         "https://example.com/dfm",
-
       canonicalUrl:
         "https://example.com/dfm",
-
       provider:
         "DIRECT" as const,
-
       discoveredAt:
         "2026-01-01T00:00:00.000Z",
-
       sourceHint:
         "V8_RESEARCH_SEED",
     };
@@ -776,16 +684,12 @@ test(
     const first =
       qualifyDiscoveryCandidate({
         candidate,
-
         relevanceScore:
           0.8,
-
         provenance:
           "EXPLICIT_RESEARCH_SEED",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
@@ -793,16 +697,12 @@ test(
     const second =
       qualifyDiscoveryCandidate({
         candidate,
-
         relevanceScore:
           0.8,
-
         provenance:
           "EXPLICIT_RESEARCH_SEED",
-
         authorityScore:
           null,
-
         freshnessStatus:
           "NOT_OBSERVED",
       });
