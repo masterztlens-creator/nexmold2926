@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { InMemoryFoundationStore } from "../../../../.v8-build/src/v8/foundation/store.js";
 import type {
   FetchedPage,
@@ -30,29 +31,11 @@ const opportunity: Opportunity = {
 };
 
 test(
-  "wires opportunity through research, search, discovery, fetch and evidence",
+  "wires opportunity through self-owned research, discovery, fetch and evidence",
   async () => {
     const store = new InMemoryFoundationStore();
+
     const url = "https://example.com/engineering";
-
-    const searchProvider: SearchProvider = {
-      name: "fake-search",
-
-      async search() {
-        return [
-          {
-            url,
-            title: "Engineering Source",
-            snippet: "Engineering source fixture",
-          },
-          {
-            url,
-            title: "Duplicate Engineering Source",
-            snippet: "Duplicate fixture",
-          },
-        ];
-      },
-    };
 
     const body = [
       "<html>",
@@ -83,42 +66,85 @@ test(
 
     const result = await runResearchAcquisition(
       opportunity,
-      searchProvider,
+      undefined,
       pageFetcher,
       store,
       {
         maxQueries: 1,
         maxCandidates: 5,
+        maxPages: 5,
+        maxDepth: 1,
+        sameHostOnly: true,
         actorId: "v8-06-test",
+        researchSeeds: [
+          {
+            url,
+            source: "DIRECT",
+            reason:
+              "V8-06 self-owned acquisition integration fixture",
+          },
+        ],
       },
     );
 
-    assert.ok(result.plan.sourceQueries.length > 0);
-    assert.equal(result.searchErrors.length, 0);
-    assert.equal(result.discovery.accepted, 1);
-    assert.equal(result.discovery.rejected, 1);
-    assert.equal(result.acquisitions.length, 1);
-    assert.equal(result.fetchErrors.length, 0);
+    assert.ok(
+      result.plan.sourceQueries.length > 0,
+    );
+
+    assert.equal(
+      result.searchErrors.length,
+      0,
+    );
+
+    assert.equal(
+      result.discovery.accepted,
+      1,
+    );
+
+    assert.equal(
+      result.discovery.rejected,
+      0,
+    );
+
+    assert.equal(
+      result.acquisitions.length,
+      1,
+    );
+
+    assert.equal(
+      result.fetchErrors.length,
+      0,
+    );
 
     const evidenceRecords = store
       .auditTrail()
-      .filter((record) => record.aggregateType === "EVIDENCE");
-
-    assert.equal(evidenceRecords.length, 1);
-
-    const evidenceRecord = evidenceRecords[0];
-
-    assert.equal(evidenceRecord.state, "INGESTED");
-    assert.equal(
-      evidenceRecord.payload.verificationStatus,
-      "UNVERIFIED",
-    );
+      .filter(
+        (record) =>
+          record.aggregateType === "EVIDENCE",
+      );
 
     assert.ok(
-      evidenceRecord.lineage.some(
-        (lineage) => lineage.type === "SNAPSHOT",
-      ),
+      evidenceRecords.length > 0,
     );
+
+    for (const evidenceRecord of evidenceRecords) {
+      assert.equal(
+        evidenceRecord.state,
+        "INGESTED",
+      );
+
+      assert.equal(
+        evidenceRecord.payload.verificationStatus,
+        "UNVERIFIED",
+      );
+
+      assert.ok(
+        evidenceRecord.lineage.some(
+          (lineage) =>
+            lineage.type === "SNAPSHOT",
+        ),
+      );
+    }
 
     store.verifyChain();
   },
@@ -133,13 +159,17 @@ test(
       name: "failing-search",
 
       async search() {
-        throw new Error("SEARCH_PROVIDER_FAILURE");
+        throw new Error(
+          "SEARCH_PROVIDER_FAILURE",
+        );
       },
     };
 
     const pageFetcher: PageFetcher = {
       async fetch() {
-        throw new Error("FETCH_SHOULD_NOT_RUN");
+        throw new Error(
+          "FETCH_SHOULD_NOT_RUN",
+        );
       },
     };
 
@@ -155,10 +185,29 @@ test(
       },
     );
 
-    assert.equal(result.discovery.accepted, 0);
-    assert.equal(result.acquisitions.length, 0);
-    assert.equal(result.searchErrors.length, 1);
-    assert.equal(result.fetchErrors.length, 0);
-    assert.equal(store.auditTrail().length, 0);
+    assert.equal(
+      result.discovery.accepted,
+      0,
+    );
+
+    assert.equal(
+      result.acquisitions.length,
+      0,
+    );
+
+    assert.equal(
+      result.searchErrors.length,
+      1,
+    );
+
+    assert.equal(
+      result.fetchErrors.length,
+      0,
+    );
+
+    assert.equal(
+      store.auditTrail().length,
+      0,
+    );
   },
 );
