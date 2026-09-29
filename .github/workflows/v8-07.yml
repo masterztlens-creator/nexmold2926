@@ -63,6 +63,4 @@ jobs:
         run: node --test tests/v8/evidence-expansion/evidence-expansion.test.ts
 
       - name: V8-07 real internet gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-07-evidence-expansion-gate.mjs
