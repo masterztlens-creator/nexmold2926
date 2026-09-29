@@ -23,11 +23,15 @@ export interface SelfOwnedDiscoveryOptions
 }
 
 export interface SelfOwnedDiscoveryResult {
-  readonly provider: "SELF_OWNED_CRAWL";
-  readonly seeds: readonly string[];
-  readonly candidates: readonly DiscoveryCandidate[];
+  readonly provider:
+    "SELF_OWNED_CRAWL";
+  readonly seeds:
+    readonly string[];
+  readonly candidates:
+    readonly DiscoveryCandidate[];
   readonly pagesFetched: number;
-  readonly fetchErrors: readonly CrawlFailure[];
+  readonly fetchErrors:
+    readonly CrawlFailure[];
 }
 
 export async function discoverWithSelfOwnedCrawl(
@@ -36,7 +40,9 @@ export async function discoverWithSelfOwnedCrawl(
   options: SelfOwnedDiscoveryOptions = {},
 ): Promise<SelfOwnedDiscoveryResult> {
   const normalizedSeeds =
-    normalizeSeeds(seedUrls);
+    normalizeSeeds(
+      seedUrls,
+    );
 
   if (
     normalizedSeeds.length === 0
@@ -52,7 +58,8 @@ export async function discoverWithSelfOwnedCrawl(
       "maxCandidates",
     );
 
-  const fetchErrors: CrawlFailure[] =
+  const fetchErrors:
+    CrawlFailure[] =
     [];
 
   const pages =
@@ -77,7 +84,7 @@ export async function discoverWithSelfOwnedCrawl(
 
   const candidates:
     DiscoveryCandidate[] =
-      [];
+    [];
 
   const seen =
     new Set<string>();
@@ -115,21 +122,21 @@ export async function discoverWithSelfOwnedCrawl(
       break;
     }
 
-    const pageCanonicalUrl =
+    const normalizedUrl =
       canonicalizeUrl(
         page.url,
       );
 
     const isExplicitSeed =
       explicitSeedSet.has(
-        pageCanonicalUrl,
+        normalizedUrl,
       );
 
     const discoveryRoot =
       page.discoveryRoot ??
       (
         isExplicitSeed
-          ? pageCanonicalUrl
+          ? normalizedUrl
           : undefined
       );
 
@@ -141,11 +148,15 @@ export async function discoverWithSelfOwnedCrawl(
         url:
           page.url,
 
-        canonicalUrl:
-          pageCanonicalUrl,
+        normalizedUrl,
+
+        kind:
+          isExplicitSeed
+            ? "SEED"
+            : "REFERENCE",
 
         provider:
-          "DIRECT",
+          "SELF_OWNED_CRAWL",
 
         discoveredAt:
           page.fetchedAt,
@@ -160,13 +171,13 @@ export async function discoverWithSelfOwnedCrawl(
         ...(isExplicitSeed
           ? options.sourceHint
             ? {
-                sourceHint:
+                sourceUrl:
                   options.sourceHint,
               }
             : {}
           : discoveryRoot
             ? {
-                sourceHint:
+                sourceUrl:
                   discoveryRoot,
               }
             : {}),
@@ -205,10 +216,10 @@ export async function discoverWithSelfOwnedCrawl(
         break;
       }
 
-      let canonicalUrl: string;
+      let normalizedUrl: string;
 
       try {
-        canonicalUrl =
+        normalizedUrl =
           canonicalizeUrl(
             link,
           );
@@ -224,18 +235,21 @@ export async function discoverWithSelfOwnedCrawl(
           url:
             link,
 
-          canonicalUrl,
+          normalizedUrl,
+
+          kind:
+            "LINK",
 
           provider:
-            "DIRECT",
+            "SELF_OWNED_CRAWL",
 
           discoveredAt:
             page.fetchedAt,
 
-          ...(page.discoveryRoot
+          ...(page.url
             ? {
-                sourceHint:
-                  page.discoveryRoot,
+                sourceUrl:
+                  page.url,
               }
             : {}),
         },
@@ -273,7 +287,8 @@ function normalizeSeeds(
   seedUrls: readonly string[],
 ): readonly string[] {
   const normalized:
-    string[] = [];
+    string[] =
+    [];
 
   const seen =
     new Set<string>();
@@ -315,10 +330,14 @@ function normalizeSeeds(
 }
 
 function addCandidate(args: {
-  readonly candidates: DiscoveryCandidate[];
-  readonly seen: Set<string>;
-  readonly candidate: DiscoveryCandidate;
-  readonly maxCandidates: number;
+  readonly candidates:
+    DiscoveryCandidate[];
+  readonly seen:
+    Set<string>;
+  readonly candidate:
+    DiscoveryCandidate;
+  readonly maxCandidates:
+    number;
 }): void {
   if (
     args.candidates.length >=
@@ -329,14 +348,14 @@ function addCandidate(args: {
 
   if (
     args.seen.has(
-      args.candidate.canonicalUrl,
+      args.candidate.normalizedUrl,
     )
   ) {
     return;
   }
 
   args.seen.add(
-    args.candidate.canonicalUrl,
+    args.candidate.normalizedUrl,
   );
 
   args.candidates.push(

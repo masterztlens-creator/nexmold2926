@@ -1,28 +1,41 @@
 export type DiscoveryProvider =
   | "SEARCH"
   | "SITEMAP"
-  | "DIRECT";
+  | "DIRECT"
+  | "SELF_OWNED_CRAWL";
+
+export type DiscoveryCandidateKind =
+  | "SEED"
+  | "LINK"
+  | "SITEMAP"
+  | "SERP_RESULT"
+  | "REFERENCE";
+
 export interface DiscoveryCandidate {
-  url: string;
-  canonicalUrl: string;
-  provider: DiscoveryProvider;
-  discoveredAt: string;
-  title?: string;
-  sourceHint?: string;
+  readonly url: string;
+  readonly normalizedUrl: string;
+  readonly kind: DiscoveryCandidateKind;
+  readonly provider: DiscoveryProvider;
+  readonly discoveredAt: string;
+  readonly sourceUrl?: string;
+  readonly title?: string;
 }
+
 export interface NormalizedDocument {
-  requestedUrl: string;
-  finalUrl: string;
-  canonicalUrl: string;
-  title: string;
-  text: string;
-  contentHash: string;
-  normalizedAt: string;
+  readonly requestedUrl: string;
+  readonly finalUrl: string;
+  readonly canonicalUrl: string;
+  readonly title: string;
+  readonly text: string;
+  readonly contentHash: string;
+  readonly normalizedAt: string;
 }
+
 /**
  * Research-layer evidence candidate.
  *
  * IMPORTANT:
+ *
  * This is intentionally NOT EvidencePayload.
  *
  * The research layer only extracts a candidate from an Internet
@@ -33,21 +46,22 @@ export interface NormalizedDocument {
  * the actual EvidencePayload and performing audit/verification.
  */
 export interface ResearchEvidenceCandidate {
-  sourceUrl: string;
-  excerpt: string;
-  locator: string;
-  extractionMethod:
+  readonly sourceUrl: string;
+  readonly excerpt: string;
+  readonly locator: string;
+  readonly extractionMethod:
     | "MANUAL_TRANSCRIPTION"
     | "TEXT_EXTRACTION"
     | "TABLE_EXTRACTION"
     | "OCR";
-  extractionConfidence:
+  readonly extractionConfidence:
     | "HIGH"
     | "MEDIUM"
     | "LOW";
-  observedAt: string;
-  excerptHash: string;
+  readonly observedAt: string;
+  readonly excerptHash: string;
 }
+
 /**
  * Evidence extracted from the research layer.
  *
@@ -55,49 +69,54 @@ export interface ResearchEvidenceCandidate {
  * V8 Evidence/Foundation pipeline.
  */
 export interface EvidenceCandidate {
-  evidence: ResearchEvidenceCandidate;
-  sourceUrl: string;
-  excerpt: string;
-  locator: string;
-  excerptHash: string;
+  readonly evidence: ResearchEvidenceCandidate;
+  readonly sourceUrl: string;
+  readonly excerpt: string;
+  readonly locator: string;
+  readonly excerptHash: string;
 }
+
 export interface FreshnessResult {
-  status:
+  readonly status:
     | "NEW"
     | "CHANGED"
     | "UNCHANGED"
     | "STALE";
-  contentHash: string;
-  previousHash?: string;
-  observedAt: string;
-  staleAfterDays: number;
+  readonly contentHash: string;
+  readonly previousHash?: string;
+  readonly observedAt: string;
+  readonly staleAfterDays: number;
 }
+
 export interface ConflictValue {
-  value: string;
-  sourceUrl: string;
-  authorityScore: number;
+  readonly value: string;
+  readonly sourceUrl: string;
+  readonly authorityScore: number;
 }
+
 export interface ConflictResult {
-  status:
+  readonly status:
     | "INSUFFICIENT_CONTEXT"
     | "NO_CONFLICT"
     | "CONFLICT";
-  resolution:
+  readonly resolution:
     | "NONE"
     | "HIGHEST_AUTHORITY_CANDIDATE"
     | "REQUIRES_REVIEW";
-  values: ConflictValue[];
-  selected?: ConflictValue;
+  readonly values: ConflictValue[];
+  readonly selected?: ConflictValue;
 }
+
 export interface KnowledgeRequirement {
-  id: string;
-  description: string;
-  requiredSignals: string[];
+  readonly id: string;
+  readonly description: string;
+  readonly requiredSignals: string[];
 }
+
 export interface KnowledgeGap {
-  requirementId: string;
-  description: string;
-  status: "OPEN" | "COVERED";
-  missingSignals: string[];
-  observedSignals: string[];
+  readonly requirementId: string;
+  readonly description: string;
+  readonly status: "OPEN" | "COVERED";
+  readonly missingSignals: string[];
+  readonly observedSignals: string[];
 }

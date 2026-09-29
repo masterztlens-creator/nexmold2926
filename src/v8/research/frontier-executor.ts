@@ -9,7 +9,7 @@ import {
 
 import type {
   DiscoveryCandidate,
-} from "../intelligence/web-discovery/types.js";
+} from "./types.js";
 
 import {
   expandSourceReferences,
@@ -19,6 +19,10 @@ import {
   ResearchFrontier,
   type FrontierItem,
 } from "./frontier.js";
+
+import {
+  canonicalizeUrl,
+} from "./discovery.js";
 
 export interface ResearchFrontierExecutorOptions {
   readonly maxPages?: number;
@@ -34,9 +38,12 @@ export interface ResearchFrontierExecutionError {
 }
 
 export interface ResearchFrontierExecutionResult {
-  readonly candidates: readonly DiscoveryCandidate[];
-  readonly fetchedPages: readonly FetchedPage[];
-  readonly errors: readonly ResearchFrontierExecutionError[];
+  readonly candidates:
+    readonly DiscoveryCandidate[];
+  readonly fetchedPages:
+    readonly FetchedPage[];
+  readonly errors:
+    readonly ResearchFrontierExecutionError[];
   readonly pagesFetched: number;
   readonly candidatesDiscovered: number;
 }
@@ -45,7 +52,10 @@ function normalizePositiveInteger(
   value: number,
   fieldName: string,
 ): number {
-  if (!Number.isInteger(value) || value <= 0) {
+  if (
+    !Number.isInteger(value) ||
+    value <= 0
+  ) {
     throw new Error(
       `V8_RESEARCH_FRONTIER_INVALID_${fieldName.toUpperCase()}`,
     );
@@ -58,7 +68,10 @@ function normalizeNonNegativeInteger(
   value: number,
   fieldName: string,
 ): number {
-  if (!Number.isInteger(value) || value < 0) {
+  if (
+    !Number.isInteger(value) ||
+    value < 0
+  ) {
     throw new Error(
       `V8_RESEARCH_FRONTIER_INVALID_${fieldName.toUpperCase()}`,
     );
@@ -72,25 +85,43 @@ function toFrontierItem(
   depth: number,
 ): FrontierItem {
   return {
-    url: candidate.normalizedUrl,
+    url:
+      candidate.normalizedUrl,
+
     depth,
+
     priority:
       depth === 0
         ? 100
-        : Math.max(1, 100 - depth),
-    ...(candidate.sourceUrl === undefined
+        : Math.max(
+            1,
+            100 - depth,
+          ),
+
+    ...(candidate.sourceUrl ===
+    undefined
       ? {}
       : {
-          discoveredFrom: candidate.sourceUrl,
-          sourceUrl: candidate.sourceUrl,
+          discoveredFrom:
+            candidate.sourceUrl,
+
+          sourceUrl:
+            candidate.sourceUrl,
         }),
-    kind: candidate.kind,
-    ...(candidate.title === undefined
+
+    kind:
+      candidate.kind,
+
+    ...(candidate.title ===
+    undefined
       ? {}
       : {
-          title: candidate.title,
+          title:
+            candidate.title,
         }),
-    discoveredAt: candidate.discoveredAt,
+
+    discoveredAt:
+      candidate.discoveredAt,
   };
 }
 
@@ -98,20 +129,36 @@ function cloneCandidate(
   candidate: DiscoveryCandidate,
 ): DiscoveryCandidate {
   return Object.freeze({
-    url: candidate.url,
-    normalizedUrl: candidate.normalizedUrl,
-    kind: candidate.kind,
-    ...(candidate.sourceUrl === undefined
+    url:
+      candidate.url,
+
+    normalizedUrl:
+      candidate.normalizedUrl,
+
+    kind:
+      candidate.kind,
+
+    provider:
+      candidate.provider,
+
+    ...(candidate.sourceUrl ===
+    undefined
       ? {}
       : {
-          sourceUrl: candidate.sourceUrl,
+          sourceUrl:
+            candidate.sourceUrl,
         }),
-    ...(candidate.title === undefined
+
+    ...(candidate.title ===
+    undefined
       ? {}
       : {
-          title: candidate.title,
+          title:
+            candidate.title,
         }),
-    discoveredAt: candidate.discoveredAt,
+
+    discoveredAt:
+      candidate.discoveredAt,
   });
 }
 
@@ -134,6 +181,60 @@ function errorMessage(
   return error instanceof Error
     ? error.message
     : String(error);
+}
+
+function convertExpandedCandidate(
+  candidate: {
+    readonly url: string;
+    readonly normalizedUrl: string;
+    readonly kind:
+      | "SEED"
+      | "LINK"
+      | "SITEMAP"
+      | "SERP_RESULT"
+      | "REFERENCE";
+    readonly sourceUrl?: string;
+    readonly title?: string;
+    readonly discoveredAt: string;
+  },
+): DiscoveryCandidate {
+  return Object.freeze({
+    url:
+      candidate.url,
+
+    normalizedUrl:
+      canonicalizeUrl(
+        candidate.normalizedUrl,
+      ),
+
+    kind:
+      candidate.kind,
+
+    provider:
+      candidate.kind ===
+      "SITEMAP"
+        ? "SITEMAP"
+        : "SELF_OWNED_CRAWL",
+
+    discoveredAt:
+      candidate.discoveredAt,
+
+    ...(candidate.sourceUrl ===
+    undefined
+      ? {}
+      : {
+          sourceUrl:
+            candidate.sourceUrl,
+        }),
+
+    ...(candidate.title ===
+    undefined
+      ? {}
+      : {
+          title:
+            candidate.title,
+        }),
+  });
 }
 
 export async function executeResearchFrontier(
@@ -160,7 +261,9 @@ export async function executeResearchFrontier(
     new ResearchFrontier();
 
   const initialCandidates =
-    seeds.map(cloneCandidate);
+    seeds.map(
+      cloneCandidate,
+    );
 
   frontier.enqueue(
     initialCandidates.map(
@@ -177,7 +280,8 @@ export async function executeResearchFrontier(
 
   if (sameHostOnly) {
     for (
-      const candidate of initialCandidates
+      const candidate
+      of initialCandidates
     ) {
       try {
         allowedHosts.add(
@@ -205,16 +309,20 @@ export async function executeResearchFrontier(
     );
 
   const fetchedPages:
-    FetchedPage[] = [];
+    FetchedPage[] =
+    [];
 
   const errors:
-    ResearchFrontierExecutionError[] = [];
+    ResearchFrontierExecutionError[] =
+    [];
 
   while (
     frontier.size > 0 &&
     fetchedPages.length < maxPages
   ) {
-    if (options.signal?.aborted) {
+    if (
+      options.signal?.aborted
+    ) {
       throw new Error(
         "V8_RESEARCH_ABORTED",
       );
@@ -227,7 +335,9 @@ export async function executeResearchFrontier(
       break;
     }
 
-    if (item.depth > maxDepth) {
+    if (
+      item.depth > maxDepth
+    ) {
       continue;
     }
 
@@ -255,8 +365,12 @@ export async function executeResearchFrontier(
     } catch (error) {
       errors.push(
         Object.freeze({
-          url: item.url,
-          depth: item.depth,
+          url:
+            item.url,
+
+          depth:
+            item.depth,
+
           error:
             errorMessage(error),
         }),
@@ -265,7 +379,9 @@ export async function executeResearchFrontier(
       continue;
     }
 
-    fetchedPages.push(page);
+    fetchedPages.push(
+      page,
+    );
 
     const expandedInputs =
       expandSourceReferences(
@@ -284,19 +400,32 @@ export async function executeResearchFrontier(
       );
 
     const nextFrontier:
-      FrontierItem[] = [];
+      FrontierItem[] =
+      [];
 
     for (
-      const candidate
+      const rawCandidate
       of discovered.candidates
     ) {
       if (
         sameHostOnly &&
         !isAllowedHost(
-          candidate.normalizedUrl,
+          rawCandidate.normalizedUrl,
           allowedHosts,
         )
       ) {
+        continue;
+      }
+
+      let candidate:
+        DiscoveryCandidate;
+
+      try {
+        candidate =
+          convertExpandedCandidate(
+            rawCandidate,
+          );
+      } catch {
         continue;
       }
 
@@ -343,16 +472,20 @@ export async function executeResearchFrontier(
       Object.freeze([
         ...candidates,
       ]),
+
     fetchedPages:
       Object.freeze([
         ...fetchedPages,
       ]),
+
     errors:
       Object.freeze([
         ...errors,
       ]),
+
     pagesFetched:
       fetchedPages.length,
+
     candidatesDiscovered:
       Math.max(
         0,
