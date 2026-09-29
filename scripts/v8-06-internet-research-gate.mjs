@@ -12,14 +12,15 @@ import {
   runResearchAcquisition,
 } from "../.v8-build/src/v8/intelligence/research-planner/acquisition-runner.js";
 
-const seedUrl =
-  process.env.V8_RESEARCH_SEED_URL?.trim();
-
-if (!seedUrl) {
-  throw new Error(
-    "V8_RESEARCH_SEED_CONFIG_MISSING: V8_RESEARCH_SEED_URL is required.",
-  );
-}
+const RESEARCH_SEEDS = Object.freeze([
+  Object.freeze({
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    source: "DIRECT",
+    reason:
+      "Explicit controlled Internet research seed for V8-06 real Internet acquisition validation of plastic injection molding wall thickness.",
+  }),
+]);
 
 const opportunity = {
   keyword: {
@@ -68,14 +69,8 @@ const result =
       sameHostOnly: true,
       actorId:
         "v8-06-real-gate",
-      researchSeeds: [
-        {
-          url: seedUrl,
-          source: "AUTHORITY",
-          reason:
-            "Explicit controlled Internet research seed for V8-06.",
-        },
-      ],
+      researchSeeds:
+        RESEARCH_SEEDS,
     },
   );
 
@@ -157,7 +152,7 @@ console.log(
 );
 
 console.log(
-  `[V8-06] seed=${seedUrl}`,
+  `[V8-06] seeds=${RESEARCH_SEEDS.length}`,
 );
 
 console.log(
