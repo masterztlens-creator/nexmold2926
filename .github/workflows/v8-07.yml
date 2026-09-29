@@ -2,15 +2,33 @@ name: V8-07 Evidence Expansion
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "src/v8/intelligence/evidence-expansion/**"
+      - "src/v8/intelligence/shared.ts"
+      - "src/v8/acquisition/**"
+      - "src/v8/foundation/**"
+      - "src/v8/evidence/**"
+      - "src/v8/domain/**"
+      - "tests/v8/evidence-expansion/**"
+      - "scripts/v8-07-evidence-expansion-gate.mjs"
+      - "tsconfig.v8.json"
+      - ".github/workflows/v8-07.yml"
+
+permissions:
+  contents: read
 
 jobs:
   v8-07:
+    name: V8-07 real evidence expansion gate
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm

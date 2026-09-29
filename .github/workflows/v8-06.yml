@@ -2,9 +2,25 @@ name: V8-06 Internet Research Acquisition
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "src/v8/intelligence/research-planner/**"
+      - "src/v8/intelligence/shared.ts"
+      - "src/v8/acquisition/**"
+      - "src/v8/foundation/**"
+      - "src/v8/evidence/**"
+      - "src/v8/domain/**"
+      - "tests/v8/intelligence/research-planner/**"
+      - "scripts/v8-06-internet-research-gate.mjs"
+      - "tsconfig.v8.json"
+      - ".github/workflows/v8-06.yml"
+
+permissions:
+  contents: read
 
 jobs:
   v8-06-internet-research:
+    name: V8-06 real internet research gate
     runs-on: ubuntu-latest
 
     steps:
