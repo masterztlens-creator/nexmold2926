@@ -16,61 +16,33 @@ const RESEARCH_SEEDS = Object.freeze([
   Object.freeze({
     url:
       "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
-    title:
-      "Plastic Injection Molding Design Guidelines",
-    snippet:
-      "Injection molding design guidance including wall thickness and manufacturing considerations.",
+    source:
+      "AUTHORITY",
+    reason:
+      "Direct authority seed for injection molding design guidance.",
   }),
+
   Object.freeze({
     url:
       "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/",
-    title:
-      "Plastic Injection Molding",
-    snippet:
-      "Plastic injection molding process and manufacturing guidance.",
+    source:
+      "AUTHORITY",
+    reason:
+      "Direct authority seed for plastic injection molding process guidance.",
   }),
+
   Object.freeze({
     url:
       "https://www.protolabs.com/resources/guides-and-trend-reports/injection-molding-guide-process-design-tips-materials/",
-    title:
-      "Injection Molding Guide",
-    snippet:
-      "Injection molding process, design tips, and material guidance.",
+    source:
+      "AUTHORITY",
+    reason:
+      "Direct authority seed for injection molding process and material guidance.",
   }),
 ]);
 
 const QUERY =
   "plastic injection molding wall thickness";
-
-const searchProvider = {
-  name:
-    "v8-07-self-owned-seed-provider",
-
-  async search(query, options = {}) {
-    if (options.signal?.aborted) {
-      throw new Error(
-        "V8-07_SEARCH_ABORTED",
-      );
-    }
-
-    if (
-      query !== QUERY
-    ) {
-      return [];
-    }
-
-    return RESEARCH_SEEDS.map(
-      (seed) => ({
-        url:
-          seed.url,
-        title:
-          seed.title,
-        snippet:
-          seed.snippet,
-      }),
-    );
-  },
-};
 
 const pageFetcher =
   new HttpPageFetcher({
@@ -84,14 +56,30 @@ const store =
 const result =
   await expandEvidenceFromInternet(
     [QUERY],
-    searchProvider,
+    undefined,
     pageFetcher,
     store,
     {
       actorId:
         "V8-07-REAL-GATE",
-      maxQueries: 1,
-      maxCandidates: 3,
+
+      maxQueries:
+        1,
+
+      maxCandidates:
+        3,
+
+      researchSeeds:
+        RESEARCH_SEEDS,
+
+      maxPages:
+        3,
+
+      maxDepth:
+        0,
+
+      sameHostOnly:
+        true,
     },
   );
 
@@ -108,7 +96,8 @@ console.log(
 );
 
 for (
-  const candidate of result.candidates
+  const candidate of
+    result.candidates
 ) {
   console.log(
     `candidate url=${candidate.url} title=${JSON.stringify(candidate.title)}`,
@@ -120,7 +109,8 @@ console.log(
 );
 
 for (
-  const candidate of result.rankedCandidates
+  const candidate of
+    result.rankedCandidates
 ) {
   console.log(
     `ranked url=${candidate.url} title=${JSON.stringify(candidate.title)}`,
@@ -132,7 +122,8 @@ console.log(
 );
 
 for (
-  const acquisition of result.acquisitions
+  const acquisition of
+    result.acquisitions
 ) {
   console.log(
     `acquisition url=${acquisition.page.finalUrl} status=${acquisition.page.status} mediaType=${JSON.stringify(acquisition.page.mediaType)} bytes=${acquisition.page.bytes.byteLength} bodyLength=${acquisition.page.body.length} evidence=${acquisition.evidence?.evidence?.length ?? "undefined"}`,
@@ -154,7 +145,7 @@ console.log(
 assert.equal(
   result.searchErrors.length,
   0,
-  "self-owned seed discovery produced search errors",
+  "self-owned discovery must not use a SearchProvider",
 );
 
 assert.equal(
@@ -187,7 +178,8 @@ assert.ok(
 );
 
 for (
-  const acquisition of result.acquisitions
+  const acquisition of
+    result.acquisitions
 ) {
   assert.equal(
     acquisition.page.status >= 200,
@@ -240,7 +232,8 @@ assert.ok(
 );
 
 for (
-  const record of evidenceRecords
+  const record of
+    evidenceRecords
 ) {
   assert.equal(
     record.state,
@@ -256,7 +249,8 @@ for (
   assert.ok(
     record.lineage.some(
       (lineage) =>
-        lineage.type === "SOURCE",
+        lineage.type ===
+        "SOURCE",
     ),
     `SOURCE lineage missing for ${record.aggregateId}`,
   );
@@ -264,7 +258,8 @@ for (
   assert.ok(
     record.lineage.some(
       (lineage) =>
-        lineage.type === "SNAPSHOT",
+        lineage.type ===
+        "SNAPSHOT",
     ),
     `SNAPSHOT lineage missing for ${record.aggregateId}`,
   );
@@ -297,7 +292,7 @@ console.log(
 );
 
 console.log(
-  "[V8-07] acquisitionMode=SELF_OWNED_SEEDS",
+  "[V8-07] acquisitionMode=SELF_OWNED_CRAWL",
 );
 
 console.log(
