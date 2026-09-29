@@ -12,8 +12,10 @@ import { runResearchAcquisition } from "../../../../.v8-build/src/v8/intelligenc
 
 const opportunity: Opportunity = {
   keyword: {
-    keyword: "plastic injection molding wall thickness",
-    normalized: "plastic injection molding wall thickness",
+    keyword:
+      "plastic injection molding wall thickness",
+    normalized:
+      "plastic injection molding wall thickness",
     source: "SEED",
     intent: "INFORMATIONAL",
     terms: [
@@ -33,9 +35,11 @@ const opportunity: Opportunity = {
 test(
   "wires opportunity through self-owned research, discovery, fetch and evidence",
   async () => {
-    const store = new InMemoryFoundationStore();
+    const store =
+      new InMemoryFoundationStore();
 
-    const url = "https://example.com/engineering";
+    const url =
+      "https://example.com/engineering";
 
     const body = [
       "<html>",
@@ -54,8 +58,11 @@ test(
       status: 200,
       mediaType: "text/html",
       body,
-      bytes: new TextEncoder().encode(body),
-      fetchedAt: "2026-01-01T00:00:00.000Z",
+      bytes: new TextEncoder().encode(
+        body,
+      ),
+      fetchedAt:
+        "2026-01-01T00:00:00.000Z",
     };
 
     const pageFetcher: PageFetcher = {
@@ -64,31 +71,33 @@ test(
       },
     };
 
-    const result = await runResearchAcquisition(
-      opportunity,
-      undefined,
-      pageFetcher,
-      store,
-      {
-        maxQueries: 1,
-        maxCandidates: 5,
-        maxPages: 5,
-        maxDepth: 1,
-        sameHostOnly: true,
-        actorId: "v8-06-test",
-        researchSeeds: [
-          {
-            url,
-            source: "DIRECT",
-            reason:
-              "V8-06 self-owned acquisition integration fixture",
-          },
-        ],
-      },
-    );
+    const result =
+      await runResearchAcquisition(
+        opportunity,
+        undefined,
+        pageFetcher,
+        store,
+        {
+          maxQueries: 1,
+          maxCandidates: 5,
+          maxPages: 5,
+          maxDepth: 1,
+          sameHostOnly: true,
+          actorId: "v8-06-test",
+          researchSeeds: [
+            {
+              url,
+              source: "DIRECT",
+              reason:
+                "V8-06 self-owned acquisition integration fixture",
+            },
+          ],
+        },
+      );
 
     assert.ok(
-      result.plan.sourceQueries.length > 0,
+      result.plan.sourceQueries.length >
+        0,
     );
 
     assert.equal(
@@ -116,32 +125,54 @@ test(
       0,
     );
 
-    const evidenceRecords = store
-      .auditTrail()
-      .filter(
-        (record) =>
-          record.aggregateType === "EVIDENCE",
-      );
+    const evidenceRecords =
+      store
+        .auditTrail()
+        .filter(
+          (
+            record,
+          ): record is typeof record & {
+            readonly aggregateType:
+              "EVIDENCE";
+            readonly payload: {
+              readonly verificationStatus:
+                | "UNVERIFIED"
+                | "VERIFIED"
+                | "REJECTED"
+                | "CONDITION_DEPENDENT"
+                | "NOT_COMPARABLE"
+                | "INSUFFICIENT_EVIDENCE"
+                | "CONFLICTING_EVIDENCE";
+            };
+          } =>
+            record.aggregateType ===
+            "EVIDENCE",
+        );
 
     assert.ok(
       evidenceRecords.length > 0,
     );
 
-    for (const evidenceRecord of evidenceRecords) {
+    for (
+      const evidenceRecord of
+        evidenceRecords
+    ) {
       assert.equal(
         evidenceRecord.state,
         "INGESTED",
       );
 
       assert.equal(
-        evidenceRecord.payload.verificationStatus,
+        evidenceRecord.payload
+          .verificationStatus,
         "UNVERIFIED",
       );
 
       assert.ok(
         evidenceRecord.lineage.some(
           (lineage) =>
-            lineage.type === "SNAPSHOT",
+            lineage.type ===
+            "SNAPSHOT",
         ),
       );
     }
@@ -153,7 +184,8 @@ test(
 test(
   "fails closed when search provider fails",
   async () => {
-    const store = new InMemoryFoundationStore();
+    const store =
+      new InMemoryFoundationStore();
 
     const searchProvider: SearchProvider = {
       name: "failing-search",
@@ -173,17 +205,18 @@ test(
       },
     };
 
-    const result = await runResearchAcquisition(
-      opportunity,
-      searchProvider,
-      pageFetcher,
-      store,
-      {
-        maxQueries: 1,
-        maxCandidates: 5,
-        actorId: "v8-06-test",
-      },
-    );
+    const result =
+      await runResearchAcquisition(
+        opportunity,
+        searchProvider,
+        pageFetcher,
+        store,
+        {
+          maxQueries: 1,
+          maxCandidates: 5,
+          actorId: "v8-06-test",
+        },
+      );
 
     assert.equal(
       result.discovery.accepted,
