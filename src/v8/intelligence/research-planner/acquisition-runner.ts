@@ -1,30 +1,48 @@
-import type { FoundationStore } from "../../foundation/types.js";
-import { ingestFetchedPage } from "../../acquisition/foundation-adapter.js";
+import type {
+  FoundationStore,
+  DiscoveryProvenance,
+} from "../../foundation/types.js";
+
+import {
+  ingestFetchedPage,
+} from "../../acquisition/foundation-adapter.js";
+
 import type {
   ExtractedEvidenceCandidate,
   FetchedPage,
   PageFetcher,
   SearchProvider,
 } from "../../acquisition/types.js";
+
 import {
   extractStructuredEvidence,
   extractTextEvidence,
 } from "../../acquisition/source-extractor.js";
-import type { Opportunity } from "../shared.js";
+
+import type {
+  Opportunity,
+} from "../shared.js";
+
 import {
   discoverCandidates,
   type DiscoveryInput,
 } from "../web-discovery/discovery.js";
-import type { DiscoveryBatch } from "../web-discovery/types.js";
+
+import type {
+  DiscoveryBatch,
+} from "../web-discovery/types.js";
+
 import {
   planResearch,
   type ResearchPlan,
 } from "./planner.js";
+
 import {
   resolveResearchSeeds,
   type ResearchSeed,
   type ResolvedResearchSeed,
 } from "./self-owned-seed-resolver.js";
+
 import {
   discoverWithSelfOwnedCrawl,
 } from "../../research/self-owned-discovery.js";
@@ -52,7 +70,9 @@ export interface ResearchAcquisitionConfig {
 export interface ResearchAcquisitionRecord {
   readonly candidateUrl: string;
   readonly page: FetchedPage;
-  readonly acquisition: ReturnType<typeof ingestFetchedPage>;
+  readonly acquisition: ReturnType<
+    typeof ingestFetchedPage
+  >;
 }
 
 export interface ResearchAcquisitionError {
@@ -69,13 +89,28 @@ export interface ResearchAcquisitionResult {
   readonly fetchErrors: readonly ResearchAcquisitionError[];
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+interface SelfOwnedDiscoveryExecution {
+  readonly discovery: DiscoveryBatch;
+  readonly fetchErrors: readonly ResearchAcquisitionError[];
 }
 
-function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) {
-    throw new Error("V8_RESEARCH_ACQUISITION_ABORTED");
+function errorMessage(
+  error: unknown,
+): string {
+  return error instanceof Error
+    ? error.message
+    : String(error);
+}
+
+function throwIfAborted(
+  signal?: AbortSignal,
+): void {
+  if (
+    signal?.aborted
+  ) {
+    throw new Error(
+      "V8_RESEARCH_ACQUISITION_ABORTED",
+    );
   }
 }
 
@@ -95,18 +130,34 @@ function evidenceKey(
 function deduplicateEvidence(
   candidates: readonly ExtractedEvidenceCandidate[],
 ): readonly ExtractedEvidenceCandidate[] {
-  const seen = new Set<string>();
-  const output: ExtractedEvidenceCandidate[] = [];
+  const seen =
+    new Set<string>();
 
-  for (const candidate of candidates) {
-    const key = evidenceKey(candidate);
+  const output:
+    ExtractedEvidenceCandidate[] =
+      [];
 
-    if (seen.has(key)) {
+  for (
+    const candidate of candidates
+  ) {
+    const key =
+      evidenceKey(
+        candidate,
+      );
+
+    if (
+      seen.has(key)
+    ) {
       continue;
     }
 
-    seen.add(key);
-    output.push(candidate);
+    seen.add(
+      key,
+    );
+
+    output.push(
+      candidate,
+    );
   }
 
   return output;
@@ -115,12 +166,16 @@ function deduplicateEvidence(
 function extractResearchEvidence(
   page: FetchedPage,
 ): readonly ExtractedEvidenceCandidate[] {
-  const structured = extractStructuredEvidence(page.body);
+  const structured =
+    extractStructuredEvidence(
+      page.body,
+    );
 
-  const documentText = extractTextEvidence(
-    page.body,
-    page.finalUrl,
-  );
+  const documentText =
+    extractTextEvidence(
+      page.body,
+      page.finalUrl,
+    );
 
   return deduplicateEvidence([
     ...structured,
@@ -138,32 +193,138 @@ function selfOwnedDiscoveryInputs(
   }[],
   seeds: readonly ResolvedResearchSeed[],
 ): DiscoveryInput[] {
-  const seedCanonicalUrls = new Set(
-    seeds.map(
-      (seed) => seed.canonicalUrl,
-    ),
-  );
+  const seedCanonicalUrls =
+    new Set(
+      seeds.map(
+        (seed) =>
+          seed.canonicalUrl,
+      ),
+    );
 
   return candidates.map(
-    (candidate): DiscoveryInput => ({
-      url: candidate.url,
-      kind: seedCanonicalUrls.has(
-        candidate.canonicalUrl,
-      )
-        ? "SEED"
-        : "LINK",
-      ...(candidate.sourceHint === undefined
+    (
+      candidate,
+    ): DiscoveryInput => ({
+      url:
+        candidate.url,
+
+      kind:
+        seedCanonicalUrls.has(
+          candidate.canonicalUrl,
+        )
+          ? "SEED"
+          : "LINK",
+
+      ...(candidate.sourceHint ===
+      undefined
         ? {}
         : {
-            sourceUrl: candidate.sourceHint,
+            sourceUrl:
+              candidate.sourceHint,
           }),
-      ...(candidate.title === undefined
+
+      ...(candidate.title ===
+      undefined
         ? {}
         : {
-            title: candidate.title,
+            title:
+              candidate.title,
           }),
-      discoveredAt: candidate.discoveredAt,
+
+      discoveredAt:
+        candidate.discoveredAt,
     }),
+  );
+}
+
+function discoveryProvenanceForSelfOwnedCandidate(
+  candidate: {
+    readonly url: string;
+    readonly normalizedUrl: string;
+    readonly kind: "SEED" | "LINK";
+    readonly sourceUrl?: string;
+    readonly discoveredAt: string;
+  },
+  seeds: readonly ResolvedResearchSeed[],
+): DiscoveryProvenance {
+  if (
+    candidate.kind ===
+    "SEED"
+  ) {
+    const matchingSeed =
+      seeds.find(
+        (seed) =>
+          seed.canonicalUrl ===
+          candidate.normalizedUrl,
+      );
+
+    if (
+      !matchingSeed
+    ) {
+      throw new Error(
+        "V8_RESEARCH_SELF_OWNED_SEED_PROVENANCE_NOT_FOUND",
+      );
+    }
+
+    return Object.freeze({
+      status:
+        "EXPLICIT_RESEARCH_SEED",
+
+      provider:
+        "DIRECT",
+
+      discoveredUrl:
+        candidate.url,
+
+      canonicalUrl:
+        candidate.normalizedUrl,
+
+      discoveredAt:
+        candidate.discoveredAt,
+
+      researchSeedUrl:
+        matchingSeed.canonicalUrl,
+
+      sourceHint:
+        "V8_RESEARCH_SEED",
+    });
+  }
+
+  if (
+    candidate.kind ===
+      "LINK" &&
+    typeof candidate.sourceUrl ===
+      "string" &&
+    candidate.sourceUrl.trim()
+  ) {
+    const researchSeedUrl =
+      candidate.sourceUrl.trim();
+
+    return Object.freeze({
+      status:
+        "CRAWLED_FROM_RESEARCH_SEED",
+
+      provider:
+        "DIRECT",
+
+      discoveredUrl:
+        candidate.url,
+
+      canonicalUrl:
+        candidate.normalizedUrl,
+
+      discoveredAt:
+        candidate.discoveredAt,
+
+      researchSeedUrl,
+
+      sourceHint:
+        researchSeedUrl,
+    });
+  }
+
+  throw new Error(
+    "V8_RESEARCH_SELF_OWNED_LINK_PROVENANCE_UNKNOWN",
   );
 }
 
@@ -171,34 +332,64 @@ async function runSelfOwnedDiscovery(
   seeds: readonly ResolvedResearchSeed[],
   pageFetcher: PageFetcher,
   config: ResearchAcquisitionConfig,
-): Promise<DiscoveryBatch> {
+): Promise<SelfOwnedDiscoveryExecution> {
   const result =
     await discoverWithSelfOwnedCrawl(
       seeds.map(
-        (seed) => seed.url,
+        (seed) =>
+          seed.url,
       ),
+
       pageFetcher,
+
       {
-        signal: config.signal,
+        signal:
+          config.signal,
+
         maxPages:
           config.maxPages ??
           config.maxCandidates ??
           50,
+
         maxDepth:
-          config.maxDepth ?? 2,
+          config.maxDepth ??
+          2,
+
         sameHostOnly:
-          config.sameHostOnly ?? true,
+          config.sameHostOnly ??
+          true,
+
         maxCandidates:
-          config.maxCandidates ?? 10,
+          config.maxCandidates ??
+          10,
       },
     );
 
-  return discoverCandidates(
-    selfOwnedDiscoveryInputs(
-      result.candidates,
-      seeds,
-    ),
-  );
+  const discovery =
+    discoverCandidates(
+      selfOwnedDiscoveryInputs(
+        result.candidates,
+        seeds,
+      ),
+    );
+
+  const fetchErrors =
+    result.fetchErrors.map(
+      (
+        failure,
+      ): ResearchAcquisitionError => ({
+        url:
+          failure.url,
+
+        error:
+          failure.error,
+      }),
+    );
+
+  return {
+    discovery,
+    fetchErrors,
+  };
 }
 
 export async function runResearchAcquisition(
@@ -208,18 +399,24 @@ export async function runResearchAcquisition(
   store: FoundationStore,
   config: ResearchAcquisitionConfig = {},
 ): Promise<ResearchAcquisitionResult> {
-  const plan = planResearch(opportunity);
+  const plan =
+    planResearch(
+      opportunity,
+    );
 
-  const maxQueries = Math.max(
-    1,
-    config.maxQueries ??
-      plan.sourceQueries.length,
-  );
+  const maxQueries =
+    Math.max(
+      1,
+      config.maxQueries ??
+        plan.sourceQueries.length,
+    );
 
-  const maxCandidates = Math.max(
-    1,
-    config.maxCandidates ?? 10,
-  );
+  const maxCandidates =
+    Math.max(
+      1,
+      config.maxCandidates ??
+        10,
+    );
 
   /*
    * Explicit self-owned seeds take precedence over
@@ -228,8 +425,10 @@ export async function runResearchAcquisition(
    * No URL is ever inferred from the opportunity keyword.
    */
   if (
-    config.researchSeeds !== undefined &&
-    config.researchSeeds.length > 0
+    config.researchSeeds !==
+      undefined &&
+    config.researchSeeds.length >
+      0
   ) {
     const seedResolution =
       resolveResearchSeeds(
@@ -237,27 +436,35 @@ export async function runResearchAcquisition(
       );
 
     if (
-      seedResolution.accepted.length === 0
+      seedResolution.accepted.length ===
+      0
     ) {
       throw new Error(
         "V8_RESEARCH_SEED_NO_VALID_SEEDS",
       );
     }
 
-    const discovery =
+    const selfOwned =
       await runSelfOwnedDiscovery(
         seedResolution.accepted,
         pageFetcher,
         config,
       );
 
-    const acquisitions: ResearchAcquisitionRecord[] =
-      [];
+    const acquisitions:
+      ResearchAcquisitionRecord[] =
+        [];
 
-    const fetchErrors: ResearchAcquisitionError[] =
-      [];
+    const fetchErrors:
+      ResearchAcquisitionError[] =
+        [
+          ...selfOwned.fetchErrors,
+        ];
 
-    for (const candidate of discovery.candidates) {
+    for (
+      const candidate of
+        selfOwned.discovery.candidates
+    ) {
       if (
         acquisitions.length >=
         maxCandidates
@@ -265,7 +472,34 @@ export async function runResearchAcquisition(
         break;
       }
 
-      throwIfAborted(config.signal);
+      throwIfAborted(
+        config.signal,
+      );
+
+      let discoveryProvenance:
+        DiscoveryProvenance;
+
+      try {
+        discoveryProvenance =
+          discoveryProvenanceForSelfOwnedCandidate(
+            candidate,
+            seedResolution.accepted,
+          );
+      } catch (
+        error
+      ) {
+        fetchErrors.push({
+          url:
+            candidate.url,
+
+          error:
+            errorMessage(
+              error,
+            ),
+        });
+
+        continue;
+      }
 
       try {
         const page =
@@ -290,29 +524,44 @@ export async function runResearchAcquisition(
             {
               actorId:
                 config.actorId,
+
+              discoveryProvenance,
             },
           );
 
         acquisitions.push({
           candidateUrl:
             candidate.url,
+
           page,
+
           acquisition,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         fetchErrors.push({
-          url: candidate.url,
+          url:
+            candidate.url,
+
           error:
-            errorMessage(error),
+            errorMessage(
+              error,
+            ),
         });
       }
     }
 
     return {
       plan,
-      discovery,
+
+      discovery:
+        selfOwned.discovery,
+
       acquisitions,
+
       searchErrors: [],
+
       fetchErrors,
     };
   }
@@ -322,28 +571,34 @@ export async function runResearchAcquisition(
    *
    * Self-owned acquisition does not require a SearchProvider.
    * If no explicit self-owned seeds were supplied, the caller
-   * must explicitly provide a SearchProvider rather than allowing
-   * the runtime to fabricate or silently bypass Internet discovery.
+   * must explicitly provide a SearchProvider.
    */
-  if (!searchProvider) {
+  if (
+    !searchProvider
+  ) {
     throw new Error(
       "V8_RESEARCH_SEARCH_PROVIDER_REQUIRED",
     );
   }
 
-  const discoveryInputs: DiscoveryInput[] =
-    [];
+  const discoveryInputs:
+    DiscoveryInput[] =
+      [];
 
-  const searchErrors: ResearchAcquisitionError[] =
-    [];
+  const searchErrors:
+    ResearchAcquisitionError[] =
+      [];
 
   for (
-    const query of plan.sourceQueries.slice(
-      0,
-      maxQueries,
-    )
+    const query of
+      plan.sourceQueries.slice(
+        0,
+        maxQueries,
+      )
   ) {
-    throwIfAborted(config.signal);
+    throwIfAborted(
+      config.signal,
+    );
 
     try {
       const results =
@@ -356,19 +611,30 @@ export async function runResearchAcquisition(
         );
 
       for (
-        const result of results
+        const result of
+          results
       ) {
         discoveryInputs.push({
-          url: result.url,
-          kind: "SERP_RESULT",
-          title: result.title,
+          url:
+            result.url,
+
+          kind:
+            "SERP_RESULT",
+
+          title:
+            result.title,
         });
       }
-    } catch (error) {
+    } catch (
+      error
+    ) {
       searchErrors.push({
         query,
+
         error:
-          errorMessage(error),
+          errorMessage(
+            error,
+          ),
       });
     }
   }
@@ -378,14 +644,17 @@ export async function runResearchAcquisition(
       discoveryInputs,
     );
 
-  const acquisitions: ResearchAcquisitionRecord[] =
-    [];
+  const acquisitions:
+    ResearchAcquisitionRecord[] =
+      [];
 
-  const fetchErrors: ResearchAcquisitionError[] =
-    [];
+  const fetchErrors:
+    ResearchAcquisitionError[] =
+      [];
 
   for (
-    const candidate of discovery.candidates
+    const candidate of
+      discovery.candidates
   ) {
     if (
       acquisitions.length >=
@@ -394,7 +663,9 @@ export async function runResearchAcquisition(
       break;
     }
 
-    throwIfAborted(config.signal);
+    throwIfAborted(
+      config.signal,
+    );
 
     try {
       const page =
@@ -425,24 +696,35 @@ export async function runResearchAcquisition(
       acquisitions.push({
         candidateUrl:
           candidate.url,
+
         page,
+
         acquisition,
       });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       fetchErrors.push({
         url:
           candidate.url,
+
         error:
-          errorMessage(error),
+          errorMessage(
+            error,
+          ),
       });
     }
   }
 
   return {
     plan,
+
     discovery,
+
     acquisitions,
+
     searchErrors,
+
     fetchErrors,
   };
 }

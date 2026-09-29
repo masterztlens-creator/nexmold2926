@@ -12,6 +12,7 @@ import {
 
 import {
   crawl,
+  type CrawlFailure,
   type CrawlOptions,
 } from "./crawler.js";
 
@@ -26,6 +27,7 @@ export interface SelfOwnedDiscoveryResult {
   readonly seeds: readonly string[];
   readonly candidates: readonly DiscoveryCandidate[];
   readonly pagesFetched: number;
+  readonly fetchErrors: readonly CrawlFailure[];
 }
 
 export async function discoverWithSelfOwnedCrawl(
@@ -50,24 +52,39 @@ export async function discoverWithSelfOwnedCrawl(
       "maxCandidates",
     );
 
+  const fetchErrors: CrawlFailure[] =
+    [];
+
   const pages =
     await crawl(
       normalizedSeeds,
       fetcher,
-      options,
+      {
+        ...options,
+
+        onFetchFailure:
+          (failure) => {
+            fetchErrors.push(
+              failure,
+            );
+
+            options.onFetchFailure?.(
+              failure,
+            );
+          },
+      },
     );
 
   const candidates:
-    DiscoveryCandidate[] = [];
+    DiscoveryCandidate[] =
+      [];
 
   const seen =
     new Set<string>();
 
   /**
    * Explicit seeds are identified against the complete
-   * normalized seed set, not only normalizedSeeds[0].
-   *
-   * This is required when multiple ResearchSeeds are supplied.
+   * normalized seed set.
    */
   const explicitSeedSet =
     new Set(
@@ -77,15 +94,15 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 1:
    *
-   * Materialize crawled page candidates before
-   * discovered links can consume the candidate budget.
+   * Materialize crawled page candidates before discovered
+   * links can consume the candidate budget.
    *
-   * Provenance contract:
+   * Provenance:
    *
    *   explicit seed page
    *       -> options.sourceHint
    *
-   *   subsequently crawled page
+   *   crawled page
    *       -> page.discoveryRoot
    */
   for (
@@ -162,12 +179,11 @@ export async function discoverWithSelfOwnedCrawl(
   /*
    * Phase 2:
    *
-   * Materialize discovered links only after all
-   * crawled page candidates have had an opportunity
-   * to enter the bounded candidate set.
+   * Materialize discovered links only after crawled page
+   * candidates have entered the bounded candidate set.
    *
-   * Every discovered link inherits the ResearchSeed
-   * that originated the page from which the link was found.
+   * Every link inherits the ResearchSeed that originated
+   * the page from which that link was observed.
    */
   for (
     const page of pages
@@ -245,6 +261,11 @@ export async function discoverWithSelfOwnedCrawl(
 
     pagesFetched:
       pages.length,
+
+    fetchErrors:
+      Object.freeze([
+        ...fetchErrors,
+      ]),
   });
 }
 

@@ -19,9 +19,9 @@ export interface FrontierItem {
   /**
    * Discovery provenance.
    *
-   * The frontier must preserve how a URL was discovered so that
-   * downstream research can distinguish direct seeds, internal links,
-   * references, sitemaps, and search-derived candidates.
+   * The frontier preserves how a URL was discovered so that
+   * downstream research can distinguish direct seeds, internal
+   * links, references, sitemaps, and search-derived candidates.
    */
   readonly kind?: DiscoveryCandidateKind;
 
@@ -38,8 +38,8 @@ export interface FrontierItem {
   /**
    * Stable observation timestamp supplied by the discovery layer.
    *
-   * The frontier does not generate this value when it is provided by
-   * upstream discovery, preserving deterministic discovery metadata.
+   * The frontier does not generate this value when it is supplied
+   * by upstream discovery.
    */
   readonly discoveredAt?: string;
 }
@@ -51,30 +51,50 @@ function compareFrontierItems(
   return (
     right.priority - left.priority ||
     left.depth - right.depth ||
-    left.url.localeCompare(right.url)
+    left.url.localeCompare(
+      right.url,
+    )
   );
 }
 
 export class ResearchFrontier {
-  private readonly queue: FrontierItem[] = [];
-  private readonly seen = new Set<string>();
+  private readonly queue: FrontierItem[] =
+    [];
+
+  private readonly seen =
+    new Set<string>();
 
   enqueue(
     items: readonly FrontierItem[],
   ): void {
-    for (const item of items) {
-      if (this.seen.has(item.url)) {
+    for (
+      const item of items
+    ) {
+      if (
+        this.seen.has(
+          item.url,
+        )
+      ) {
         continue;
       }
 
-      this.seen.add(item.url);
-      this.queue.push(item);
+      this.seen.add(
+        item.url,
+      );
+
+      this.queue.push(
+        item,
+      );
     }
 
-    this.queue.sort(compareFrontierItems);
+    this.queue.sort(
+      compareFrontierItems,
+    );
   }
 
-  next(): FrontierItem | undefined {
+  next():
+    | FrontierItem
+    | undefined {
     return this.queue.shift();
   }
 
@@ -82,7 +102,11 @@ export class ResearchFrontier {
     return this.queue.length;
   }
 
-  has(url: string): boolean {
-    return this.seen.has(url);
+  has(
+    url: string,
+  ): boolean {
+    return this.seen.has(
+      url,
+    );
   }
 }

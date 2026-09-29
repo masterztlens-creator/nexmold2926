@@ -6,6 +6,11 @@ import {
   type FrontierItem,
 } from "./frontier.js";
 
+export interface CrawlFailure {
+  readonly url: string;
+  readonly error: string;
+}
+
 export interface CrawlPage {
   readonly url: string;
   readonly title?: string;
@@ -17,8 +22,8 @@ export interface CrawlPage {
   /**
    * ResearchSeed that originated this crawled page.
    *
-   * This value is inherited from the frontier item and must not be
-   * recomputed from the first seed supplied to the crawler.
+   * This value is inherited from the frontier item and must never
+   * be recomputed from the first seed supplied to the crawler.
    */
   readonly discoveryRoot?: string;
 }
@@ -28,9 +33,21 @@ export interface CrawlOptions {
   readonly maxDepth?: number;
   readonly sameHostOnly?: boolean;
   readonly signal?: AbortSignal;
+
+  /**
+   * Reports non-fatal crawl failures to the acquisition layer.
+   *
+   * The crawler remains fail-soft for individual URLs, but failures
+   * are no longer silently discarded.
+   */
+  readonly onFetchFailure?: (
+    failure: CrawlFailure,
+  ) => void;
 }
 
-function titleOf(html: string): string | undefined {
+function titleOf(
+  html: string,
+): string | undefined {
   const match = html.match(
     /<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/i,
   );
@@ -54,19 +71,64 @@ function linksOf(
 
   let match: RegExpExecArray | null;
 
-  while ((match = pattern.exec(html))) {
+  while (
+    (match = pattern.exec(html))
+  ) {
     try {
-      const canonicalUrl = canonicalizeUrl(
-        new URL(match[1], base).toString(),
-      );
+      const canonicalUrl =
+        canonicalizeUrl(
+          new URL(
+            match[1],
+            base,
+          ).toString(),
+        );
 
-      output.push(canonicalUrl);
+      output.push(
+        canonicalUrl,
+      );
     } catch {
       continue;
     }
   }
 
-  return [...new Set(output)];
+  return [
+    ...new Set(output),
+  ];
+}
+
+function reportFailure(
+  options: CrawlOptions,
+  url: string,
+  error: unknown,
+): void {
+  const message =
+    error instanceof Error
+      ? error.message
+      : String(error);
+
+  options.onFetchFailure?.(
+    Object.freeze({
+      url,
+      error: message,
+    }),
+  );
+}
+
+function isSupportedHtmlMediaType(
+  mediaType: string,
+): boolean {
+  const normalized =
+    mediaType
+      .split(";", 1)[0]
+      .trim()
+      .toLowerCase();
+
+  return (
+    normalized === "text/html" ||
+    normalized === "text/plain" ||
+    normalized ===
+      "application/xhtml+xml"
+  );
 }
 
 export async function crawl(
@@ -92,7 +154,9 @@ export async function crawl(
 
   const seeds: FrontierItem[] = [];
 
-  for (const raw of seedUrls) {
+  for (
+    const raw of seedUrls
+  ) {
     try {
       const url =
         canonicalizeUrl(raw);
@@ -101,6 +165,12 @@ export async function crawl(
         evaluateSourceUrl(url).status !==
         "ELIGIBLE"
       ) {
+        reportFailure(
+          options,
+          url,
+          "V8_RESEARCH_SOURCE_POLICY_BLOCKED",
+        );
+
         continue;
       }
 
@@ -110,17 +180,23 @@ export async function crawl(
         priority: 100,
 
         /**
-         * Every explicit seed establishes its own
+         * Every explicit ResearchSeed establishes its own
          * independent provenance root.
          */
         discoveryRoot: url,
       });
-    } catch {
-      continue;
+    } catch (error) {
+      reportFailure(
+        options,
+        raw,
+        error,
+      );
     }
   }
 
-  frontier.enqueue(seeds);
+  frontier.enqueue(
+    seeds,
+  );
 
   const pages: CrawlPage[] = [];
 
@@ -135,7 +211,9 @@ export async function crawl(
     frontier.size &&
     pages.length < maxPages
   ) {
-    if (options.signal?.aborted) {
+    if (
+      options.signal?.aborted
+    ) {
       throw new Error(
         "V8_RESEARCH_ABORTED",
       );
@@ -159,10 +237,18 @@ export async function crawl(
         );
 
       if (
-        !/^text\/(html|plain)|application\/xhtml\+xml$/i.test(
+        !isSupportedHtmlMediaType(
           page.mediaType,
         )
       ) {
+        reportFailure(
+          options,
+          item.url,
+          `V8_RESEARCH_UNSUPPORTED_MEDIA_TYPE:${
+            page.mediaType || "UNKNOWN"
+          }`,
+        );
+
         continue;
       }
 
@@ -184,7 +270,9 @@ export async function crawl(
             page.finalUrl,
 
           title:
-            titleOf(page.body),
+            titleOf(
+              page.body,
+            ),
 
           links:
             Object.freeze(
@@ -229,7 +317,7 @@ export async function crawl(
                 page.finalUrl,
 
               /**
-               * Preserve the original ResearchSeed
+               * Preserve the originating ResearchSeed
                * for every descendant.
                */
               ...(item.discoveryRoot
@@ -247,7 +335,13 @@ export async function crawl(
           ),
         );
       }
-    } catch {
+    } catch (error) {
+      reportFailure(
+        options,
+        item.url,
+        error,
+      );
+
       continue;
     }
   }
