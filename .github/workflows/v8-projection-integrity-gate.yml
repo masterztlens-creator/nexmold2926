@@ -56,6 +56,4 @@ jobs:
           echo "V8 build output: PASS"
 
       - name: Real Internet Projection Integrity Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-projection-integrity-gate.mjs

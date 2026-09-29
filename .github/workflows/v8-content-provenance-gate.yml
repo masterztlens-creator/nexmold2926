@@ -49,6 +49,4 @@ jobs:
           test -f .v8-build/src/v8/foundation/store.js
 
       - name: Real Internet Content Provenance Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-content-provenance-gate.mjs
