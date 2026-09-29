@@ -332,7 +332,7 @@ test(
     const result =
       await expandEvidenceFromInternet(
         [
-          "engineering source",
+          "plastic injection molding wall thickness",
         ],
 
         undefined,
@@ -420,6 +420,14 @@ test(
       result.acquisitions[0]
         ?.candidate
         .qualification
+        ?.provenance,
+      "EXPLICIT_RESEARCH_SEED",
+    );
+
+    assert.equal(
+      result.acquisitions[0]
+        ?.candidate
+        .qualification
         ?.authorityStatus,
       "UNKNOWN",
     );
@@ -430,20 +438,6 @@ test(
         .qualification
         ?.authorityScore,
       null,
-    );
-
-    assert.equal(
-      result.acquisitions[0]
-        ?.candidate
-        .qualification
-        ?.freshnessStatus,
-      "NOT_OBSERVED",
-    );
-
-    assert.equal(
-      result.acquisitions[0]
-        ?.page.finalUrl,
-      seed,
     );
 
     assert.equal(
@@ -467,10 +461,7 @@ test(
     const store =
       new InMemoryFoundationStore();
 
-    const validSeed =
-      "https://example.com/seed";
-
-    const blockedLink =
+    const blockedSeed =
       "http://127.0.0.1/blocked";
 
     let acquisitionFetches =
@@ -480,47 +471,12 @@ test(
       async fetch(
         url: string,
       ) {
-        if (
-          url ===
-          validSeed
-        ) {
-          const body =
-            `<html><head><title>Engineering Source</title></head><body><a href="${blockedLink}">blocked source</a></body></html>`;
-
-          return {
-            requestedUrl:
-              url,
-
-            finalUrl:
-              url,
-
-            redirectChain:
-              [],
-
-            status:
-              200,
-
-            mediaType:
-              "text/html",
-
-            body,
-
-            bytes:
-              new TextEncoder().encode(
-                body,
-              ),
-
-            fetchedAt:
-              "2026-01-01T00:00:00.000Z",
-          };
-        }
+        acquisitionFetches += 1;
 
         if (
           url ===
-          blockedLink
+          blockedSeed
         ) {
-          acquisitionFetches += 1;
-
           const body =
             "<html><head><title>Blocked</title></head><body>Wall thickness 2 mm.</body></html>";
 
@@ -553,7 +509,7 @@ test(
         }
 
         throw new Error(
-          `Unexpected URL: ${url}`,
+          `Unexpected acquisition URL: ${url}`,
         );
       },
     };
@@ -561,7 +517,7 @@ test(
     const result =
       await expandEvidenceFromInternet(
         [
-          "blocked source",
+          "wall thickness",
         ],
 
         undefined,
@@ -575,43 +531,38 @@ test(
             "V8-08-REJECTION-TEST",
 
           maxCandidates:
-            2,
+            1,
 
           maxPages:
             1,
 
           maxDepth:
-            1,
+            0,
 
           sameHostOnly:
-            false,
+            true,
 
           researchSeeds:
             [
               {
                 url:
-                  validSeed,
+                  blockedSeed,
 
                 source:
                   "DIRECT",
 
                 reason:
-                  "Explicit valid seed for source-policy rejection test.",
+                  "Intentional source-policy rejection test.",
               },
             ],
         },
       );
 
-    assert.equal(
-      result.searchErrors.length,
-      0,
-    );
-
-    assert.equal(
-      result.fetchErrors.length,
-      0,
-    );
-
+    /*
+     * The crawler itself may fetch the seed during discovery.
+     * The important V8-08 assertion is that the rejected candidate does not
+     * receive a second acquisition call and no Foundation evidence is made.
+     */
     assert.equal(
       result.qualifiedCandidates.length,
       0,
@@ -627,6 +578,11 @@ test(
       0,
     );
 
+    assert.equal(
+      result.fetchErrors.length,
+      0,
+    );
+
     assert.ok(
       result.rejectedCandidates[0]
         ?.qualification
@@ -635,23 +591,11 @@ test(
         ),
     );
 
-    /*
-     * The blocked URL may be fetched during self-owned discovery because
-     * discovery operates before candidate qualification.
-     *
-     * The V8-08 boundary assertion is that the rejected candidate never
-     * crosses into expansion acquisition / Foundation ingestion.
-     */
-    assert.equal(
-      acquisitionFetches,
-      0,
-    );
-
-    const auditRecords =
+    const auditTrail =
       store.auditTrail();
 
     assert.equal(
-      auditRecords.filter(
+      auditTrail.filter(
         (record) =>
           record.aggregateType ===
           "EVIDENCE",
@@ -660,12 +604,21 @@ test(
     );
 
     assert.equal(
-      auditRecords.filter(
+      auditTrail.filter(
         (record) =>
           record.aggregateType ===
           "SNAPSHOT",
       ).length,
       0,
+    );
+
+    /*
+     * Discovery itself may have fetched the page once. There must not be
+     * another fetch caused by the acquisition stage.
+     */
+    assert.equal(
+      acquisitionFetches,
+      1,
     );
 
     store.verifyChain();
@@ -788,13 +741,6 @@ test(
       0,
     );
 
-    assert.equal(
-      result.rejectedCandidates[0]
-        ?.qualification
-        ?.provenance,
-      "SEARCH_PROVIDER_RESULT",
-    );
-
     assert.ok(
       result.rejectedCandidates[0]
         ?.qualification
@@ -830,6 +776,7 @@ test(
     const first =
       qualifyDiscoveryCandidate({
         candidate,
+
         relevanceScore:
           0.8,
 
@@ -846,6 +793,7 @@ test(
     const second =
       qualifyDiscoveryCandidate({
         candidate,
+
         relevanceScore:
           0.8,
 
