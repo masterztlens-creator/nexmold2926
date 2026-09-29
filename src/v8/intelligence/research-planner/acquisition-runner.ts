@@ -30,6 +30,7 @@ import {
 
 import type {
   DiscoveryBatch,
+  DiscoveryCandidate,
 } from "../web-discovery/types.js";
 
 import {
@@ -238,15 +239,32 @@ function selfOwnedDiscoveryInputs(
 }
 
 function discoveryProvenanceForSelfOwnedCandidate(
-  candidate: {
-    readonly url: string;
-    readonly normalizedUrl: string;
-    readonly kind: "SEED" | "LINK";
-    readonly sourceUrl?: string;
-    readonly discoveredAt: string;
-  },
+  candidate: DiscoveryCandidate,
   seeds: readonly ResolvedResearchSeed[],
 ): DiscoveryProvenance {
+  /*
+   * This function is exclusively for the self-owned
+   * acquisition path.
+   *
+   * The upstream discovery type is intentionally broader
+   * than this function's semantic domain because the same
+   * DiscoveryCandidate type also represents sitemap,
+   * search-provider, and reference candidates.
+   *
+   * Reject every non-self-owned kind explicitly rather
+   * than narrowing the TypeScript type unsafely.
+   */
+  if (
+    candidate.kind !==
+      "SEED" &&
+    candidate.kind !==
+      "LINK"
+  ) {
+    throw new Error(
+      "V8_RESEARCH_SELF_OWNED_INVALID_DISCOVERY_KIND",
+    );
+  }
+
   if (
     candidate.kind ===
     "SEED"
@@ -291,8 +309,6 @@ function discoveryProvenanceForSelfOwnedCandidate(
   }
 
   if (
-    candidate.kind ===
-      "LINK" &&
     typeof candidate.sourceUrl ===
       "string" &&
     candidate.sourceUrl.trim()
