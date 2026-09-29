@@ -63,8 +63,16 @@ export async function discoverWithSelfOwnedCrawl(
   const seen =
     new Set<string>();
 
-  const discoveryRoot =
-    normalizedSeeds[0];
+  /**
+   * Explicit seeds are identified against the complete
+   * normalized seed set, not only normalizedSeeds[0].
+   *
+   * This is required when multiple ResearchSeeds are supplied.
+   */
+  const explicitSeedSet =
+    new Set(
+      normalizedSeeds,
+    );
 
   /*
    * Phase 1:
@@ -78,7 +86,7 @@ export async function discoverWithSelfOwnedCrawl(
    *       -> options.sourceHint
    *
    *   subsequently crawled page
-   *       -> discoveryRoot
+   *       -> page.discoveryRoot
    */
   for (
     const page of pages
@@ -96,27 +104,42 @@ export async function discoverWithSelfOwnedCrawl(
       );
 
     const isExplicitSeed =
-      pageCanonicalUrl ===
-      discoveryRoot;
+      explicitSeedSet.has(
+        pageCanonicalUrl,
+      );
+
+    const discoveryRoot =
+      page.discoveryRoot ??
+      (
+        isExplicitSeed
+          ? pageCanonicalUrl
+          : undefined
+      );
 
     addCandidate({
       candidates,
       seen,
+
       candidate: {
         url:
           page.url,
+
         canonicalUrl:
           pageCanonicalUrl,
+
         provider:
           "DIRECT",
+
         discoveredAt:
           page.fetchedAt,
+
         ...(page.title
           ? {
               title:
                 page.title,
             }
           : {}),
+
         ...(isExplicitSeed
           ? options.sourceHint
             ? {
@@ -131,6 +154,7 @@ export async function discoverWithSelfOwnedCrawl(
               }
             : {}),
       },
+
       maxCandidates,
     });
   }
@@ -142,8 +166,8 @@ export async function discoverWithSelfOwnedCrawl(
    * crawled page candidates have had an opportunity
    * to enter the bounded candidate set.
    *
-   * Every discovered link is attributed to the
-   * self-owned discovery root.
+   * Every discovered link inherits the ResearchSeed
+   * that originated the page from which the link was found.
    */
   for (
     const page of pages
@@ -179,21 +203,27 @@ export async function discoverWithSelfOwnedCrawl(
       addCandidate({
         candidates,
         seen,
+
         candidate: {
           url:
             link,
+
           canonicalUrl,
+
           provider:
             "DIRECT",
+
           discoveredAt:
             page.fetchedAt,
-          ...(discoveryRoot
+
+          ...(page.discoveryRoot
             ? {
                 sourceHint:
-                  discoveryRoot,
+                  page.discoveryRoot,
               }
             : {}),
         },
+
         maxCandidates,
       });
     }

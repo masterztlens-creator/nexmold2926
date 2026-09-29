@@ -9,6 +9,14 @@ export interface FrontierItem {
   readonly priority: number;
 
   /**
+   * ResearchSeed that originated this frontier item.
+   *
+   * This value must be propagated unchanged from an explicit
+   * ResearchSeed through every descendant discovered by crawling.
+   */
+  readonly discoveryRoot?: string;
+
+  /**
    * Discovery provenance.
    *
    * The frontier must preserve how a URL was discovered so that

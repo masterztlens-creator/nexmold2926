@@ -1,7 +1,10 @@
 import type { PageFetcher } from "../acquisition/types.js";
 import { evaluateSourceUrl } from "../acquisition/source-policy.js";
 import { canonicalizeUrl } from "./discovery.js";
-import { ResearchFrontier, type FrontierItem } from "./frontier.js";
+import {
+  ResearchFrontier,
+  type FrontierItem,
+} from "./frontier.js";
 
 export interface CrawlPage {
   readonly url: string;
@@ -10,6 +13,14 @@ export interface CrawlPage {
   readonly body: string;
   readonly fetchedAt: string;
   readonly discoveredFrom?: string;
+
+  /**
+   * ResearchSeed that originated this crawled page.
+   *
+   * This value is inherited from the frontier item and must not be
+   * recomputed from the first seed supplied to the crawler.
+   */
+  readonly discoveryRoot?: string;
 }
 
 export interface CrawlOptions {
@@ -32,7 +43,10 @@ function titleOf(html: string): string | undefined {
   );
 }
 
-function linksOf(html: string, base: string): string[] {
+function linksOf(
+  html: string,
+  base: string,
+): string[] {
   const output: string[] = [];
 
   const pattern =
@@ -60,18 +74,33 @@ export async function crawl(
   fetcher: PageFetcher,
   options: CrawlOptions = {},
 ): Promise<readonly CrawlPage[]> {
-  const maxPages = Math.max(1, options.maxPages ?? 50);
-  const maxDepth = Math.max(0, options.maxDepth ?? 2);
-  const sameHost = options.sameHostOnly ?? true;
+  const maxPages = Math.max(
+    1,
+    options.maxPages ?? 50,
+  );
 
-  const frontier = new ResearchFrontier();
+  const maxDepth = Math.max(
+    0,
+    options.maxDepth ?? 2,
+  );
+
+  const sameHost =
+    options.sameHostOnly ?? true;
+
+  const frontier =
+    new ResearchFrontier();
+
   const seeds: FrontierItem[] = [];
 
   for (const raw of seedUrls) {
     try {
-      const url = canonicalizeUrl(raw);
+      const url =
+        canonicalizeUrl(raw);
 
-      if (evaluateSourceUrl(url).status !== "ELIGIBLE") {
+      if (
+        evaluateSourceUrl(url).status !==
+        "ELIGIBLE"
+      ) {
         continue;
       }
 
@@ -79,6 +108,12 @@ export async function crawl(
         url,
         depth: 0,
         priority: 100,
+
+        /**
+         * Every explicit seed establishes its own
+         * independent provenance root.
+         */
+        discoveryRoot: url,
       });
     } catch {
       continue;
@@ -90,24 +125,38 @@ export async function crawl(
   const pages: CrawlPage[] = [];
 
   const hosts = new Set(
-    seeds.map((seed) => new URL(seed.url).host),
+    seeds.map(
+      (seed) =>
+        new URL(seed.url).host,
+    ),
   );
 
-  while (frontier.size && pages.length < maxPages) {
+  while (
+    frontier.size &&
+    pages.length < maxPages
+  ) {
     if (options.signal?.aborted) {
-      throw new Error("V8_RESEARCH_ABORTED");
+      throw new Error(
+        "V8_RESEARCH_ABORTED",
+      );
     }
 
-    const item = frontier.next();
+    const item =
+      frontier.next();
 
     if (!item) {
       break;
     }
 
     try {
-      const page = await fetcher.fetch(item.url, {
-        signal: options.signal,
-      });
+      const page =
+        await fetcher.fetch(
+          item.url,
+          {
+            signal:
+              options.signal,
+          },
+        );
 
       if (
         !/^text\/(html|plain)|application\/xhtml\+xml$/i.test(
@@ -117,35 +166,85 @@ export async function crawl(
         continue;
       }
 
-      const links = linksOf(page.body, page.finalUrl).filter(
-        (url) =>
-          !sameHost ||
-          hosts.has(new URL(url).host),
-      );
+      const links =
+        linksOf(
+          page.body,
+          page.finalUrl,
+        ).filter(
+          (url) =>
+            !sameHost ||
+            hosts.has(
+              new URL(url).host,
+            ),
+        );
 
       pages.push(
         Object.freeze({
-          url: page.finalUrl,
-          title: titleOf(page.body),
-          links: Object.freeze(links),
-          body: page.body,
-          fetchedAt: page.fetchedAt,
+          url:
+            page.finalUrl,
+
+          title:
+            titleOf(page.body),
+
+          links:
+            Object.freeze(
+              links,
+            ),
+
+          body:
+            page.body,
+
+          fetchedAt:
+            page.fetchedAt,
+
           ...(item.discoveredFrom
             ? {
-                discoveredFrom: item.discoveredFrom,
+                discoveredFrom:
+                  item.discoveredFrom,
+              }
+            : {}),
+
+          ...(item.discoveryRoot
+            ? {
+                discoveryRoot:
+                  item.discoveryRoot,
               }
             : {}),
         }),
       );
 
-      if (item.depth < maxDepth) {
+      if (
+        item.depth <
+        maxDepth
+      ) {
         frontier.enqueue(
-          links.map((url) => ({
-            url,
-            depth: item.depth + 1,
-            discoveredFrom: page.finalUrl,
-            priority: 100 - item.depth - 1,
-          })),
+          links.map(
+            (url) => ({
+              url,
+
+              depth:
+                item.depth + 1,
+
+              discoveredFrom:
+                page.finalUrl,
+
+              /**
+               * Preserve the original ResearchSeed
+               * for every descendant.
+               */
+              ...(item.discoveryRoot
+                ? {
+                    discoveryRoot:
+                      item.discoveryRoot,
+                  }
+                : {}),
+
+              priority:
+                100 -
+                item.depth -
+                1,
+            }),
+          ),
         );
       }
     } catch {
@@ -153,5 +252,7 @@ export async function crawl(
     }
   }
 
-  return Object.freeze(pages);
+  return Object.freeze(
+    pages,
+  );
 }
