@@ -125,6 +125,86 @@ test("V8 first-hop discovery rejects invalid observed URLs", () => {
   );
 });
 
+test("V8 first-hop discovery rejects non-public observed URLs", () => {
+  const result =
+    observeFirstHop({
+      query:
+        "plastic injection molding",
+      observations: [
+        {
+          url:
+            "http://localhost/private",
+          observedFrom:
+            "https://example.com/search",
+          observedAt:
+            "2026-10-01T00:00:00.000Z",
+        },
+        {
+          url:
+            "http://127.0.0.1/private",
+          observedFrom:
+            "https://example.com/search",
+          observedAt:
+            "2026-10-01T00:00:01.000Z",
+        },
+        {
+          url:
+            "http://192.168.1.10/private",
+          observedFrom:
+            "https://example.com/search",
+          observedAt:
+            "2026-10-01T00:00:02.000Z",
+        },
+        {
+          url:
+            "http://10.0.0.1/private",
+          observedFrom:
+            "https://example.com/search",
+          observedAt:
+            "2026-10-01T00:00:03.000Z",
+        },
+      ],
+    });
+
+  assert.equal(
+    result.accepted,
+    0,
+  );
+
+  assert.equal(
+    result.rejected,
+    4,
+  );
+});
+
+test("V8 first-hop discovery rejects credential-bearing observed URLs", () => {
+  const result =
+    observeFirstHop({
+      query:
+        "plastic injection molding",
+      observations: [
+        {
+          url:
+            "https://user:password@example.com/private",
+          observedFrom:
+            "https://example.com/search",
+          observedAt:
+            "2026-10-01T00:00:00.000Z",
+        },
+      ],
+    });
+
+  assert.equal(
+    result.accepted,
+    0,
+  );
+
+  assert.equal(
+    result.rejected,
+    1,
+  );
+});
+
 test("V8 first-hop discovery rejects invalid observation sources", () => {
   const result =
     observeFirstHop({
@@ -147,6 +227,22 @@ test("V8 first-hop discovery rejects invalid observation sources", () => {
           observedAt:
             "2026-10-01T00:00:00.000Z",
         },
+        {
+          url:
+            "https://example.com/c",
+          observedFrom:
+            "http://localhost/search",
+          observedAt:
+            "2026-10-01T00:00:00.000Z",
+        },
+        {
+          url:
+            "https://example.com/d",
+          observedFrom:
+            "http://192.168.1.10/search",
+          observedAt:
+            "2026-10-01T00:00:00.000Z",
+        },
       ],
     });
 
@@ -157,7 +253,7 @@ test("V8 first-hop discovery rejects invalid observation sources", () => {
 
   assert.equal(
     result.rejected,
-    2,
+    4,
   );
 });
 

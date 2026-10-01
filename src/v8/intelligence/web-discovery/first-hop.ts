@@ -1,4 +1,8 @@
 import {
+  evaluateSourceUrl,
+} from "../../acquisition/source-policy.js";
+
+import {
   createDiscoveryCandidate,
 } from "./discovery.js";
 
@@ -103,65 +107,75 @@ function requireObservationTimestamp(
   return timestamp;
 }
 
-function requireObservationSource(
-  observedFrom: string,
-): string {
-  if (
-    typeof observedFrom !== "string" ||
-    observedFrom.trim() === ""
-  ) {
-    throw new Error(
-      "V8_FIRST_HOP_OBSERVED_FROM_EMPTY",
-    );
-  }
-
-  const source =
-    observedFrom.trim();
-
-  const normalizedSource =
-    createDiscoveryCandidate({
-      url: source,
-      kind: "REFERENCE",
-      discoveredAt:
-        new Date(0).toISOString(),
-    });
-
-  if (normalizedSource === null) {
-    throw new Error(
-      "V8_FIRST_HOP_OBSERVED_FROM_INVALID",
-    );
-  }
-
-  return normalizedSource.normalizedUrl;
-}
-
-function requireObservationUrl(
+function requirePublicUrl(
   url: string,
+  emptyCode: string,
+  invalidCode: string,
 ): string {
   if (
     typeof url !== "string" ||
     url.trim() === ""
   ) {
     throw new Error(
-      "V8_FIRST_HOP_URL_EMPTY",
+      emptyCode,
+    );
+  }
+
+  const rawUrl =
+    url.trim();
+
+  const decision =
+    evaluateSourceUrl(
+      rawUrl,
+    );
+
+  if (
+    decision.status !== "ELIGIBLE"
+  ) {
+    throw new Error(
+      invalidCode,
     );
   }
 
   const candidate =
     createDiscoveryCandidate({
-      url,
-      kind: "SEED",
+      url:
+        rawUrl,
+      kind:
+        "SEED",
       discoveredAt:
         new Date(0).toISOString(),
     });
 
-  if (candidate === null) {
+  if (
+    candidate === null
+  ) {
     throw new Error(
-      "V8_FIRST_HOP_URL_INVALID",
+      invalidCode,
     );
   }
 
   return candidate.normalizedUrl;
+}
+
+function requireObservationSource(
+  observedFrom: string,
+): string {
+  return requirePublicUrl(
+    observedFrom,
+    "V8_FIRST_HOP_OBSERVED_FROM_EMPTY",
+    "V8_FIRST_HOP_OBSERVED_FROM_INVALID",
+  );
+}
+
+function requireObservationUrl(
+  url: string,
+): string {
+  return requirePublicUrl(
+    url,
+    "V8_FIRST_HOP_URL_EMPTY",
+    "V8_FIRST_HOP_URL_INVALID",
+  );
 }
 
 function resolveCandidateKind(
@@ -180,8 +194,14 @@ function resolveCandidateKind(
  * DiscoveryCandidate contract.
  *
  * This function deliberately does not perform network access and does not
- * derive URLs from the research query. Every accepted candidate must be
- * explicitly supplied by a FirstHopObservation.
+ * derive URLs from the research query.
+ *
+ * Every accepted candidate must:
+ *
+ * 1. be explicitly observed;
+ * 2. use an eligible public Internet URL;
+ * 3. have an eligible public observation source;
+ * 4. have a valid UTC observation timestamp.
  */
 export function observeFirstHop(
   input: FirstHopDiscoveryInput,
