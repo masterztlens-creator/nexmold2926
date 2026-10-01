@@ -37,8 +37,10 @@ import {
 
 import type {
   AuditActor,
+  ClaimPayload,
   EvidencePayload,
   FoundationStore,
+  KnowledgePayload,
 } from "../foundation/types.js";
 
 import {
@@ -1520,7 +1522,7 @@ export async function runV8ArticleRuntime(
         input.title,
     });
 
-    /*
+  /*
    * ============================================================
    * FINAL CONTENT PROVENANCE CLOSURE
    * ============================================================
@@ -1637,8 +1639,16 @@ export async function runV8ArticleRuntime(
       const knowledgeId of
         provenance.knowledgeIds
     ) {
+      /*
+       * Explicit generic parameter is intentional.
+       *
+       * FoundationStore.get<T>() defaults to unknown. The runtime is
+       * crossing an aggregate boundary here, so the payload contract must
+       * be stated explicitly instead of relying on inference or weakening
+       * the type with `any`.
+       */
       const knowledge =
-        store.get(
+        store.get<KnowledgePayload>(
           "KNOWLEDGE",
           knowledgeId,
         );
@@ -1656,8 +1666,11 @@ export async function runV8ArticleRuntime(
       const claimId of
         provenance.claimIds
     ) {
+      /*
+       * Explicit ClaimPayload typing closes the FoundationStore boundary.
+       */
       const claim =
-        store.get(
+        store.get<ClaimPayload>(
           "CLAIM",
           claimId,
         );
@@ -1676,7 +1689,7 @@ export async function runV8ArticleRuntime(
         provenance.evidenceIds
     ) {
       const evidence =
-        store.get(
+        store.get<EvidencePayload>(
           "EVIDENCE",
           evidenceId,
         );
@@ -1701,7 +1714,7 @@ export async function runV8ArticleRuntime(
         provenance.claimIds
     ) {
       const claim =
-        store.get(
+        store.get<ClaimPayload>(
           "CLAIM",
           claimId,
         );
@@ -1740,7 +1753,7 @@ export async function runV8ArticleRuntime(
         provenance.knowledgeIds
     ) {
       const knowledge =
-        store.get(
+        store.get<KnowledgePayload>(
           "KNOWLEDGE",
           knowledgeId,
         );
@@ -1776,8 +1789,8 @@ export async function runV8ArticleRuntime(
    * Content fingerprint now covers the exact assertion-level
    * provenance, so the final runtime fingerprint must include it.
    */
-  
-    const fingerprint =
+
+  const fingerprint =
     contentFingerprint({
       acquisition:
         acquisition.acquisitions.map(
