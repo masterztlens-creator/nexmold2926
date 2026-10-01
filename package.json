@@ -21,6 +21,7 @@
         "v8:artifact": "node scripts/v8-artifact-gate.mjs",
         "v8:next": "node scripts/v8-next-gate.mjs",
         "v8:article:first": "npm run v8:compile && node scripts/v8-first-article.mjs"
+        "v8:first-hop:internet": "npm run v8:compile && node scripts/v8-first-hop-internet.mjs"
     },
     "devDependencies": {
         "typescript": "6.0.3",
