@@ -20,6 +20,7 @@ jobs:
 
     env:
       NODE_VERSION: "22.19.0"
+      NEXMOLD_SOURCE_SHA: ${{ github.sha }}
 
     steps:
       - name: Resolve source SHA
@@ -30,6 +31,33 @@ jobs:
           echo "Source SHA: ${{ github.sha }}"
           echo "Source ref: ${{ github.ref }}"
           echo "Repository: ${{ github.repository }}"
+
+          node -e '
+            const sourceSha =
+              process.env.NEXMOLD_SOURCE_SHA;
+
+            if (
+              typeof sourceSha !== "string" ||
+              !/^[0-9a-f]{40}$/i.test(sourceSha)
+            ) {
+              throw new Error(
+                `NEXMOLD_SOURCE_SHA is missing or invalid: ${sourceSha}`,
+              );
+            }
+
+            if (
+              sourceSha.toLowerCase() !==
+              "${{ github.sha }}".toLowerCase()
+            ) {
+              throw new Error(
+                `NEXMOLD_SOURCE_SHA does not match github.sha: ${sourceSha}`,
+              );
+            }
+
+            console.log(
+              `Authoritative source SHA: ${sourceSha}`,
+            );
+          '
 
       - name: Checkout exact source SHA
         uses: actions/checkout@v4
@@ -52,15 +80,23 @@ jobs:
           npm --version
 
           node -e '
-            const major = Number(process.versions.node.split(".")[0]);
+            const major =
+              Number(
+                process.versions.node.split(".")[0],
+              );
 
-            if (!Number.isInteger(major) || major < 22) {
+            if (
+              !Number.isInteger(major) ||
+              major < 22
+            ) {
               throw new Error(
                 `Node.js >= 22 is required, got ${process.version}`,
               );
             }
 
-            console.log(`Node.js runtime: ${process.version}`);
+            console.log(
+              `Node.js runtime: ${process.version}`,
+            );
           '
 
       - name: Install dependencies
@@ -270,6 +306,7 @@ jobs:
           export NEXMOLD_BUILD_EPOCH="$BUILD_EPOCH"
 
           echo "Authoritative build epoch: $NEXMOLD_BUILD_EPOCH"
+          echo "Authoritative source SHA: $NEXMOLD_SOURCE_SHA"
 
           node scripts/v8-actual-dist-closure-gate.mjs
 
@@ -299,6 +336,20 @@ jobs:
 
           const lkgPath =
             '.nexmold/last-known-good.json';
+
+          const expectedSourceSha =
+            process.env.NEXMOLD_SOURCE_SHA;
+
+          if (
+            typeof expectedSourceSha !== 'string' ||
+            !/^[0-9a-f]{40}$/i.test(
+              expectedSourceSha,
+            )
+          ) {
+            throw new Error(
+              'NEXMOLD_SOURCE_SHA is missing or invalid',
+            );
+          }
 
           const closure =
             JSON.parse(
@@ -330,6 +381,26 @@ jobs:
           ) {
             throw new Error(
               `Unexpected closure schema: ${closure?.schema}`,
+            );
+          }
+
+          if (
+            typeof closure.sourceSha !== 'string' ||
+            !/^[0-9a-f]{40}$/i.test(
+              closure.sourceSha,
+            )
+          ) {
+            throw new Error(
+              'Closure source SHA is missing or invalid',
+            );
+          }
+
+          if (
+            closure.sourceSha.toLowerCase() !==
+            expectedSourceSha.toLowerCase()
+          ) {
+            throw new Error(
+              `Closure source SHA mismatch: expected ${expectedSourceSha}, received ${closure.sourceSha}`,
             );
           }
 
@@ -411,6 +482,15 @@ jobs:
           ) {
             throw new Error(
               'LKG closure identity is missing',
+            );
+          }
+
+          if (
+            lkg.closure.sourceSha !==
+            closure.sourceSha
+          ) {
+            throw new Error(
+              'LKG source SHA mismatch',
             );
           }
 
@@ -576,6 +656,15 @@ jobs:
           }
 
           if (
+            releaseManifest.closure.sourceSha !==
+            closure.sourceSha
+          ) {
+            throw new Error(
+              'Release manifest source SHA mismatch',
+            );
+          }
+
+          if (
             releaseManifest.closure.fingerprint !==
             closureFingerprint
           ) {
@@ -648,7 +737,11 @@ jobs:
           }
 
           console.log(
-            'Closure → Release → LKG identity: PASS',
+            'Source SHA → Closure → Release → LKG identity: PASS',
+          );
+
+          console.log(
+            `Source SHA: ${expectedSourceSha}`,
           );
 
           console.log(
@@ -688,6 +781,20 @@ jobs:
           node - <<'NODE'
           const fs = require('node:fs');
 
+          const expectedSourceSha =
+            process.env.NEXMOLD_SOURCE_SHA;
+
+          if (
+            typeof expectedSourceSha !== 'string' ||
+            !/^[0-9a-f]{40}$/i.test(
+              expectedSourceSha,
+            )
+          ) {
+            throw new Error(
+              'NEXMOLD_SOURCE_SHA is missing or invalid',
+            );
+          }
+
           const closure =
             JSON.parse(
               fs.readFileSync(
@@ -711,6 +818,24 @@ jobs:
                 'utf8',
               ),
             );
+
+          if (
+            closure.sourceSha !==
+            expectedSourceSha
+          ) {
+            throw new Error(
+              'Final closure/source SHA mismatch',
+            );
+          }
+
+          if (
+            lkg?.closure?.sourceSha !==
+            expectedSourceSha
+          ) {
+            throw new Error(
+              'Final LKG/source SHA mismatch',
+            );
+          }
 
           if (
             closure.buildEpoch !==
@@ -742,6 +867,10 @@ jobs:
           console.log(
             'Final release artifacts: PASS',
           );
+
+          console.log(
+            `Final source SHA: ${expectedSourceSha}`,
+          );
           NODE
 
       - name: Final integrity summary
@@ -753,10 +882,10 @@ jobs:
           echo "NEXMOLD V8 FINAL INTEGRATION"
           echo "========================================"
           echo "Commit: ${{ github.sha }}"
+          echo "Source SHA: $NEXMOLD_SOURCE_SHA"
           echo "Repository: ${{ github.repository }}"
           echo "Workflow: ${{ github.workflow }}"
           echo "Run ID: ${{ github.run_id }}"
           echo "========================================"
           echo "V8 Final + Production Integration: PASS"
           echo "========================================"
-

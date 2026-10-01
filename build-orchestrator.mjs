@@ -1062,6 +1062,44 @@ function readClosureReleaseIdentity() {
   }
 
   if (
+    typeof closure.sourceSha !== "string" ||
+    !/^[0-9a-f]{40}$/i.test(
+      closure.sourceSha,
+    )
+  ) {
+    throw new Error(
+      "V8 closure sourceSha is missing or invalid",
+    );
+  }
+
+  const expectedSourceSha =
+    process.env.NEXMOLD_SOURCE_SHA;
+
+  if (
+    typeof expectedSourceSha === "string" &&
+    expectedSourceSha.trim()
+  ) {
+    if (
+      !/^[0-9a-f]{40}$/i.test(
+        expectedSourceSha.trim(),
+      )
+    ) {
+      throw new Error(
+        "NEXMOLD_SOURCE_SHA is invalid",
+      );
+    }
+
+    if (
+      closure.sourceSha.toLowerCase() !==
+      expectedSourceSha.trim().toLowerCase()
+    ) {
+      throw new Error(
+        `V8 closure sourceSha mismatch: expected ${expectedSourceSha.trim()}, received ${closure.sourceSha}`,
+      );
+    }
+  }
+
+  if (
     !closure.projection ||
     typeof closure.projection !== "object"
   ) {
@@ -1260,6 +1298,9 @@ function readClosureReleaseIdentity() {
 
     buildEpoch:
       closure.buildEpoch,
+
+    sourceSha:
+      closure.sourceSha,
 
     projectionId:
       closure.projection.id,
@@ -1944,4 +1985,3 @@ main().catch(
     process.exitCode = 1;
   },
 );
-
