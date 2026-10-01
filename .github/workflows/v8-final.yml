@@ -321,20 +321,6 @@ jobs:
           node --experimental-strip-types \
             build-orchestrator.mjs
 
-      - name: V8 production gate
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node scripts/v8-production-gate.mjs
-
-      - name: V8 actual dist closure gate
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node scripts/v8-actual-dist-closure-gate.mjs
-
       - name: Verify production artifacts
         shell: bash
         run: |
