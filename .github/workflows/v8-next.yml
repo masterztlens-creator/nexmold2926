@@ -117,22 +117,22 @@ jobs:
           const fs = require('node:fs');
 
           const packageJson = JSON.parse(
-            fs.readFileSync('package.json', 'utf8')
+            fs.readFileSync('package.json', 'utf8'),
           );
 
           const lockfile = JSON.parse(
-            fs.readFileSync('package-lock.json', 'utf8')
+            fs.readFileSync('package-lock.json', 'utf8'),
           );
 
           if (packageJson.name !== 'nexmold-v8-full') {
             throw new Error(
-              `Unexpected package name: ${packageJson.name}`
+              `Unexpected package name: ${packageJson.name}`,
             );
           }
 
           if (packageJson.engines?.node !== '>=22.12.0') {
             throw new Error(
-              `Unexpected Node engine: ${packageJson.engines?.node}`
+              `Unexpected Node engine: ${packageJson.engines?.node}`,
             );
           }
 
@@ -143,7 +143,7 @@ jobs:
             throw new Error(
               `Unexpected TypeScript version: ${
                 packageJson.devDependencies?.typescript
-              }`
+              }`,
             );
           }
 
@@ -151,7 +151,7 @@ jobs:
             throw new Error(
               `Unexpected lockfileVersion: ${
                 lockfile.lockfileVersion
-              }`
+              }`,
             );
           }
 
@@ -160,13 +160,11 @@ jobs:
               ?.typescript !== '6.0.3'
           ) {
             throw new Error(
-              'package-lock.json TypeScript baseline mismatch'
+              'package-lock.json TypeScript baseline mismatch',
             );
           }
 
-          console.log(
-            'LKG package contract: PASS'
-          );
+          console.log('LKG package contract: PASS');
           NODE
 
       - name: Verify source Final workflow run
@@ -174,11 +172,11 @@ jobs:
         env:
           SOURCE_RUN_ID: ${{ steps.source.outputs.run_id }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
           node - <<'NODE'
-          const fs = require('node:fs');
           const https = require('node:https');
 
           const runId = process.env.SOURCE_RUN_ID;
@@ -204,37 +202,29 @@ jobs:
 
                   response.setEncoding('utf8');
 
-                  response.on(
-                    'data',
-                    (chunk) => {
-                      body += chunk;
-                    },
-                  );
+                  response.on('data', (chunk) => {
+                    body += chunk;
+                  });
 
-                  response.on(
-                    'end',
-                    () => {
-                      if (
-                        response.statusCode < 200 ||
-                        response.statusCode >= 300
-                      ) {
-                        reject(
-                          new Error(
-                            `GitHub API ${response.statusCode}: ${body}`,
-                          ),
-                        );
-                        return;
-                      }
+                  response.on('end', () => {
+                    if (
+                      response.statusCode < 200 ||
+                      response.statusCode >= 300
+                    ) {
+                      reject(
+                        new Error(
+                          `GitHub API ${response.statusCode}: ${body}`,
+                        ),
+                      );
+                      return;
+                    }
 
-                      try {
-                        resolve(
-                          JSON.parse(body),
-                        );
-                      } catch (error) {
-                        reject(error);
-                      }
-                    },
-                  );
+                    try {
+                      resolve(JSON.parse(body));
+                    } catch (error) {
+                      reject(error);
+                    }
+                  });
                 },
               );
 
@@ -243,67 +233,99 @@ jobs:
             });
           }
 
-          if (
-            !/^[0-9]+$/.test(runId)
-          ) {
-            throw new Error(
-              `Invalid source workflow run ID: ${runId}`,
+          (async () => {
+            if (!/^[0-9]+$/.test(runId)) {
+              throw new Error(
+                `Invalid source workflow run ID: ${runId}`,
+              );
+            }
+
+            if (!/^[0-9a-f]{40}$/i.test(expectedSha)) {
+              throw new Error(
+                `Invalid source SHA: ${expectedSha}`,
+              );
+            }
+
+            if (
+              typeof repository !== 'string' ||
+              repository.length === 0
+            ) {
+              throw new Error(
+                'GITHUB_REPOSITORY is missing',
+              );
+            }
+
+            if (
+              typeof token !== 'string' ||
+              token.length === 0
+            ) {
+              throw new Error(
+                'GITHUB_TOKEN is missing',
+              );
+            }
+
+            const run = await requestJson(
+              `https://api.github.com/repos/${repository}/actions/runs/${runId}`,
             );
-          }
 
-          const run = await requestJson(
-            `https://api.github.com/repos/${repository}/actions/runs/${runId}`,
-          );
+            if (
+              typeof run?.head_sha !== 'string' ||
+              run.head_sha.toLowerCase() !==
+                expectedSha.toLowerCase()
+            ) {
+              throw new Error(
+                `Source workflow SHA mismatch: expected ${expectedSha}, received ${run?.head_sha}`,
+              );
+            }
 
-          if (
-            run?.head_sha?.toLowerCase() !==
-            expectedSha.toLowerCase()
-          ) {
-            throw new Error(
-              `Source workflow SHA mismatch: expected ${expectedSha}, received ${run?.head_sha}`,
+            if (
+              run?.name !==
+              'NEXMOLD V8 Final + Production Integration'
+            ) {
+              throw new Error(
+                `Unexpected source workflow: ${run?.name}`,
+              );
+            }
+
+            if (run?.conclusion !== 'success') {
+              throw new Error(
+                `Source Final workflow is not successful: ${run?.conclusion}`,
+              );
+            }
+
+            console.log(
+              'Source Final workflow verification: PASS',
             );
-          }
 
-          if (
-            run?.name !==
-            'NEXMOLD V8 Final + Production Integration'
-          ) {
-            throw new Error(
-              `Unexpected source workflow: ${run?.name}`,
+            console.log(
+              `Source workflow: ${run.name}`,
             );
-          }
 
-          if (
-            run?.conclusion !==
-            'success'
-          ) {
-            throw new Error(
-              `Source Final workflow is not successful: ${run?.conclusion}`,
+            console.log(
+              `Source run ID: ${run.id}`,
             );
-          }
 
-          console.log(
-            'Source Final workflow verification: PASS',
-          );
+            console.log(
+              `Source SHA: ${run.head_sha}`,
+            );
 
-          console.log(
-            `Source workflow: ${run.name}`,
-          );
+            console.log(
+              `Source conclusion: ${run.conclusion}`,
+            );
+          })().catch((error) => {
+            console.error(
+              'Source Final workflow verification: FAIL',
+            );
 
-          console.log(
-            `Source run ID: ${run.id}`,
-          );
+            console.error(
+              error instanceof Error
+                ? error.stack || error.message
+                : error,
+            );
 
-          console.log(
-            `Source SHA: ${run.head_sha}`,
-          );
-
-          console.log(
-            `Source conclusion: ${run.conclusion}`,
-          );
+            process.exit(1);
+          });
           NODE
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download V8 publication handoff
         uses: actions/download-artifact@v4
@@ -333,7 +355,7 @@ jobs:
             '.nexmold/v8-real-publication-handoff.json';
 
           const payload = JSON.parse(
-            fs.readFileSync(path, 'utf8')
+            fs.readFileSync(path, 'utf8'),
           );
 
           if (
@@ -341,7 +363,7 @@ jobs:
             'nexmold.v8.real-publication-handoff.v1'
           ) {
             throw new Error(
-              `Unexpected handoff schema: ${payload?.schema}`
+              `Unexpected handoff schema: ${payload?.schema}`,
             );
           }
 
@@ -350,7 +372,7 @@ jobs:
             !/^[0-9a-f]{64}$/.test(payload.fingerprint)
           ) {
             throw new Error(
-              'Publication handoff fingerprint is missing or invalid'
+              'Publication handoff fingerprint is missing or invalid',
             );
           }
 
@@ -361,7 +383,7 @@ jobs:
             throw new Error(
               `Expected exactly 3 publication pages, received ${
                 payload.pages?.length ?? 0
-              }`
+              }`,
             );
           }
 
@@ -372,33 +394,35 @@ jobs:
           ]);
 
           const actualRoutes = new Set(
-            payload.pages.map((page) => page?.canonicalRoute)
+            payload.pages.map(
+              (page) => page?.canonicalRoute,
+            ),
           );
 
           if (actualRoutes.size !== requiredRoutes.size) {
             throw new Error(
-              'Publication handoff contains duplicate or invalid routes'
+              'Publication handoff contains duplicate or invalid routes',
             );
           }
 
           for (const route of requiredRoutes) {
             if (!actualRoutes.has(route)) {
               throw new Error(
-                `Publication handoff missing required route: ${route}`
+                `Publication handoff missing required route: ${route}`,
               );
             }
           }
 
           console.log(
-            'Downloaded V8 publication handoff: PASS'
+            'Downloaded V8 publication handoff: PASS',
           );
 
           console.log(
-            `handoff fingerprint: ${payload.fingerprint}`
+            `handoff fingerprint: ${payload.fingerprint}`,
           );
 
           console.log(
-            `publication pages: ${payload.pages.length}`
+            `publication pages: ${payload.pages.length}`,
           );
           NODE
 
