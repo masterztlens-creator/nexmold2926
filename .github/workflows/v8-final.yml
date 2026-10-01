@@ -83,8 +83,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          node --experimental-strip-types \
-            tests/v8/integration/v8-19-final-publication-gate.test.mjs
+          node scripts/v8-final-publication-gate.mjs
 
       - name: Verify publication handoff
         shell: bash
