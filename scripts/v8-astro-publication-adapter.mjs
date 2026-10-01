@@ -672,6 +672,40 @@ function verifyGeneratedPage(
     `Generated canonical route missing: ${file}`,
   );
 
+  /*
+   * --------------------------------------------------------------------------
+   * Astro-source provenance invariant
+   * --------------------------------------------------------------------------
+   *
+   * The generated file is an .astro source file, not final HTML.
+   *
+   * Therefore provenance values are intentionally represented as Astro
+   * expressions:
+   *
+   *   const contentId = "authoritative-id";
+   *
+   *   <meta
+   *     name="nexmold-v8-content-id"
+   *     content={contentId}
+   *   />
+   *
+   * This verification validates the binding between the authoritative
+   * handoff value and the Astro metadata expression.
+   *
+   * Final rendered HTML is verified separately by:
+   *
+   *   scripts/v8-actual-dist-closure-gate.mjs
+   */
+
+  assert.ok(
+    content.includes(
+      `const contentId = ${escapeJsString(
+        handoff.contentId,
+      )};`,
+    ),
+    `Content provenance source binding missing: ${file}`,
+  );
+
   assert.ok(
     content.includes(
       `name="nexmold-v8-content-id"`,
@@ -681,9 +715,18 @@ function verifyGeneratedPage(
 
   assert.ok(
     content.includes(
-      `content=${escapeJsString(handoff.contentId)}`,
+      `content={contentId}`,
     ),
-    `Content provenance identity missing: ${file}`,
+    `Content provenance Astro binding missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `const decisionId = ${escapeJsString(
+        handoff.decisionId,
+      )};`,
+    ),
+    `Decision provenance source binding missing: ${file}`,
   );
 
   assert.ok(
@@ -695,9 +738,18 @@ function verifyGeneratedPage(
 
   assert.ok(
     content.includes(
-      `content=${escapeJsString(handoff.decisionId)}`,
+      `content={decisionId}`,
     ),
-    `Decision provenance identity missing: ${file}`,
+    `Decision provenance Astro binding missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `const projectionId = ${escapeJsString(
+        handoff.projectionId,
+      )};`,
+    ),
+    `Projection provenance source binding missing: ${file}`,
   );
 
   assert.ok(
@@ -709,9 +761,18 @@ function verifyGeneratedPage(
 
   assert.ok(
     content.includes(
-      `content=${escapeJsString(handoff.projectionId)}`,
+      `content={projectionId}`,
     ),
-    `Projection provenance identity missing: ${file}`,
+    `Projection provenance Astro binding missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `const handoffFingerprint = ${escapeJsString(
+        handoff.fingerprint,
+      )};`,
+    ),
+    `Handoff provenance source binding missing: ${file}`,
   );
 
   assert.ok(
@@ -723,9 +784,9 @@ function verifyGeneratedPage(
 
   assert.ok(
     content.includes(
-      `content=${escapeJsString(handoff.fingerprint)}`,
+      `content={handoffFingerprint}`,
     ),
-    `Handoff provenance fingerprint missing: ${file}`,
+    `Handoff provenance Astro binding missing: ${file}`,
   );
 }
 
