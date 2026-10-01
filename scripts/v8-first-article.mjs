@@ -245,7 +245,7 @@ const BOOTSTRAP_CORPUS = Object.freeze([
     ]),
 
     authority:
-      "ENGINEERING_GUIDANCE",
+      "ENGINEERING_REFERENCE",
   }),
 
   Object.freeze({
@@ -273,7 +273,7 @@ const BOOTSTRAP_CORPUS = Object.freeze([
     ]),
 
     authority:
-      "ENGINEERING_GUIDANCE",
+      "ENGINEERING_REFERENCE",
   }),
 
   Object.freeze({
@@ -301,7 +301,7 @@ const BOOTSTRAP_CORPUS = Object.freeze([
     ]),
 
     authority:
-      "ENGINEERING_GUIDANCE",
+      "ENGINEERING_REFERENCE",
   }),
 ]);
 
