@@ -437,11 +437,16 @@ jobs:
 
       - name: Real production build
         shell: bash
+        env:
+          NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -euo pipefail
+
+          echo "NEXMOLD_SOURCE_SHA=$NEXMOLD_SOURCE_SHA"
 
           node --experimental-strip-types \
             build-orchestrator.mjs
 
       - name: Run V8 next gate
         run: npm run v8:next
+
