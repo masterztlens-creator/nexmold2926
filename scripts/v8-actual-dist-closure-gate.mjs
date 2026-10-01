@@ -105,6 +105,11 @@ const BUILD_EPOCH =
     ? process.env.NEXMOLD_BUILD_EPOCH.trim()
     : "";
 
+const SOURCE_SHA =
+  typeof process.env.NEXMOLD_SOURCE_SHA === "string"
+    ? process.env.NEXMOLD_SOURCE_SHA.trim()
+    : "";
+
 const HANDOFF_PATH = path.resolve(
   process.env.NEXMOLD_V8_HANDOFF ??
     path.join(
@@ -152,6 +157,9 @@ const PRODUCTION_CONSUMPTION_SCHEMA =
 
 const SHA256_PATTERN =
   /^[a-f0-9]{64}$/;
+
+const GIT_SHA_PATTERN =
+  /^[0-9a-f]{40}$/i;
 
 const PROVENANCE_META = Object.freeze({
   contentId:
@@ -1626,6 +1634,9 @@ function buildClosureArtifact(
     buildEpoch:
       BUILD_EPOCH,
 
+    sourceSha:
+      SOURCE_SHA,
+
     handoff: Object.freeze({
       schema:
         handoff.schema,
@@ -1702,15 +1713,15 @@ function buildClosureArtifact(
         consumptionFingerprint:
           consumption.consumptionFingerprint,
         executionId:
-          consumption.executionId,
+          execution.executionId,
         releaseId:
-          consumption.releaseId,
+          release.id,
         projectionId:
-          consumption.projectionId,
+          projectionIdentity.id,
         releaseFingerprint:
-          consumption.releaseFingerprint,
+          release.fingerprint,
         projectionFingerprint:
-          consumption.projectionFingerprint,
+          projectionIdentity.fingerprint,
         manifest:
           [...consumption.manifest],
       }),
@@ -1749,6 +1760,10 @@ async function main() {
   );
 
   console.log(
+    `Source SHA: ${SOURCE_SHA}`,
+  );
+
+  console.log(
     `Handoff   : ${path.relative(
       ROOT,
       HANDOFF_PATH,
@@ -1778,6 +1793,14 @@ async function main() {
     BUILD_EPOCH.length > 0,
     "V8_ACTUAL_DIST_BUILD_EPOCH_MISSING",
     "NEXMOLD_BUILD_EPOCH is required.",
+  );
+
+  requireCondition(
+    GIT_SHA_PATTERN.test(
+      SOURCE_SHA,
+    ),
+    "V8_ACTUAL_DIST_SOURCE_SHA_INVALID",
+    "NEXMOLD_SOURCE_SHA must be a valid 40-character Git commit SHA.",
   );
 
   requireCondition(
@@ -2029,6 +2052,13 @@ async function main() {
       BUILD_EPOCH,
     "V8_ACTUAL_DIST_CLOSURE_EPOCH_INVALID",
     "Persisted closure artifact build epoch mismatch.",
+  );
+
+  requireCondition(
+    persistedClosure.sourceSha ===
+      SOURCE_SHA,
+    "V8_ACTUAL_DIST_CLOSURE_PERSISTED_SOURCE_SHA",
+    "Persisted closure source SHA mismatch.",
   );
 
   requireCondition(
