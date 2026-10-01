@@ -212,9 +212,7 @@ jobs:
 
           echo "Production HTML artifacts: $HTML_COUNT"
 
-          if [
-            "$HTML_COUNT" -le 0
-          ]; then
+          if [ "$HTML_COUNT" -le 0 ]; then
             echo "ERROR: No production HTML artifacts found."
             exit 1
           fi
@@ -225,6 +223,53 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          RELEASE_STATE=".nexmold/release-state.json"
+
+          test -f "$RELEASE_STATE"
+
+          BUILD_EPOCH="$(
+            node -e '
+              const fs = require("node:fs");
+
+              const releaseStatePath =
+                ".nexmold/release-state.json";
+
+              const releaseState =
+                JSON.parse(
+                  fs.readFileSync(
+                    releaseStatePath,
+                    "utf8",
+                  ),
+                );
+
+              if (
+                !releaseState ||
+                typeof releaseState !== "object"
+              ) {
+                throw new Error(
+                  "release-state.json is invalid",
+                );
+              }
+
+              if (
+                typeof releaseState.epoch !== "string" ||
+                !releaseState.epoch.trim()
+              ) {
+                throw new Error(
+                  "release-state.json does not contain a valid epoch",
+                );
+              }
+
+              process.stdout.write(
+                releaseState.epoch.trim(),
+              );
+            '
+          )"
+
+          export NEXMOLD_BUILD_EPOCH="$BUILD_EPOCH"
+
+          echo "Authoritative build epoch: $NEXMOLD_BUILD_EPOCH"
 
           node scripts/v8-actual-dist-closure-gate.mjs
 
@@ -714,3 +759,4 @@ jobs:
           echo "========================================"
           echo "V8 Final + Production Integration: PASS"
           echo "========================================"
+
