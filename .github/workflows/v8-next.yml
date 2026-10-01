@@ -3,7 +3,7 @@ name: NEXMOLD V8 Next Operational Gate
 on:
   workflow_run:
     workflows:
-      - NEXMOLD V8 Final Gate
+      - NEXMOLD V8 Final + Production Integration
     types:
       - completed
 
