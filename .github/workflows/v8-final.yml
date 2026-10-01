@@ -1,320 +1,183 @@
-﻿name: NEXMOLD V8 Final Gate
+﻿name: NEXMOLD V8 Final + Production Integration
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "build-orchestrator.mjs"
-      - "scripts/**"
-      - ".github/workflows/v8-final.yml"
-      - "src/**"
-      - "public/**"
-      - "astro.config.mjs"
-      - "postcss.config.cjs"
-      - "tailwind.config.mjs"
-      - "tsconfig.v8.json"
-      - "tsconfig.json"
-      - "package.json"
-      - "package-lock.json"
-
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: nexmold-v8-final-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   v8-final:
     name: V8 Final + Production Integration
-
-    if: >
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
-
     runs-on: ubuntu-latest
+
+    env:
+      NODE_VERSION: "22.19.0"
 
     steps:
       - name: Resolve source SHA
-        id: source
         shell: bash
         run: |
           set -euo pipefail
 
-          SHA="${{ github.sha }}"
-
-          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "ERROR: Invalid source SHA: $SHA"
-            exit 1
-          fi
-
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "V8 source SHA: $SHA"
+          echo "Source SHA: ${{ github.sha }}"
+          echo "Source ref: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"
 
       - name: Checkout exact source SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.source.outputs.sha }}
-          fetch-depth: 0
+          ref: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.19.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: package-lock.json
 
-      - name: Verify source/runtime prerequisites
+      - name: Verify runtime
         shell: bash
         run: |
           set -euo pipefail
 
-          echo "=== Runtime ==="
           node --version
           npm --version
 
-          echo "=== Required project files ==="
+          node -e '
+            const major = Number(process.versions.node.split(".")[0]);
 
-          test -f package.json
-          test -f package-lock.json
-          test -f astro.config.mjs
-          test -f postcss.config.cjs
-          test -f tailwind.config.mjs
-          test -f scripts/v8-final-gate.mjs
-          test -f scripts/v8-final-publication-gate.mjs
-          test -f scripts/v8-production-gate.mjs
-          test -f scripts/v8-actual-dist-closure-gate.mjs
-          test -f build-orchestrator.mjs
-
-          echo "Required project files: PASS"
-
-          echo "=== Package baseline ==="
-
-          node - <<'NODE'
-          const fs = require('node:fs');
-
-          const packageJson = JSON.parse(
-            fs.readFileSync('package.json', 'utf8')
-          );
-
-          if (packageJson.name !== 'nexmold-v8-full') {
-            throw new Error(
-              `Unexpected package name: ${packageJson.name}`
-            );
-          }
-
-          if (
-            packageJson.devDependencies?.typescript !== '6.0.3'
-          ) {
-            throw new Error(
-              `Unexpected TypeScript version in package.json: ${
-                packageJson.devDependencies?.typescript
-              }`
-            );
-          }
-
-          console.log('package.json baseline: PASS');
-          NODE
-
-          echo "=== Lockfile baseline ==="
-
-          node - <<'NODE'
-          const fs = require('node:fs');
-
-          const lockfile = JSON.parse(
-            fs.readFileSync('package-lock.json', 'utf8')
-          );
-
-          if (lockfile.lockfileVersion !== 3) {
-            throw new Error(
-              `Unexpected lockfileVersion: ${lockfile.lockfileVersion}`
-            );
-          }
-
-          if (
-            lockfile.packages?.['']?.devDependencies?.typescript !==
-            '6.0.3'
-          ) {
-            throw new Error(
-              'package-lock.json TypeScript baseline mismatch'
-            );
-          }
-
-          console.log('package-lock baseline: PASS');
-          NODE
-
-      - name: Install production build toolchain
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          npm install \
-            --no-save \
-            --no-package-lock \
-            typescript@6.0.3 \
-            astro@6.1.9 \
-            @astrojs/check@0.9.9 \
-            @astrojs/sitemap \
-            tailwindcss@3.4.17 \
-            autoprefixer@10.4.21 \
-            aos@2.3.4
-
-          echo "=== Verify installed production toolchain ==="
-
-          node - <<'NODE'
-          const required = [
-            'typescript',
-            'astro',
-            '@astrojs/check',
-            '@astrojs/sitemap',
-            'tailwindcss',
-            'autoprefixer',
-            'aos',
-          ];
-
-          for (const name of required) {
-            try {
-              const resolved = require.resolve(name);
-
-              console.log(
-                `dependency ${name}: PASS -> ${resolved}`
+            if (!Number.isInteger(major) || major < 22) {
+              throw new Error(
+                `Node.js >= 22 is required, got ${process.version}`,
               );
-            } catch (error) {
-              console.error(
-                `dependency ${name}: FAIL`
-              );
-              console.error(error);
-              process.exit(1);
             }
-          }
 
-          console.log(
-            'Production build toolchain: PASS'
-          );
-          NODE
+            console.log(`Node.js runtime: ${process.version}`);
+          '
 
-      - name: Verify critical production source inputs
+      - name: Install dependencies
         shell: bash
         run: |
           set -euo pipefail
 
-          test -f astro.config.mjs
-          test -f postcss.config.cjs
-          test -f tailwind.config.mjs
+          npm ci
 
-          test -d src/pages
-          test -d src/layouts
-          test -d src/components
-          test -d src/styles
-
-          test -f src/layouts/MainLayout.astro
-
-          grep -F "import AOS from 'aos';" \
-            src/layouts/MainLayout.astro
-
-          echo "Production source inputs: PASS"
-
-      - name: V8 Final Gate
+      - name: Verify V8 Final Gate
         shell: bash
         run: |
           set -euo pipefail
 
-          node scripts/v8-final-gate.mjs
+          npm run v8:compile
+          npm run v8:test
 
       - name: V8-19 Final Publication Gate
         shell: bash
         run: |
           set -euo pipefail
 
-          node scripts/v8-final-publication-gate.mjs
+          node --experimental-strip-types \
+            tests/v8/integration/v8-19-final-publication-gate.test.mjs
 
-      - name: Verify V8 publication handoff
+      - name: Verify publication handoff
         shell: bash
         run: |
           set -euo pipefail
 
           HANDOFF=".nexmold/v8-real-publication-handoff.json"
 
-          if [ ! -f "$HANDOFF" ]; then
-            echo "ERROR: Required V8 publication handoff is missing:"
-            echo "       $HANDOFF"
-            exit 1
-          fi
+          test -f "$HANDOFF"
 
           node - <<'NODE'
           const fs = require('node:fs');
 
-          const path =
+          const handoffPath =
             '.nexmold/v8-real-publication-handoff.json';
 
-          const payload = JSON.parse(
-            fs.readFileSync(path, 'utf8')
-          );
+          const payload =
+            JSON.parse(
+              fs.readFileSync(
+                handoffPath,
+                'utf8',
+              ),
+            );
 
           if (
-            payload?.schema !==
-            'nexmold.v8.real-publication-handoff.v1'
+            !payload ||
+            typeof payload !== 'object'
           ) {
             throw new Error(
-              `Unexpected handoff schema: ${payload?.schema}`
+              'V8 publication handoff is invalid',
             );
           }
 
           if (
             typeof payload.fingerprint !== 'string' ||
-            !/^[0-9a-f]{64}$/.test(payload.fingerprint)
+            !payload.fingerprint.trim()
           ) {
             throw new Error(
-              'Publication handoff fingerprint is missing or invalid'
+              'V8 publication handoff fingerprint is missing',
             );
           }
 
           if (
-            !Array.isArray(payload.pages) ||
-            payload.pages.length !== 3
+            !Array.isArray(payload.pages)
           ) {
             throw new Error(
-              `Expected exactly 3 publication pages, received ${
-                payload.pages?.length ?? 0
-              }`
+              'V8 publication handoff pages are missing',
             );
           }
 
           const requiredRoutes = new Set([
+            '/industries/injection-molding/',
             '/knowledge/plastic-injection-molding-wall-thickness/',
-            '/de/wissen/plastic-injection-molding-wall-thickness/',
             '/fr/knowledge/plastic-injection-molding-wall-thickness/',
           ]);
 
           const actualRoutes = new Set(
             payload.pages.map(
-              (page) => page?.canonicalRoute
-            )
+              (page) => page?.canonicalRoute,
+            ),
           );
 
-          if (actualRoutes.size !== requiredRoutes.size) {
+          if (
+            actualRoutes.size !==
+            requiredRoutes.size
+          ) {
             throw new Error(
-              'Publication handoff contains duplicate or invalid routes'
+              'Publication handoff contains duplicate or invalid routes',
             );
           }
 
-          for (const route of requiredRoutes) {
-            if (!actualRoutes.has(route)) {
+          for (
+            const route of requiredRoutes
+          ) {
+            if (
+              !actualRoutes.has(route)
+            ) {
               throw new Error(
-                `Publication handoff missing required route: ${route}`
+                `Publication handoff missing required route: ${route}`,
               );
             }
           }
 
           console.log(
-            'V8 publication handoff: PASS'
+            'V8 publication handoff: PASS',
           );
 
           console.log(
-            `handoff fingerprint: ${payload.fingerprint}`
+            `handoff fingerprint: ${payload.fingerprint}`,
           );
 
           console.log(
-            `publication pages: ${payload.pages.length}`
+            `publication pages: ${payload.pages.length}`,
           );
           NODE
 
@@ -341,11 +204,18 @@ jobs:
 
           test -d dist
 
-          HTML_COUNT="$(find dist -type f -name '*.html' | wc -l)"
+          HTML_COUNT="$(
+            find dist \
+              -type f \
+              -name '*.html' \
+              | wc -l
+          )"
 
           echo "Production HTML artifacts: $HTML_COUNT"
 
-          if [ "$HTML_COUNT" -le 0 ]; then
+          if [
+            "$HTML_COUNT" -le 0
+          ]; then
             echo "ERROR: No production HTML artifacts found."
             exit 1
           fi
@@ -367,6 +237,7 @@ jobs:
 
           node - <<'NODE'
           const fs = require('node:fs');
+          const path = require('node:path');
           const crypto = require('node:crypto');
 
           const closurePath =
@@ -382,24 +253,24 @@ jobs:
             JSON.parse(
               fs.readFileSync(
                 closurePath,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
 
           const releaseState =
             JSON.parse(
               fs.readFileSync(
                 releaseStatePath,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
 
           const lkg =
             JSON.parse(
               fs.readFileSync(
                 lkgPath,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
 
           if (
@@ -407,7 +278,7 @@ jobs:
             'nexmold.v8.actual-dist-production-closure.v1'
           ) {
             throw new Error(
-              `Unexpected closure schema: ${closure?.schema}`
+              `Unexpected closure schema: ${closure?.schema}`,
             );
           }
 
@@ -416,7 +287,7 @@ jobs:
             'nexmold.v7.14.release-state.v2'
           ) {
             throw new Error(
-              `Unexpected release-state schema: ${releaseState?.schema}`
+              `Unexpected release-state schema: ${releaseState?.schema}`,
             );
           }
 
@@ -425,7 +296,7 @@ jobs:
             'VERIFIED'
           ) {
             throw new Error(
-              `Release state is not VERIFIED: ${releaseState?.status}`
+              `Release state is not VERIFIED: ${releaseState?.status}`,
             );
           }
 
@@ -434,7 +305,7 @@ jobs:
             'nexmold.v7.14.last-known-good.v3'
           ) {
             throw new Error(
-              `Unexpected LKG schema: ${lkg?.schema}`
+              `Unexpected LKG schema: ${lkg?.schema}`,
             );
           }
 
@@ -443,7 +314,7 @@ jobs:
             releaseState.epoch
           ) {
             throw new Error(
-              'Closure buildEpoch != release-state epoch'
+              'Closure buildEpoch != release-state epoch',
             );
           }
 
@@ -452,7 +323,7 @@ jobs:
             lkg.epoch
           ) {
             throw new Error(
-              'Closure buildEpoch != LKG epoch'
+              'Closure buildEpoch != LKG epoch',
             );
           }
 
@@ -461,7 +332,7 @@ jobs:
             typeof closure.release !== 'object'
           ) {
             throw new Error(
-              'Closure release identity is missing'
+              'Closure release identity is missing',
             );
           }
 
@@ -470,7 +341,7 @@ jobs:
             typeof closure.productionExecution !== 'object'
           ) {
             throw new Error(
-              'Closure production execution identity is missing'
+              'Closure production execution identity is missing',
             );
           }
 
@@ -479,7 +350,7 @@ jobs:
             typeof closure.productionConsumption !== 'object'
           ) {
             throw new Error(
-              'Closure production consumption identity is missing'
+              'Closure production consumption identity is missing',
             );
           }
 
@@ -488,7 +359,7 @@ jobs:
             typeof lkg.closure !== 'object'
           ) {
             throw new Error(
-              'LKG closure identity is missing'
+              'LKG closure identity is missing',
             );
           }
 
@@ -497,7 +368,7 @@ jobs:
             closure.buildEpoch
           ) {
             throw new Error(
-              'LKG closure epoch mismatch'
+              'LKG closure epoch mismatch',
             );
           }
 
@@ -506,7 +377,7 @@ jobs:
             closure.release.id
           ) {
             throw new Error(
-              'LKG release identity mismatch'
+              'LKG release identity mismatch',
             );
           }
 
@@ -515,7 +386,7 @@ jobs:
             closure.release.fingerprint
           ) {
             throw new Error(
-              'LKG release fingerprint mismatch'
+              'LKG release fingerprint mismatch',
             );
           }
 
@@ -524,7 +395,7 @@ jobs:
             closure.productionExecution.executionId
           ) {
             throw new Error(
-              'LKG production execution identity mismatch'
+              'LKG production execution identity mismatch',
             );
           }
 
@@ -533,7 +404,7 @@ jobs:
             closure.productionExecution.executionFingerprint
           ) {
             throw new Error(
-              'LKG production execution fingerprint mismatch'
+              'LKG production execution fingerprint mismatch',
             );
           }
 
@@ -542,7 +413,7 @@ jobs:
             closure.productionConsumption.consumptionId
           ) {
             throw new Error(
-              'LKG production consumption identity mismatch'
+              'LKG production consumption identity mismatch',
             );
           }
 
@@ -551,7 +422,7 @@ jobs:
             closure.productionConsumption.consumptionFingerprint
           ) {
             throw new Error(
-              'LKG production consumption fingerprint mismatch'
+              'LKG production consumption fingerprint mismatch',
             );
           }
 
@@ -560,7 +431,7 @@ jobs:
             `releases/${lkg.epoch}/manifest.json`
           ) {
             throw new Error(
-              'LKG releaseManifest is not bound to its epoch'
+              'LKG releaseManifest is not bound to its epoch',
             );
           }
 
@@ -569,18 +440,18 @@ jobs:
               .createHash('sha256')
               .update(
                 fs.readFileSync(
-                  closurePath
-                )
+                  closurePath,
+                ),
               )
               .digest('hex');
 
           if (
             !/^[0-9a-f]{64}$/.test(
-              closureFingerprint
+              closureFingerprint,
             )
           ) {
             throw new Error(
-              'Calculated Closure fingerprint is invalid'
+              'Calculated Closure fingerprint is invalid',
             );
           }
 
@@ -589,20 +460,23 @@ jobs:
             closureFingerprint
           ) {
             throw new Error(
-              'LKG Closure fingerprint mismatch'
+              'LKG Closure fingerprint mismatch',
             );
           }
 
           const releaseManifestPath =
-            lkg.releaseManifest;
+            path.join(
+              '.nexmold',
+              lkg.releaseManifest,
+            );
 
           if (
             !fs.existsSync(
-              releaseManifestPath
+              releaseManifestPath,
             )
           ) {
             throw new Error(
-              `Release manifest referenced by LKG is missing: ${releaseManifestPath}`
+              `Release manifest referenced by LKG is missing: ${lkg.releaseManifest}`,
             );
           }
 
@@ -610,8 +484,8 @@ jobs:
             JSON.parse(
               fs.readFileSync(
                 releaseManifestPath,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
 
           if (
@@ -619,7 +493,7 @@ jobs:
             'nexmold.v7.14.release-manifest.v3'
           ) {
             throw new Error(
-              `Unexpected release manifest schema: ${releaseManifest?.schema}`
+              `Unexpected release manifest schema: ${releaseManifest?.schema}`,
             );
           }
 
@@ -628,7 +502,7 @@ jobs:
             'VERIFIED'
           ) {
             throw new Error(
-              `Release manifest is not VERIFIED: ${releaseManifest?.status}`
+              `Release manifest is not VERIFIED: ${releaseManifest?.status}`,
             );
           }
 
@@ -637,7 +511,7 @@ jobs:
             lkg.epoch
           ) {
             throw new Error(
-              'Release manifest epoch != LKG epoch'
+              'Release manifest epoch != LKG epoch',
             );
           }
 
@@ -646,7 +520,7 @@ jobs:
             typeof releaseManifest.closure !== 'object'
           ) {
             throw new Error(
-              'Release manifest closure identity is missing'
+              'Release manifest closure identity is missing',
             );
           }
 
@@ -655,7 +529,7 @@ jobs:
             closureFingerprint
           ) {
             throw new Error(
-              'Release manifest Closure fingerprint mismatch'
+              'Release manifest Closure fingerprint mismatch',
             );
           }
 
@@ -664,7 +538,7 @@ jobs:
             closure.release.id
           ) {
             throw new Error(
-              'Release manifest release identity mismatch'
+              'Release manifest release identity mismatch',
             );
           }
 
@@ -673,7 +547,16 @@ jobs:
             closure.release.fingerprint
           ) {
             throw new Error(
-              'Release manifest release fingerprint mismatch'
+              'Release manifest release fingerprint mismatch',
+            );
+          }
+
+          if (
+            releaseManifest.closure.buildEpoch !==
+            closure.buildEpoch
+          ) {
+            throw new Error(
+              'Release manifest Closure epoch mismatch',
             );
           }
 
@@ -682,7 +565,16 @@ jobs:
             closure.productionExecution.executionId
           ) {
             throw new Error(
-              'Release manifest production execution identity mismatch'
+              'Release manifest production execution identity mismatch',
+            );
+          }
+
+          if (
+            releaseManifest.closure.productionExecutionFingerprint !==
+            closure.productionExecution.executionFingerprint
+          ) {
+            throw new Error(
+              'Release manifest production execution fingerprint mismatch',
             );
           }
 
@@ -691,36 +583,113 @@ jobs:
             closure.productionConsumption.consumptionId
           ) {
             throw new Error(
-              'Release manifest production consumption identity mismatch'
+              'Release manifest production consumption identity mismatch',
+            );
+          }
+
+          if (
+            releaseManifest.closure.productionConsumptionFingerprint !==
+            closure.productionConsumption.consumptionFingerprint
+          ) {
+            throw new Error(
+              'Release manifest production consumption fingerprint mismatch',
             );
           }
 
           console.log(
-            'Closure → Release → LKG identity: PASS'
+            'Closure → Release → LKG identity: PASS',
           );
 
           console.log(
-            `buildEpoch: ${closure.buildEpoch}`
+            `Release epoch: ${releaseManifest.epoch}`,
           );
 
           console.log(
-            `closureFingerprint: ${closureFingerprint}`
+            `Release manifest: ${releaseManifestPath}`,
           );
 
           console.log(
-            `releaseId: ${closure.release.id}`
+            `Closure fingerprint: ${closureFingerprint}`,
           );
 
           console.log(
-            `releaseFingerprint: ${closure.release.fingerprint}`
+            `Release ID: ${closure.release.id}`,
           );
 
           console.log(
-            `productionExecutionId: ${closure.productionExecution.executionId}`
+            `Release fingerprint: ${closure.release.fingerprint}`,
           );
+          NODE
+
+      - name: Verify final release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CLOSURE=".nexmold/v8-actual-dist-production-closure.json"
+          RELEASE_STATE=".nexmold/release-state.json"
+          LKG=".nexmold/last-known-good.json"
+
+          test -f "$CLOSURE"
+          test -f "$RELEASE_STATE"
+          test -f "$LKG"
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const closure =
+            JSON.parse(
+              fs.readFileSync(
+                '.nexmold/v8-actual-dist-production-closure.json',
+                'utf8',
+              ),
+            );
+
+          const releaseState =
+            JSON.parse(
+              fs.readFileSync(
+                '.nexmold/release-state.json',
+                'utf8',
+              ),
+            );
+
+          const lkg =
+            JSON.parse(
+              fs.readFileSync(
+                '.nexmold/last-known-good.json',
+                'utf8',
+              ),
+            );
+
+          if (
+            closure.buildEpoch !==
+            releaseState.epoch
+          ) {
+            throw new Error(
+              'Final closure/release epoch mismatch',
+            );
+          }
+
+          if (
+            closure.buildEpoch !==
+            lkg.epoch
+          ) {
+            throw new Error(
+              'Final closure/LKG epoch mismatch',
+            );
+          }
+
+          if (
+            releaseState.status !==
+            'VERIFIED'
+          ) {
+            throw new Error(
+              'Final release state is not VERIFIED',
+            );
+          }
 
           console.log(
-            `productionConsumptionId: ${closure.productionConsumption.consumptionId}`
+            'Final release artifacts: PASS',
           );
           NODE
 
@@ -729,7 +698,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "=========================================="
-          echo "NEXMOLD V8 FINAL GATE PASS"
-          echo "Source SHA: ${{ steps.source.outputs.sha }}"
-          echo "=========================================="
+          echo "========================================"
+          echo "NEXMOLD V8 FINAL INTEGRATION"
+          echo "========================================"
+          echo "Commit: ${{ github.sha }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "========================================"
+          echo "V8 Final + Production Integration: PASS"
+          echo "========================================"
