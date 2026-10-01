@@ -212,32 +212,52 @@ function writeUtf8(
   );
 }
 
+/*
+ * Current V8 Content contract:
+ *
+ * interface Content {
+ *   id: ContentId;
+ *   decisionId: DecisionId;
+ *   title: string;
+ *   body: string;
+ * }
+ *
+ * The previous implementation expected Content.sections[],
+ * which does not exist in the current V8 domain contract.
+ *
+ * Article Markdown is therefore materialized directly from
+ * Content.title + Content.body.
+ */
 function createArticleMarkdown(
   content,
 ) {
-  const sections =
-    Array.isArray(content.sections)
-      ? content.sections
-      : [];
+  requireCondition(
+    content !== null &&
+      typeof content === "object",
+    "runtime content is missing",
+  );
 
   requireCondition(
-    sections.length > 0,
-    "runtime content contains no sections",
+    typeof content.title ===
+      "string" &&
+      content.title.trim().length > 0,
+    "runtime content contains no title",
+  );
+
+  requireCondition(
+    typeof content.body ===
+      "string" &&
+      content.body.trim().length > 0,
+    "runtime content contains no article body",
   );
 
   return [
-    `# ${content.title}`,
+    `# ${content.title.trim()}`,
     "",
     ARTICLE_DESCRIPTION,
     "",
-    ...sections.flatMap(
-      (section) => [
-        `## ${section.heading}`,
-        "",
-        section.body.trim(),
-        "",
-      ],
-    ),
+    content.body.trim(),
+    "",
   ].join("\n");
 }
 
@@ -422,6 +442,21 @@ function createManifest({
       {
         fingerprint:
           runtime.fingerprint,
+
+        content:
+          {
+            id:
+              runtime.content.id,
+
+            decisionId:
+              runtime.content.decisionId,
+
+            title:
+              runtime.content.title,
+
+            bodyLength:
+              runtime.content.body.length,
+          },
       },
 
     artifact:
@@ -807,9 +842,24 @@ async function main() {
   );
 
   requireCondition(
-    runtime.content.sections.length >
-      0,
-    "Article Runtime produced no article sections",
+    runtime.content !== null &&
+      typeof runtime.content ===
+        "object",
+    "Article Runtime produced no Content",
+  );
+
+  requireCondition(
+    typeof runtime.content.title ===
+      "string" &&
+      runtime.content.title.trim().length > 0,
+    "Article Runtime produced Content without a title",
+  );
+
+  requireCondition(
+    typeof runtime.content.body ===
+      "string" &&
+      runtime.content.body.trim().length > 0,
+    "Article Runtime produced Content without an article body",
   );
 
   console.log(
@@ -833,7 +883,7 @@ async function main() {
   );
 
   console.log(
-    `12. Article sections: ${runtime.content.sections.length}`,
+    `12. Article body length: ${runtime.content.body.length}`,
   );
 
   /*
@@ -982,4 +1032,3 @@ main().catch(
     process.exitCode = 1;
   },
 );
-
