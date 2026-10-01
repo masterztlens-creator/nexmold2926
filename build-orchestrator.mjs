@@ -12,6 +12,9 @@
  *   -> ARTICLE FACTORY
  *   -> ROUTE CONFLICT GATE
  *   -> CLEAN BUILD
+ *   -> V8 REAL PUBLICATION GATE
+ *   -> V8 ASTRO PUBLICATION ADAPTER
+ *   -> BUILD
  *   -> ARTIFACT AUDIT
  *   -> V8 ACTUAL DIST CLOSURE
  *   -> V8-09 PRODUCTION INTEGRATION
@@ -1111,70 +1114,17 @@ function readClosureReleaseIdentity() {
     );
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * The V8 actual-dist closure persists release.manifest as
-   * manifest-entry objects:
-   *
-   *   {
-   *     path,
-   *     route,
-   *     bytes,
-   *     sha256
-   *   }
-   *
-   * The V8 ReleaseArtifact contract, however, requires:
-   *
-   *   readonly string[]
-   *
-   * Therefore this boundary converts the persisted closure
-   * manifest into the canonical release path manifest.
-   *
-   * The closure producer remains unchanged.
-   * The V8 release domain remains unchanged.
-   */
   if (
     !Array.isArray(closure.release.manifest) ||
-    closure.release.manifest.length === 0
+    closure.release.manifest.length === 0 ||
+    closure.release.manifest.some(
+      (value) =>
+        typeof value !== "string" ||
+        !value.trim(),
+    )
   ) {
     throw new Error(
       "V8 closure release.manifest is missing or invalid",
-    );
-  }
-
-  const releaseManifest =
-    closure.release.manifest
-      .map((entry) => {
-        if (
-          !entry ||
-          typeof entry !== "object" ||
-          Array.isArray(entry)
-        ) {
-          throw new Error(
-            "V8 closure release.manifest entry is invalid",
-          );
-        }
-
-        if (
-          typeof entry.path !== "string" ||
-          !entry.path.trim()
-        ) {
-          throw new Error(
-            "V8 closure release.manifest entry.path is missing or invalid",
-          );
-        }
-
-        return entry.path.trim();
-      })
-      .sort();
-
-  if (
-    new Set(releaseManifest).size !==
-    releaseManifest.length
-  ) {
-    throw new Error(
-      "V8 closure release.manifest contains duplicate paths",
     );
   }
 
@@ -1289,9 +1239,7 @@ function readClosureReleaseIdentity() {
       closure.release.fingerprint,
 
     releaseManifest:
-      Object.freeze(
-        releaseManifest,
-      ),
+      Object.freeze([...closure.release.manifest]),
 
     productionExecutionId:
       closure.productionExecution.executionId,
@@ -1510,6 +1458,20 @@ async function main() {
   pass(
     "EPOCH",
     `Clean build epoch ${epoch} prepared.`,
+  );
+
+  section(
+    "V8_REAL_PUBLICATION_GATE",
+  );
+
+  await runCommand(
+    "node scripts/v8-final-publication-gate.mjs",
+    "V8_REAL_PUBLICATION_GATE",
+  );
+
+  pass(
+    "V8_REAL_PUBLICATION_GATE",
+    "Real Internet V8 publication handoff generated and verified.",
   );
 
   section(
