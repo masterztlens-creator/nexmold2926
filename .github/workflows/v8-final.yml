@@ -135,9 +135,9 @@ jobs:
           }
 
           const requiredRoutes = new Set([
-          '/knowledge/plastic-injection-molding-wall-thickness/',
-          '/de/wissen/plastic-injection-molding-wall-thickness/',
-          '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+            '/knowledge/plastic-injection-molding-wall-thickness/',
+            '/de/wissen/plastic-injection-molding-wall-thickness/',
+            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
           ]);
 
           const actualRoutes = new Set(
@@ -220,6 +220,13 @@ jobs:
           fi
 
           echo "Production artifacts: PASS"
+
+      - name: Verify Actual Dist Production Closure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node scripts/v8-actual-dist-closure-gate.mjs
 
       - name: Verify Closure → Release → LKG identity
         shell: bash
