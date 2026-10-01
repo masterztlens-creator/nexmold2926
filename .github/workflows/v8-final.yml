@@ -6,11 +6,17 @@ on:
       - main
     paths:
       - "build-orchestrator.mjs"
-      - "scripts/v8-actual-dist-closure-gate.mjs"
-      - "scripts/v8-final-publication-gate.mjs"
+      - "scripts/**"
       - ".github/workflows/v8-final.yml"
       - "src/v8/**"
       - "src/pages/**"
+      - "src/layouts/**"
+      - "src/components/**"
+      - "src/styles/**"
+      - "src/content/**"
+      - "astro.config.mjs"
+      - "postcss.config.cjs"
+      - "tailwind.config.mjs"
       - "tsconfig.v8.json"
       - "tsconfig.json"
       - "package.json"
@@ -85,7 +91,7 @@ jobs:
 
           echo "Required project files: PASS"
 
-          echo "=== package.json baseline ==="
+          echo "=== Package baseline ==="
 
           node - <<'NODE'
           const fs = require('node:fs');
@@ -113,7 +119,7 @@ jobs:
           console.log('package.json baseline: PASS');
           NODE
 
-          echo "=== package-lock.json baseline ==="
+          echo "=== Lockfile baseline ==="
 
           node - <<'NODE'
           const fs = require('node:fs');
@@ -190,17 +196,26 @@ jobs:
           );
           NODE
 
-      - name: Verify critical source imports
+      - name: Verify critical production source inputs
         shell: bash
         run: |
           set -euo pipefail
+
+          test -f astro.config.mjs
+          test -f postcss.config.cjs
+          test -f tailwind.config.mjs
+
+          test -d src/pages
+          test -d src/layouts
+          test -d src/components
+          test -d src/styles
 
           test -f src/layouts/MainLayout.astro
 
           grep -F "import AOS from 'aos';" \
             src/layouts/MainLayout.astro
 
-          echo "MainLayout AOS import: PASS"
+          echo "Production source inputs: PASS"
 
       - name: V8 Final Gate
         shell: bash
