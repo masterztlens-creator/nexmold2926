@@ -269,84 +269,788 @@ function canonicalEvidenceId(
 }
 
 /*
- * Runtime Truth Selection
+ * Runtime Evidence Topic Selection
  *
  * Acquisition persists the complete Evidence inventory for every fetched
  * Internet page. That inventory is intentionally broader than the Evidence
  * set used by one Article Runtime execution.
  *
- * The Article Runtime therefore selects exactly one canonical Evidence
- * aggregate from each successful acquisition. Selection is deterministic:
+ * Runtime selection MUST therefore be driven by the Problem.question.
  *
- *   1. preserve acquisition order;
- *   2. preserve extractor order within an acquisition;
- *   3. choose the first canonical Evidence ID not already selected.
+ * Selection contract:
  *
- * This does not delete, mutate, or truncate persisted Evidence. It only
- * defines which Evidence aggregates become inputs to TruthProducer for this
- * runtime execution.
+ *   Problem.question
+ *        ↓
+ *   normalized semantic terms / phrases
+ *        ↓
+ *   Evidence semantic fields
+ *        ↓
+ *   deterministic relevance score
+ *        ↓
+ *   one canonical Evidence per acquisition
+ *
+ * The selector never falls back to "the first Evidence".
+ *
+ * This is important because an Internet document may contain multiple
+ * independent topics. For example:
+ *
+ *   "Wall Thickness"
+ *   "Maximum Dimensions"
+ *   "Draft Angle"
+ *   "Material Selection"
+ *
+ * are all legitimate Evidence topics on one manufacturing page, but they
+ * are NOT interchangeable.
+ *
+ * The selector is intentionally conservative:
+ *
+ *   - exact multi-word topic phrases receive substantially more weight
+ *   - section / table / parameter matches receive higher weight than
+ *     incidental excerpt matches
+ *   - generic phrases that occur throughout the Evidence inventory receive
+ *     less weight through deterministic document-frequency weighting
+ *   - at least one meaningful topic phrase must match
+ *   - no topic-relevant Evidence means FAIL CLOSED
+ *
+ * No Evidence is deleted or mutated by this function.
  */
+
+const TOPIC_STOP_WORDS = new Set([
+  "a",
+  "about",
+  "an",
+  "and",
+  "are",
+  "be",
+  "by",
+  "can",
+  "does",
+  "for",
+  "from",
+  "how",
+  "in",
+  "into",
+  "is",
+  "of",
+  "on",
+  "or",
+  "should",
+  "that",
+  "the",
+  "their",
+  "this",
+  "to",
+  "under",
+  "using",
+  "use",
+  "used",
+  "what",
+  "when",
+  "which",
+  "with",
+  "within",
+];
+
+const TOPIC_SEARCH_FIELDS: readonly {
+  readonly key: keyof EvidencePayload;
+  readonly weight: number;
+}[] = [
+  {
+    key: "section",
+    weight: 8,
+  },
+  {
+    key: "table",
+    weight: 7,
+  },
+  {
+    key: "parameter",
+    weight: 7,
+  },
+  {
+    key: "row",
+    weight: 5,
+  },
+  {
+    key: "excerpt",
+    weight: 4,
+  },
+  {
+    key: "locator",
+    weight: 2,
+  },
+];
+
+interface TopicPhrase {
+  readonly value: string;
+  readonly tokenCount: number;
+}
+
+interface EvidenceRelevance {
+  readonly score: number;
+  readonly phraseMatches: readonly string[];
+  readonly tokenMatches: readonly string[];
+}
+
+function normalizeTopicText(
+  value: string,
+): string {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(
+      /[^\p{L}\p{N}]+/gu,
+      " ",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
+
+function topicTokens(
+  value: string,
+): readonly string[] {
+  return normalizeTopicText(
+    value,
+  )
+    .split(" ")
+    .filter(
+      (token) =>
+        token.length > 1 &&
+        !TOPIC_STOP_WORDS.has(token),
+    );
+}
+
+function uniqueStrings(
+  values: readonly string[],
+): readonly string[] {
+  return [
+    ...new Set(
+      values.filter(
+        (value) =>
+          value.length > 0,
+      ),
+    ),
+  ];
+}
+
+function buildTopicPhrases(
+  question: string,
+): readonly TopicPhrase[] {
+  const tokens =
+    topicTokens(question);
+
+  const phrases: TopicPhrase[] = [];
+
+  /*
+   * Longer phrases are considered first because they generally represent
+   * more specific concepts than individual words or short phrases.
+   *
+   * Example:
+   *
+   *   plastic injection molding wall thickness
+   *
+   * yields:
+   *
+   *   plastic injection molding wall
+   *   injection molding wall thickness
+   *   plastic injection molding
+   *   injection molding
+   *   wall thickness
+   *
+   * The selector later weights these according to actual Evidence frequency,
+   * so a ubiquitous "injection molding" phrase cannot automatically outrank
+   * a specific "wall thickness" topic.
+   */
+  for (
+    let size = 4;
+    size >= 2;
+    size -= 1
+  ) {
+    for (
+      let start = 0;
+      start + size <= tokens.length;
+      start += 1
+    ) {
+      const phrase =
+        tokens
+          .slice(
+            start,
+            start + size,
+          )
+          .join(" ");
+
+      phrases.push({
+        value: phrase,
+        tokenCount: size,
+      });
+    }
+  }
+
+  return uniqueStrings(
+    phrases.map(
+      (phrase) =>
+        phrase.value,
+    ),
+  ).map(
+    (value) => ({
+      value,
+      tokenCount:
+        value.split(" ").length,
+    }),
+  );
+}
+
+function evidenceSearchText(
+  evidence: EvidencePayload,
+): string {
+  return normalizeTopicText(
+    [
+      evidence.section,
+      evidence.table,
+      evidence.parameter,
+      evidence.row,
+      evidence.excerpt,
+      evidence.locator,
+    ]
+      .filter(
+        (
+          value,
+        ): value is string =>
+          typeof value === "string" &&
+          value.trim().length > 0,
+      )
+      .join(" "),
+  );
+}
+
+function evidenceFieldText(
+  evidence: EvidencePayload,
+  key: keyof EvidencePayload,
+): string {
+  const value =
+    evidence[key];
+
+  if (
+    typeof value !== "string"
+  ) {
+    return "";
+  }
+
+  return normalizeTopicText(
+    value,
+  );
+}
+
+function phraseDocumentFrequency(
+  evidenceInventory:
+    readonly EvidencePayload[][],
+  phrase: string,
+): number {
+  let frequency = 0;
+
+  for (
+    const evidenceList of evidenceInventory
+  ) {
+    for (
+      const evidence of evidenceList
+    ) {
+      const text =
+        evidenceSearchText(
+          evidence,
+        );
+
+      if (
+        text.includes(
+          phrase,
+        )
+      ) {
+        frequency += 1;
+      }
+    }
+  }
+
+  return frequency;
+}
+
+function tokenDocumentFrequency(
+  evidenceInventory:
+    readonly EvidencePayload[][],
+  token: string,
+): number {
+  let frequency = 0;
+
+  for (
+    const evidenceList of evidenceInventory
+  ) {
+    for (
+      const evidence of evidenceList
+    ) {
+      const tokens =
+        new Set(
+          topicTokens(
+            evidenceSearchText(
+              evidence,
+            ),
+          ),
+        );
+
+      if (
+        tokens.has(token)
+      ) {
+        frequency += 1;
+      }
+    }
+  }
+
+  return frequency;
+}
+
+function phraseSpecificityWeight(
+  phrase: TopicPhrase,
+  documentCount: number,
+  totalEvidenceCount: number,
+): number {
+  if (
+    documentCount <= 0 ||
+    totalEvidenceCount <= 0
+  ) {
+    return 0;
+  }
+
+  /*
+   * Deterministic inverse-frequency weighting.
+   *
+   * A phrase present in nearly every Evidence record is weak evidence of
+   * topical relevance. A phrase occurring in only one or two records is
+   * substantially more discriminative.
+   *
+   * The token-count multiplier favors specific multi-word concepts.
+   */
+  const rarity =
+    Math.log(
+      (
+        totalEvidenceCount + 1
+      ) /
+        (
+          documentCount + 1
+        ),
+    );
+
+  return (
+    rarity *
+    (
+      4 +
+      phrase.tokenCount * 4
+    )
+  );
+}
+
+function tokenSpecificityWeight(
+  documentCount: number,
+  totalEvidenceCount: number,
+): number {
+  if (
+    documentCount <= 0 ||
+    totalEvidenceCount <= 0
+  ) {
+    return 0;
+  }
+
+  return Math.log(
+    (
+      totalEvidenceCount + 1
+    ) /
+      (
+        documentCount + 1
+      ),
+  );
+}
+
+function scoreEvidence(
+  evidence: EvidencePayload,
+  topicPhrases: readonly TopicPhrase[],
+  questionTokens: readonly string[],
+  phraseFrequency:
+    ReadonlyMap<string, number>,
+  tokenFrequency:
+    ReadonlyMap<string, number>,
+  totalEvidenceCount: number,
+): EvidenceRelevance {
+  const normalizedFields =
+    TOPIC_SEARCH_FIELDS.map(
+      (field) => ({
+        key:
+          field.key,
+        weight:
+          field.weight,
+        text:
+          evidenceFieldText(
+            evidence,
+            field.key,
+          ),
+      }),
+    );
+
+  const fullText =
+    evidenceSearchText(
+      evidence,
+    );
+
+  let score = 0;
+
+  const phraseMatches: string[] = [];
+  const tokenMatches: string[] = [];
+
+  for (
+    const phrase of topicPhrases
+  ) {
+    if (
+      !fullText.includes(
+        phrase.value,
+      )
+    ) {
+      continue;
+    }
+
+    const documentCount =
+      phraseFrequency.get(
+        phrase.value,
+      ) ?? 0;
+
+    const specificity =
+      phraseSpecificityWeight(
+        phrase,
+        documentCount,
+        totalEvidenceCount,
+      );
+
+    /*
+     * The phrase must carry a meaningful signal even when the phrase is
+     * common. Multi-word exact matches therefore receive a deterministic
+     * base weight in addition to their rarity weight.
+     */
+    const basePhraseWeight =
+      12 +
+      phrase.tokenCount * 8;
+
+    score +=
+      basePhraseWeight +
+      specificity;
+
+    phraseMatches.push(
+      phrase.value,
+    );
+
+    for (
+      const field of normalizedFields
+    ) {
+      if (
+        field.text.includes(
+          phrase.value,
+        )
+      ) {
+        score +=
+          field.weight *
+          (
+            2 +
+            phrase.tokenCount
+          );
+      }
+    }
+  }
+
+  for (
+    const token of questionTokens
+  ) {
+    if (
+      fullText
+        .split(" ")
+        .includes(token)
+    ) {
+      const documentCount =
+        tokenFrequency.get(
+          token,
+        ) ?? 0;
+
+      score +=
+        1 +
+        tokenSpecificityWeight(
+          documentCount,
+          totalEvidenceCount,
+        );
+
+      tokenMatches.push(
+        token,
+      );
+    }
+  }
+
+  /*
+   * Exact semantic-field matches receive a final deterministic bonus.
+   *
+   * This prevents a topic phrase that merely happens to occur in a long
+   * excerpt from outranking a matching section/parameter heading.
+   */
+  for (
+    const phrase of topicPhrases
+  ) {
+    for (
+      const field of normalizedFields
+    ) {
+      if (
+        field.text ===
+        phrase.value
+      ) {
+        score +=
+          field.weight *
+          (
+            4 +
+            phrase.tokenCount
+          );
+      }
+    }
+  }
+
+  return {
+    score,
+    phraseMatches:
+      uniqueStrings(
+        phraseMatches,
+      ),
+    tokenMatches:
+      uniqueStrings(
+        tokenMatches,
+      ),
+  };
+}
+
 function selectRuntimeEvidence(
-  acquisitions: readonly ResearchAcquisitionResult["acquisitions"][number][],
+  acquisitions:
+    readonly ResearchAcquisitionResult["acquisitions"][number][],
+  question: string,
 ): readonly {
   readonly id: string;
   readonly payload: EvidencePayload;
 }[] {
+  const evidenceInventory =
+    acquisitions.map(
+      (record) =>
+        record.acquisition.evidence,
+    );
+
+  const totalEvidenceCount =
+    evidenceInventory.reduce(
+      (
+        total,
+        evidence,
+      ) =>
+        total +
+        evidence.length,
+      0,
+    );
+
+  invariant(
+    totalEvidenceCount > 0,
+    "V8_ARTICLE_RUNTIME_NO_EVIDENCE",
+    "Runtime Evidence selection received an empty Evidence inventory.",
+  );
+
+  const topicPhrases =
+    buildTopicPhrases(
+      question,
+    );
+
+  const questionTokens =
+    topicTokens(
+      question,
+    );
+
+  invariant(
+    topicPhrases.length > 0 &&
+      questionTokens.length > 0,
+    "V8_ARTICLE_RUNTIME_INVALID_TOPIC",
+    "Problem.question does not contain a selectable semantic topic.",
+  );
+
+  const phraseFrequency =
+    new Map<string, number>();
+
+  for (
+    const phrase of topicPhrases
+  ) {
+    phraseFrequency.set(
+      phrase.value,
+      phraseDocumentFrequency(
+        evidenceInventory,
+        phrase.value,
+      ),
+    );
+  }
+
+  const tokenFrequency =
+    new Map<string, number>();
+
+  for (
+    const token of questionTokens
+  ) {
+    tokenFrequency.set(
+      token,
+      tokenDocumentFrequency(
+        evidenceInventory,
+        token,
+      ),
+    );
+  }
+
   const selected: {
     id: string;
     payload: EvidencePayload;
   }[] = [];
 
-  const selectedIds = new Set<string>();
+  const selectedIds =
+    new Set<string>();
 
-  for (const record of acquisitions) {
+  for (
+    const record of acquisitions
+  ) {
     let selectedForAcquisition:
       | {
           id: string;
           payload: EvidencePayload;
+          score: number;
+          phraseMatches:
+            readonly string[];
+          tokenMatches:
+            readonly string[];
+          evidenceIndex: number;
         }
       | undefined;
 
-    for (const payload of record.acquisition.evidence) {
-      const id = canonicalEvidenceId(
-        record.acquisition.sourceId,
-        record.acquisition.snapshotId,
-        record.acquisition.snapshot.contentHash,
-        payload,
-      );
+    for (
+      let evidenceIndex = 0;
+      evidenceIndex <
+        record.acquisition.evidence.length;
+      evidenceIndex += 1
+    ) {
+      const payload =
+        record.acquisition.evidence[
+          evidenceIndex
+        ];
 
-      if (selectedIds.has(id)) {
+      const id =
+        canonicalEvidenceId(
+          record.acquisition.sourceId,
+          record.acquisition.snapshotId,
+          record.acquisition.snapshot.contentHash,
+          payload,
+        );
+
+      if (
+        selectedIds.has(id)
+      ) {
         continue;
       }
 
-      selectedForAcquisition = {
-        id,
-        payload,
-      };
+      const relevance =
+        scoreEvidence(
+          payload,
+          topicPhrases,
+          questionTokens,
+          phraseFrequency,
+          tokenFrequency,
+          totalEvidenceCount,
+        );
 
-      break;
+      /*
+       * A meaningful topic phrase is mandatory.
+       *
+       * Generic token overlap alone is not sufficient because a page may
+       * contain broad manufacturing terminology around several unrelated
+       * parameters.
+       */
+      if (
+        relevance.phraseMatches.length ===
+        0
+      ) {
+        continue;
+      }
+
+      if (
+        selectedForAcquisition ===
+          undefined ||
+        relevance.score >
+          selectedForAcquisition.score
+      ) {
+        selectedForAcquisition = {
+          id,
+          payload,
+          score:
+            relevance.score,
+          phraseMatches:
+            relevance.phraseMatches,
+          tokenMatches:
+            relevance.tokenMatches,
+          evidenceIndex,
+        };
+      }
     }
 
     invariant(
-      selectedForAcquisition !== undefined,
-      "V8_ARTICLE_RUNTIME_ACQUISITION_WITHOUT_SELECTABLE_EVIDENCE",
-      `Acquisition ${record.candidateUrl} produced no selectable canonical Evidence.`,
+      selectedForAcquisition !==
+        undefined,
+      "V8_ARTICLE_RUNTIME_NO_TOPIC_RELEVANT_EVIDENCE",
+      [
+        `Acquisition ${record.candidateUrl} produced no Evidence relevant to Problem.question.`,
+        `question=${question}`,
+      ].join(" "),
+    );
+
+    /*
+     * Deterministic diagnostic only. No external state is changed.
+     *
+     * Keeping the selected semantic signal visible makes an incorrect
+     * publication artifact diagnosable without weakening the fail-closed
+     * contract.
+     */
+    console.debug(
+      "[V8-ARTICLE-RUNTIME][EVIDENCE-SELECTION]",
+      JSON.stringify({
+        candidateUrl:
+          record.candidateUrl,
+        question,
+        selectedEvidenceId:
+          selectedForAcquisition.id,
+        score:
+          selectedForAcquisition.score,
+        phraseMatches:
+          selectedForAcquisition.phraseMatches,
+        tokenMatches:
+          selectedForAcquisition.tokenMatches,
+        evidenceIndex:
+          selectedForAcquisition.evidenceIndex,
+      }),
     );
 
     selectedIds.add(
       selectedForAcquisition.id,
     );
 
-    selected.push(
-      selectedForAcquisition,
-    );
+    selected.push({
+      id:
+        selectedForAcquisition.id,
+      payload:
+        selectedForAcquisition.payload,
+    });
   }
 
   invariant(
     selected.length ===
       acquisitions.length,
     "V8_ARTICLE_RUNTIME_EVIDENCE_SELECTION_INCOMPLETE",
-    "Runtime Evidence selection did not produce one canonical Evidence record per acquisition.",
+    "Runtime Evidence selection did not produce one topic-relevant canonical Evidence record per acquisition.",
   );
 
   return selected;
@@ -380,7 +1084,10 @@ export async function runV8ArticleRuntime(
       },
     );
 
-  if (acquisition.acquisitions.length === 0) {
+  if (
+    acquisition.acquisitions.length ===
+    0
+  ) {
     console.error(
       "[V8-21][ACQUISITION-DIAGNOSTIC]",
     );
@@ -399,7 +1106,8 @@ export async function runV8ArticleRuntime(
 
     for (
       let index = 0;
-      index < acquisition.searchErrors.length;
+      index <
+        acquisition.searchErrors.length;
       index += 1
     ) {
       const error =
@@ -420,7 +1128,8 @@ export async function runV8ArticleRuntime(
 
     for (
       let index = 0;
-      index < acquisition.fetchErrors.length;
+      index <
+        acquisition.fetchErrors.length;
       index += 1
     ) {
       const error =
@@ -463,13 +1172,17 @@ export async function runV8ArticleRuntime(
   /*
    * The Foundation retains the complete Evidence inventory.
    *
-   * Runtime Truth Production uses one deterministic canonical Evidence
-   * aggregate per acquisition rather than promoting the entire extraction
-   * inventory into Claims and Knowledge.
+   * Runtime Truth Production uses one deterministic topic-relevant canonical
+   * Evidence aggregate per acquisition rather than promoting the entire
+   * extraction inventory into Claims and Knowledge.
+   *
+   * Critically, this selection is driven by Problem.question rather than
+   * extractor order.
    */
   const selectedEvidence =
     selectRuntimeEvidence(
       acquisition.acquisitions,
+      input.problem.question,
     );
 
   const evidenceIds =
@@ -590,7 +1303,10 @@ export async function runV8ArticleRuntime(
       truthInput,
     );
 
-  if (truth.rejectedCandidates.length > 0) {
+  if (
+    truth.rejectedCandidates.length >
+    0
+  ) {
     console.error(
       "[V8-TRUTH-PRODUCER][DIAGNOSTIC]",
     );
@@ -613,7 +1329,8 @@ export async function runV8ArticleRuntime(
 
     for (
       let index = 0;
-      index < truth.rejectedCandidates.length;
+      index <
+        truth.rejectedCandidates.length;
       index += 1
     ) {
       const rejected =
@@ -632,18 +1349,6 @@ export async function runV8ArticleRuntime(
       );
     }
   }
-
-  invariant(
-    truth.claims.length > 0,
-    "V8_ARTICLE_RUNTIME_NO_CLAIMS",
-    "Verified Evidence produced no admissible Claims.",
-  );
-
-  invariant(
-    truth.knowledge.length > 0,
-    "V8_ARTICLE_RUNTIME_NO_KNOWLEDGE",
-    "Verified Claims produced no Knowledge records.",
-  );
 
   invariant(
     truth.claims.length > 0,
