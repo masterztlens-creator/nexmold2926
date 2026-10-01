@@ -1088,20 +1088,18 @@ function buildFoundationClosureAudit(
     "runtime Foundation closure contains no Decision ID",
   );
 
-  const sortedEvidenceIds =
-    [
-      ...verifiedEvidenceIds,
-    ].sort();
-
-  const sortedClaimIds =
-    [
-      ...claimIds,
-    ].sort();
-
-  const sortedKnowledgeIds =
-    [
-      ...knowledgeIds,
-    ].sort();
+  /*
+   * IMPORTANT:
+   *
+   * Runtime ID arrays are lineage-ordered arrays.
+   *
+   * They must NOT be sorted before being persisted into the
+   * article manifest because the persisted manifest is required
+   * to be positionally identical to the Runtime closure.
+   *
+   * Canonical set ordering and Runtime lineage ordering are
+   * different contracts and must not be conflated.
+   */
 
   requireCondition(
     JSON.stringify(
@@ -1114,6 +1112,7 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
+    ),
     "runtime verified Evidence IDs contain duplicates or unstable ordering",
   );
 
@@ -1128,6 +1127,7 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
+    ),
     "runtime Claim IDs contain duplicates or unstable ordering",
   );
 
@@ -1142,18 +1142,19 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
+    ),
     "runtime Knowledge IDs contain duplicates or unstable ordering",
   );
 
   return {
     verifiedEvidenceIds:
-      sortedEvidenceIds,
+      verifiedEvidenceIds,
 
     claimIds:
-      sortedClaimIds,
+      claimIds,
 
     knowledgeIds:
-      sortedKnowledgeIds,
+      knowledgeIds,
 
     decisionId:
       String(
