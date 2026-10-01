@@ -83,30 +83,85 @@ jobs:
             ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json";
 
           const article =
-            fs.readFileSync(articlePath, "utf8");
+            fs.readFileSync(
+              articlePath,
+              "utf8",
+            );
 
           const manifest =
             JSON.parse(
-              fs.readFileSync(manifestPath, "utf8"),
+              fs.readFileSync(
+                manifestPath,
+                "utf8",
+              ),
             );
 
           if (!article.trim()) {
-            throw new Error("V8_FIRST_ARTICLE_EMPTY");
+            throw new Error(
+              "V8_FIRST_ARTICLE_EMPTY",
+            );
           }
 
           if (
             !manifest ||
             typeof manifest !== "object"
           ) {
-            throw new Error("V8_FIRST_ARTICLE_MANIFEST_INVALID");
+            throw new Error(
+              "V8_FIRST_ARTICLE_MANIFEST_INVALID",
+            );
           }
 
           if (
             manifest.schema !==
-            "nexmold.v8.first-article-manifest.v1"
+            "nexmold.v8.first-article-manifest.v2"
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_MANIFEST_SCHEMA_INVALID",
+              `V8_FIRST_ARTICLE_MANIFEST_SCHEMA_INVALID:${manifest.schema ?? "missing"}`,
+            );
+          }
+
+          if (
+            manifest.execution?.mode !==
+            "LIVE_INTERNET"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_EXECUTION_MODE_INVALID",
+            );
+          }
+
+          if (
+            manifest.execution?.searchProvider !==
+            "NONE"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SEARCH_PROVIDER_INVALID",
+            );
+          }
+
+          if (
+            manifest.execution?.discoveryProvider !==
+            "V8_SELF_OWNED_FIRST_HOP"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DISCOVERY_PROVIDER_INVALID",
+            );
+          }
+
+          if (
+            manifest.execution?.acquisitionProvider !==
+            "SELF_OWNED_CRAWL"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ACQUISITION_PROVIDER_INVALID",
+            );
+          }
+
+          if (
+            manifest.article?.title !==
+            "Plastic Injection Molding Wall Thickness"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_TITLE_INVALID",
             );
           }
 
@@ -120,11 +175,30 @@ jobs:
           }
 
           if (
+            manifest.article?.primaryKeyword !==
+            "plastic injection molding wall thickness"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_KEYWORD_INVALID",
+            );
+          }
+
+          if (
             manifest.article?.artifact !==
             "article.md"
           ) {
             throw new Error(
               "V8_FIRST_ARTICLE_ARTIFACT_INVALID",
+            );
+          }
+
+          if (
+            typeof manifest.artifact?.path !==
+            "string" ||
+            manifest.artifact.path.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ARTIFACT_PATH_MISSING",
             );
           }
 
@@ -148,6 +222,351 @@ jobs:
             );
           }
 
+          if (
+            !manifest.discovery ||
+            typeof manifest.discovery !== "object"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DISCOVERY_SECTION_MISSING",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              manifest.discovery.bootstrapMatches,
+            ) ||
+            manifest.discovery.bootstrapMatches < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_BOOTSTRAP_MATCHES_INVALID",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              manifest.discovery.pagesObserved,
+            ) ||
+            manifest.discovery.pagesObserved < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PAGES_OBSERVED_INVALID",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              manifest.discovery.candidatesAccepted,
+            ) ||
+            manifest.discovery.candidatesAccepted < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CANDIDATES_ACCEPTED_INVALID",
+            );
+          }
+
+          if (
+            !Array.isArray(
+              manifest.discovery.candidates,
+            ) ||
+            manifest.discovery.candidates.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DISCOVERY_CANDIDATES_MISSING",
+            );
+          }
+
+          if (
+            !manifest.acquisition ||
+            typeof manifest.acquisition !== "object"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ACQUISITION_SECTION_MISSING",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              manifest.acquisition.successfulAcquisitions,
+            ) ||
+            manifest.acquisition.successfulAcquisitions < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SUCCESSFUL_ACQUISITIONS_INVALID",
+            );
+          }
+
+          if (
+            !Array.isArray(
+              manifest.acquisition.sources,
+            ) ||
+            manifest.acquisition.sources.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ACQUISITION_SOURCES_MISSING",
+            );
+          }
+
+          if (
+            manifest.acquisition.successfulAcquisitions !==
+            manifest.acquisition.sources.length
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ACQUISITION_SOURCE_COUNT_MISMATCH",
+            );
+          }
+
+          for (
+            const source of
+              manifest.acquisition.sources
+          ) {
+            if (
+              typeof source?.candidateUrl !==
+                "string" ||
+              source.candidateUrl.length === 0
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_SOURCE_CANDIDATE_URL_MISSING",
+              );
+            }
+
+            if (
+              typeof source?.requestedUrl !==
+                "string" ||
+              source.requestedUrl.length === 0
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_SOURCE_REQUESTED_URL_MISSING",
+              );
+            }
+
+            if (
+              typeof source?.finalUrl !==
+                "string" ||
+              source.finalUrl.length === 0
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_SOURCE_FINAL_URL_MISSING",
+              );
+            }
+
+            if (
+              typeof source?.sourceId !==
+                "string" ||
+              source.sourceId.length === 0
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_SOURCE_ID_MISSING",
+              );
+            }
+
+            if (
+              typeof source?.snapshotId !==
+                "string" ||
+              source.snapshotId.length === 0
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_SNAPSHOT_ID_MISSING",
+              );
+            }
+
+            if (
+              !Array.isArray(
+                source?.evidenceIds,
+              ) ||
+              source.evidenceIds.length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_SOURCE_EVIDENCE_IDS_MISSING:${source.sourceId}`,
+              );
+            }
+          }
+
+          if (
+            !manifest.foundation ||
+            typeof manifest.foundation !== "object"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_FOUNDATION_SECTION_MISSING",
+            );
+          }
+
+          const verifiedEvidenceIds =
+            manifest.foundation.verifiedEvidenceIds;
+
+          const claimIds =
+            manifest.foundation.claimIds;
+
+          const knowledgeIds =
+            manifest.foundation.knowledgeIds;
+
+          const decisionId =
+            manifest.foundation.decisionId;
+
+          if (
+            !Array.isArray(
+              verifiedEvidenceIds,
+            ) ||
+            verifiedEvidenceIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_VERIFIED_EVIDENCE_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(
+              claimIds,
+            ) ||
+            claimIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CLAIM_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(
+              knowledgeIds,
+            ) ||
+            knowledgeIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_KNOWLEDGE_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            typeof decisionId !==
+              "string" ||
+            decisionId.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DECISION_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !manifest.runtime ||
+            typeof manifest.runtime !== "object"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_RUNTIME_SECTION_MISSING",
+            );
+          }
+
+          if (
+            typeof manifest.runtime.fingerprint !==
+              "string" ||
+            manifest.runtime.fingerprint.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_RUNTIME_FINGERPRINT_MISSING",
+            );
+          }
+
+          if (
+            !manifest.runtime.content ||
+            typeof manifest.runtime.content !== "object"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_RUNTIME_CONTENT_MISSING",
+            );
+          }
+
+          if (
+            typeof manifest.runtime.content.id !==
+              "string" ||
+            manifest.runtime.content.id.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_ID_MISSING",
+            );
+          }
+
+          if (
+            manifest.runtime.content.decisionId !==
+            decisionId
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_DECISION_LINEAGE_MISMATCH",
+            );
+          }
+
+          if (
+            manifest.runtime.content.title !==
+            manifest.article.title
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_TITLE_MISMATCH",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              manifest.runtime.content.bodyLength,
+            ) ||
+            manifest.runtime.content.bodyLength < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_BODY_LENGTH_INVALID",
+            );
+          }
+
+          const sourceEvidenceIds =
+            new Set();
+
+          for (
+            const source of
+              manifest.acquisition.sources
+          ) {
+            for (
+              const evidenceId of
+                source.evidenceIds
+            ) {
+              sourceEvidenceIds.add(
+                evidenceId,
+              );
+            }
+          }
+
+          const verifiedEvidenceSet =
+            new Set(
+              verifiedEvidenceIds,
+            );
+
+          for (
+            const evidenceId of
+              sourceEvidenceIds
+          ) {
+            if (
+              !verifiedEvidenceSet.has(
+                evidenceId,
+              )
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_SOURCE_EVIDENCE_NOT_VERIFIED:${evidenceId}`,
+              );
+            }
+          }
+
+          if (
+            sourceEvidenceIds.size !==
+            verifiedEvidenceSet.size
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_EVIDENCE_LINEAGE_SET_MISMATCH",
+            );
+          }
+
+          if (
+            manifest.discovery.candidatesAccepted <
+            manifest.acquisition.candidates
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DISCOVERY_ACQUISITION_COUNT_INVALID",
+            );
+          }
+
           console.log(
             "Article artifact: PASS",
           );
@@ -162,6 +581,30 @@ jobs:
 
           console.log(
             `Manifest fingerprint: ${manifest.manifestFingerprint}`,
+          );
+
+          console.log(
+            `Discovery candidates: ${manifest.discovery.candidates.length}`,
+          );
+
+          console.log(
+            `Successful acquisitions: ${manifest.acquisition.successfulAcquisitions}`,
+          );
+
+          console.log(
+            `Verified Evidence: ${verifiedEvidenceIds.length}`,
+          );
+
+          console.log(
+            `Claims: ${claimIds.length}`,
+          );
+
+          console.log(
+            `Knowledge: ${knowledgeIds.length}`,
+          );
+
+          console.log(
+            `Decision: ${decisionId}`,
           );
           NODE
 
@@ -178,190 +621,188 @@ jobs:
 
           const manifest =
             JSON.parse(
-              fs.readFileSync(manifestPath, "utf8"),
+              fs.readFileSync(
+                manifestPath,
+                "utf8",
+              ),
             );
 
           const foundation =
             manifest.foundation;
 
-          const compiler =
-            manifest.compiler;
+          const acquisition =
+            manifest.acquisition;
 
-          const plan =
-            manifest.plan;
+          const runtime =
+            manifest.runtime;
 
           if (
-            typeof foundation?.sourceId !==
-            "string" ||
-            foundation.sourceId.length === 0
+            !Array.isArray(
+              foundation?.verifiedEvidenceIds,
+            ) ||
+            foundation.verifiedEvidenceIds.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_SOURCE_LINEAGE_MISSING",
+              "V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_MISSING",
             );
           }
 
           if (
-            typeof foundation?.snapshotId !==
-            "string" ||
-            foundation.snapshotId.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_SNAPSHOT_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(foundation.evidenceIds) ||
-            foundation.evidenceIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EVIDENCE_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(foundation.claimIds) ||
+            !Array.isArray(
+              foundation?.claimIds,
+            ) ||
             foundation.claimIds.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_CLAIM_LINEAGE_MISSING",
+              "V8_FIRST_ARTICLE_PROVENANCE_CLAIMS_MISSING",
             );
           }
 
           if (
-            !Array.isArray(foundation.knowledgeIds) ||
+            !Array.isArray(
+              foundation?.knowledgeIds,
+            ) ||
             foundation.knowledgeIds.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_KNOWLEDGE_LINEAGE_MISSING",
+              "V8_FIRST_ARTICLE_PROVENANCE_KNOWLEDGE_MISSING",
             );
           }
 
           if (
-            typeof foundation.decisionId !==
-            "string" ||
+            typeof foundation?.decisionId !==
+              "string" ||
             foundation.decisionId.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_DECISION_LINEAGE_MISSING",
+              "V8_FIRST_ARTICLE_PROVENANCE_DECISION_MISSING",
             );
           }
 
           if (
-            !Array.isArray(plan?.sections) ||
-            plan.sections.length === 0
+            !Array.isArray(
+              acquisition?.sources,
+            ) ||
+            acquisition.sources.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_PLAN_LINEAGE_MISSING",
+              "V8_FIRST_ARTICLE_PROVENANCE_SOURCES_MISSING",
             );
           }
 
-          if (
-            !Number.isInteger(compiler?.sectionCount) ||
-            compiler.sectionCount < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_SECTION_COUNT_INVALID",
-            );
-          }
+          const sourceIds =
+            new Set();
 
-          if (
-            !Number.isInteger(compiler?.claimCount) ||
-            compiler.claimCount < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CLAIM_COUNT_INVALID",
-            );
-          }
+          const snapshotIds =
+            new Set();
 
-          if (
-            !Number.isInteger(compiler?.evidenceCount) ||
-            compiler.evidenceCount < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EVIDENCE_COUNT_INVALID",
-            );
-          }
-
-          if (
-            compiler.claimCount !==
-            foundation.claimIds.length
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CLAIM_COUNT_LINEAGE_MISMATCH",
-            );
-          }
-
-          if (
-            compiler.evidenceCount !==
-            foundation.evidenceIds.length
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EVIDENCE_COUNT_LINEAGE_MISMATCH",
-            );
-          }
-
-          const plannedKnowledge =
-            new Set(
-              plan.sections.flatMap(
-                (section) =>
-                  Array.isArray(section.knowledgeIds)
-                    ? section.knowledgeIds
-                    : [],
-              ),
-            );
-
-          const plannedClaims =
-            new Set(
-              plan.sections.flatMap(
-                (section) =>
-                  Array.isArray(section.claimIds)
-                    ? section.claimIds
-                    : [],
-              ),
-            );
-
-          const plannedEvidence =
-            new Set(
-              plan.sections.flatMap(
-                (section) =>
-                  Array.isArray(section.evidenceIds)
-                    ? section.evidenceIds
-                    : [],
-              ),
-            );
+          const acquiredEvidenceIds =
+            new Set();
 
           for (
-            const knowledgeId of
-              foundation.knowledgeIds
+            const source of
+              acquisition.sources
           ) {
-            if (!plannedKnowledge.has(knowledgeId)) {
+            if (
+              sourceIds.has(
+                source.sourceId,
+              )
+            ) {
               throw new Error(
-                `V8_FIRST_ARTICLE_KNOWLEDGE_NOT_PLANNED:${knowledgeId}`,
+                `V8_FIRST_ARTICLE_DUPLICATE_SOURCE_ID:${source.sourceId}`,
+              );
+            }
+
+            if (
+              snapshotIds.has(
+                source.snapshotId,
+              )
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_DUPLICATE_SNAPSHOT_ID:${source.snapshotId}`,
+              );
+            }
+
+            sourceIds.add(
+              source.sourceId,
+            );
+
+            snapshotIds.add(
+              source.snapshotId,
+            );
+
+            for (
+              const evidenceId of
+                source.evidenceIds
+            ) {
+              acquiredEvidenceIds.add(
+                evidenceId,
               );
             }
           }
 
-          for (
-            const claimId of
-              foundation.claimIds
+          const verifiedEvidenceIds =
+            new Set(
+              foundation.verifiedEvidenceIds,
+            );
+
+          if (
+            acquiredEvidenceIds.size !==
+            verifiedEvidenceIds.size
           ) {
-            if (!plannedClaims.has(claimId)) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_CLAIM_NOT_PLANNED:${claimId}`,
-              );
-            }
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_CARDINALITY_MISMATCH",
+            );
           }
 
           for (
             const evidenceId of
-              foundation.evidenceIds
+              acquiredEvidenceIds
           ) {
-            if (!plannedEvidence.has(evidenceId)) {
+            if (
+              !verifiedEvidenceIds.has(
+                evidenceId,
+              )
+            ) {
               throw new Error(
-                `V8_FIRST_ARTICLE_EVIDENCE_NOT_PLANNED:${evidenceId}`,
+                `V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_NOT_VERIFIED:${evidenceId}`,
               );
             }
+          }
+
+          if (
+            runtime?.content?.decisionId !==
+            foundation.decisionId
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_DECISION_CONTENT_MISMATCH",
+            );
+          }
+
+          if (
+            typeof runtime?.content?.bodyLength !==
+              "number" ||
+            runtime.content.bodyLength < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_CONTENT_EMPTY",
+            );
+          }
+
+          if (
+            foundation.claimIds.length < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_NO_CLAIMS",
+            );
+          }
+
+          if (
+            foundation.knowledgeIds.length < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_NO_KNOWLEDGE",
+            );
           }
 
           console.log(
@@ -369,15 +810,15 @@ jobs:
           );
 
           console.log(
-            `Source: ${foundation.sourceId}`,
+            `Sources: ${sourceIds.size}`,
           );
 
           console.log(
-            `Snapshot: ${foundation.snapshotId}`,
+            `Snapshots: ${snapshotIds.size}`,
           );
 
           console.log(
-            `Evidence: ${foundation.evidenceIds.length}`,
+            `Evidence: ${verifiedEvidenceIds.size}`,
           );
 
           console.log(
@@ -390,6 +831,10 @@ jobs:
 
           console.log(
             `Decision: ${foundation.decisionId}`,
+          );
+
+          console.log(
+            `Content: ${runtime.content.id}`,
           );
           NODE
 
