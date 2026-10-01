@@ -17,6 +17,7 @@ import {
   contentFingerprint,
 } from "../.v8-build/src/v8/foundation/hash.js";
 
+
 const ARTICLE_TITLE =
   "Plastic Injection Molding Wall Thickness";
 
@@ -58,24 +59,55 @@ const QUERY =
     .trim() ||
   PRIMARY_KEYWORD;
 
+
 /*
- * V8-owned bootstrap authority corpus.
+ * ============================================================
+ * V8-OWNED BOOTSTRAP AUTHORITY CORPUS
+ * ============================================================
  *
- * This corpus is an entry-point authority registry only.
- * It is NOT article content.
- * It is NOT Evidence.
- * It is NOT a fixture.
+ * These URLs are discovery entry points only.
  *
- * The actual article must be produced only from pages successfully
- * fetched from the Internet during this execution.
+ * They are NOT:
+ *
+ *   - article content
+ *   - Evidence
+ *   - Claims
+ *   - Knowledge
+ *   - hard-coded article facts
+ *
+ * Every usable fact must still travel through:
+ *
+ *   Internet
+ *      ↓
+ *   Fetch
+ *      ↓
+ *   Snapshot
+ *      ↓
+ *   Evidence
+ *      ↓
+ *   Claim
+ *      ↓
+ *   Knowledge
+ *      ↓
+ *   Decision
+ *      ↓
+ *   Content
+ *
+ * The bootstrap corpus exists only to give V8 an initial set of
+ * public Internet entry points from which autonomous discovery
+ * can begin.
  */
+
 const BOOTSTRAP_CORPUS = Object.freeze([
   Object.freeze({
     id: "iso:294-1",
+
     url:
       "https://www.iso.org/standard/67036.html",
+
     title:
       "ISO 294-1 Plastics Injection Moulding of Test Specimens",
+
     terms: Object.freeze([
       "plastics",
       "plastic",
@@ -84,19 +116,22 @@ const BOOTSTRAP_CORPUS = Object.freeze([
       "molding",
       "thermoplastic",
       "test specimens",
-      "standards",
-      "wall thickness",
+      "standard",
     ]),
+
     authority:
       "AUTHORITATIVE_STANDARD",
   }),
 
   Object.freeze({
     id: "iso:294-3",
+
     url:
       "https://www.iso.org/standard/76649.html",
+
     title:
       "ISO 294-3 Plastics Injection Moulding of Test Specimens",
+
     terms: Object.freeze([
       "plastics",
       "plastic",
@@ -105,19 +140,22 @@ const BOOTSTRAP_CORPUS = Object.freeze([
       "molding",
       "small plates",
       "test specimens",
-      "standards",
-      "wall thickness",
+      "standard",
     ]),
+
     authority:
       "AUTHORITATIVE_STANDARD",
   }),
 
   Object.freeze({
     id: "iso:294-4",
+
     url:
       "https://www.iso.org/standard/70413.html",
+
     title:
       "ISO 294-4 Plastics Injection Moulding Shrinkage",
+
     terms: Object.freeze([
       "plastics",
       "plastic",
@@ -126,19 +164,22 @@ const BOOTSTRAP_CORPUS = Object.freeze([
       "molding",
       "shrinkage",
       "test specimens",
-      "standards",
-      "wall thickness",
+      "standard",
     ]),
+
     authority:
       "AUTHORITATIVE_STANDARD",
   }),
 
   Object.freeze({
     id: "iso:294-5",
+
     url:
       "https://www.iso.org/standard/85835.html",
+
     title:
       "ISO 294-5 Plastics Injection Moulding Anisotropy",
+
     terms: Object.freeze([
       "plastics",
       "plastic",
@@ -148,19 +189,22 @@ const BOOTSTRAP_CORPUS = Object.freeze([
       "anisotropy",
       "flow direction",
       "test specimens",
-      "standards",
-      "wall thickness",
+      "standard",
     ]),
+
     authority:
       "AUTHORITATIVE_STANDARD",
   }),
 
   Object.freeze({
     id: "iso:20430",
+
     url:
       "https://committee.iso.org/standard/68000.html",
+
     title:
       "ISO 20430 Injection Moulding Machine Safety Requirements",
+
     terms: Object.freeze([
       "plastics",
       "plastic",
@@ -169,13 +213,104 @@ const BOOTSTRAP_CORPUS = Object.freeze([
       "molding",
       "machine",
       "safety",
-      "standards",
-      "wall thickness",
+      "standard",
     ]),
+
     authority:
       "AUTHORITATIVE_STANDARD",
   }),
+
+  Object.freeze({
+    id: "protolabs:wall-thickness",
+
+    url:
+      "https://www.protolabs.com/resources/design-tips/improving-part-design-with-uniform-wall-thickness/",
+
+    title:
+      "Injection Molding Wall Thickness Guidelines",
+
+    terms: Object.freeze([
+      "plastic",
+      "plastics",
+      "injection",
+      "molding",
+      "moulding",
+      "wall",
+      "thickness",
+      "uniform",
+      "sink",
+      "warp",
+      "material",
+      "design",
+    ]),
+
+    authority:
+      "ENGINEERING_GUIDANCE",
+  }),
+
+  Object.freeze({
+    id: "protolabs:design-guidelines",
+
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+
+    title:
+      "Plastic Injection Molding Design Guidelines",
+
+    terms: Object.freeze([
+      "plastic",
+      "plastics",
+      "injection",
+      "molding",
+      "moulding",
+      "wall",
+      "thickness",
+      "material",
+      "design",
+      "draft",
+      "ribs",
+      "moldability",
+    ]),
+
+    authority:
+      "ENGINEERING_GUIDANCE",
+  }),
+
+  Object.freeze({
+    id: "protolabs:injection-molding-basics",
+
+    url:
+      "https://www.protolabs.com/resources/design-tips/injection-molding-basics/",
+
+    title:
+      "Injection Molding Basics: An Intro to Designing Plastic Parts",
+
+    terms: Object.freeze([
+      "plastic",
+      "plastics",
+      "injection",
+      "molding",
+      "moulding",
+      "wall",
+      "thickness",
+      "sink",
+      "warp",
+      "ribs",
+      "design",
+      "material",
+    ]),
+
+    authority:
+      "ENGINEERING_GUIDANCE",
+  }),
 ]);
+
+
+/*
+ * ============================================================
+ * FAILURE / ASSERTION HELPERS
+ * ============================================================
+ */
 
 function fail(
   message,
@@ -185,6 +320,7 @@ function fail(
   );
 }
 
+
 function requireCondition(
   condition,
   message,
@@ -193,6 +329,7 @@ function requireCondition(
     fail(message);
   }
 }
+
 
 function writeUtf8(
   filePath,
@@ -212,7 +349,531 @@ function writeUtf8(
   );
 }
 
+
 /*
+ * ============================================================
+ * TOPIC RELEVANCE
+ * ============================================================
+ *
+ * DiscoveryCandidate validity is deliberately not equivalent
+ * to ResearchSeed relevance.
+ *
+ * The pipeline is:
+ *
+ *   Candidate
+ *      ↓
+ *   Topic relevance
+ *      ↓
+ *   Research Seed
+ *      ↓
+ *   Fetch
+ *      ↓
+ *   Evidence
+ *
+ * This prevents URLs such as:
+ *
+ *   /login/
+ *   /account/
+ *   /standards/
+ *   /obp/ui/
+ *   /es/
+ *   /fr/
+ *
+ * from consuming the limited ResearchSeed budget merely because
+ * they are valid public HTTPS URLs.
+ */
+
+
+/**
+ * Normalize text for deterministic relevance evaluation.
+ *
+ * This function deliberately does not perform semantic inference.
+ * It only creates a stable lexical representation.
+ */
+function normalizeResearchText(
+  value,
+) {
+  return String(
+    value ?? "",
+  )
+    .toLowerCase()
+    .replace(
+      /https?:\/\//g,
+      " ",
+    )
+    .replace(
+      /[^a-z0-9]+/g,
+      " ",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
+
+
+/**
+ * Create deterministic topic tokens from the query.
+ *
+ * "molding" and "moulding" are treated as equivalent domain
+ * spellings because both are legitimate English variants in
+ * injection-molding engineering sources.
+ */
+function createResearchTopicTokens(
+  query,
+) {
+  const normalized =
+    normalizeResearchText(
+      query,
+    );
+
+  const rawTokens =
+    normalized
+      .split(" ")
+      .filter(
+        (token) =>
+          token.length >= 3,
+      );
+
+  const aliases =
+    new Set(
+      rawTokens,
+    );
+
+  if (
+    aliases.has(
+      "molding",
+    ) ||
+    aliases.has(
+      "moulding",
+    )
+  ) {
+    aliases.add(
+      "molding",
+    );
+
+    aliases.add(
+      "moulding",
+    );
+  }
+
+  return Object.freeze(
+    [
+      ...aliases,
+    ],
+  );
+}
+
+
+const RESEARCH_BLOCKED_PATH_TOKENS =
+  Object.freeze([
+    "login",
+    "signin",
+    "sign-in",
+    "account",
+    "register",
+    "signup",
+    "sign-up",
+    "password",
+    "session",
+    "oauth",
+    "authorize",
+    "authorization",
+    "checkout",
+    "cart",
+    "search",
+  ]);
+
+
+const RESEARCH_NAVIGATION_PATH_TOKENS =
+  Object.freeze([
+    "home",
+    "standards",
+    "standard",
+    "obp",
+    "ui",
+    "contents",
+    "sites",
+    "committee",
+  ]);
+
+
+const RESEARCH_LANGUAGE_PATH_TOKENS =
+  Object.freeze([
+    "es",
+    "fr",
+    "de",
+    "it",
+    "pt",
+    "ru",
+    "ja",
+    "zh",
+    "ko",
+    "nl",
+    "pl",
+    "sv",
+    "da",
+    "fi",
+    "no",
+    "tr",
+    "cs",
+  ]);
+
+
+/**
+ * Returns URL/path tokens without allowing query parameters to
+ * dominate topic matching.
+ */
+function getCandidatePathText(
+  candidate,
+) {
+  return normalizeResearchText(
+    candidate?.url ??
+      candidate?.normalizedUrl ??
+      "",
+  );
+}
+
+
+/**
+ * Returns true when the candidate clearly represents a
+ * navigation/authentication endpoint rather than an engineering
+ * document.
+ */
+function isBlockedResearchCandidate(
+  candidate,
+) {
+  const normalized =
+    getCandidatePathText(
+      candidate,
+    );
+
+  return RESEARCH_BLOCKED_PATH_TOKENS.some(
+    (token) =>
+      normalized.includes(
+        ` ${token} `,
+      ) ||
+      normalized.endsWith(
+        ` ${token}`,
+      ) ||
+      normalized.includes(
+        `/${token}/`,
+      ),
+  );
+}
+
+
+/**
+ * Score a candidate using only deterministic lexical signals.
+ *
+ * The score is intentionally transparent:
+ *
+ *   title token                +10
+ *   URL token                   +3
+ *   exact wall+thickness      +100
+ *   title wall+thickness       +150
+ *   seed candidate              +20
+ *   title exists                 +2
+ *
+ * Negative signals exist to prevent navigation endpoints from
+ * becoming Research Seeds.
+ */
+function scoreResearchCandidate(
+  candidate,
+  topicTokens,
+) {
+  const title =
+    normalizeResearchText(
+      candidate?.title ??
+        "",
+    );
+
+  const url =
+    getCandidatePathText(
+      candidate,
+    );
+
+  const sourceUrl =
+    normalizeResearchText(
+      candidate?.sourceUrl ??
+        "",
+    );
+
+  const combined =
+    [
+      title,
+      url,
+      sourceUrl,
+    ]
+      .filter(
+        Boolean,
+      )
+      .join(" ");
+
+  let score = 0;
+
+  let matchedTitleTokens = 0;
+
+  for (
+    const token of
+      topicTokens
+  ) {
+    if (
+      title.includes(
+        token,
+      )
+    ) {
+      score += 10;
+      matchedTitleTokens += 1;
+    }
+
+    if (
+      url.includes(
+        token,
+      )
+    ) {
+      score += 3;
+    }
+  }
+
+  if (
+    title.length > 0
+  ) {
+    score += 2;
+  }
+
+  if (
+    candidate?.kind ===
+    "SEED"
+  ) {
+    score += 20;
+  }
+
+  const hasWall =
+    combined.includes(
+      "wall",
+    );
+
+  const hasThickness =
+    combined.includes(
+      "thickness",
+    );
+
+  const titleHasWall =
+    title.includes(
+      "wall",
+    );
+
+  const titleHasThickness =
+    title.includes(
+      "thickness",
+    );
+
+  if (
+    hasWall &&
+    hasThickness
+  ) {
+    score += 100;
+  }
+
+  if (
+    titleHasWall &&
+    titleHasThickness
+  ) {
+    score += 150;
+  }
+
+  if (
+    matchedTitleTokens >=
+    3
+  ) {
+    score += 25;
+  }
+
+  if (
+    isBlockedResearchCandidate(
+      candidate,
+    )
+  ) {
+    score -= 1000;
+  }
+
+  for (
+    const token of
+      RESEARCH_NAVIGATION_PATH_TOKENS
+  ) {
+    if (
+      url.includes(
+        `/${token}/`,
+      ) ||
+      url.endsWith(
+        `/${token}`,
+      )
+    ) {
+      score -= 100;
+    }
+  }
+
+  for (
+    const token of
+      RESEARCH_LANGUAGE_PATH_TOKENS
+  ) {
+    if (
+      url.includes(
+        `/${token}/`,
+      )
+    ) {
+      score -= 30;
+    }
+  }
+
+  return score;
+}
+
+
+/**
+ * Select Research Seeds from live discovery candidates.
+ *
+ * This is deliberately separate from discovery itself.
+ *
+ * Discovery may observe many valid URLs.
+ * Research selection chooses only those that are relevant enough
+ * to justify Internet acquisition budget.
+ */
+function selectResearchSeeds(
+  candidates,
+  query,
+  limit = 8,
+) {
+  const topicTokens =
+    createResearchTopicTokens(
+      query,
+    );
+
+  const ranked =
+    candidates
+      .map(
+        (
+          candidate,
+          index,
+        ) => ({
+          candidate,
+          index,
+          score:
+            scoreResearchCandidate(
+              candidate,
+              topicTokens,
+            ),
+        }),
+      )
+      .filter(
+        ({
+          score,
+        }) =>
+          score > 0,
+      )
+      .sort(
+        (
+          left,
+          right,
+        ) => {
+          if (
+            right.score !==
+            left.score
+          ) {
+            return (
+              right.score -
+              left.score
+            );
+          }
+
+          if (
+            left.index !==
+            right.index
+          ) {
+            return (
+              left.index -
+              right.index
+            );
+          }
+
+          return (
+            left.candidate.normalizedUrl.localeCompare(
+              right.candidate.normalizedUrl,
+            )
+          );
+        },
+      );
+
+  return ranked
+    .slice(
+      0,
+      limit,
+    )
+    .map(
+      ({
+        candidate,
+      }) => ({
+        url:
+          candidate.url,
+
+        source:
+          candidate.kind ===
+          "SEED"
+            ? "AUTHORITY"
+            : "DIRECT",
+
+        reason:
+          candidate.kind ===
+          "SEED"
+            ? "V8-owned authority bootstrap source selected by deterministic topic relevance."
+            : `Discovered by V8 first-hop observation from ${candidate.sourceUrl ?? "Internet source"} and selected by deterministic topic relevance.`,
+
+        relevanceScore:
+          scoreResearchCandidate(
+            candidate,
+            topicTokens,
+          ),
+
+        candidateKind:
+          candidate.kind,
+
+        title:
+          candidate.title,
+      }),
+    );
+}
+
+
+/**
+ * Require at least one candidate with strong direct topic
+ * relevance. This prevents an irrelevant authority corpus from
+ * being accepted merely because it is technically fetchable.
+ */
+function requireTopicRelevantResearchSeed(
+  researchSeeds,
+) {
+  const strongSeed =
+    researchSeeds.find(
+      (seed) =>
+        seed.relevanceScore >=
+        100,
+    );
+
+  requireCondition(
+    strongSeed !==
+      undefined,
+    "V8 research discovery produced no strongly topic-relevant ResearchSeed",
+  );
+}
+
+
+/*
+ * ============================================================
+ * ARTICLE MARKDOWN MATERIALIZATION
+ * ============================================================
+ *
  * Current V8 Content contract:
  *
  * interface Content {
@@ -222,32 +883,35 @@ function writeUtf8(
  *   body: string;
  * }
  *
- * The previous implementation expected Content.sections[],
- * which does not exist in the current V8 domain contract.
+ * The current contract does not expose Content.sections[].
  *
- * Article Markdown is therefore materialized directly from
+ * Therefore the persisted Markdown artifact is constructed from
  * Content.title + Content.body.
  */
+
 function createArticleMarkdown(
   content,
 ) {
   requireCondition(
     content !== null &&
-      typeof content === "object",
+      typeof content ===
+        "object",
     "runtime content is missing",
   );
 
   requireCondition(
     typeof content.title ===
       "string" &&
-      content.title.trim().length > 0,
+      content.title.trim().length >
+        0,
     "runtime content contains no title",
   );
 
   requireCondition(
     typeof content.body ===
       "string" &&
-      content.body.trim().length > 0,
+      content.body.trim().length >
+        0,
     "runtime content contains no article body",
   );
 
@@ -258,8 +922,17 @@ function createArticleMarkdown(
     "",
     content.body.trim(),
     "",
-  ].join("\n");
+  ].join(
+    "\n",
+  );
 }
+
+
+/*
+ * ============================================================
+ * MANIFEST
+ * ============================================================
+ */
 
 function createManifest({
   query,
@@ -272,7 +945,10 @@ function createManifest({
 
   const sources =
     acquisition.acquisitions.map(
-      (record) => ({
+      (
+        record,
+        index,
+      ) => ({
         candidateUrl:
           record.candidateUrl,
 
@@ -288,12 +964,26 @@ function createManifest({
         snapshotId:
           record.acquisition.snapshotId,
 
+        /*
+         * EvidencePayload itself does not own the canonical
+         * Foundation Evidence ID.
+         *
+         * Runtime derives and verifies those IDs and exposes
+         * them through verifiedEvidenceIds.
+         *
+         * Therefore the manifest must not read:
+         *
+         *   evidence.id
+         *
+         * from an EvidencePayload.
+         */
         evidenceIds:
-          record.acquisition.evidence.map(
-            (evidence) =>
-              evidence.id ??
+          [
+            runtime.verifiedEvidenceIds[
+              index
+            ] ??
               null,
-          ),
+          ],
       }),
     );
 
@@ -361,7 +1051,9 @@ function createManifest({
 
         fetchErrors:
           firstHop.fetchErrors.map(
-            (failure) => ({
+            (
+              failure,
+            ) => ({
               url:
                 failure.url,
 
@@ -372,7 +1064,9 @@ function createManifest({
 
         candidates:
           firstHop.observation.candidates.map(
-            (candidate) => ({
+            (
+              candidate,
+            ) => ({
               url:
                 candidate.url,
 
@@ -484,6 +1178,13 @@ function createManifest({
   };
 }
 
+
+/*
+ * ============================================================
+ * MAIN
+ * ============================================================
+ */
+
 async function main() {
   console.log(
     "==============================================",
@@ -517,12 +1218,15 @@ async function main() {
     "Acquisition owner: V8",
   );
 
-  console.log("");
+  console.log(
+    "",
+  );
+
 
   /*
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    * 1. LIVE FIRST-HOP INTERNET DISCOVERY
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    */
 
   const fetcher =
@@ -566,68 +1270,59 @@ async function main() {
   );
 
   requireCondition(
-    firstHop.pagesObserved > 0,
+    firstHop.pagesObserved >
+      0,
     "no Internet page was successfully observed",
   );
 
   requireCondition(
-    firstHop.observation.candidates.length > 0,
+    firstHop.observation.candidates.length >
+      0,
     "Internet observation produced no discovery candidates",
   );
 
+
   /*
-   * ------------------------------------------------------------
-   * 2. REAL INTERNET CANDIDATES → RESEARCH SEEDS
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
+   * 2. CANDIDATE → TOPIC RELEVANCE → RESEARCH SEED
+   * ----------------------------------------------------------
    *
-   * The candidates are not converted into Evidence here.
+   * This is the critical repair.
    *
-   * They become explicit research seeds for the existing
-   * self-owned acquisition pipeline.
+   * We do NOT do:
    *
-   * Every URL therefore still has:
+   *   candidates.slice(0, 8)
    *
-   *   Internet observation
-   *       ↓
-   *   DiscoveryCandidate
-   *       ↓
+   * anymore.
+   *
+   * Instead:
+   *
+   *   candidates
+   *      ↓
+   *   deterministic relevance ranking
+   *      ↓
+   *   navigation rejection
+   *      ↓
+   *   topic relevance gate
+   *      ↓
    *   ResearchSeed
-   *       ↓
-   *   HTTP Fetch
-   *       ↓
-   *   Snapshot
-   *       ↓
-   *   Evidence
    */
 
   const researchSeeds =
-    firstHop.observation.candidates
-      .slice(
-        0,
-        8,
-      )
-      .map(
-        (candidate) => ({
-          url:
-            candidate.url,
-
-          source:
-            candidate.kind ===
-              "SEED"
-              ? "AUTHORITY"
-              : "DIRECT",
-
-          reason:
-            candidate.kind ===
-              "SEED"
-              ? "V8-owned authority bootstrap source."
-              : `Discovered by V8 first-hop observation from ${candidate.sourceUrl ?? "Internet source"}.`,
-        }),
-      );
+    selectResearchSeeds(
+      firstHop.observation.candidates,
+      QUERY,
+      8,
+    );
 
   requireCondition(
-    researchSeeds.length > 0,
-    "no ResearchSeed could be created from live Internet discovery",
+    researchSeeds.length >=
+      2,
+    "V8 research discovery produced fewer than two topic-relevant research seeds",
+  );
+
+  requireTopicRelevantResearchSeed(
+    researchSeeds,
   );
 
   console.log(
@@ -641,28 +1336,30 @@ async function main() {
     console.log(
       `    ${seed.source} ${seed.url}`,
     );
+
+    console.log(
+      `      relevance=${seed.relevanceScore}`,
+    );
+
+    if (
+      seed.title
+    ) {
+      console.log(
+        `      title=${seed.title}`,
+      );
+    }
   }
 
+
   /*
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    * 3. ARTICLE RUNTIME
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    *
-   * No SearchProvider is supplied.
+   * No external SearchProvider.
    *
-   * Therefore the runtime must use:
-   *
-   *   researchSeeds
-   *       →
-   *   SELF_OWNED_CRAWL
-   *       →
-   *   Foundation acquisition
-   *       →
-   *   Truth
-   *       →
-   *   Decision
-   *       →
-   *   Content
+   * The only research inputs are the ResearchSeeds produced by
+   * V8-owned Internet Discovery.
    */
 
   const runtime =
@@ -805,10 +1502,20 @@ async function main() {
         ARTICLE_TITLE,
     });
 
+
   /*
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    * 4. HARD RUNTIME CLOSURE
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
+   *
+   * Runtime relevance remains fail-closed.
+   *
+   * We do NOT bypass:
+   *
+   *   V8_ARTICLE_RUNTIME_NO_TOPIC_RELEVANT_EVIDENCE
+   *
+   * If Discovery still selects irrelevant documents, Runtime must
+   * fail rather than generate unsupported article content.
    */
 
   requireCondition(
@@ -851,16 +1558,19 @@ async function main() {
   requireCondition(
     typeof runtime.content.title ===
       "string" &&
-      runtime.content.title.trim().length > 0,
+      runtime.content.title.trim().length >
+        0,
     "Article Runtime produced Content without a title",
   );
 
   requireCondition(
     typeof runtime.content.body ===
       "string" &&
-      runtime.content.body.trim().length > 0,
+      runtime.content.body.trim().length >
+        0,
     "Article Runtime produced Content without an article body",
   );
+
 
   console.log(
     `7. Successful acquisitions: ${runtime.acquisition.acquisitions.length}`,
@@ -886,10 +1596,11 @@ async function main() {
     `12. Article body length: ${runtime.content.body.length}`,
   );
 
+
   /*
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    * 5. ARTICLE ARTIFACT
-   * ------------------------------------------------------------
+   * ----------------------------------------------------------
    */
 
   const articleContent =
@@ -909,6 +1620,7 @@ async function main() {
       articleContent,
     });
 
+
   writeUtf8(
     ARTICLE_PATH,
     articleContent,
@@ -922,6 +1634,7 @@ async function main() {
       2,
     )}\n`,
   );
+
 
   requireCondition(
     fs.existsSync(
@@ -937,11 +1650,13 @@ async function main() {
     "manifest.json was not written",
   );
 
+
   const persistedArticle =
     fs.readFileSync(
       ARTICLE_PATH,
       "utf8",
     );
+
 
   const persistedManifest =
     JSON.parse(
@@ -951,11 +1666,13 @@ async function main() {
       ),
     );
 
+
   requireCondition(
     persistedArticle ===
       articleContent,
     "persisted article differs from runtime artifact",
   );
+
 
   requireCondition(
     persistedManifest.artifact
@@ -966,11 +1683,13 @@ async function main() {
     "article content fingerprint mismatch",
   );
 
+
   requireCondition(
     persistedManifest.execution.mode ===
       "LIVE_INTERNET",
     "manifest does not identify a live Internet execution",
   );
+
 
   requireCondition(
     persistedManifest.execution.searchProvider ===
@@ -978,11 +1697,46 @@ async function main() {
     "article execution unexpectedly used a SearchProvider",
   );
 
+
   requireCondition(
     persistedManifest.acquisition
-      .successfulAcquisitions > 0,
+      .successfulAcquisitions >
+      0,
     "manifest records zero successful acquisitions",
   );
+
+
+  requireCondition(
+    persistedManifest.foundation
+      .verifiedEvidenceIds.length >
+      0,
+    "manifest records no verified Evidence IDs",
+  );
+
+
+  requireCondition(
+    persistedManifest.foundation
+      .verifiedEvidenceIds.length ===
+      runtime.verifiedEvidenceIds.length,
+    "manifest Evidence closure differs from Runtime Evidence closure",
+  );
+
+
+  requireCondition(
+    persistedManifest.foundation
+      .verifiedEvidenceIds.every(
+        (
+          evidenceId,
+          index,
+        ) =>
+          evidenceId ===
+          runtime.verifiedEvidenceIds[
+            index
+          ],
+      ),
+    "manifest Evidence IDs are not identical to Runtime verifiedEvidenceIds",
+  );
+
 
   console.log(
     "13. Article artifact: PASS",
@@ -996,7 +1750,10 @@ async function main() {
     `    ${MANIFEST_PATH}`,
   );
 
-  console.log("");
+  console.log(
+    "",
+  );
+
 
   console.log(
     "==============================================",
@@ -1011,24 +1768,35 @@ async function main() {
   );
 }
 
+
 main().catch(
-  (error) => {
-    console.error("");
+  (
+    error,
+  ) => {
+    console.error(
+      "",
+    );
+
     console.error(
       "==============================================",
     );
+
     console.error(
       "V8 FIRST ARTICLE LIVE INTERNET RUN: FAIL",
     );
+
     console.error(
       "==============================================",
     );
+
     console.error(
       error instanceof Error
         ? error.stack ??
             error.message
         : String(error),
     );
-    process.exitCode = 1;
+
+    process.exitCode =
+      1;
   },
 );
