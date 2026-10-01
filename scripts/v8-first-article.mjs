@@ -1088,19 +1088,6 @@ function buildFoundationClosureAudit(
     "runtime Foundation closure contains no Decision ID",
   );
 
-  /*
-   * IMPORTANT:
-   *
-   * Runtime ID arrays are lineage-ordered arrays.
-   *
-   * They must NOT be sorted before being persisted into the
-   * article manifest because the persisted manifest is required
-   * to be positionally identical to the Runtime closure.
-   *
-   * Canonical set ordering and Runtime lineage ordering are
-   * different contracts and must not be conflated.
-   */
-
   requireCondition(
     JSON.stringify(
       verifiedEvidenceIds,
@@ -1112,7 +1099,6 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
-    ),
     "runtime verified Evidence IDs contain duplicates or unstable ordering",
   );
 
@@ -1127,7 +1113,6 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
-    ),
     "runtime Claim IDs contain duplicates or unstable ordering",
   );
 
@@ -1142,7 +1127,6 @@ function buildFoundationClosureAudit(
           ),
         ],
       ),
-    ),
     "runtime Knowledge IDs contain duplicates or unstable ordering",
   );
 
