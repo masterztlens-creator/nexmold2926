@@ -286,7 +286,9 @@ jobs:
           ]);
 
           const actualRoutes = new Set(
-            payload.pages.map((page) => page?.canonicalRoute)
+            payload.pages.map(
+              (page) => page?.canonicalRoute
+            )
           );
 
           if (actualRoutes.size !== requiredRoutes.size) {
@@ -349,6 +351,378 @@ jobs:
           fi
 
           echo "Production artifacts: PASS"
+
+      - name: Verify Closure → Release → LKG identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CLOSURE=".nexmold/v8-actual-dist-production-closure.json"
+          RELEASE_STATE=".nexmold/release-state.json"
+          LKG=".nexmold/last-known-good.json"
+
+          test -f "$CLOSURE"
+          test -f "$RELEASE_STATE"
+          test -f "$LKG"
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+
+          const closurePath =
+            '.nexmold/v8-actual-dist-production-closure.json';
+
+          const releaseStatePath =
+            '.nexmold/release-state.json';
+
+          const lkgPath =
+            '.nexmold/last-known-good.json';
+
+          const closure =
+            JSON.parse(
+              fs.readFileSync(
+                closurePath,
+                'utf8'
+              )
+            );
+
+          const releaseState =
+            JSON.parse(
+              fs.readFileSync(
+                releaseStatePath,
+                'utf8'
+              )
+            );
+
+          const lkg =
+            JSON.parse(
+              fs.readFileSync(
+                lkgPath,
+                'utf8'
+              )
+            );
+
+          if (
+            closure?.schema !==
+            'nexmold.v8.actual-dist-production-closure.v1'
+          ) {
+            throw new Error(
+              `Unexpected closure schema: ${closure?.schema}`
+            );
+          }
+
+          if (
+            releaseState?.schema !==
+            'nexmold.v7.14.release-state.v2'
+          ) {
+            throw new Error(
+              `Unexpected release-state schema: ${releaseState?.schema}`
+            );
+          }
+
+          if (
+            releaseState?.status !==
+            'VERIFIED'
+          ) {
+            throw new Error(
+              `Release state is not VERIFIED: ${releaseState?.status}`
+            );
+          }
+
+          if (
+            lkg?.schema !==
+            'nexmold.v7.14.last-known-good.v3'
+          ) {
+            throw new Error(
+              `Unexpected LKG schema: ${lkg?.schema}`
+            );
+          }
+
+          if (
+            closure.buildEpoch !==
+            releaseState.epoch
+          ) {
+            throw new Error(
+              'Closure buildEpoch != release-state epoch'
+            );
+          }
+
+          if (
+            closure.buildEpoch !==
+            lkg.epoch
+          ) {
+            throw new Error(
+              'Closure buildEpoch != LKG epoch'
+            );
+          }
+
+          if (
+            !closure.release ||
+            typeof closure.release !== 'object'
+          ) {
+            throw new Error(
+              'Closure release identity is missing'
+            );
+          }
+
+          if (
+            !closure.productionExecution ||
+            typeof closure.productionExecution !== 'object'
+          ) {
+            throw new Error(
+              'Closure production execution identity is missing'
+            );
+          }
+
+          if (
+            !closure.productionConsumption ||
+            typeof closure.productionConsumption !== 'object'
+          ) {
+            throw new Error(
+              'Closure production consumption identity is missing'
+            );
+          }
+
+          if (
+            !lkg.closure ||
+            typeof lkg.closure !== 'object'
+          ) {
+            throw new Error(
+              'LKG closure identity is missing'
+            );
+          }
+
+          if (
+            lkg.closure.buildEpoch !==
+            closure.buildEpoch
+          ) {
+            throw new Error(
+              'LKG closure epoch mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.releaseId !==
+            closure.release.id
+          ) {
+            throw new Error(
+              'LKG release identity mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.releaseFingerprint !==
+            closure.release.fingerprint
+          ) {
+            throw new Error(
+              'LKG release fingerprint mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.productionExecutionId !==
+            closure.productionExecution.executionId
+          ) {
+            throw new Error(
+              'LKG production execution identity mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.productionExecutionFingerprint !==
+            closure.productionExecution.executionFingerprint
+          ) {
+            throw new Error(
+              'LKG production execution fingerprint mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.productionConsumptionId !==
+            closure.productionConsumption.consumptionId
+          ) {
+            throw new Error(
+              'LKG production consumption identity mismatch'
+            );
+          }
+
+          if (
+            lkg.closure.productionConsumptionFingerprint !==
+            closure.productionConsumption.consumptionFingerprint
+          ) {
+            throw new Error(
+              'LKG production consumption fingerprint mismatch'
+            );
+          }
+
+          if (
+            lkg.releaseManifest !==
+            `releases/${lkg.epoch}/manifest.json`
+          ) {
+            throw new Error(
+              'LKG releaseManifest is not bound to its epoch'
+            );
+          }
+
+          const closureFingerprint =
+            crypto
+              .createHash('sha256')
+              .update(
+                fs.readFileSync(
+                  closurePath
+                )
+              )
+              .digest('hex');
+
+          if (
+            !/^[0-9a-f]{64}$/.test(
+              closureFingerprint
+            )
+          ) {
+            throw new Error(
+              'Calculated Closure fingerprint is invalid'
+            );
+          }
+
+          if (
+            lkg.closure.fingerprint !==
+            closureFingerprint
+          ) {
+            throw new Error(
+              'LKG Closure fingerprint mismatch'
+            );
+          }
+
+          const releaseManifestPath =
+            lkg.releaseManifest;
+
+          if (
+            !fs.existsSync(
+              releaseManifestPath
+            )
+          ) {
+            throw new Error(
+              `Release manifest referenced by LKG is missing: ${releaseManifestPath}`
+            );
+          }
+
+          const releaseManifest =
+            JSON.parse(
+              fs.readFileSync(
+                releaseManifestPath,
+                'utf8'
+              )
+            );
+
+          if (
+            releaseManifest?.schema !==
+            'nexmold.v7.14.release-manifest.v3'
+          ) {
+            throw new Error(
+              `Unexpected release manifest schema: ${releaseManifest?.schema}`
+            );
+          }
+
+          if (
+            releaseManifest?.status !==
+            'VERIFIED'
+          ) {
+            throw new Error(
+              `Release manifest is not VERIFIED: ${releaseManifest?.status}`
+            );
+          }
+
+          if (
+            releaseManifest.epoch !==
+            lkg.epoch
+          ) {
+            throw new Error(
+              'Release manifest epoch != LKG epoch'
+            );
+          }
+
+          if (
+            !releaseManifest.closure ||
+            typeof releaseManifest.closure !== 'object'
+          ) {
+            throw new Error(
+              'Release manifest closure identity is missing'
+            );
+          }
+
+          if (
+            releaseManifest.closure.fingerprint !==
+            closureFingerprint
+          ) {
+            throw new Error(
+              'Release manifest Closure fingerprint mismatch'
+            );
+          }
+
+          if (
+            releaseManifest.closure.releaseId !==
+            closure.release.id
+          ) {
+            throw new Error(
+              'Release manifest release identity mismatch'
+            );
+          }
+
+          if (
+            releaseManifest.closure.releaseFingerprint !==
+            closure.release.fingerprint
+          ) {
+            throw new Error(
+              'Release manifest release fingerprint mismatch'
+            );
+          }
+
+          if (
+            releaseManifest.closure.productionExecutionId !==
+            closure.productionExecution.executionId
+          ) {
+            throw new Error(
+              'Release manifest production execution identity mismatch'
+            );
+          }
+
+          if (
+            releaseManifest.closure.productionConsumptionId !==
+            closure.productionConsumption.consumptionId
+          ) {
+            throw new Error(
+              'Release manifest production consumption identity mismatch'
+            );
+          }
+
+          console.log(
+            'Closure → Release → LKG identity: PASS'
+          );
+
+          console.log(
+            `buildEpoch: ${closure.buildEpoch}`
+          );
+
+          console.log(
+            `closureFingerprint: ${closureFingerprint}`
+          );
+
+          console.log(
+            `releaseId: ${closure.release.id}`
+          );
+
+          console.log(
+            `releaseFingerprint: ${closure.release.fingerprint}`
+          );
+
+          console.log(
+            `productionExecutionId: ${closure.productionExecution.executionId}`
+          );
+
+          console.log(
+            `productionConsumptionId: ${closure.productionConsumption.consumptionId}`
+          );
+          NODE
 
       - name: Final integrity summary
         shell: bash
