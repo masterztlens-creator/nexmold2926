@@ -349,7 +349,7 @@ const TOPIC_STOP_WORDS = new Set([
   "which",
   "with",
   "within",
-];
+]);
 
 const TOPIC_SEARCH_FIELDS: readonly {
   readonly key: keyof EvidencePayload;
@@ -546,7 +546,7 @@ function evidenceFieldText(
 
 function phraseDocumentFrequency(
   evidenceInventory:
-    readonly EvidencePayload[][],
+    readonly (readonly EvidencePayload[])[],
   phrase: string,
 ): number {
   let frequency = 0;
@@ -577,7 +577,7 @@ function phraseDocumentFrequency(
 
 function tokenDocumentFrequency(
   evidenceInventory:
-    readonly EvidencePayload[][],
+    readonly (readonly EvidencePayload[])[],
   token: string,
 ): number {
   let frequency = 0;
@@ -835,7 +835,8 @@ function selectRuntimeEvidence(
   readonly id: string;
   readonly payload: EvidencePayload;
 }[] {
-  const evidenceInventory =
+  const evidenceInventory:
+    readonly (readonly EvidencePayload[])[] =
     acquisitions.map(
       (record) =>
         record.acquisition.evidence,
