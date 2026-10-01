@@ -1,32 +1,21 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
 import {
-  FoundationService,
-  InMemoryFoundationStore,
-  createSource,
-  createScope,
-  createContext,
-  createProblem,
-  createDecision,
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  observeInternetFirstHop,
+} from "../.v8-build/src/v8/intelligence/web-discovery/first-hop-observer.js";
+
+import {
+  runV8ArticleRuntime,
+} from "../.v8-build/src/v8/runtime/article-runtime.js";
+
+import {
   contentFingerprint,
-} from "../.v8-build/src/v8/index.js";
-
-import {
-  TruthProducer,
-} from "../.v8-build/src/v8/intelligence/truth-producer/index.js";
-
-import {
-  ArticleIntelligencePlanner,
-} from "../.v8-build/src/v8/intelligence/article-intelligence/index.js";
-
-import {
-  EvidenceBoundContentCompiler,
-} from "../.v8-build/src/v8/intelligence/content-compiler/index.js";
-
-const BUILD_TIMESTAMP =
-  "2026-10-01T00:00:00.000Z";
+} from "../.v8-build/src/v8/foundation/hash.js";
 
 const ARTICLE_TITLE =
   "Plastic Injection Molding Wall Thickness";
@@ -58,43 +47,139 @@ const MANIFEST_PATH = path.join(
 );
 
 const ACTOR = Object.freeze({
-  id: "v8-first-article",
+  id: "v8:first-article",
   role: "SYSTEM",
 });
 
-const AUDITOR = Object.freeze({
-  id: "v8-first-article-auditor",
-  role: "AUDITOR",
-});
+const QUERY =
+  process.argv
+    .slice(2)
+    .join(" ")
+    .trim() ||
+  PRIMARY_KEYWORD;
 
-const SOURCE_CONTENT =
-  "Wall thickness should be selected with material, flow, cooling, and structural requirements in mind.";
+/*
+ * V8-owned bootstrap authority corpus.
+ *
+ * This corpus is an entry-point authority registry only.
+ * It is NOT article content.
+ * It is NOT Evidence.
+ * It is NOT a fixture.
+ *
+ * The actual article must be produced only from pages successfully
+ * fetched from the Internet during this execution.
+ */
+const BOOTSTRAP_CORPUS = Object.freeze([
+  Object.freeze({
+    id: "iso:294-1",
+    url:
+      "https://www.iso.org/standard/67036.html",
+    title:
+      "ISO 294-1 Plastics Injection Moulding of Test Specimens",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "thermoplastic",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
 
-const SOURCE_URL =
-  "https://example.test/v8-first-article/wall-thickness";
+  Object.freeze({
+    id: "iso:294-3",
+    url:
+      "https://www.iso.org/standard/76649.html",
+    title:
+      "ISO 294-3 Plastics Injection Moulding of Test Specimens",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "small plates",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
 
-const SOURCE_ID =
-  "source:v8:first-article:wall-thickness";
+  Object.freeze({
+    id: "iso:294-4",
+    url:
+      "https://www.iso.org/standard/70413.html",
+    title:
+      "ISO 294-4 Plastics Injection Moulding Shrinkage",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "shrinkage",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
 
-const EVIDENCE_ID =
-  "evidence:v8:first-article:wall-thickness";
+  Object.freeze({
+    id: "iso:294-5",
+    url:
+      "https://www.iso.org/standard/85835.html",
+    title:
+      "ISO 294-5 Plastics Injection Moulding Anisotropy",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "anisotropy",
+      "flow direction",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
 
-const SCOPE_ID =
-  "scope:v8:first-article:wall-thickness";
+  Object.freeze({
+    id: "iso:20430",
+    url:
+      "https://committee.iso.org/standard/68000.html",
+    title:
+      "ISO 20430 Injection Moulding Machine Safety Requirements",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "machine",
+      "safety",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+]);
 
-const CONTEXT_ID =
-  "context:v8:first-article:wall-thickness";
-
-const PROBLEM_ID =
-  "problem:v8:first-article:wall-thickness";
-
-const DECISION_ID =
-  "decision:v8:first-article:wall-thickness";
-
-const SECTION_ID =
-  "definition-and-scope";
-
-function fail(message) {
+function fail(
+  message,
+) {
   throw new Error(
     `V8_FIRST_ARTICLE_FAILED:${message}`,
   );
@@ -128,333 +213,249 @@ function writeUtf8(
 }
 
 function createArticleMarkdown(
-  draft,
+  content,
 ) {
-  const sections = draft.sections
-    .map(
-      (section) =>
-        [
-          `## ${section.heading}`,
-          "",
-          section.body.trim(),
-          "",
-        ].join("\n"),
-    )
-    .join("\n");
+  const sections =
+    Array.isArray(content.sections)
+      ? content.sections
+      : [];
+
+  requireCondition(
+    sections.length > 0,
+    "runtime content contains no sections",
+  );
 
   return [
-    `# ${draft.title}`,
+    `# ${content.title}`,
     "",
-    draft.description.trim(),
+    ARTICLE_DESCRIPTION,
     "",
-    sections.trim(),
-    "",
+    ...sections.flatMap(
+      (section) => [
+        `## ${section.heading}`,
+        "",
+        section.body.trim(),
+        "",
+      ],
+    ),
   ].join("\n");
 }
 
 function createManifest({
-  source,
-  snapshot,
-  evidence,
-  truth,
-  scope,
-  context,
-  problem,
-  decision,
-  plan,
-  draft,
+  query,
+  firstHop,
+  runtime,
   articleContent,
 }) {
+  const acquisition =
+    runtime.acquisition;
+
+  const sources =
+    acquisition.acquisitions.map(
+      (record) => ({
+        candidateUrl:
+          record.candidateUrl,
+
+        requestedUrl:
+          record.page.requestedUrl,
+
+        finalUrl:
+          record.page.finalUrl,
+
+        sourceId:
+          record.acquisition.sourceId,
+
+        snapshotId:
+          record.acquisition.snapshotId,
+
+        evidenceIds:
+          record.acquisition.evidence.map(
+            (evidence) =>
+              evidence.id ??
+              null,
+          ),
+      }),
+    );
+
   const base = {
     schema:
-      "nexmold.v8.first-article-manifest.v1",
+      "nexmold.v8.first-article-manifest.v2",
 
     generatedAt:
-      BUILD_TIMESTAMP,
+      new Date().toISOString(),
 
     generator:
       "NEXMOLD V8",
 
-    article: {
-      title:
-        draft.title,
+    execution:
+      {
+        mode:
+          "LIVE_INTERNET",
 
-      slug:
-        draft.slug,
+        searchProvider:
+          "NONE",
 
-      primaryKeyword:
-        PRIMARY_KEYWORD,
+        discoveryProvider:
+          "V8_SELF_OWNED_FIRST_HOP",
 
-      description:
-        draft.description,
+        acquisitionProvider:
+          "SELF_OWNED_CRAWL",
 
-      artifact:
-        "article.md",
-    },
+        query,
+      },
 
-    foundation: {
-      sourceId:
-        source.id,
+    article:
+      {
+        title:
+          ARTICLE_TITLE,
 
-      snapshotId:
-        snapshot.aggregateId,
+        slug:
+          ARTICLE_SLUG,
 
-      evidenceIds:
-        [evidence.aggregateId],
+        primaryKeyword:
+          PRIMARY_KEYWORD,
 
-      claimIds:
-        [...truth.claims].sort(),
+        description:
+          ARTICLE_DESCRIPTION,
 
-      knowledgeIds:
-        [...truth.knowledge].sort(),
+        artifact:
+          "article.md",
+      },
 
-      scopeId:
-        scope.id,
+    discovery:
+      {
+        bootstrapMatches:
+          firstHop.bootstrap.matched.length,
 
-      contextId:
-        context.id,
+        bootstrapRejected:
+          firstHop.bootstrap.rejected.length,
 
-      problemId:
-        problem.id,
+        pagesObserved:
+          firstHop.pagesObserved,
 
-      decisionId:
-        decision.id,
-    },
+        candidatesAccepted:
+          firstHop.observation.accepted,
 
-    plan: {
-      decisionId:
-        plan.decisionId,
+        candidatesRejected:
+          firstHop.observation.rejected,
 
-      scopeId:
-        plan.scopeId,
+        fetchErrors:
+          firstHop.fetchErrors.map(
+            (failure) => ({
+              url:
+                failure.url,
 
-      contextId:
-        plan.contextId,
+              error:
+                failure.error,
+            }),
+          ),
 
-      sections:
-        plan.sections.map(
-          (section) => ({
-            sectionId:
-              section.sectionId,
+        candidates:
+          firstHop.observation.candidates.map(
+            (candidate) => ({
+              url:
+                candidate.url,
 
-            heading:
-              section.heading,
+              normalizedUrl:
+                candidate.normalizedUrl,
 
-            knowledgeIds:
-              [...section.knowledgeIds],
+              kind:
+                candidate.kind,
 
-            claimIds:
-              [...section.claimIds],
+              sourceUrl:
+                candidate.sourceUrl,
 
-            evidenceIds:
-              [...section.evidenceIds],
-          }),
-        ),
-    },
+              title:
+                candidate.title,
 
-    compiler: {
-      sectionCount:
-        draft.sections.length,
+              discoveredAt:
+                candidate.discoveredAt,
+            }),
+          ),
+      },
 
-      claimCount:
-        draft.claims.length,
+    acquisition:
+      {
+        planQueries:
+          acquisition.plan.sourceQueries,
 
-      evidenceCount:
-        draft.evidence.length,
-    },
+        candidates:
+          acquisition.discovery.candidates.length,
 
-    artifact: {
-      path:
-        path.relative(
-          process.cwd(),
-          ARTICLE_PATH,
-        ),
+        successfulAcquisitions:
+          acquisition.acquisitions.length,
 
-      contentFingerprint:
-        contentFingerprint(
-          articleContent,
-        ),
-    },
+        searchErrors:
+          acquisition.searchErrors,
 
-    rejectedCandidates:
-      [...truth.rejectedCandidates],
+        fetchErrors:
+          acquisition.fetchErrors,
+
+        sources,
+      },
+
+    foundation:
+      {
+        verifiedEvidenceIds:
+          runtime.verifiedEvidenceIds,
+
+        claimIds:
+          runtime.claimIds,
+
+        knowledgeIds:
+          runtime.knowledgeIds,
+
+        scopeId:
+          runtime.scopeId,
+
+        contextId:
+          runtime.contextId,
+
+        problemId:
+          runtime.problemId,
+
+        decisionId:
+          runtime.decisionId,
+      },
+
+    runtime:
+      {
+        fingerprint:
+          runtime.fingerprint,
+      },
+
+    artifact:
+      {
+        path:
+          path.relative(
+            process.cwd(),
+            ARTICLE_PATH,
+          ),
+
+        contentFingerprint:
+          contentFingerprint(
+            articleContent,
+          ),
+      },
   };
 
   return {
     ...base,
+
     manifestFingerprint:
-      contentFingerprint(base),
+      contentFingerprint(
+        base,
+      ),
   };
 }
 
-function assertArticleClosure({
-  store,
-  source,
-  snapshot,
-  evidence,
-  truth,
-  scope,
-  context,
-  problem,
-  decision,
-  plan,
-  draft,
-}) {
-  requireCondition(
-    source.id === SOURCE_ID,
-    "source identity mismatch",
-  );
-
-  requireCondition(
-    snapshot.payload.sourceId ===
-      source.id,
-    "snapshot source lineage mismatch",
-  );
-
-  requireCondition(
-    snapshot.state ===
-      "SEALED",
-    "snapshot is not sealed",
-  );
-
-  requireCondition(
-    evidence.payload.sourceId ===
-      source.id,
-    "evidence source lineage mismatch",
-  );
-
-  requireCondition(
-    evidence.payload.snapshotId ===
-      snapshot.aggregateId,
-    "evidence snapshot lineage mismatch",
-  );
-
-  requireCondition(
-    evidence.state ===
-      "VERIFIED",
-    "evidence is not verified",
-  );
-
-  requireCondition(
-    evidence.payload.verificationStatus ===
-      "VERIFIED",
-    "evidence verificationStatus is not VERIFIED",
-  );
-
-  requireCondition(
-    truth.claims.length === 1,
-    `expected exactly one Claim, received ${truth.claims.length}`,
-  );
-
-  requireCondition(
-    truth.knowledge.length === 1,
-    `expected exactly one Knowledge, received ${truth.knowledge.length}`,
-  );
-
-  requireCondition(
-    truth.rejectedCandidates.length === 0,
-    `TruthProducer rejected ${truth.rejectedCandidates.length} candidate(s)`,
-  );
-
-  requireCondition(
-    scope.id === SCOPE_ID,
-    "scope identity mismatch",
-  );
-
-  requireCondition(
-    context.scopeId ===
-      scope.id,
-    "context scope lineage mismatch",
-  );
-
-  requireCondition(
-    problem.contextId ===
-      context.id,
-    "problem context lineage mismatch",
-  );
-
-  requireCondition(
-    decision.payload.problemId ===
-      problem.id,
-    "decision problem lineage mismatch",
-  );
-
-  requireCondition(
-    decision.payload.knowledgeIds.includes(
-      truth.knowledge[0],
-    ),
-    "decision does not contain produced Knowledge",
-  );
-
-  requireCondition(
-    plan.sections.length === 1,
-    "article plan must contain exactly one section",
-  );
-
-  requireCondition(
-    plan.sections[0].knowledgeIds.includes(
-      truth.knowledge[0],
-    ),
-    "article plan does not contain produced Knowledge",
-  );
-
-  requireCondition(
-    plan.sections[0].claimIds.includes(
-      truth.claims[0],
-    ),
-    "article plan does not contain produced Claim",
-  );
-
-  requireCondition(
-    plan.sections[0].evidenceIds.includes(
-      evidence.aggregateId,
-    ),
-    "article plan does not contain produced Evidence",
-  );
-
-  requireCondition(
-    draft.sections.length === 1,
-    "compiled article must contain exactly one section",
-  );
-
-  requireCondition(
-    draft.sections[0].knowledgeIds.includes(
-      truth.knowledge[0],
-    ),
-    "compiled article lost Knowledge lineage",
-  );
-
-  requireCondition(
-    draft.sections[0].claimIds.includes(
-      truth.claims[0],
-    ),
-    "compiled article lost Claim lineage",
-  );
-
-  requireCondition(
-    draft.sections[0].evidenceIds.includes(
-      evidence.aggregateId,
-    ),
-    "compiled article lost Evidence lineage",
-  );
-
-  requireCondition(
-    draft.sections[0].body.includes(
-      SOURCE_CONTENT,
-    ),
-    "compiled article does not contain the source evidence excerpt",
-  );
-
-  store.verifyChain();
-}
-
-function main() {
+async function main() {
   console.log(
     "==============================================",
   );
 
   console.log(
-    "NEXMOLD V8 FIRST ARTICLE RUNNER",
+    "NEXMOLD V8 FIRST ARTICLE — LIVE INTERNET",
   );
 
   console.log(
@@ -462,7 +463,7 @@ function main() {
   );
 
   console.log(
-    `Timestamp: ${BUILD_TIMESTAMP}`,
+    `Query: ${QUERY}`,
   );
 
   console.log(
@@ -470,590 +471,391 @@ function main() {
   );
 
   console.log(
-    `Slug: ${ARTICLE_SLUG}`,
+    "Search provider: NONE",
+  );
+
+  console.log(
+    "Discovery owner: V8",
+  );
+
+  console.log(
+    "Acquisition owner: V8",
   );
 
   console.log("");
 
-  const store =
-    new InMemoryFoundationStore();
-
-  const service =
-    new FoundationService(store);
-
   /*
    * ------------------------------------------------------------
-   * 1. SOURCE
+   * 1. LIVE FIRST-HOP INTERNET DISCOVERY
    * ------------------------------------------------------------
    */
 
-  const source =
-    createSource({
-      id:
-        SOURCE_ID,
+  const fetcher =
+    new HttpPageFetcher({
+      timeoutMs:
+        15000,
 
-      kind:
-        "PUBLIC_WEB",
-
-      locator:
-        SOURCE_URL,
-
-      access:
-        "PAYLOAD_ALLOWED",
-
-      title:
-        "V8 First Article Controlled Evidence Source",
-
-      version:
-        "1",
-
-      publisher:
-        "NEXMOLD V8 First Article Harness",
-
-      authority:
-        "ENGINEERING_REFERENCE",
-
-      canonicalUrl:
-        SOURCE_URL,
-
-      retrievedAt:
-        BUILD_TIMESTAMP,
-
-      documentHash:
-        contentFingerprint(
-          SOURCE_CONTENT,
-        ),
+      maxBytes:
+        5 * 1024 * 1024,
     });
 
-  service.registerSource(
-    source,
-    ACTOR,
-    "V8 first article source registration",
-  );
-
-  console.log(
-    "1/10 Source: PASS",
-  );
-
-  /*
-   * ------------------------------------------------------------
-   * 2. SNAPSHOT
-   * ------------------------------------------------------------
-   */
-
-  const snapshot =
-    service.captureSnapshot(
+  const firstHop =
+    await observeInternetFirstHop(
+      QUERY,
+      BOOTSTRAP_CORPUS,
+      fetcher,
       {
-        source,
-
-        capturedAt:
-          BUILD_TIMESTAMP,
-
-        locator:
-          source.locator,
-
-        content:
-          SOURCE_CONTENT,
-
-        metadataOnly:
-          false,
-
-        requestedUrl:
-          SOURCE_URL,
-
-        finalUrl:
-          SOURCE_URL,
-
-        redirectChain:
-          [SOURCE_URL],
-
-        mediaType:
-          "text/plain",
+        limit:
+          20,
       },
-
-      ACTOR,
-
-      "V8 first article source snapshot",
     );
 
-  service.sealSnapshot(
-    snapshot.aggregateId,
-    ACTOR,
-    "V8 first article seal snapshot",
-  );
-
-  const sealedSnapshot =
-    store.get(
-      "SNAPSHOT",
-      snapshot.aggregateId,
-    );
-
-  requireCondition(
-    sealedSnapshot !== null,
-    "sealed snapshot could not be read back",
-  );
-
-  requireCondition(
-    sealedSnapshot.state ===
-      "SEALED",
-    "snapshot sealing failed",
+  console.log(
+    `1. Bootstrap matches: ${firstHop.bootstrap.matched.length}`,
   );
 
   console.log(
-    "2/10 Snapshot: PASS",
+    `2. Pages observed: ${firstHop.pagesObserved}`,
+  );
+
+  console.log(
+    `3. Candidates accepted: ${firstHop.observation.accepted}`,
+  );
+
+  console.log(
+    `4. Candidates rejected: ${firstHop.observation.rejected}`,
+  );
+
+  console.log(
+    `5. First-hop fetch errors: ${firstHop.fetchErrors.length}`,
+  );
+
+  requireCondition(
+    firstHop.pagesObserved > 0,
+    "no Internet page was successfully observed",
+  );
+
+  requireCondition(
+    firstHop.observation.candidates.length > 0,
+    "Internet observation produced no discovery candidates",
   );
 
   /*
    * ------------------------------------------------------------
-   * 3. EVIDENCE
+   * 2. REAL INTERNET CANDIDATES → RESEARCH SEEDS
    * ------------------------------------------------------------
+   *
+   * The candidates are not converted into Evidence here.
+   *
+   * They become explicit research seeds for the existing
+   * self-owned acquisition pipeline.
+   *
+   * Every URL therefore still has:
+   *
+   *   Internet observation
+   *       ↓
+   *   DiscoveryCandidate
+   *       ↓
+   *   ResearchSeed
+   *       ↓
+   *   HTTP Fetch
+   *       ↓
+   *   Snapshot
+   *       ↓
+   *   Evidence
    */
 
-  const evidence =
-    service.ingestEvidence(
-      {
-        id:
-          EVIDENCE_ID,
+  const researchSeeds =
+    firstHop.observation.candidates
+      .slice(
+        0,
+        8,
+      )
+      .map(
+        (candidate) => ({
+          url:
+            candidate.url,
 
-        sourceId:
-          source.id,
+          source:
+            candidate.kind ===
+              "SEED"
+              ? "AUTHORITY"
+              : "DIRECT",
 
-        locator:
-          "v8-first-article:p1",
-
-        excerpt:
-          SOURCE_CONTENT,
-
-        ingestion:
-          "INGESTED",
-
-        capturedAt:
-          sealedSnapshot.recordedAt,
-
-        snapshotId:
-          sealedSnapshot.aggregateId,
-
-        section:
-          "Engineering considerations",
-      },
-
-      ACTOR,
-
-      "V8 first article evidence ingestion",
-    );
-
-  service.verifyEvidence(
-    evidence.aggregateId,
-    AUDITOR,
-    "V8 first article evidence verification",
-  );
-
-  const verifiedEvidence =
-    store.get(
-      "EVIDENCE",
-      evidence.aggregateId,
-    );
+          reason:
+            candidate.kind ===
+              "SEED"
+              ? "V8-owned authority bootstrap source."
+              : `Discovered by V8 first-hop observation from ${candidate.sourceUrl ?? "Internet source"}.`,
+        }),
+      );
 
   requireCondition(
-    verifiedEvidence !== null,
-    "verified evidence could not be read back",
-  );
-
-  requireCondition(
-    verifiedEvidence.state ===
-      "VERIFIED",
-    "evidence verification failed",
-  );
-
-  requireCondition(
-    verifiedEvidence.payload
-      .verificationStatus ===
-      "VERIFIED",
-    "evidence verification status failed",
+    researchSeeds.length > 0,
+    "no ResearchSeed could be created from live Internet discovery",
   );
 
   console.log(
-    "3/10 Evidence: PASS",
+    `6. Research seeds: ${researchSeeds.length}`,
   );
+
+  for (
+    const seed of
+      researchSeeds
+  ) {
+    console.log(
+      `    ${seed.source} ${seed.url}`,
+    );
+  }
 
   /*
    * ------------------------------------------------------------
-   * 4. TRUTH PRODUCER
+   * 3. ARTICLE RUNTIME
    * ------------------------------------------------------------
    *
-   * The interpreter is deliberately deterministic.
+   * No SearchProvider is supplied.
    *
-   * It does not invent unsupported facts.
-   * It converts the verified evidence excerpt into one
-   * evidence-bound ClaimCandidate.
+   * Therefore the runtime must use:
    *
-   * The formal TruthProducer then persists:
-   *
-   * Evidence -> Claim -> Knowledge
+   *   researchSeeds
+   *       →
+   *   SELF_OWNED_CRAWL
+   *       →
+   *   Foundation acquisition
+   *       →
+   *   Truth
+   *       →
+   *   Decision
+   *       →
+   *   Content
    */
 
-  const interpreter =
-    Object.freeze({
-      interpret(input) {
-        requireCondition(
-          input.length === 1,
-          `expected one Evidence input, received ${input.length}`,
-        );
+  const runtime =
+    await runV8ArticleRuntime({
+      opportunity:
+        {
+          keyword:
+            {
+              keyword:
+                PRIMARY_KEYWORD,
 
-        const item =
-          input[0];
+              normalized:
+                PRIMARY_KEYWORD,
 
-        requireCondition(
-          item.verificationStatus ===
-            "VERIFIED",
-          "TruthProducer received non-verified Evidence",
-        );
+              source:
+                "DISCOVERY",
 
-        requireCondition(
-          item.excerpt.trim() ===
-            SOURCE_CONTENT,
-          "TruthProducer received unexpected Evidence content",
-        );
+              intent:
+                "INFORMATIONAL",
 
-        return [
-          {
-            statement:
-              "Wall thickness selection depends on material, flow, cooling, and structural requirements.",
+              language:
+                "en",
 
-            evidenceIds:
-              [item.snapshotId
-                ? EVIDENCE_ID
-                : EVIDENCE_ID],
+              market:
+                "GLOBAL",
 
-            epistemicLevel:
-              "ENGINEERING_INFERENCE",
+              terms:
+                [
+                  "plastic",
+                  "injection",
+                  "molding",
+                  "wall",
+                  "thickness",
+                ],
+            },
 
-            confidence:
-              "HIGH",
-          },
-        ];
-      },
-    });
+          score:
+            1,
 
-  const truthProducer =
-    new TruthProducer(
-      service,
-      interpreter,
-    );
+          demand:
+            1,
 
-  const truth =
-    truthProducer.produce({
-      evidence:
-        [verifiedEvidence.payload],
+          relevance:
+            1,
+
+          competition:
+            0,
+
+          authorityGap:
+            1,
+
+          conversionPotential:
+            0.5,
+
+          reasons:
+            [
+              "First V8 live Internet article research run.",
+              "Engineering information request.",
+            ],
+        },
+
+      searchProvider:
+        undefined,
+
+      pageFetcher:
+        fetcher,
 
       actor:
-        AUDITOR,
-    });
+        ACTOR,
 
-  requireCondition(
-    truth.claims.length === 1,
-    "TruthProducer did not produce exactly one Claim",
-  );
+      acquisition:
+        {
+          actorId:
+            ACTOR.id,
 
-  requireCondition(
-    truth.knowledge.length === 1,
-    "TruthProducer did not produce exactly one Knowledge",
-  );
+          researchSeeds,
 
-  requireCondition(
-    truth.rejectedCandidates.length === 0,
-    "TruthProducer rejected a ClaimCandidate",
-  );
+          maxCandidates:
+            8,
 
-  console.log(
-    "4/10 TruthProducer: PASS",
-  );
+          maxPages:
+            8,
 
-  console.log(
-    `    Claim: ${truth.claims[0]}`,
-  );
+          maxDepth:
+            1,
 
-  console.log(
-    `    Knowledge: ${truth.knowledge[0]}`,
-  );
+          sameHostOnly:
+            false,
+        },
 
-  /*
-   * ------------------------------------------------------------
-   * 5. SCOPE
-   * ------------------------------------------------------------
-   */
+      scope:
+        {
+          geography:
+            "GLOBAL",
 
-  const scope =
-    createScope({
-      id:
-        SCOPE_ID,
+          industries:
+            [
+              "PLASTIC_INJECTION_MOLDING",
+            ],
 
-      geography:
-        "GLOBAL",
+          languages:
+            [
+              "en",
+            ],
+        },
 
-      industries:
-        [
-          "PLASTIC_INJECTION_MOLDING",
-        ],
+      context:
+        {
+          purpose:
+            "Generate the first NEXMOLD V8 article from evidence acquired from the live Internet.",
 
-      languages:
-        ["en"],
-    });
+          variables:
+            {
+              acquisitionMode:
+                "LIVE_INTERNET",
 
-  service.registerScope(
-    scope,
-    ACTOR,
-    "V8 first article scope registration",
-  );
+              discoveryMode:
+                "V8_SELF_OWNED",
 
-  console.log(
-    "5/10 Scope: PASS",
-  );
+              searchProvider:
+                "NONE",
+            },
+        },
 
-  /*
-   * ------------------------------------------------------------
-   * 6. CONTEXT
-   * ------------------------------------------------------------
-   */
+      problem:
+        {
+          question:
+            "What evidence-backed engineering information can V8 state about plastic injection molding wall thickness?",
 
-  const context =
-    createContext({
-      id:
-        CONTEXT_ID,
-
-      scopeId:
-        scope.id,
-
-      purpose:
-        "Generate the first V8 evidence-bound article for plastic injection molding wall thickness.",
-
-      variables:
-        {},
-    });
-
-  service.registerContext(
-    context,
-    ACTOR,
-    "V8 first article context registration",
-  );
-
-  console.log(
-    "6/10 Context: PASS",
-  );
-
-  /*
-   * ------------------------------------------------------------
-   * 7. PROBLEM + DECISION
-   * ------------------------------------------------------------
-   */
-
-  const problem =
-    createProblem({
-      id:
-        PROBLEM_ID,
-
-      contextId:
-        context.id,
-
-      question:
-        "What evidence-backed information can V8 state about plastic injection molding wall thickness?",
-
-      constraints:
-        [
-          "VERIFIED evidence only",
-          "No unsupported factual injection",
-          "Content must remain within the approved scope",
-        ],
-    });
-
-  service.registerProblem(
-    problem,
-    ACTOR,
-    "V8 first article problem registration",
-  );
-
-  const decision =
-    createDecision({
-      id:
-        DECISION_ID,
-
-      problemId:
-        problem.id,
-
-      knowledgeIds:
-        [...truth.knowledge],
-
-      outcome:
-        "State only evidence-backed wall-thickness guidance within the approved scope.",
-
-      status:
-        "APPROVED",
-    });
-
-  service.createDecision(
-    decision,
-    scope.id,
-    context.id,
-    ACTOR,
-    "V8 first article approved decision",
-  );
-
-  const persistedDecision =
-    store.get(
-      "DECISION",
-      decision.id,
-    );
-
-  requireCondition(
-    persistedDecision !== null,
-    "approved Decision could not be read back",
-  );
-
-  requireCondition(
-    persistedDecision.state ===
-      "APPROVED",
-    "Decision is not APPROVED",
-  );
-
-  console.log(
-    "7/10 Decision: PASS",
-  );
-
-  /*
-   * ------------------------------------------------------------
-   * 8. ARTICLE INTELLIGENCE PLANNER
-   * ------------------------------------------------------------
-   */
-
-  const planner =
-    new ArticleIntelligencePlanner(
-      store,
-    );
-
-  const plan =
-    planner.plan({
-      decisionId:
-        decision.id,
-
-      scopeId:
-        scope.id,
-
-      contextId:
-        context.id,
-
-      sections:
-        [
-          {
-            sectionId:
-              SECTION_ID,
-
-            heading:
-              "Definition and engineering scope",
-
-            knowledgeIds:
-              [...truth.knowledge],
-          },
-        ],
-    });
-
-  requireCondition(
-    plan.sections.length === 1,
-    "Article Planner produced an unexpected section count",
-  );
-
-  console.log(
-    "8/10 Article Planner: PASS",
-  );
-
-  /*
-   * ------------------------------------------------------------
-   * 9. EVIDENCE-BOUND CONTENT COMPILER
-   * ------------------------------------------------------------
-   */
-
-  const compiler =
-    new EvidenceBoundContentCompiler(
-      store,
-    );
-
-  const draft =
-    compiler.compile({
-      plan,
+          constraints:
+            [
+              "VERIFIED evidence only",
+              "No unsupported factual injection",
+              "All article content must remain traceable to acquired Internet Evidence",
+              "Unresolved contradictions must not be silently merged",
+            ],
+        },
 
       title:
         ARTICLE_TITLE,
-
-      primaryKeyword:
-        PRIMARY_KEYWORD,
-
-      description:
-        ARTICLE_DESCRIPTION,
     });
 
+  /*
+   * ------------------------------------------------------------
+   * 4. HARD RUNTIME CLOSURE
+   * ------------------------------------------------------------
+   */
+
   requireCondition(
-    draft.title ===
-      ARTICLE_TITLE,
-    "compiled article title mismatch",
+    runtime.acquisition.acquisitions.length >
+      0,
+    "Article Runtime produced no successful Internet acquisitions",
   );
 
   requireCondition(
-    draft.slug ===
-      ARTICLE_SLUG,
-    "compiled article slug mismatch",
+    runtime.verifiedEvidenceIds.length >
+      0,
+    "Article Runtime produced no verified Evidence",
   );
 
   requireCondition(
-    draft.sections.length === 1,
-    "compiled article section count mismatch",
+    runtime.claimIds.length >
+      0,
+    "Article Runtime produced no Claims",
+  );
+
+  requireCondition(
+    runtime.knowledgeIds.length >
+      0,
+    "Article Runtime produced no Knowledge",
+  );
+
+  requireCondition(
+    runtime.decisionId.length >
+      0,
+    "Article Runtime produced no Decision",
+  );
+
+  requireCondition(
+    runtime.content.sections.length >
+      0,
+    "Article Runtime produced no article sections",
   );
 
   console.log(
-    "9/10 Content Compiler: PASS",
+    `7. Successful acquisitions: ${runtime.acquisition.acquisitions.length}`,
+  );
+
+  console.log(
+    `8. Verified Evidence: ${runtime.verifiedEvidenceIds.length}`,
+  );
+
+  console.log(
+    `9. Claims: ${runtime.claimIds.length}`,
+  );
+
+  console.log(
+    `10. Knowledge: ${runtime.knowledgeIds.length}`,
+  );
+
+  console.log(
+    `11. Decision: ${runtime.decisionId}`,
+  );
+
+  console.log(
+    `12. Article sections: ${runtime.content.sections.length}`,
   );
 
   /*
    * ------------------------------------------------------------
-   * 10. FINAL CLOSURE + ARTIFACT
+   * 5. ARTICLE ARTIFACT
    * ------------------------------------------------------------
    */
 
-  assertArticleClosure({
-    store,
-    source,
-    snapshot:
-      sealedSnapshot,
-    evidence:
-      verifiedEvidence,
-    truth,
-    scope,
-    context,
-    problem,
-    decision:
-      persistedDecision,
-    plan,
-    draft,
-  });
-
   const articleContent =
     createArticleMarkdown(
-      draft,
+      runtime.content,
     );
 
   const manifest =
     createManifest({
-      source,
-      snapshot:
-        sealedSnapshot,
-      evidence:
-        verifiedEvidence,
-      truth,
-      scope,
-      context,
-      problem,
-      decision:
-        persistedDecision,
-      plan,
-      draft,
+      query:
+        QUERY,
+
+      firstHop,
+
+      runtime,
+
       articleContent,
     });
 
@@ -1102,136 +904,82 @@ function main() {
   requireCondition(
     persistedArticle ===
       articleContent,
-    "persisted article content mismatch",
+    "persisted article differs from runtime artifact",
   );
 
   requireCondition(
-    persistedManifest
-      .artifact
+    persistedManifest.artifact
       .contentFingerprint ===
       contentFingerprint(
         persistedArticle,
       ),
-    "article artifact fingerprint mismatch",
+    "article content fingerprint mismatch",
   );
 
   requireCondition(
-    persistedManifest
-      .foundation
-      .sourceId ===
-      source.id,
-    "manifest source lineage mismatch",
+    persistedManifest.execution.mode ===
+      "LIVE_INTERNET",
+    "manifest does not identify a live Internet execution",
   );
 
   requireCondition(
-    persistedManifest
-      .foundation
-      .decisionId ===
-      decision.id,
-    "manifest decision lineage mismatch",
+    persistedManifest.execution.searchProvider ===
+      "NONE",
+    "article execution unexpectedly used a SearchProvider",
   );
 
   requireCondition(
-    persistedManifest
-      .foundation
-      .knowledgeIds
-      .length === 1,
-    "manifest Knowledge lineage mismatch",
-  );
-
-  requireCondition(
-    persistedManifest
-      .foundation
-      .claimIds
-      .length === 1,
-    "manifest Claim lineage mismatch",
-  );
-
-  requireCondition(
-    persistedManifest
-      .foundation
-      .evidenceIds
-      .length === 1,
-    "manifest Evidence lineage mismatch",
+    persistedManifest.acquisition
+      .successfulAcquisitions > 0,
+    "manifest records zero successful acquisitions",
   );
 
   console.log(
-    "10/10 First Article Artifact: PASS",
+    "13. Article artifact: PASS",
+  );
+
+  console.log(
+    `    ${ARTICLE_PATH}`,
+  );
+
+  console.log(
+    `    ${MANIFEST_PATH}`,
   );
 
   console.log("");
+
   console.log(
     "==============================================",
   );
 
   console.log(
-    "NEXMOLD V8 FIRST ARTICLE: PASS",
+    "V8 FIRST ARTICLE LIVE INTERNET RUN: PASS",
   );
 
   console.log(
     "==============================================",
   );
-
-  console.log("");
-
-  console.log(
-    `Article: ${ARTICLE_PATH}`,
-  );
-
-  console.log(
-    `Manifest: ${MANIFEST_PATH}`,
-  );
-
-  console.log(
-    `Source: ${source.id}`,
-  );
-
-  console.log(
-    `Evidence: ${evidence.aggregateId}`,
-  );
-
-  console.log(
-    `Claim: ${truth.claims[0]}`,
-  );
-
-  console.log(
-    `Knowledge: ${truth.knowledge[0]}`,
-  );
-
-  console.log(
-    `Decision: ${decision.id}`,
-  );
-
-  console.log(
-    `Article fingerprint: ${manifest.artifact.contentFingerprint}`,
-  );
-
-  console.log(
-    `Manifest fingerprint: ${manifest.manifestFingerprint}`,
-  );
-
-  console.log("");
 }
 
-try {
-  main();
-} catch (error) {
-  console.error("");
-  console.error(
-    "==============================================",
-  );
-  console.error(
-    "NEXMOLD V8 FIRST ARTICLE: FAIL",
-  );
-  console.error(
-    "==============================================",
-  );
-  console.error("");
-  console.error(
-    error instanceof Error
-      ? error.stack ?? error.message
-      : String(error),
-  );
-  process.exitCode = 1;
-}
+main().catch(
+  (error) => {
+    console.error("");
+    console.error(
+      "==============================================",
+    );
+    console.error(
+      "V8 FIRST ARTICLE LIVE INTERNET RUN: FAIL",
+    );
+    console.error(
+      "==============================================",
+    );
+    console.error(
+      error instanceof Error
+        ? error.stack ??
+            error.message
+        : String(error),
+    );
+    process.exitCode = 1;
+  },
+);
 
