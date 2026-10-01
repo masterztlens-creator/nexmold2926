@@ -1704,27 +1704,27 @@ function buildClosureArtifact(
           [...execution.manifest],
       }),
 
-    productionConsumption:
-      Object.freeze({
-        schema:
-          consumption.schema,
-        consumptionId:
-          consumption.consumptionId,
-        consumptionFingerprint:
-          consumption.consumptionFingerprint,
-        executionId:
-          execution.executionId,
-        releaseId:
-          release.id,
-        projectionId:
-          projectionIdentity.id,
-        releaseFingerprint:
-          release.fingerprint,
-        projectionFingerprint:
-          projectionIdentity.fingerprint,
-        manifest:
-          [...consumption.manifest],
-      }),
+productionConsumption:
+  Object.freeze({
+    schema:
+      consumption.schema,
+    consumptionId:
+      consumption.consumptionId,
+    consumptionFingerprint:
+      consumption.consumptionFingerprint,
+    executionId:
+      consumption.executionId,
+    releaseId:
+      release.id,
+    projectionId:
+      consumption.projectionId,
+    releaseFingerprint:
+      consumption.releaseFingerprint,
+    projectionFingerprint:
+      consumption.projectionFingerprint,
+    manifest:
+      [...consumption.manifest],
+  }),
   });
 }
 
