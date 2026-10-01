@@ -1520,7 +1520,264 @@ export async function runV8ArticleRuntime(
         input.title,
     });
 
-  const fingerprint =
+    /*
+   * ============================================================
+   * FINAL CONTENT PROVENANCE CLOSURE
+   * ============================================================
+   *
+   * At this boundary the article runtime must no longer rely on
+   * aggregate-level lineage alone.
+   *
+   * The exact compiled body must have complete assertion-level
+   * provenance.
+   *
+   * Therefore:
+   *
+   *   Content assertion
+   *        ↓
+   *   Knowledge
+   *        ↓
+   *   Claim
+   *        ↓
+   *   Evidence
+   *
+   * is checked before the ArticleRuntimeResult can escape.
+   */
+
+  const contentAssertions =
+    compiled.content.body
+      .split("\n")
+      .map((line) =>
+        line.trim(),
+      )
+      .filter(
+        (line) =>
+          line.length > 0 &&
+          ![
+            "Problem",
+            "Decision",
+            "Verified knowledge",
+            "Context",
+            "Constraints",
+          ].includes(line),
+      );
+
+  invariant(
+    contentAssertions.length > 0,
+    "V8_ARTICLE_RUNTIME_NO_CONTENT_ASSERTIONS",
+    "Compiled Content contains no auditable assertions.",
+  );
+
+  invariant(
+    compiled.content.provenance.length ===
+      contentAssertions.length,
+    "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_COUNT_MISMATCH",
+    "Compiled Content provenance does not cover every content assertion.",
+  );
+
+  for (
+    let index = 0;
+    index <
+      contentAssertions.length;
+    index += 1
+  ) {
+    const assertion =
+      contentAssertions[index];
+
+    const provenance =
+      compiled.content.provenance[
+        index
+      ];
+
+    invariant(
+      provenance.ordinal ===
+        index,
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_ORDINAL_MISMATCH",
+      `Content provenance ordinal mismatch at ${index}.`,
+    );
+
+    invariant(
+      provenance.text ===
+        assertion,
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_TEXT_MISMATCH",
+      `Content provenance text mismatch at ${index}.`,
+    );
+
+    invariant(
+      provenance.fingerprint ===
+        contentFingerprint(
+          assertion,
+        ),
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_FINGERPRINT_MISMATCH",
+      `Content provenance fingerprint mismatch at ${index}.`,
+    );
+
+    invariant(
+      provenance.knowledgeIds.length >
+        0,
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_KNOWLEDGE",
+      `Content assertion ${index} has no Knowledge lineage.`,
+    );
+
+    invariant(
+      provenance.claimIds.length >
+        0,
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_CLAIM",
+      `Content assertion ${index} has no Claim lineage.`,
+    );
+
+    invariant(
+      provenance.evidenceIds.length >
+        0,
+      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_EVIDENCE",
+      `Content assertion ${index} has no Evidence lineage.`,
+    );
+
+    for (
+      const knowledgeId of
+        provenance.knowledgeIds
+    ) {
+      const knowledge =
+        store.get(
+          "KNOWLEDGE",
+          knowledgeId,
+        );
+
+      invariant(
+        knowledge !== null &&
+          knowledge.state ===
+            "VERIFIED",
+        "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_NOT_VERIFIED",
+        `Content assertion ${index} references non-verified Knowledge ${knowledgeId}.`,
+      );
+    }
+
+    for (
+      const claimId of
+        provenance.claimIds
+    ) {
+      const claim =
+        store.get(
+          "CLAIM",
+          claimId,
+        );
+
+      invariant(
+        claim !== null &&
+          claim.state ===
+            "VERIFIED",
+        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_NOT_VERIFIED",
+        `Content assertion ${index} references non-verified Claim ${claimId}.`,
+      );
+    }
+
+    for (
+      const evidenceId of
+        provenance.evidenceIds
+    ) {
+      const evidence =
+        store.get(
+          "EVIDENCE",
+          evidenceId,
+        );
+
+      invariant(
+        evidence !== null &&
+          evidence.state ===
+            "VERIFIED",
+        "V8_ARTICLE_RUNTIME_CONTENT_EVIDENCE_NOT_VERIFIED",
+        `Content assertion ${index} references non-verified Evidence ${evidenceId}.`,
+      );
+    }
+
+    /*
+     * Closure must be semantically valid:
+     *
+     * every Claim used by an assertion must actually cite at least
+     * one Evidence used by that same assertion.
+     */
+    for (
+      const claimId of
+        provenance.claimIds
+    ) {
+      const claim =
+        store.get(
+          "CLAIM",
+          claimId,
+        );
+
+      invariant(
+        claim !== null,
+        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_MISSING",
+        `Claim ${claimId} disappeared during content closure.`,
+      );
+
+      const claimEvidenceIds =
+        claim.payload
+          .evidenceIds;
+
+      invariant(
+        claimEvidenceIds.some(
+          (evidenceId) =>
+            provenance.evidenceIds.includes(
+              evidenceId,
+            ),
+        ),
+        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_EVIDENCE_CLOSURE_BROKEN",
+        [
+          `Content assertion ${index}`,
+          `Claim ${claimId}`,
+          "does not intersect its declared Evidence lineage.",
+        ].join(" "),
+      );
+    }
+
+    /*
+     * Knowledge -> Claim closure.
+     */
+    for (
+      const knowledgeId of
+        provenance.knowledgeIds
+    ) {
+      const knowledge =
+        store.get(
+          "KNOWLEDGE",
+          knowledgeId,
+        );
+
+      invariant(
+        knowledge !== null,
+        "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_MISSING",
+        `Knowledge ${knowledgeId} disappeared during content closure.`,
+      );
+
+      for (
+        const claimId of
+          knowledge.payload
+            .claimIds
+      ) {
+        invariant(
+          provenance.claimIds.includes(
+            claimId,
+          ),
+          "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_CLAIM_CLOSURE_BROKEN",
+          [
+            `Content assertion ${index}`,
+            `Knowledge ${knowledgeId}`,
+            `requires Claim ${claimId},`,
+            "but the assertion does not bind that Claim.",
+          ].join(" "),
+        );
+      }
+    }
+  }
+
+  /*
+   * Content fingerprint now covers the exact assertion-level
+   * provenance, so the final runtime fingerprint must include it.
+   */
+  
+    const fingerprint =
     contentFingerprint({
       acquisition:
         acquisition.acquisitions.map(
