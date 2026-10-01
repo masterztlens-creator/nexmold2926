@@ -135,9 +135,9 @@ jobs:
           }
 
           const requiredRoutes = new Set([
-            '/industries/injection-molding/',
-            '/knowledge/plastic-injection-molding-wall-thickness/',
-            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+          '/knowledge/plastic-injection-molding-wall-thickness/',
+          '/de/wissen/plastic-injection-molding-wall-thickness/',
+          '/fr/knowledge/plastic-injection-molding-wall-thickness/',
           ]);
 
           const actualRoutes = new Set(
