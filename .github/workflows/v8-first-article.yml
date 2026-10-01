@@ -1,0 +1,413 @@
+name: V8 First Article
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v8-first-article
+  cancel-in-progress: false
+
+jobs:
+  first-article:
+    name: Generate and Audit First Article
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+
+      - name: Verify Node.js and npm
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm ci
+
+      - name: Compile V8
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm run v8:compile
+
+      - name: Generate first article
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm run v8:article:first
+
+      - name: Verify first article artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ARTICLE_DIR=".nexmold/v8/articles/plastic-injection-molding-wall-thickness"
+          ARTICLE_FILE="$ARTICLE_DIR/article.md"
+          MANIFEST_FILE="$ARTICLE_DIR/manifest.json"
+
+          test -f "$ARTICLE_FILE"
+          test -f "$MANIFEST_FILE"
+
+          test -s "$ARTICLE_FILE"
+          test -s "$MANIFEST_FILE"
+
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+
+          const articlePath =
+            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md";
+
+          const manifestPath =
+            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json";
+
+          const article =
+            fs.readFileSync(articlePath, "utf8");
+
+          const manifest =
+            JSON.parse(
+              fs.readFileSync(manifestPath, "utf8"),
+            );
+
+          if (!article.trim()) {
+            throw new Error("V8_FIRST_ARTICLE_EMPTY");
+          }
+
+          if (
+            !manifest ||
+            typeof manifest !== "object"
+          ) {
+            throw new Error("V8_FIRST_ARTICLE_MANIFEST_INVALID");
+          }
+
+          if (
+            manifest.schema !==
+            "nexmold.v8.first-article-manifest.v1"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_MANIFEST_SCHEMA_INVALID",
+            );
+          }
+
+          if (
+            manifest.article?.slug !==
+            "plastic-injection-molding-wall-thickness"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SLUG_INVALID",
+            );
+          }
+
+          if (
+            manifest.article?.artifact !==
+            "article.md"
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ARTIFACT_INVALID",
+            );
+          }
+
+          if (
+            typeof manifest.artifact?.contentFingerprint !==
+            "string" ||
+            manifest.artifact.contentFingerprint.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_FINGERPRINT_MISSING",
+            );
+          }
+
+          if (
+            typeof manifest.manifestFingerprint !==
+            "string" ||
+            manifest.manifestFingerprint.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_MANIFEST_FINGERPRINT_MISSING",
+            );
+          }
+
+          console.log(
+            "Article artifact: PASS",
+          );
+
+          console.log(
+            `Article bytes: ${Buffer.byteLength(article, "utf8")}`,
+          );
+
+          console.log(
+            `Content fingerprint: ${manifest.artifact.contentFingerprint}`,
+          );
+
+          console.log(
+            `Manifest fingerprint: ${manifest.manifestFingerprint}`,
+          );
+          NODE
+
+      - name: Audit article provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+
+          const manifestPath =
+            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json";
+
+          const manifest =
+            JSON.parse(
+              fs.readFileSync(manifestPath, "utf8"),
+            );
+
+          const foundation =
+            manifest.foundation;
+
+          const compiler =
+            manifest.compiler;
+
+          const plan =
+            manifest.plan;
+
+          if (
+            typeof foundation?.sourceId !==
+            "string" ||
+            foundation.sourceId.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SOURCE_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            typeof foundation?.snapshotId !==
+            "string" ||
+            foundation.snapshotId.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SNAPSHOT_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(foundation.evidenceIds) ||
+            foundation.evidenceIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_EVIDENCE_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(foundation.claimIds) ||
+            foundation.claimIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CLAIM_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(foundation.knowledgeIds) ||
+            foundation.knowledgeIds.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_KNOWLEDGE_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            typeof foundation.decisionId !==
+            "string" ||
+            foundation.decisionId.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_DECISION_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Array.isArray(plan?.sections) ||
+            plan.sections.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PLAN_LINEAGE_MISSING",
+            );
+          }
+
+          if (
+            !Number.isInteger(compiler?.sectionCount) ||
+            compiler.sectionCount < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_SECTION_COUNT_INVALID",
+            );
+          }
+
+          if (
+            !Number.isInteger(compiler?.claimCount) ||
+            compiler.claimCount < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CLAIM_COUNT_INVALID",
+            );
+          }
+
+          if (
+            !Number.isInteger(compiler?.evidenceCount) ||
+            compiler.evidenceCount < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_EVIDENCE_COUNT_INVALID",
+            );
+          }
+
+          if (
+            compiler.claimCount !==
+            foundation.claimIds.length
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CLAIM_COUNT_LINEAGE_MISMATCH",
+            );
+          }
+
+          if (
+            compiler.evidenceCount !==
+            foundation.evidenceIds.length
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_EVIDENCE_COUNT_LINEAGE_MISMATCH",
+            );
+          }
+
+          const plannedKnowledge =
+            new Set(
+              plan.sections.flatMap(
+                (section) =>
+                  Array.isArray(section.knowledgeIds)
+                    ? section.knowledgeIds
+                    : [],
+              ),
+            );
+
+          const plannedClaims =
+            new Set(
+              plan.sections.flatMap(
+                (section) =>
+                  Array.isArray(section.claimIds)
+                    ? section.claimIds
+                    : [],
+              ),
+            );
+
+          const plannedEvidence =
+            new Set(
+              plan.sections.flatMap(
+                (section) =>
+                  Array.isArray(section.evidenceIds)
+                    ? section.evidenceIds
+                    : [],
+              ),
+            );
+
+          for (
+            const knowledgeId of
+              foundation.knowledgeIds
+          ) {
+            if (!plannedKnowledge.has(knowledgeId)) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_KNOWLEDGE_NOT_PLANNED:${knowledgeId}`,
+              );
+            }
+          }
+
+          for (
+            const claimId of
+              foundation.claimIds
+          ) {
+            if (!plannedClaims.has(claimId)) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_CLAIM_NOT_PLANNED:${claimId}`,
+              );
+            }
+          }
+
+          for (
+            const evidenceId of
+              foundation.evidenceIds
+          ) {
+            if (!plannedEvidence.has(evidenceId)) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_EVIDENCE_NOT_PLANNED:${evidenceId}`,
+              );
+            }
+          }
+
+          console.log(
+            "Article provenance: PASS",
+          );
+
+          console.log(
+            `Source: ${foundation.sourceId}`,
+          );
+
+          console.log(
+            `Snapshot: ${foundation.snapshotId}`,
+          );
+
+          console.log(
+            `Evidence: ${foundation.evidenceIds.length}`,
+          );
+
+          console.log(
+            `Claims: ${foundation.claimIds.length}`,
+          );
+
+          console.log(
+            `Knowledge: ${foundation.knowledgeIds.length}`,
+          );
+
+          console.log(
+            `Decision: ${foundation.decisionId}`,
+          );
+          NODE
+
+      - name: Upload first article artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: v8-first-article-plastic-injection-molding-wall-thickness
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md
+            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json
+
+      - name: Final result
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=============================================="
+          echo "NEXMOLD V8 FIRST ARTICLE CI: PASS"
+          echo "=============================================="
