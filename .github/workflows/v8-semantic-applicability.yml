@@ -8,11 +8,17 @@ on:
       - "src/v8/applicability/**"
       - "src/v8/domain/**"
       - "src/v8/constitution/**"
+      - "src/v8/acquisition/**"
+      - "src/v8/intelligence/web-discovery/**"
+      - "src/v8/intelligence/research-planner/**"
+      - "src/v8/research/**"
+      - "src/v8/runtime/**"
       - "scripts/v8-semantic-applicability-gate.mjs"
       - ".github/workflows/v8-semantic-applicability.yml"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.v8.json"
+
   workflow_dispatch:
 
 permissions:
@@ -24,9 +30,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Resolve source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Source SHA: ${{ github.sha }}"
+          echo "Source ref: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"
+
       - name: Checkout exact source
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Setup Node
@@ -45,13 +61,39 @@ jobs:
 
           test -f src/v8/applicability/semantic-types.ts
           test -f src/v8/applicability/semantic.ts
+
+          test -f src/v8/intelligence/web-discovery/bootstrap.ts
+          test -f src/v8/intelligence/web-discovery/first-hop.ts
+          test -f src/v8/intelligence/web-discovery/first-hop-observer.ts
+          test -f src/v8/intelligence/web-discovery/discovery.ts
+
+          test -f src/v8/intelligence/research-planner/acquisition-runner.ts
+          test -f src/v8/intelligence/research-planner/self-owned-seed-resolver.ts
+          test -f src/v8/research/self-owned-discovery.ts
+
+          test -f src/v8/runtime/article-runtime.ts
+
           test -f scripts/v8-semantic-applicability-gate.mjs
           test -f .github/workflows/v8-semantic-applicability.yml
+
+      - name: Verify V8-22A has no Tavily dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -nEi \
+            "tavily|V8_SEARCH_API_KEY|searxng|SEARCH_API_KEY" \
+            scripts/v8-semantic-applicability-gate.mjs; then
+            echo "ERROR: V8-22A gate still contains a forbidden external search dependency."
+            exit 1
+          fi
+
+          echo "V8-22A external search dependency check: PASS"
 
       - name: Compile V8
         run: npm run v8:compile
 
-      - name: Verify compiled semantic applicability
+      - name: Verify compiled V8-22A dependencies
         shell: bash
         run: |
           set -euo pipefail
@@ -59,9 +101,17 @@ jobs:
           test -f .v8-build/src/v8/applicability/semantic.js
           test -f .v8-build/src/v8/applicability/semantic-types.js
 
+          test -f .v8-build/src/v8/intelligence/web-discovery/bootstrap.js
+          test -f .v8-build/src/v8/intelligence/web-discovery/first-hop.js
+          test -f .v8-build/src/v8/intelligence/web-discovery/first-hop-observer.js
+
+          test -f .v8-build/src/v8/intelligence/research-planner/acquisition-runner.js
+          test -f .v8-build/src/v8/intelligence/research-planner/self-owned-seed-resolver.js
+
+          test -f .v8-build/src/v8/research/self-owned-discovery.js
+          test -f .v8-build/src/v8/runtime/article-runtime.js
+
       - name: Run V8-22A Semantic Applicability Gate
-        env:
-          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
         run: node scripts/v8-semantic-applicability-gate.mjs
 
       - name: Emit gate identity
@@ -74,4 +124,7 @@ jobs:
           echo "[V8-22A] source_sha=${GITHUB_SHA}"
           echo "[V8-22A] workflow=${GITHUB_WORKFLOW}"
           echo "[V8-22A] run_id=${GITHUB_RUN_ID}"
+          echo "[V8-22A] search_provider=NONE"
+          echo "[V8-22A] discovery_owner=V8"
+          echo "[V8-22A] acquisition=SELF_OWNED_CRAWL"
           echo "[V8-22A] status=PASS"

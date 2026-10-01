@@ -13,22 +13,13 @@ import {
 } from "../.v8-build/src/v8/acquisition/page-fetcher.js";
 
 import {
-  TavilySearchProvider,
-} from "../.v8-build/src/v8/acquisition/tavily-search-provider.js";
+  observeInternetFirstHop,
+} from "../.v8-build/src/v8/intelligence/web-discovery/first-hop-observer.js";
 
 import {
   evaluateSemanticApplicability,
   assertSemanticApplicability,
 } from "../.v8-build/src/v8/applicability/semantic.js";
-
-const SEARCH_API_KEY =
-  process.env.V8_SEARCH_API_KEY;
-
-if (!SEARCH_API_KEY) {
-  throw new Error(
-    "V8_SEARCH_API_KEY is required.",
-  );
-}
 
 const ACTOR = {
   id: "v8:semantic-applicability-gate",
@@ -64,7 +55,7 @@ const OPPORTUNITY = {
   authorityGap: 1,
   conversionPotential: 1,
   reasons: [
-    "V8-22A real Internet semantic applicability gate seed opportunity",
+    "V8-22A V8-owned first-hop semantic applicability gate seed opportunity",
   ],
 };
 
@@ -101,6 +92,97 @@ const PROBLEM = {
   ],
 };
 
+const BOOTSTRAP_CORPUS = [
+  {
+    id: "iso:294-1",
+    url:
+      "https://www.iso.org/standard/67036.html",
+    title:
+      "ISO 294-1 Plastics injection moulding test specimens",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "moulding",
+      "wall",
+      "thickness",
+      "ISO 294-1",
+    ],
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  },
+  {
+    id: "iso:294-3",
+    url:
+      "https://www.iso.org/standard/76649.html",
+    title:
+      "ISO 294-3 Plastics injection moulding test specimens",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "moulding",
+      "test",
+      "specimen",
+      "ISO 294-3",
+    ],
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  },
+  {
+    id: "iso:294-4",
+    url:
+      "https://www.iso.org/standard/70413.html",
+    title:
+      "ISO 294-4 Plastics injection moulding test specimens",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "moulding",
+      "shrinkage",
+      "warpage",
+      "ISO 294-4",
+    ],
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  },
+  {
+    id: "iso:294-5",
+    url:
+      "https://www.iso.org/standard/85835.html",
+    title:
+      "ISO 294-5 Plastics injection moulding test specimens",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "moulding",
+      "anisotropy",
+      "ISO 294-5",
+    ],
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  },
+  {
+    id: "iso:20430",
+    url:
+      "https://committee.iso.org/standard/68000.html",
+    title:
+      "ISO 20430 Injection moulding machines",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "moulding",
+      "injection molding machine",
+      "ISO 20430",
+    ],
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  },
+];
+
 function assertTrue(
   value,
   message,
@@ -117,7 +199,7 @@ function assertEqual(
 ) {
   if (actual !== expected) {
     throw new Error(
-      `${message}: expected=${String(expected)} actual=${String(actual)}`,
+      `${message}: expected=${String(expected)} actual=${String(expected)}`,
     );
   }
 }
@@ -198,13 +280,6 @@ function buildSemanticRelations(
       `Knowledge ${knowledgeId} has no Claim IDs.`,
     );
 
-    /*
-     * The following relation is derived from the exact runtime
-     * Problem/Knowledge binding used for this gate.
-     *
-     * It is deliberately marked VERIFIED_DERIVATION rather than
-     * EXPLICIT: no external semantic claim is being invented here.
-     */
     relations.push(
       relation(
         knowledgeId,
@@ -319,36 +394,139 @@ function expectBlocked(
   );
 }
 
+function buildResearchSeeds(
+  firstHop,
+) {
+  const seeds = [];
+
+  for (
+    const candidate of
+      firstHop.observation.candidates
+  ) {
+    if (
+      candidate.kind !==
+      "SEED"
+    ) {
+      continue;
+    }
+
+    const source =
+      firstHop.bootstrap.matched.find(
+        (item) =>
+          item.url ===
+          candidate.normalizedUrl,
+      );
+
+    seeds.push({
+      url:
+        candidate.normalizedUrl,
+      source:
+        source?.authority ===
+        "AUTHORITATIVE_STANDARD"
+          ? "AUTHORITY"
+          : "DIRECT",
+      reason:
+        source
+          ? `V8-owned first-hop authority: ${source.title}`
+          : "V8-owned first-hop Internet observation",
+    });
+  }
+
+  return seeds;
+}
+
 async function main() {
   const store =
     new InMemoryFoundationStore();
 
-  const searchProvider =
-    new TavilySearchProvider(
-      SEARCH_API_KEY,
+  const pageFetcher =
+    new HttpPageFetcher({
+      timeoutMs: 15000,
+      maxBytes:
+        5 * 1024 * 1024,
+    });
+
+  const firstHop =
+    await observeInternetFirstHop(
+      OPPORTUNITY.keyword.normalized,
+      BOOTSTRAP_CORPUS,
+      pageFetcher,
+      {
+        limit: 20,
+      },
     );
 
-  const pageFetcher =
-    new HttpPageFetcher();
+  assertTrue(
+    firstHop.bootstrap.matched.length > 0,
+    "V8_22A_FIRST_HOP_NO_BOOTSTRAP_MATCH",
+  );
 
+  assertTrue(
+    firstHop.pagesObserved > 0,
+    "V8_22A_FIRST_HOP_NO_SUCCESSFUL_PAGE_OBSERVATION",
+  );
+
+  assertTrue(
+    firstHop.observation.candidates.length > 0,
+    "V8_22A_FIRST_HOP_NO_DISCOVERY_CANDIDATES",
+  );
+
+  const researchSeeds =
+    buildResearchSeeds(
+      firstHop,
+    );
+
+  assertTrue(
+    researchSeeds.length > 0,
+    "V8_22A_FIRST_HOP_NO_RESEARCH_SEEDS",
+  );
+
+  /*
+   * Only bootstrap authority pages that were actually observed
+   * by the V8-owned first-hop are promoted to ResearchSeed.
+   *
+   * This preserves the distinction between:
+   *
+   *   registered bootstrap source
+   *
+   * and:
+   *
+   *   actually observed Internet source.
+   *
+   * Failed bootstrap fetches are therefore never promoted.
+   */
   const runtime =
     await runV8ArticleRuntime({
       opportunity:
         OPPORTUNITY,
-      searchProvider,
+
+      searchProvider:
+        undefined,
+
       pageFetcher,
+
       store,
+
       actor:
         ACTOR,
+
       acquisition: {
-        maxCandidates: 3,
+        researchSeeds,
+        maxCandidates: 1,
+        maxPages: 3,
+        maxDepth: 1,
+        sameHostOnly: true,
       },
+
       scope:
         SCOPE,
+
       context:
         CONTEXT,
+
       problem:
         PROBLEM,
+
       title:
         "Plastic Injection Molding Wall Thickness",
     });
@@ -418,7 +596,7 @@ async function main() {
   assertEqual(
     semantic.result.state,
     "APPLICABLE",
-    "Real Internet semantic applicability did not reach APPLICABLE",
+    "V8-owned first-hop semantic applicability did not reach APPLICABLE",
   );
 
   assert.deepEqual(
@@ -435,9 +613,7 @@ async function main() {
 
   /*
    * Fail-closed test 1:
-   * Replace the Problem object while retaining the same predicate.
-   *
-   * Exact relation identity must fail.
+   * Break the exact Knowledge -> Problem identity.
    */
   const wrongProblemRelations =
     relations.map(
@@ -581,7 +757,7 @@ async function main() {
 
   /*
    * Fail-closed test 4:
-   * Remove every relation.
+   * Remove every semantic relation.
    */
   const emptyResult =
     evaluateSemanticApplicability({
@@ -613,7 +789,35 @@ async function main() {
   store.verifyChain();
 
   console.log(
-    "[NEXMOLD][V8-22A] REAL INTERNET SEMANTIC APPLICABILITY GATE PASS",
+    "[NEXMOLD][V8-22A] V8-OWNED FIRST-HOP SEMANTIC APPLICABILITY GATE PASS",
+  );
+
+  console.log(
+    `[V8-22A] bootstrapMatches=${firstHop.bootstrap.matched.length}`,
+  );
+
+  console.log(
+    `[V8-22A] pagesObserved=${firstHop.pagesObserved}`,
+  );
+
+  console.log(
+    `[V8-22A] firstHopCandidates=${firstHop.observation.candidates.length}`,
+  );
+
+  console.log(
+    `[V8-22A] firstHopFetchErrors=${firstHop.fetchErrors.length}`,
+  );
+
+  console.log(
+    `[V8-22A] researchSeeds=${researchSeeds.length}`,
+  );
+
+  console.log(
+    `[V8-22A] searchProvider=NONE`,
+  );
+
+  console.log(
+    `[V8-22A] acquisitionProvider=SELF_OWNED_CRAWL`,
   );
 
   console.log(
@@ -668,7 +872,7 @@ async function main() {
 main().catch(
   (error) => {
     console.error(
-      "[NEXMOLD][V8-22A] REAL INTERNET SEMANTIC APPLICABILITY GATE FAIL",
+      "[NEXMOLD][V8-22A] V8-OWNED FIRST-HOP SEMANTIC APPLICABILITY GATE FAIL",
     );
 
     console.error(
