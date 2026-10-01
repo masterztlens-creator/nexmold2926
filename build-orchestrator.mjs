@@ -991,8 +991,13 @@ function auditSmokeRoutes() {
 /**
  * Read and validate the persisted V8 actual-dist closure.
  *
- * This is deliberately kept at the orchestrator/release boundary.
- * The V8 release domain itself remains unchanged.
+ * The persisted closure release.manifest is an object[]
+ * containing path/route/bytes/sha256 evidence.
+ *
+ * The canonical V8 ReleaseArtifact expects readonly string[]
+ * paths. This function therefore performs the explicit
+ * Closure -> Release boundary normalization without mutating
+ * the Closure Producer or the V8 release domain.
  */
 function readClosureReleaseIdentity() {
   if (
@@ -1116,15 +1121,45 @@ function readClosureReleaseIdentity() {
 
   if (
     !Array.isArray(closure.release.manifest) ||
-    closure.release.manifest.length === 0 ||
-    closure.release.manifest.some(
-      (value) =>
-        typeof value !== "string" ||
-        !value.trim(),
-    )
+    closure.release.manifest.length === 0
   ) {
     throw new Error(
       "V8 closure release.manifest is missing or invalid",
+    );
+  }
+
+  const releaseManifest =
+    closure.release.manifest
+      .map((entry) => {
+        if (
+          !entry ||
+          typeof entry !== "object" ||
+          Array.isArray(entry)
+        ) {
+          throw new Error(
+            "V8 closure release.manifest entry is invalid",
+          );
+        }
+
+        if (
+          typeof entry.path !== "string" ||
+          !entry.path.trim()
+        ) {
+          throw new Error(
+            "V8 closure release.manifest entry.path is missing or invalid",
+          );
+        }
+
+        return entry.path.trim();
+      })
+      .sort();
+
+  if (
+    new Set(releaseManifest).size !==
+    releaseManifest.length
+  ) {
+    throw new Error(
+      "V8 closure release.manifest contains duplicate paths",
     );
   }
 
@@ -1239,7 +1274,7 @@ function readClosureReleaseIdentity() {
       closure.release.fingerprint,
 
     releaseManifest:
-      Object.freeze([...closure.release.manifest]),
+      Object.freeze(releaseManifest),
 
     productionExecutionId:
       closure.productionExecution.executionId,
@@ -1909,3 +1944,4 @@ main().catch(
     process.exitCode = 1;
   },
 );
+
