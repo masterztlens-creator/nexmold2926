@@ -1,858 +1,1170 @@
-name: V8 First Article
-
-on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-concurrency:
-  group: v8-first-article
-  cancel-in-progress: false
-
-jobs:
-  first-article:
-    name: Generate and Audit First Article
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout exact source
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.19.0"
-          cache: npm
-
-      - name: Verify Node.js and npm
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node --version
-          npm --version
-
-      - name: Install dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          npm ci
-
-      - name: Compile V8
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          npm run v8:compile
-
-      - name: Generate first article
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          npm run v8:article:first
-
-      - name: Verify first article artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          ARTICLE_DIR=".nexmold/v8/articles/plastic-injection-molding-wall-thickness"
-          ARTICLE_FILE="$ARTICLE_DIR/article.md"
-          MANIFEST_FILE="$ARTICLE_DIR/manifest.json"
-
-          test -f "$ARTICLE_FILE"
-          test -f "$MANIFEST_FILE"
-
-          test -s "$ARTICLE_FILE"
-          test -s "$MANIFEST_FILE"
-
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-
-          const articlePath =
-            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md";
-
-          const manifestPath =
-            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json";
-
-          const article =
-            fs.readFileSync(
-              articlePath,
-              "utf8",
-            );
-
-          const manifest =
-            JSON.parse(
-              fs.readFileSync(
-                manifestPath,
-                "utf8",
-              ),
-            );
-
-          if (!article.trim()) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EMPTY",
-            );
-          }
-
-          if (
-            !manifest ||
-            typeof manifest !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_MANIFEST_INVALID",
-            );
-          }
-
-          if (
-            manifest.schema !==
-            "nexmold.v8.first-article-manifest.v2"
-          ) {
-            throw new Error(
-              `V8_FIRST_ARTICLE_MANIFEST_SCHEMA_INVALID:${manifest.schema ?? "missing"}`,
-            );
-          }
-
-          if (
-            manifest.execution?.mode !==
-            "LIVE_INTERNET"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EXECUTION_MODE_INVALID",
-            );
-          }
-
-          if (
-            manifest.execution?.searchProvider !==
-            "NONE"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_SEARCH_PROVIDER_INVALID",
-            );
-          }
-
-          if (
-            manifest.execution?.discoveryProvider !==
-            "V8_SELF_OWNED_FIRST_HOP"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_DISCOVERY_PROVIDER_INVALID",
-            );
-          }
-
-          if (
-            manifest.execution?.acquisitionProvider !==
-            "SELF_OWNED_CRAWL"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ACQUISITION_PROVIDER_INVALID",
-            );
-          }
-
-          if (
-            manifest.article?.title !==
-            "Plastic Injection Molding Wall Thickness"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_TITLE_INVALID",
-            );
-          }
-
-          if (
-            manifest.article?.slug !==
-            "plastic-injection-molding-wall-thickness"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_SLUG_INVALID",
-            );
-          }
-
-          if (
-            manifest.article?.primaryKeyword !==
-            "plastic injection molding wall thickness"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_KEYWORD_INVALID",
-            );
-          }
-
-          if (
-            manifest.article?.artifact !==
-            "article.md"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ARTIFACT_INVALID",
-            );
-          }
-
-          if (
-            typeof manifest.artifact?.path !==
-            "string" ||
-            manifest.artifact.path.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ARTIFACT_PATH_MISSING",
-            );
-          }
-
-          if (
-            typeof manifest.artifact?.contentFingerprint !==
-            "string" ||
-            manifest.artifact.contentFingerprint.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CONTENT_FINGERPRINT_MISSING",
-            );
-          }
-
-          if (
-            typeof manifest.manifestFingerprint !==
-            "string" ||
-            manifest.manifestFingerprint.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_MANIFEST_FINGERPRINT_MISSING",
-            );
-          }
-
-          if (
-            !manifest.discovery ||
-            typeof manifest.discovery !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_DISCOVERY_SECTION_MISSING",
-            );
-          }
-
-          if (
-            !Number.isInteger(
-              manifest.discovery.bootstrapMatches,
-            ) ||
-            manifest.discovery.bootstrapMatches < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_BOOTSTRAP_MATCHES_INVALID",
-            );
-          }
-
-          if (
-            !Number.isInteger(
-              manifest.discovery.pagesObserved,
-            ) ||
-            manifest.discovery.pagesObserved < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PAGES_OBSERVED_INVALID",
-            );
-          }
-
-          if (
-            !Number.isInteger(
-              manifest.discovery.candidatesAccepted,
-            ) ||
-            manifest.discovery.candidatesAccepted < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CANDIDATES_ACCEPTED_INVALID",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              manifest.discovery.candidates,
-            ) ||
-            manifest.discovery.candidates.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_DISCOVERY_CANDIDATES_MISSING",
-            );
-          }
-
-          if (
-            !manifest.acquisition ||
-            typeof manifest.acquisition !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ACQUISITION_SECTION_MISSING",
-            );
-          }
-
-          if (
-            !Number.isInteger(
-              manifest.acquisition.successfulAcquisitions,
-            ) ||
-            manifest.acquisition.successfulAcquisitions < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_SUCCESSFUL_ACQUISITIONS_INVALID",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              manifest.acquisition.sources,
-            ) ||
-            manifest.acquisition.sources.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ACQUISITION_SOURCES_MISSING",
-            );
-          }
-
-          if (
-            manifest.acquisition.successfulAcquisitions !==
-            manifest.acquisition.sources.length
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_ACQUISITION_SOURCE_COUNT_MISMATCH",
-            );
-          }
-
-          for (
-            const source of
-              manifest.acquisition.sources
-          ) {
-            if (
-              typeof source?.candidateUrl !==
-                "string" ||
-              source.candidateUrl.length === 0
-            ) {
-              throw new Error(
-                "V8_FIRST_ARTICLE_SOURCE_CANDIDATE_URL_MISSING",
-              );
-            }
-
-            if (
-              typeof source?.requestedUrl !==
-                "string" ||
-              source.requestedUrl.length === 0
-            ) {
-              throw new Error(
-                "V8_FIRST_ARTICLE_SOURCE_REQUESTED_URL_MISSING",
-              );
-            }
-
-            if (
-              typeof source?.finalUrl !==
-                "string" ||
-              source.finalUrl.length === 0
-            ) {
-              throw new Error(
-                "V8_FIRST_ARTICLE_SOURCE_FINAL_URL_MISSING",
-              );
-            }
-
-            if (
-              typeof source?.sourceId !==
-                "string" ||
-              source.sourceId.length === 0
-            ) {
-              throw new Error(
-                "V8_FIRST_ARTICLE_SOURCE_ID_MISSING",
-              );
-            }
-
-            if (
-              typeof source?.snapshotId !==
-                "string" ||
-              source.snapshotId.length === 0
-            ) {
-              throw new Error(
-                "V8_FIRST_ARTICLE_SNAPSHOT_ID_MISSING",
-              );
-            }
-
-            if (
-              !Array.isArray(
-                source?.evidenceIds,
-              ) ||
-              source.evidenceIds.length === 0
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_SOURCE_EVIDENCE_IDS_MISSING:${source.sourceId}`,
-              );
-            }
-          }
-
-          if (
-            !manifest.foundation ||
-            typeof manifest.foundation !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_FOUNDATION_SECTION_MISSING",
-            );
-          }
-
-          const verifiedEvidenceIds =
-            manifest.foundation.verifiedEvidenceIds;
-
-          const claimIds =
-            manifest.foundation.claimIds;
-
-          const knowledgeIds =
-            manifest.foundation.knowledgeIds;
-
-          const decisionId =
-            manifest.foundation.decisionId;
-
-          if (
-            !Array.isArray(
-              verifiedEvidenceIds,
-            ) ||
-            verifiedEvidenceIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_VERIFIED_EVIDENCE_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              claimIds,
-            ) ||
-            claimIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CLAIM_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              knowledgeIds,
-            ) ||
-            knowledgeIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_KNOWLEDGE_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            typeof decisionId !==
-              "string" ||
-            decisionId.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_DECISION_LINEAGE_MISSING",
-            );
-          }
-
-          if (
-            !manifest.runtime ||
-            typeof manifest.runtime !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_RUNTIME_SECTION_MISSING",
-            );
-          }
-
-          if (
-            typeof manifest.runtime.fingerprint !==
-              "string" ||
-            manifest.runtime.fingerprint.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_RUNTIME_FINGERPRINT_MISSING",
-            );
-          }
-
-          if (
-            !manifest.runtime.content ||
-            typeof manifest.runtime.content !== "object"
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_RUNTIME_CONTENT_MISSING",
-            );
-          }
-
-          if (
-            typeof manifest.runtime.content.id !==
-              "string" ||
-            manifest.runtime.content.id.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CONTENT_ID_MISSING",
-            );
-          }
-
-          if (
-            manifest.runtime.content.decisionId !==
-            decisionId
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CONTENT_DECISION_LINEAGE_MISMATCH",
-            );
-          }
-
-          if (
-            manifest.runtime.content.title !==
-            manifest.article.title
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CONTENT_TITLE_MISMATCH",
-            );
-          }
-
-          if (
-            !Number.isInteger(
-              manifest.runtime.content.bodyLength,
-            ) ||
-            manifest.runtime.content.bodyLength < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_CONTENT_BODY_LENGTH_INVALID",
-            );
-          }
-
-          const sourceEvidenceIds =
-            new Set();
-
-          for (
-            const source of
-              manifest.acquisition.sources
-          ) {
-            for (
-              const evidenceId of
-                source.evidenceIds
-            ) {
-              sourceEvidenceIds.add(
-                evidenceId,
-              );
-            }
-          }
-
-          const verifiedEvidenceSet =
-            new Set(
-              verifiedEvidenceIds,
-            );
-
-          for (
-            const evidenceId of
-              sourceEvidenceIds
-          ) {
-            if (
-              !verifiedEvidenceSet.has(
-                evidenceId,
-              )
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_SOURCE_EVIDENCE_NOT_VERIFIED:${evidenceId}`,
-              );
-            }
-          }
-
-          if (
-            sourceEvidenceIds.size !==
-            verifiedEvidenceSet.size
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_EVIDENCE_LINEAGE_SET_MISMATCH",
-            );
-          }
-
-          if (
-            manifest.discovery.candidatesAccepted <
-            manifest.acquisition.candidates
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_DISCOVERY_ACQUISITION_COUNT_INVALID",
-            );
-          }
-
-          console.log(
-            "Article artifact: PASS",
-          );
-
-          console.log(
-            `Article bytes: ${Buffer.byteLength(article, "utf8")}`,
-          );
-
-          console.log(
-            `Content fingerprint: ${manifest.artifact.contentFingerprint}`,
-          );
-
-          console.log(
-            `Manifest fingerprint: ${manifest.manifestFingerprint}`,
-          );
-
-          console.log(
-            `Discovery candidates: ${manifest.discovery.candidates.length}`,
-          );
-
-          console.log(
-            `Successful acquisitions: ${manifest.acquisition.successfulAcquisitions}`,
-          );
-
-          console.log(
-            `Verified Evidence: ${verifiedEvidenceIds.length}`,
-          );
-
-          console.log(
-            `Claims: ${claimIds.length}`,
-          );
-
-          console.log(
-            `Knowledge: ${knowledgeIds.length}`,
-          );
-
-          console.log(
-            `Decision: ${decisionId}`,
-          );
-          NODE
-
-      - name: Audit article provenance
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-
-          const manifestPath =
-            ".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json";
-
-          const manifest =
-            JSON.parse(
-              fs.readFileSync(
-                manifestPath,
-                "utf8",
-              ),
-            );
-
-          const foundation =
-            manifest.foundation;
-
-          const acquisition =
-            manifest.acquisition;
-
-          const runtime =
-            manifest.runtime;
-
-          if (
-            !Array.isArray(
-              foundation?.verifiedEvidenceIds,
-            ) ||
-            foundation.verifiedEvidenceIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              foundation?.claimIds,
-            ) ||
-            foundation.claimIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_CLAIMS_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              foundation?.knowledgeIds,
-            ) ||
-            foundation.knowledgeIds.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_KNOWLEDGE_MISSING",
-            );
-          }
-
-          if (
-            typeof foundation?.decisionId !==
-              "string" ||
-            foundation.decisionId.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_DECISION_MISSING",
-            );
-          }
-
-          if (
-            !Array.isArray(
-              acquisition?.sources,
-            ) ||
-            acquisition.sources.length === 0
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_SOURCES_MISSING",
-            );
-          }
-
-          const sourceIds =
-            new Set();
-
-          const snapshotIds =
-            new Set();
-
-          const acquiredEvidenceIds =
-            new Set();
-
-          for (
-            const source of
-              acquisition.sources
-          ) {
-            if (
-              sourceIds.has(
-                source.sourceId,
-              )
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_DUPLICATE_SOURCE_ID:${source.sourceId}`,
-              );
-            }
-
-            if (
-              snapshotIds.has(
-                source.snapshotId,
-              )
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_DUPLICATE_SNAPSHOT_ID:${source.snapshotId}`,
-              );
-            }
-
-            sourceIds.add(
-              source.sourceId,
-            );
-
-            snapshotIds.add(
-              source.snapshotId,
-            );
-
-            for (
-              const evidenceId of
-                source.evidenceIds
-            ) {
-              acquiredEvidenceIds.add(
-                evidenceId,
-              );
-            }
-          }
-
-          const verifiedEvidenceIds =
-            new Set(
-              foundation.verifiedEvidenceIds,
-            );
-
-          if (
-            acquiredEvidenceIds.size !==
-            verifiedEvidenceIds.size
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_CARDINALITY_MISMATCH",
-            );
-          }
-
-          for (
-            const evidenceId of
-              acquiredEvidenceIds
-          ) {
-            if (
-              !verifiedEvidenceIds.has(
-                evidenceId,
-              )
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_NOT_VERIFIED:${evidenceId}`,
-              );
-            }
-          }
-
-          if (
-            runtime?.content?.decisionId !==
-            foundation.decisionId
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_DECISION_CONTENT_MISMATCH",
-            );
-          }
-
-          if (
-            typeof runtime?.content?.bodyLength !==
-              "number" ||
-            runtime.content.bodyLength < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_CONTENT_EMPTY",
-            );
-          }
-
-          if (
-            foundation.claimIds.length < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_NO_CLAIMS",
-            );
-          }
-
-          if (
-            foundation.knowledgeIds.length < 1
-          ) {
-            throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_NO_KNOWLEDGE",
-            );
-          }
-
-          console.log(
-            "Article provenance: PASS",
-          );
-
-          console.log(
-            `Sources: ${sourceIds.size}`,
-          );
-
-          console.log(
-            `Snapshots: ${snapshotIds.size}`,
-          );
-
-          console.log(
-            `Evidence: ${verifiedEvidenceIds.size}`,
-          );
-
-          console.log(
-            `Claims: ${foundation.claimIds.length}`,
-          );
-
-          console.log(
-            `Knowledge: ${foundation.knowledgeIds.length}`,
-          );
-
-          console.log(
-            `Decision: ${foundation.decisionId}`,
-          );
-
-          console.log(
-            `Content: ${runtime.content.id}`,
-          );
-          NODE
-
-      - name: Upload first article artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: v8-first-article-plastic-injection-molding-wall-thickness
-          if-no-files-found: error
-          retention-days: 14
-          path: |
-            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md
-            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json
-
-      - name: Final result
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          echo "=============================================="
-          echo "NEXMOLD V8 FIRST ARTICLE CI: PASS"
-          echo "=============================================="
+import fs from "node:fs";
+import path from "node:path";
+
+import {
+  HttpPageFetcher,
+} from "../.v8-build/src/v8/acquisition/page-fetcher.js";
+
+import {
+  observeInternetFirstHop,
+} from "../.v8-build/src/v8/intelligence/web-discovery/first-hop-observer.js";
+
+import {
+  runV8ArticleRuntime,
+} from "../.v8-build/src/v8/runtime/article-runtime.js";
+
+import {
+  contentFingerprint,
+} from "../.v8-build/src/v8/foundation/hash.js";
+
+const ARTICLE_TITLE =
+  "Plastic Injection Molding Wall Thickness";
+
+const PRIMARY_KEYWORD =
+  "plastic injection molding wall thickness";
+
+const ARTICLE_SLUG =
+  "plastic-injection-molding-wall-thickness";
+
+const ARTICLE_DESCRIPTION =
+  "Evidence-backed engineering guidance for plastic injection molding wall thickness.";
+
+const ARTICLE_ROOT = path.resolve(
+  ".nexmold",
+  "v8",
+  "articles",
+  ARTICLE_SLUG,
+);
+
+const ARTICLE_PATH = path.join(
+  ARTICLE_ROOT,
+  "article.md",
+);
+
+const MANIFEST_PATH = path.join(
+  ARTICLE_ROOT,
+  "manifest.json",
+);
+
+const ACTOR = Object.freeze({
+  id: "v8:first-article",
+  role: "SYSTEM",
+});
+
+const QUERY =
+  process.argv
+    .slice(2)
+    .join(" ")
+    .trim() ||
+  PRIMARY_KEYWORD;
+
+/*
+ * V8-owned bootstrap authority corpus.
+ *
+ * This corpus is an entry-point authority registry only.
+ * It is NOT article content.
+ * It is NOT Evidence.
+ * It is NOT a fixture.
+ *
+ * The actual article must be produced only from pages successfully
+ * fetched from the Internet during this execution.
+ */
+const BOOTSTRAP_CORPUS = Object.freeze([
+  Object.freeze({
+    id: "iso:294-1",
+    url:
+      "https://www.iso.org/standard/67036.html",
+    title:
+      "ISO 294-1 Plastics Injection Moulding of Test Specimens",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "thermoplastic",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+
+  Object.freeze({
+    id: "iso:294-3",
+    url:
+      "https://www.iso.org/standard/76649.html",
+    title:
+      "ISO 294-3 Plastics Injection Moulding of Test Specimens",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "small plates",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+
+  Object.freeze({
+    id: "iso:294-4",
+    url:
+      "https://www.iso.org/standard/70413.html",
+    title:
+      "ISO 294-4 Plastics Injection Moulding Shrinkage",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "shrinkage",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+
+  Object.freeze({
+    id: "iso:294-5",
+    url:
+      "https://www.iso.org/standard/85835.html",
+    title:
+      "ISO 294-5 Plastics Injection Moulding Anisotropy",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "anisotropy",
+      "flow direction",
+      "test specimens",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+
+  Object.freeze({
+    id: "iso:20430",
+    url:
+      "https://committee.iso.org/standard/68000.html",
+    title:
+      "ISO 20430 Injection Moulding Machine Safety Requirements",
+    terms: Object.freeze([
+      "plastics",
+      "plastic",
+      "injection",
+      "moulding",
+      "molding",
+      "machine",
+      "safety",
+      "standards",
+      "wall thickness",
+    ]),
+    authority:
+      "AUTHORITATIVE_STANDARD",
+  }),
+]);
+
+function fail(
+  message,
+) {
+  throw new Error(
+    `V8_FIRST_ARTICLE_FAILED:${message}`,
+  );
+}
+
+function requireCondition(
+  condition,
+  message,
+) {
+  if (!condition) {
+    fail(message);
+  }
+}
+
+function writeUtf8(
+  filePath,
+  content,
+) {
+  fs.mkdirSync(
+    path.dirname(filePath),
+    {
+      recursive: true,
+    },
+  );
+
+  fs.writeFileSync(
+    filePath,
+    content,
+    "utf8",
+  );
+}
+
+/*
+ * Current V8 Content contract:
+ *
+ * interface Content {
+ *   id: ContentId;
+ *   decisionId: DecisionId;
+ *   title: string;
+ *   body: string;
+ * }
+ *
+ * Article Markdown is therefore materialized directly from
+ * Content.title + Content.body.
+ */
+function createArticleMarkdown(
+  content,
+) {
+  requireCondition(
+    content !== null &&
+      typeof content === "object",
+    "runtime content is missing",
+  );
+
+  requireCondition(
+    typeof content.title ===
+      "string" &&
+      content.title.trim().length > 0,
+    "runtime content contains no title",
+  );
+
+  requireCondition(
+    typeof content.body ===
+      "string" &&
+      content.body.trim().length > 0,
+    "runtime content contains no article body",
+  );
+
+  return [
+    `# ${content.title.trim()}`,
+    "",
+    ARTICLE_DESCRIPTION,
+    "",
+    content.body.trim(),
+    "",
+  ].join("\n");
+}
+
+function createManifest({
+  query,
+  firstHop,
+  runtime,
+  articleContent,
+}) {
+  const acquisition =
+    runtime.acquisition;
+
+  /*
+   * IMPORTANT:
+   *
+   * record.acquisition.evidence[] contains EvidencePayload objects.
+   * EvidencePayload intentionally has no `id` property.
+   *
+   * The Article Runtime already computes the canonical Evidence identity
+   * with canonicalEvidenceId() and exposes the verified identities through
+   * runtime.verifiedEvidenceIds[].
+   *
+   * Runtime selection is deterministic:
+   *
+   *   acquisition[0] -> verifiedEvidenceIds[0]
+   *   acquisition[1] -> verifiedEvidenceIds[1]
+   *   ...
+   *
+   * Therefore Manifest lineage must consume the canonical verified IDs
+   * exposed by the Runtime rather than attempting to read
+   * record.acquisition.evidence[].id.
+   */
+  const sources =
+    acquisition.acquisitions.map(
+      (record, index) => {
+        const evidenceId =
+          runtime.verifiedEvidenceIds[index];
+
+        requireCondition(
+          typeof evidenceId ===
+            "string" &&
+            evidenceId.trim().length > 0,
+          `acquisition ${index + 1} has no canonical verified Evidence ID`,
+        );
+
+        return {
+          candidateUrl:
+            record.candidateUrl,
+
+          requestedUrl:
+            record.page.requestedUrl,
+
+          finalUrl:
+            record.page.finalUrl,
+
+          sourceId:
+            record.acquisition.sourceId,
+
+          snapshotId:
+            record.acquisition.snapshotId,
+
+          /*
+           * Exactly one canonical runtime Evidence aggregate
+           * is selected for each successful acquisition.
+           */
+          evidenceIds: [
+            evidenceId,
+          ],
+        };
+      },
+    );
+
+  /*
+   * Manifest-level Evidence lineage closure.
+   *
+   * Every Evidence ID recorded under a source must:
+   *
+   *   1. exist;
+   *   2. be verified by the Runtime;
+   *   3. map one-to-one with the Runtime's selected Evidence set.
+   *
+   * Fail closed. Never serialize null or an unverified identity.
+   */
+  const sourceEvidenceIds =
+    sources.flatMap(
+      (source) =>
+        source.evidenceIds,
+    );
+
+  requireCondition(
+    sourceEvidenceIds.length ===
+      runtime.verifiedEvidenceIds.length,
+    "manifest source Evidence count does not match verified Evidence count",
+  );
+
+  requireCondition(
+    sourceEvidenceIds.every(
+      (id) =>
+        runtime.verifiedEvidenceIds.includes(
+          id,
+        ),
+    ),
+    "manifest source Evidence contains an unverified Evidence ID",
+  );
+
+  requireCondition(
+    new Set(
+      sourceEvidenceIds,
+    ).size ===
+      new Set(
+        runtime.verifiedEvidenceIds,
+      ).size,
+    "manifest source Evidence IDs are not one-to-one with verified runtime Evidence IDs",
+  );
+
+  const base = {
+    schema:
+      "nexmold.v8.first-article-manifest.v2",
+
+    generatedAt:
+      new Date().toISOString(),
+
+    generator:
+      "NEXMOLD V8",
+
+    execution:
+      {
+        mode:
+          "LIVE_INTERNET",
+
+        searchProvider:
+          "NONE",
+
+        discoveryProvider:
+          "V8_SELF_OWNED_FIRST_HOP",
+
+        acquisitionProvider:
+          "SELF_OWNED_CRAWL",
+
+        query,
+      },
+
+    article:
+      {
+        title:
+          ARTICLE_TITLE,
+
+        slug:
+          ARTICLE_SLUG,
+
+        primaryKeyword:
+          PRIMARY_KEYWORD,
+
+        description:
+          ARTICLE_DESCRIPTION,
+
+        artifact:
+          "article.md",
+      },
+
+    discovery:
+      {
+        bootstrapMatches:
+          firstHop.bootstrap.matched.length,
+
+        bootstrapRejected:
+          firstHop.bootstrap.rejected.length,
+
+        pagesObserved:
+          firstHop.pagesObserved,
+
+        candidatesAccepted:
+          firstHop.observation.accepted,
+
+        candidatesRejected:
+          firstHop.observation.rejected,
+
+        fetchErrors:
+          firstHop.fetchErrors.map(
+            (failure) => ({
+              url:
+                failure.url,
+
+              error:
+                failure.error,
+            }),
+          ),
+
+        candidates:
+          firstHop.observation.candidates.map(
+            (candidate) => ({
+              url:
+                candidate.url,
+
+              normalizedUrl:
+                candidate.normalizedUrl,
+
+              kind:
+                candidate.kind,
+
+              sourceUrl:
+                candidate.sourceUrl,
+
+              title:
+                candidate.title,
+
+              discoveredAt:
+                candidate.discoveredAt,
+            }),
+          ),
+      },
+
+    acquisition:
+      {
+        planQueries:
+          acquisition.plan.sourceQueries,
+
+        candidates:
+          acquisition.discovery.candidates.length,
+
+        successfulAcquisitions:
+          acquisition.acquisitions.length,
+
+        searchErrors:
+          acquisition.searchErrors,
+
+        fetchErrors:
+          acquisition.fetchErrors,
+
+        sources,
+      },
+
+    foundation:
+      {
+        verifiedEvidenceIds:
+          runtime.verifiedEvidenceIds,
+
+        claimIds:
+          runtime.claimIds,
+
+        knowledgeIds:
+          runtime.knowledgeIds,
+
+        scopeId:
+          runtime.scopeId,
+
+        contextId:
+          runtime.contextId,
+
+        problemId:
+          runtime.problemId,
+
+        decisionId:
+          runtime.decisionId,
+      },
+
+    runtime:
+      {
+        fingerprint:
+          runtime.fingerprint,
+
+        content:
+          {
+            id:
+              runtime.content.id,
+
+            decisionId:
+              runtime.content.decisionId,
+
+            title:
+              runtime.content.title,
+
+            bodyLength:
+              runtime.content.body.length,
+          },
+      },
+
+    artifact:
+      {
+        path:
+          path.relative(
+            process.cwd(),
+            ARTICLE_PATH,
+          ),
+
+        contentFingerprint:
+          contentFingerprint(
+            articleContent,
+          ),
+      },
+  };
+
+  return {
+    ...base,
+
+    manifestFingerprint:
+      contentFingerprint(
+        base,
+      ),
+  };
+}
+
+async function main() {
+  console.log(
+    "==============================================",
+  );
+
+  console.log(
+    "NEXMOLD V8 FIRST ARTICLE — LIVE INTERNET",
+  );
+
+  console.log(
+    "==============================================",
+  );
+
+  console.log(
+    `Query: ${QUERY}`,
+  );
+
+  console.log(
+    `Article: ${ARTICLE_TITLE}`,
+  );
+
+  console.log(
+    "Search provider: NONE",
+  );
+
+  console.log(
+    "Discovery owner: V8",
+  );
+
+  console.log(
+    "Acquisition owner: V8",
+  );
+
+  console.log("");
+
+  /*
+   * ------------------------------------------------------------
+   * 1. LIVE FIRST-HOP INTERNET DISCOVERY
+   * ------------------------------------------------------------
+   */
+
+  const fetcher =
+    new HttpPageFetcher({
+      timeoutMs:
+        15000,
+
+      maxBytes:
+        5 * 1024 * 1024,
+    });
+
+  const firstHop =
+    await observeInternetFirstHop(
+      QUERY,
+      BOOTSTRAP_CORPUS,
+      fetcher,
+      {
+        limit:
+          20,
+      },
+    );
+
+  console.log(
+    `1. Bootstrap matches: ${firstHop.bootstrap.matched.length}`,
+  );
+
+  console.log(
+    `2. Pages observed: ${firstHop.pagesObserved}`,
+  );
+
+  console.log(
+    `3. Candidates accepted: ${firstHop.observation.accepted}`,
+  );
+
+  console.log(
+    `4. Candidates rejected: ${firstHop.observation.rejected}`,
+  );
+
+  console.log(
+    `5. First-hop fetch errors: ${firstHop.fetchErrors.length}`,
+  );
+
+  requireCondition(
+    firstHop.pagesObserved > 0,
+    "no Internet page was successfully observed",
+  );
+
+  requireCondition(
+    firstHop.observation.candidates.length > 0,
+    "Internet observation produced no discovery candidates",
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * 2. REAL INTERNET CANDIDATES → RESEARCH SEEDS
+   * ------------------------------------------------------------
+   *
+   * The candidates are not converted into Evidence here.
+   *
+   * They become explicit research seeds for the existing
+   * self-owned acquisition pipeline.
+   *
+   * Every URL therefore still has:
+   *
+   *   Internet observation
+   *       ↓
+   *   DiscoveryCandidate
+   *       ↓
+   *   ResearchSeed
+   *       ↓
+   *   HTTP Fetch
+   *       ↓
+   *   Snapshot
+   *       ↓
+   *   Evidence
+   */
+
+  const researchSeeds =
+    firstHop.observation.candidates
+      .slice(
+        0,
+        8,
+      )
+      .map(
+        (candidate) => ({
+          url:
+            candidate.url,
+
+          source:
+            candidate.kind ===
+              "SEED"
+              ? "AUTHORITY"
+              : "DIRECT",
+
+          reason:
+            candidate.kind ===
+              "SEED"
+              ? "V8-owned authority bootstrap source."
+              : `Discovered by V8 first-hop observation from ${candidate.sourceUrl ?? "Internet source"}.`,
+        }),
+      );
+
+  requireCondition(
+    researchSeeds.length > 0,
+    "no ResearchSeed could be created from live Internet discovery",
+  );
+
+  console.log(
+    `6. Research seeds: ${researchSeeds.length}`,
+  );
+
+  for (
+    const seed of
+      researchSeeds
+  ) {
+    console.log(
+      `    ${seed.source} ${seed.url}`,
+    );
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * 3. ARTICLE RUNTIME
+   * ------------------------------------------------------------
+   *
+   * No SearchProvider is supplied.
+   *
+   * Therefore the runtime must use:
+   *
+   *   researchSeeds
+   *       →
+   *   SELF_OWNED_CRAWL
+   *       →
+   *   Foundation acquisition
+   *       →
+   *   Truth
+   *       →
+   *   Decision
+   *       →
+   *   Content
+   */
+
+  const runtime =
+    await runV8ArticleRuntime({
+      opportunity:
+        {
+          keyword:
+            {
+              keyword:
+                PRIMARY_KEYWORD,
+
+              normalized:
+                PRIMARY_KEYWORD,
+
+              source:
+                "DISCOVERY",
+
+              intent:
+                "INFORMATIONAL",
+
+              language:
+                "en",
+
+              market:
+                "GLOBAL",
+
+              terms:
+                [
+                  "plastic",
+                  "injection",
+                  "molding",
+                  "wall",
+                  "thickness",
+                ],
+            },
+
+          score:
+            1,
+
+          demand:
+            1,
+
+          relevance:
+            1,
+
+          competition:
+            0,
+
+          authorityGap:
+            1,
+
+          conversionPotential:
+            0.5,
+
+          reasons:
+            [
+              "First V8 live Internet article research run.",
+              "Engineering information request.",
+            ],
+        },
+
+      searchProvider:
+        undefined,
+
+      pageFetcher:
+        fetcher,
+
+      actor:
+        ACTOR,
+
+      acquisition:
+        {
+          actorId:
+            ACTOR.id,
+
+          researchSeeds,
+
+          maxCandidates:
+            8,
+
+          maxPages:
+            8,
+
+          maxDepth:
+            1,
+
+          sameHostOnly:
+            false,
+        },
+
+      scope:
+        {
+          geography:
+            "GLOBAL",
+
+          industries:
+            [
+              "PLASTIC_INJECTION_MOLDING",
+            ],
+
+          languages:
+            [
+              "en",
+            ],
+        },
+
+      context:
+        {
+          purpose:
+            "Generate the first NEXMOLD V8 article from evidence acquired from the live Internet.",
+
+          variables:
+            {
+              acquisitionMode:
+                "LIVE_INTERNET",
+
+              discoveryMode:
+                "V8_SELF_OWNED",
+
+              searchProvider:
+                "NONE",
+            },
+        },
+
+      problem:
+        {
+          question:
+            "What evidence-backed engineering information can V8 state about plastic injection molding wall thickness?",
+
+          constraints:
+            [
+              "VERIFIED evidence only",
+              "No unsupported factual injection",
+              "All article content must remain traceable to acquired Internet Evidence",
+              "Unresolved contradictions must not be silently merged",
+            ],
+        },
+
+      title:
+        ARTICLE_TITLE,
+    });
+
+  /*
+   * ------------------------------------------------------------
+   * 4. HARD RUNTIME CLOSURE
+   * ------------------------------------------------------------
+   */
+
+  requireCondition(
+    runtime.acquisition.acquisitions.length >
+      0,
+    "Article Runtime produced no successful Internet acquisitions",
+  );
+
+  requireCondition(
+    runtime.verifiedEvidenceIds.length >
+      0,
+    "Article Runtime produced no verified Evidence",
+  );
+
+  requireCondition(
+    runtime.claimIds.length >
+      0,
+    "Article Runtime produced no Claims",
+  );
+
+  requireCondition(
+    runtime.knowledgeIds.length >
+      0,
+    "Article Runtime produced no Knowledge",
+  );
+
+  requireCondition(
+    runtime.decisionId.length >
+      0,
+    "Article Runtime produced no Decision",
+  );
+
+  requireCondition(
+    runtime.content !== null &&
+      typeof runtime.content ===
+        "object",
+    "Article Runtime produced no Content",
+  );
+
+  requireCondition(
+    typeof runtime.content.title ===
+      "string" &&
+      runtime.content.title.trim().length > 0,
+    "Article Runtime produced Content without a title",
+  );
+
+  requireCondition(
+    typeof runtime.content.body ===
+      "string" &&
+      runtime.content.body.trim().length > 0,
+    "Article Runtime produced Content without an article body",
+  );
+
+  console.log(
+    `7. Successful acquisitions: ${runtime.acquisition.acquisitions.length}`,
+  );
+
+  console.log(
+    `8. Verified Evidence: ${runtime.verifiedEvidenceIds.length}`,
+  );
+
+  console.log(
+    `9. Claims: ${runtime.claimIds.length}`,
+  );
+
+  console.log(
+    `10. Knowledge: ${runtime.knowledgeIds.length}`,
+  );
+
+  console.log(
+    `11. Decision: ${runtime.decisionId}`,
+  );
+
+  console.log(
+    `12. Article body length: ${runtime.content.body.length}`,
+  );
+
+  /*
+   * ------------------------------------------------------------
+   * 5. ARTICLE ARTIFACT
+   * ------------------------------------------------------------
+   */
+
+  const articleContent =
+    createArticleMarkdown(
+      runtime.content,
+    );
+
+  const manifest =
+    createManifest({
+      query:
+        QUERY,
+
+      firstHop,
+
+      runtime,
+
+      articleContent,
+    });
+
+  writeUtf8(
+    ARTICLE_PATH,
+    articleContent,
+  );
+
+  writeUtf8(
+    MANIFEST_PATH,
+    `${JSON.stringify(
+      manifest,
+      null,
+      2,
+    )}\n`,
+  );
+
+  requireCondition(
+    fs.existsSync(
+      ARTICLE_PATH,
+    ),
+    "article.md was not written",
+  );
+
+  requireCondition(
+    fs.existsSync(
+      MANIFEST_PATH,
+    ),
+    "manifest.json was not written",
+  );
+
+  const persistedArticle =
+    fs.readFileSync(
+      ARTICLE_PATH,
+      "utf8",
+    );
+
+  const persistedManifest =
+    JSON.parse(
+      fs.readFileSync(
+        MANIFEST_PATH,
+        "utf8",
+      ),
+    );
+
+  requireCondition(
+    persistedArticle ===
+      articleContent,
+    "persisted article differs from runtime artifact",
+  );
+
+  requireCondition(
+    persistedManifest.artifact
+      .contentFingerprint ===
+      contentFingerprint(
+        persistedArticle,
+      ),
+    "article content fingerprint mismatch",
+  );
+
+  requireCondition(
+    persistedManifest.execution.mode ===
+      "LIVE_INTERNET",
+    "manifest does not identify a live Internet execution",
+  );
+
+  requireCondition(
+    persistedManifest.execution.searchProvider ===
+      "NONE",
+    "article execution unexpectedly used a SearchProvider",
+  );
+
+  requireCondition(
+    persistedManifest.acquisition
+      .successfulAcquisitions > 0,
+    "manifest records zero successful acquisitions",
+  );
+
+  /*
+   * Final persisted Evidence lineage verification.
+   *
+   * This protects against a future serialization regression where
+   * the in-memory manifest is correct but the persisted JSON is not.
+   */
+  const persistedSources =
+    persistedManifest.acquisition
+      ?.sources;
+
+  requireCondition(
+    Array.isArray(
+      persistedSources,
+    ),
+    "persisted manifest sources are missing",
+  );
+
+  const persistedSourceEvidenceIds =
+    persistedSources.flatMap(
+      (source) =>
+        Array.isArray(
+          source.evidenceIds,
+        )
+          ? source.evidenceIds
+          : [],
+    );
+
+  requireCondition(
+    persistedSourceEvidenceIds.length ===
+      runtime.verifiedEvidenceIds.length,
+    "persisted manifest source Evidence count does not match verified Evidence count",
+  );
+
+  requireCondition(
+    persistedSourceEvidenceIds.every(
+      (id) =>
+        typeof id ===
+          "string" &&
+        id.trim().length > 0,
+    ),
+    "persisted manifest contains an empty or null Evidence ID",
+  );
+
+  requireCondition(
+    persistedSourceEvidenceIds.every(
+      (id) =>
+        runtime.verifiedEvidenceIds.includes(
+          id,
+        ),
+    ),
+    "persisted manifest contains an Evidence ID that is not runtime-verified",
+  );
+
+  requireCondition(
+    new Set(
+      persistedSourceEvidenceIds,
+    ).size ===
+      new Set(
+        runtime.verifiedEvidenceIds,
+      ).size,
+    "persisted manifest Evidence lineage is not one-to-one with runtime verified Evidence",
+  );
+
+  console.log(
+    "13. Article artifact: PASS",
+  );
+
+  console.log(
+    `    ${ARTICLE_PATH}`,
+  );
+
+  console.log(
+    `    ${MANIFEST_PATH}`,
+  );
+
+  console.log("");
+
+  console.log(
+    "==============================================",
+  );
+
+  console.log(
+    "V8 FIRST ARTICLE LIVE INTERNET RUN: PASS",
+  );
+
+  console.log(
+    "==============================================",
+  );
+}
+
+main().catch(
+  (error) => {
+    console.error("");
+    console.error(
+      "==============================================",
+    );
+    console.error(
+      "V8 FIRST ARTICLE LIVE INTERNET RUN: FAIL",
+    );
+    console.error(
+      "==============================================",
+    );
+    console.error(
+      error instanceof Error
+        ? error.stack ??
+            error.message
+        : String(error),
+    );
+    process.exitCode = 1;
+  },
+);
