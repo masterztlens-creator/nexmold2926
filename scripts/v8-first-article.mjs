@@ -362,13 +362,13 @@ function assertArticleClosure({
   );
 
   requireCondition(
-    context.payload.scopeId ===
+    context.scopeId ===
       scope.id,
     "context scope lineage mismatch",
   );
 
   requireCondition(
-    problem.payload.contextId ===
+    problem.contextId ===
       context.id,
     "problem context lineage mismatch",
   );
@@ -1234,3 +1234,4 @@ try {
   );
   process.exitCode = 1;
 }
+
