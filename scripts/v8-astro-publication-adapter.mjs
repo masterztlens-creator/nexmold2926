@@ -401,7 +401,10 @@ function routeToSourcePath(route) {
   );
 }
 
-function renderPage(page) {
+function renderPage(
+  page,
+  handoff,
+) {
   const title =
     escapeJsString(
       page.title,
@@ -410,6 +413,26 @@ function renderPage(page) {
   const locale =
     escapeJsString(
       page.locale,
+    );
+
+  const contentId =
+    escapeJsString(
+      handoff.contentId,
+    );
+
+  const decisionId =
+    escapeJsString(
+      handoff.decisionId,
+    );
+
+  const projectionId =
+    escapeJsString(
+      handoff.projectionId,
+    );
+
+  const handoffFingerprint =
+    escapeJsString(
+      handoff.fingerprint,
     );
 
   const canonical =
@@ -468,12 +491,18 @@ function renderPage(page) {
 const title = ${title};
 const locale = ${locale};
 const canonical = ${canonicalJs};
+
+const contentId = ${contentId};
+const decisionId = ${decisionId};
+const projectionId = ${projectionId};
+const handoffFingerprint = ${handoffFingerprint};
 ---
 
 <!doctype html>
 <html lang={locale}>
 <head>
   <meta charset="utf-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
@@ -496,6 +525,26 @@ ${alternateLinks}
   <meta
     name="robots"
     content="index,follow,max-image-preview:large"
+  />
+
+  <meta
+    name="nexmold-v8-content-id"
+    content={contentId}
+  />
+
+  <meta
+    name="nexmold-v8-decision-id"
+    content={decisionId}
+  />
+
+  <meta
+    name="nexmold-v8-projection-id"
+    content={projectionId}
+  />
+
+  <meta
+    name="nexmold-v8-handoff-fingerprint"
+    content={handoffFingerprint}
   />
 </head>
 
@@ -561,7 +610,10 @@ function prepareTarget(file) {
   );
 }
 
-function writePage(page) {
+function writePage(
+  page,
+  handoff,
+) {
   const target =
     routeToSourcePath(
       page.canonicalRoute,
@@ -573,7 +625,10 @@ function writePage(page) {
 
   fs.writeFileSync(
     target,
-    renderPage(page),
+    renderPage(
+      page,
+      handoff,
+    ),
     "utf8",
   );
 
@@ -582,6 +637,7 @@ function writePage(page) {
 
 function verifyGeneratedPage(
   page,
+  handoff,
   file,
 ) {
   assert.ok(
@@ -615,6 +671,62 @@ function verifyGeneratedPage(
     ),
     `Generated canonical route missing: ${file}`,
   );
+
+  assert.ok(
+    content.includes(
+      `name="nexmold-v8-content-id"`,
+    ),
+    `Content provenance metadata missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `content=${escapeJsString(handoff.contentId)}`,
+    ),
+    `Content provenance identity missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `name="nexmold-v8-decision-id"`,
+    ),
+    `Decision provenance metadata missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `content=${escapeJsString(handoff.decisionId)}`,
+    ),
+    `Decision provenance identity missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `name="nexmold-v8-projection-id"`,
+    ),
+    `Projection provenance metadata missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `content=${escapeJsString(handoff.projectionId)}`,
+    ),
+    `Projection provenance identity missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `name="nexmold-v8-handoff-fingerprint"`,
+    ),
+    `Handoff provenance metadata missing: ${file}`,
+  );
+
+  assert.ok(
+    content.includes(
+      `content=${escapeJsString(handoff.fingerprint)}`,
+    ),
+    `Handoff provenance fingerprint missing: ${file}`,
+  );
 }
 
 function main() {
@@ -643,10 +755,12 @@ function main() {
         const file =
           writePage(
             page,
+            handoff,
           );
 
         verifyGeneratedPage(
           page,
+          handoff,
           file,
         );
 

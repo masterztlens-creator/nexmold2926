@@ -14,6 +14,8 @@
  *          ↓
  *   REAL PUBLICATION HANDOFF
  *          ↓
+ *   ACTUAL DIST HTML PROVENANCE
+ *          ↓
  *   ACTUAL DIST HTML
  *          ↓
  *   RELEASE ARTIFACT
@@ -41,7 +43,11 @@
  *       ↓
  *   Handoff
  *       ↓
- *   Actual dist route
+ *   Handoff fingerprint
+ *       ↓
+ *   Astro publication source
+ *       ↓
+ *   Built HTML provenance
  *       ↓
  *   Actual dist SHA-256
  *       ↓
@@ -59,6 +65,7 @@
  *
  * Fail closed:
  *   Any missing artifact, identity mismatch, malformed fingerprint,
+ *   missing provenance metadata, duplicate provenance metadata,
  *   non-canonical manifest, or broken production identity causes process exit 1.
  *
  * ============================================================================
@@ -145,6 +152,20 @@ const PRODUCTION_CONSUMPTION_SCHEMA =
 
 const SHA256_PATTERN =
   /^[a-f0-9]{64}$/;
+
+const PROVENANCE_META = Object.freeze({
+  contentId:
+    "nexmold-v8-content-id",
+
+  decisionId:
+    "nexmold-v8-decision-id",
+
+  projectionId:
+    "nexmold-v8-projection-id",
+
+  handoffFingerprint:
+    "nexmold-v8-handoff-fingerprint",
+});
 
 /*
  * ============================================================================
@@ -469,6 +490,266 @@ function assertExactStringSet(
   }
 
   return expectedCanonical;
+}
+
+/*
+ * ============================================================================
+ * HTML PROVENANCE PARSING
+ * ============================================================================
+ *
+ * The provenance metadata is deliberately stored as ordinary HTML <meta>
+ * elements so that the identity survives:
+ *
+ *   Astro source -> Astro build -> actual dist HTML
+ *
+ * The parser below is dependency-free and fail-closed:
+ *
+ *   - the target meta name must exist;
+ *   - exactly one matching meta element must exist;
+ *   - the content attribute must exist;
+ *   - duplicate provenance declarations are rejected;
+ *   - unrelated meta elements are ignored.
+ *
+ * ============================================================================
+ */
+
+function decodeHtmlAttributeValue(
+  value,
+) {
+  return String(value)
+    .replaceAll(
+      "&quot;",
+      '"',
+    )
+    .replaceAll(
+      "&#39;",
+      "'",
+    )
+    .replaceAll(
+      "&lt;",
+      "<",
+    )
+    .replaceAll(
+      "&gt;",
+      ">",
+    )
+    .replaceAll(
+      "&amp;",
+      "&",
+    );
+}
+
+function parseHtmlTagAttributes(
+  tag,
+) {
+  const attributes = new Map();
+
+  const attributePattern =
+    /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
+
+  for (
+    const match of tag.matchAll(
+      attributePattern,
+    )
+  ) {
+    const name =
+      match[1].toLowerCase();
+
+    const value =
+      decodeHtmlAttributeValue(
+        match[2] ??
+          match[3] ??
+          match[4] ??
+          "",
+      );
+
+    requireCondition(
+      !attributes.has(name),
+      "V8_ACTUAL_DIST_HTML_PROVENANCE_DUPLICATE_ATTRIBUTE",
+      `Duplicate HTML attribute "${name}" encountered in provenance meta tag.`,
+    );
+
+    attributes.set(
+      name,
+      value,
+    );
+  }
+
+  return attributes;
+}
+
+function readProvenanceMeta(
+  html,
+  metaName,
+  artifactPath,
+) {
+  const metaTags =
+    html.match(
+      /<meta\b[^>]*>/gi,
+    ) ?? [];
+
+  const matches = [];
+
+  for (
+    const tag of metaTags
+  ) {
+    const attributes =
+      parseHtmlTagAttributes(
+        tag,
+      );
+
+    const name =
+      attributes.get(
+        "name",
+      );
+
+    if (
+      name !== metaName
+    ) {
+      continue;
+    }
+
+    matches.push(
+      attributes,
+    );
+  }
+
+  requireCondition(
+    matches.length === 1,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_META_COUNT",
+    `Expected exactly one "${metaName}" provenance meta tag in ${artifactPath}, received ${matches.length}.`,
+  );
+
+  const attributes =
+    matches[0];
+
+  requireCondition(
+    attributes.has("content"),
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_CONTENT_MISSING",
+    `Provenance meta tag "${metaName}" has no content attribute in ${artifactPath}.`,
+  );
+
+  const value =
+    attributes.get(
+      "content",
+    );
+
+  requireString(
+    value,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_CONTENT_EMPTY",
+    `Provenance meta tag "${metaName}" has empty content in ${artifactPath}.`,
+  );
+
+  return value;
+}
+
+function readActualDistProvenance(
+  file,
+  artifactPath,
+) {
+  requireCondition(
+    fs.existsSync(file) &&
+      fs.statSync(file).isFile(),
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_FILE_MISSING",
+    `Actual dist HTML file is missing: ${artifactPath}`,
+  );
+
+  const html =
+    fs.readFileSync(
+      file,
+      "utf8",
+    );
+
+  const contentId =
+    readProvenanceMeta(
+      html,
+      PROVENANCE_META.contentId,
+      artifactPath,
+    );
+
+  const decisionId =
+    readProvenanceMeta(
+      html,
+      PROVENANCE_META.decisionId,
+      artifactPath,
+    );
+
+  const projectionId =
+    readProvenanceMeta(
+      html,
+      PROVENANCE_META.projectionId,
+      artifactPath,
+    );
+
+  const handoffFingerprint =
+    readProvenanceMeta(
+      html,
+      PROVENANCE_META.handoffFingerprint,
+      artifactPath,
+    );
+
+  return Object.freeze({
+    contentId,
+    decisionId,
+    projectionId,
+    handoffFingerprint,
+  });
+}
+
+function assertActualDistProvenance(
+  page,
+  handoff,
+  entry,
+) {
+  const target =
+    resolveInside(
+      DIST,
+      entry.path,
+      "V8_ACTUAL_DIST_HTML_PROVENANCE_PATH_ESCAPE",
+    );
+
+  const provenance =
+    readActualDistProvenance(
+      target,
+      entry.path,
+    );
+
+  requireCondition(
+    provenance.contentId ===
+      handoff.contentId,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_CONTENT_ID_MISMATCH",
+    `Actual dist contentId mismatch for ${entry.path}: expected ${handoff.contentId}, received ${provenance.contentId}.`,
+  );
+
+  requireCondition(
+    provenance.decisionId ===
+      handoff.decisionId,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_DECISION_ID_MISMATCH",
+    `Actual dist decisionId mismatch for ${entry.path}: expected ${handoff.decisionId}, received ${provenance.decisionId}.`,
+  );
+
+  requireCondition(
+    provenance.projectionId ===
+      handoff.projectionId,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_PROJECTION_ID_MISMATCH",
+    `Actual dist projectionId mismatch for ${entry.path}: expected ${handoff.projectionId}, received ${provenance.projectionId}.`,
+  );
+
+  requireCondition(
+    provenance.handoffFingerprint ===
+      handoff.fingerprint,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_HANDOFF_FINGERPRINT_MISMATCH",
+    `Actual dist handoff fingerprint mismatch for ${entry.path}: expected ${handoff.fingerprint}, received ${provenance.handoffFingerprint}.`,
+  );
+
+  requireCondition(
+    page.canonicalRoute ===
+      entry.route,
+    "V8_ACTUAL_DIST_HTML_PROVENANCE_ROUTE_MISMATCH",
+    `Actual dist provenance route binding mismatch for ${entry.path}.`,
+  );
+
+  return provenance;
 }
 
 /*
@@ -838,6 +1119,7 @@ function validateHtmlManifest(
    * Do NOT replace this with localeCompare(), because that can produce a
    * different ordering from the producer and therefore a different SHA-256.
    */
+
   const calculatedSetHash =
     sha256Text(
       entries
@@ -884,7 +1166,9 @@ function bindHandoffToDist(
   const entriesByRoute =
     new Map();
 
-  for (const entry of htmlManifest.entries) {
+  for (
+    const entry of htmlManifest.entries
+  ) {
     entriesByRoute.set(
       entry.route,
       entry,
@@ -930,6 +1214,19 @@ function bindHandoffToDist(
     "Multiple handoff routes resolve to the same dist artifact path.",
   );
 
+  for (
+    const {
+      page,
+      entry,
+    } of matchedEntries
+  ) {
+    assertActualDistProvenance(
+      page,
+      handoff,
+      entry,
+    );
+  }
+
   return Object.freeze({
     matchedEntries: Object.freeze(
       matchedEntries,
@@ -947,18 +1244,6 @@ function bindHandoffToDist(
 /*
  * ============================================================================
  * COMPILED V8 MODULE LOADER
- * ============================================================================
- *
- * IMPORTANT:
- *
- * Never import src/v8/*.ts directly with plain Node.
- *
- * The production build compiles V8 into:
- *
- *   .v8-build/src/v8/...
- *
- * This gate therefore imports the compiled JavaScript output only.
- *
  * ============================================================================
  */
 
@@ -1013,16 +1298,6 @@ async function buildRelease(
     "releasePreflight() export is missing.",
   );
 
-  /*
-   * The production modules only require Projection identity:
-   *
-   *   id
-   *   fingerprint
-   *
-   * This is an identity adapter, not a synthetic Projection producer.
-   *
-   * It deliberately uses the authoritative Real Internet handoff identity.
-   */
   const projectionIdentity =
     Object.freeze({
       id:
@@ -1487,12 +1762,6 @@ async function main() {
     )}`,
   );
 
-  /*
-   * --------------------------------------------------------------------------
-   * PRECHECK
-   * --------------------------------------------------------------------------
-   */
-
   requireCondition(
     fs.existsSync(ROOT),
     "V8_ACTUAL_DIST_ROOT_MISSING",
@@ -1566,6 +1835,10 @@ async function main() {
   );
 
   console.log(
+    `[V8-ACTUAL-DIST] handoffFingerprint=${handoff.fingerprint}`,
+  );
+
+  console.log(
     `[V8-ACTUAL-DIST] pages=${handoff.pages.length}`,
   );
 
@@ -1611,6 +1884,10 @@ async function main() {
 
   console.log(
     "[V8-ACTUAL-DIST] Handoff routes -> actual dist: PASS",
+  );
+
+  console.log(
+    "[V8-ACTUAL-DIST] Handoff provenance -> actual HTML: PASS",
   );
 
   for (
@@ -1680,7 +1957,7 @@ async function main() {
    * --------------------------------------------------------------------------
    * PRODUCTION EXECUTION → PRODUCTION CONSUMPTION
    * --------------------------------------------------------------------------
- */
+   */
 
   const consumption =
     await buildProductionConsumption(
@@ -1734,11 +2011,6 @@ async function main() {
     )}`,
   );
 
-  /*
-   * Read it back to ensure the persisted artifact is valid JSON and contains
-   * the expected canonical identities.
-   */
-
   const persistedClosure =
     readJson(
       CLOSURE_OUTPUT_PATH,
@@ -1757,6 +2029,27 @@ async function main() {
       BUILD_EPOCH,
     "V8_ACTUAL_DIST_CLOSURE_EPOCH_INVALID",
     "Persisted closure artifact build epoch mismatch.",
+  );
+
+  requireCondition(
+    persistedClosure.handoff.fingerprint ===
+      handoff.fingerprint,
+    "V8_ACTUAL_DIST_CLOSURE_PERSISTED_HANDOFF_FINGERPRINT",
+    "Persisted closure handoff fingerprint mismatch.",
+  );
+
+  requireCondition(
+    persistedClosure.content.id ===
+      handoff.contentId,
+    "V8_ACTUAL_DIST_CLOSURE_PERSISTED_CONTENT_ID",
+    "Persisted closure content identity mismatch.",
+  );
+
+  requireCondition(
+    persistedClosure.decision.id ===
+      handoff.decisionId,
+    "V8_ACTUAL_DIST_CLOSURE_PERSISTED_DECISION_ID",
+    "Persisted closure decision identity mismatch.",
   );
 
   requireCondition(
@@ -1798,12 +2091,6 @@ async function main() {
     "[V8-ACTUAL-DIST] Closure artifact persistence: PASS",
   );
 
-  /*
-   * --------------------------------------------------------------------------
-   * FINAL RESULT
-   * --------------------------------------------------------------------------
-   */
-
   console.log(
     "=======================================================",
   );
@@ -1817,7 +2104,7 @@ async function main() {
   );
 
   console.log(
-    "[V8-ACTUAL-DIST] REAL INTERNET HANDOFF -> ACTUAL DIST -> RELEASE -> PRODUCTION EXECUTION -> PRODUCTION CONSUMPTION: PASS",
+    "[V8-ACTUAL-DIST] REAL INTERNET HANDOFF -> ACTUAL HTML PROVENANCE -> ACTUAL DIST -> RELEASE -> PRODUCTION EXECUTION -> PRODUCTION CONSUMPTION: PASS",
   );
 
   console.log(
