@@ -991,9 +991,7 @@ function auditSmokeRoutes() {
  * This is deliberately kept at the orchestrator/release boundary.
  * The V8 release domain itself remains unchanged.
  */
-function readClosureReleaseIdentity(
-  release,
-) {
+function readClosureReleaseIdentity() {
   if (
     !fs.existsSync(
       V8_CLOSURE_PATH,
@@ -1114,20 +1112,16 @@ function readClosureReleaseIdentity(
   }
 
   if (
-    closure.release.id !==
-    release.id
+    !Array.isArray(closure.release.manifest) ||
+    closure.release.manifest.length === 0 ||
+    closure.release.manifest.some(
+      (value) =>
+        typeof value !== "string" ||
+        !value.trim(),
+    )
   ) {
     throw new Error(
-      `V8 closure release.id mismatch: expected ${release.id}, received ${closure.release.id}`,
-    );
-  }
-
-  if (
-    closure.release.fingerprint !==
-    release.fingerprint
-  ) {
-    throw new Error(
-      "V8 closure release fingerprint mismatch",
+      "V8 closure release.manifest is missing or invalid",
     );
   }
 
@@ -1240,6 +1234,9 @@ function readClosureReleaseIdentity(
 
     releaseFingerprint:
       closure.release.fingerprint,
+
+    releaseManifest:
+      Object.freeze([...closure.release.manifest]),
 
     productionExecutionId:
       closure.productionExecution.executionId,
@@ -1531,36 +1528,148 @@ async function main() {
     "RELEASE_PREFLIGHT",
   );
 
-  const releaseResult =
-    await runExportedGate(
-      ...GATES.release,
-      "RELEASE_PREFLIGHT",
+  await runExportedGate(
+    ...GATES.release,
+    "RELEASE_PREFLIGHT",
+  );
+
+  const canonicalReleaseModulePath =
+    path.resolve(
+      ROOT,
+      ".v8-build",
+      "src",
+      "v8",
+      "release",
+      "preflight.js",
     );
 
+  ensureRoot(
+    canonicalReleaseModulePath,
+  );
+
   if (
-    !releaseResult ||
-    typeof releaseResult !== "object" ||
-    typeof releaseResult.id !== "string" ||
-    !releaseResult.id ||
-    typeof releaseResult.fingerprint !== "string" ||
-    !/^[a-f0-9]{64}$/.test(
-      releaseResult.fingerprint,
+    !fs.existsSync(
+      canonicalReleaseModulePath,
     )
   ) {
     fail(
       "RELEASE_PREFLIGHT",
-      "Release preflight did not return a canonical ReleaseArtifact.",
+      "Compiled V8 release preflight module is missing: .v8-build/src/v8/release/preflight.js",
     );
   }
+
+  const canonicalReleaseModule =
+    await import(
+      `${pathToFileURL(canonicalReleaseModulePath).href}?release_epoch=${encodeURIComponent(epoch)}`
+    );
+
+  const releasePreflight =
+    canonicalReleaseModule.releasePreflight;
+
+  if (
+    typeof releasePreflight !== "function"
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Compiled V8 releasePreflight() export is missing.",
+    );
+  }
+
+  const closureIdentity =
+    readClosureReleaseIdentity();
+
+  const canonicalRelease =
+    releasePreflight({
+      projection: Object.freeze({
+        id:
+          closureIdentity.projectionId,
+        fingerprint:
+          closureIdentity.projectionFingerprint,
+      }),
+      requiredPaths:
+        closureIdentity.releaseManifest,
+      generatedPaths:
+        closureIdentity.releaseManifest,
+    });
+
+  if (
+    !canonicalRelease ||
+    typeof canonicalRelease !== "object" ||
+    typeof canonicalRelease.id !== "string" ||
+    !canonicalRelease.id ||
+    typeof canonicalRelease.fingerprint !== "string" ||
+    !/^[a-f0-9]{64}$/.test(
+      canonicalRelease.fingerprint,
+    )
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "V8 releasePreflight() did not return a canonical ReleaseArtifact.",
+    );
+  }
+
+  if (
+    canonicalRelease.id !==
+    closureIdentity.releaseId
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Canonical V8 ReleaseArtifact id does not match the persisted closure release identity.",
+    );
+  }
+
+  if (
+    canonicalRelease.fingerprint !==
+    closureIdentity.releaseFingerprint
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Canonical V8 ReleaseArtifact fingerprint does not match the persisted closure release identity.",
+    );
+  }
+
+  if (
+    canonicalRelease.projectionId !==
+    closureIdentity.projectionId
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Canonical V8 ReleaseArtifact projectionId does not match the persisted closure projection identity.",
+    );
+  }
+
+  if (
+    canonicalRelease.projectionFingerprint !==
+    closureIdentity.projectionFingerprint
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Canonical V8 ReleaseArtifact projectionFingerprint does not match the persisted closure projection fingerprint.",
+    );
+  }
+
+  if (
+    JSON.stringify([
+      ...canonicalRelease.manifest,
+    ]) !==
+    JSON.stringify([
+      ...closureIdentity.releaseManifest,
+    ])
+  ) {
+    fail(
+      "RELEASE_PREFLIGHT",
+      "Canonical V8 ReleaseArtifact manifest does not match the persisted closure release manifest.",
+    );
+  }
+
+  pass(
+    "RELEASE_PREFLIGHT",
+    `Canonical V8 ReleaseArtifact ${canonicalRelease.id} verified against persisted closure identity.`,
+  );
 
   section(
     "CLOSURE_RELEASE_IDENTITY",
   );
-
-  const closureIdentity =
-    readClosureReleaseIdentity(
-      releaseResult,
-    );
 
   if (
     closureIdentity.buildEpoch !==
@@ -1574,27 +1683,27 @@ async function main() {
 
   if (
     closureIdentity.releaseId !==
-    releaseResult.id
+    canonicalRelease.id
   ) {
     fail(
       "CLOSURE_RELEASE_IDENTITY",
-      "Closure releaseId does not match ReleaseArtifact.",
+      "Closure releaseId does not match canonical V8 ReleaseArtifact.",
     );
   }
 
   if (
     closureIdentity.releaseFingerprint !==
-    releaseResult.fingerprint
+    canonicalRelease.fingerprint
   ) {
     fail(
       "CLOSURE_RELEASE_IDENTITY",
-      "Closure releaseFingerprint does not match ReleaseArtifact.",
+      "Closure releaseFingerprint does not match canonical V8 ReleaseArtifact.",
     );
   }
 
   pass(
     "CLOSURE_RELEASE_IDENTITY",
-    `Closure ${closureIdentity.fingerprint} bound to Release ${releaseResult.id}.`,
+    `Closure ${closureIdentity.fingerprint} bound to Release ${canonicalRelease.id}.`,
   );
 
   const releaseManifest = {
@@ -1725,11 +1834,11 @@ async function main() {
   );
 
   console.log(
-    `Release ID    : ${releaseResult.id}`,
+    `Release ID    : ${canonicalRelease.id}`,
   );
 
   console.log(
-    `Release hash  : ${releaseResult.fingerprint}`,
+    `Release hash  : ${canonicalRelease.fingerprint}`,
   );
 }
 
