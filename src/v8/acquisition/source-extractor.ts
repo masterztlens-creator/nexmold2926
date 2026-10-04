@@ -23,10 +23,27 @@ const SEMANTIC_UI_OPEN_PATTERN =
 const ROLE_UI_OPEN_PATTERN =
   /<(div|section|aside|header|footer|nav)(?:\s[^>]*)?>/gi;
 
+const TABLE_PATTERN =
+  /<table(?:\s[^>]*)?>([\s\S]*?)<\/table>/gi;
+
+const TABLE_ROW_PATTERN =
+  /<tr(?:\s[^>]*)?>([\s\S]*?)<\/tr>/gi;
+
+const TABLE_CELL_PATTERN =
+  /<(?:th|td)(?:\s[^>]*)?>([\s\S]*?)<\/(?:th|td)>/gi;
+
 const PARAMETER_VALUE_UNIT_PATTERNS: readonly RegExp[] = [
   /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s*[:=]\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\b/gi,
   /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s+(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\b/gi,
 ];
+
+const RANGE_PARAMETER_VALUE_UNIT_PATTERNS: readonly RegExp[] = [
+  /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s*[:=]\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\s*(?:-|–|—|to)\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)?\b/gi,
+  /\b([A-Za-z][A-Za-z0-9 _\/().-]{1,80}?)\s+(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\s*(?:-|–|—|to)\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)?\b/gi,
+];
+
+const NUMERIC_RANGE_PATTERN =
+  /(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)\s*(?:-|–|—|to)\s*(-?\d+(?:\.\d+)?)\s*(mm|cm|m|µm|μm|um|in|inch|inches|kg|g|mg|MPa|GPa|Pa|bar|psi|°C|°F|K|N|kN|J|kJ|W|kW|%|s|min|h)?/i;
 
 function decodeHtml(html: string): string {
   return html
@@ -79,11 +96,18 @@ function normalizeText(value: string): string {
 }
 
 function normalizeUnit(unit: string): string {
-  const normalized = unit.trim();
+  const normalized = unit
+    .trim()
+    .replace(/[.,;:]+$/, "");
 
   if (normalized === "μm") return "µm";
   if (normalized === "um") return "µm";
-  if (normalized === "inch" || normalized === "inches") return "in";
+  if (
+    normalized === "inch" ||
+    normalized === "inches"
+  ) {
+    return "in";
+  }
 
   return normalized;
 }
@@ -98,8 +122,13 @@ function normalizeParameter(parameter: string): string {
 function isPlausibleParameter(parameter: string): boolean {
   const normalized = parameter.trim();
 
-  if (normalized.length < 2 || normalized.length > 80) return false;
-  if (!/[A-Za-z]/.test(normalized)) return false;
+  if (normalized.length < 2 || normalized.length > 80) {
+    return false;
+  }
+
+  if (!/[A-Za-z]/.test(normalized)) {
+    return false;
+  }
 
   if (
     /^(?:the|a|an|is|was|are|were|has|have|with|from|for|and|or)$/i.test(
@@ -203,7 +232,9 @@ function findMatchingElementEnd(
   return html.length;
 }
 
-function firstElementTagName(html: string): string | undefined {
+function firstElementTagName(
+  html: string,
+): string | undefined {
   const withoutLeadingComments = html.replace(
     /^\s*(?:<!--[\s\S]*?-->\s*)*/,
     "",
@@ -226,21 +257,6 @@ function isJumpToSectionUiBlock(
     return false;
   }
 
-  /*
-   * The real Protolabs Jump-to-Section wrapper is an unadorned:
-   *
-   *   <div>
-   *     <h5>Jump to Section</h5>
-   *     <p>
-   *       ... multiple links with #anchors ...
-   *     </p>
-   *   </div>
-   *
-   * Do not classify arbitrary div ancestors as UI. The opening tag
-   * must be completely unadorned and its first child must be a
-   * heading. This prevents removal of the surrounding container,
-   * row, column, or authoritative content column.
-   */
   if (!/^<div\s*>$/i.test(openingTag.trim())) {
     return false;
   }
@@ -356,7 +372,9 @@ function removeUiSubtrees(
   return output.join("");
 }
 
-function removeSemanticUiSubtrees(html: string): string {
+function removeSemanticUiSubtrees(
+  html: string,
+): string {
   return removeUiSubtrees(
     html,
     SEMANTIC_UI_OPEN_PATTERN,
@@ -364,14 +382,26 @@ function removeSemanticUiSubtrees(html: string): string {
   );
 }
 
-function removeRoleUiSubtrees(html: string): string {
+function removeRoleUiSubtrees(
+  html: string,
+): string {
   return removeUiSubtrees(
     html,
     ROLE_UI_OPEN_PATTERN,
-    (openingTag, openingIndex, tagName) => {
+    (
+      openingTag,
+      openingIndex,
+      tagName,
+    ) => {
       const attributes = openingTag
-        .replace(/^<[^ \t\r\n\f>]+/i, "")
-        .replace(/\/?>$/i, "");
+        .replace(
+          /^<[^ \t\r\n\f>]+/i,
+          "",
+        )
+        .replace(
+          /\/?>$/i,
+          "",
+        );
 
       if (isUiRoleOrMarker(attributes)) {
         return true;
@@ -387,24 +417,47 @@ function removeRoleUiSubtrees(html: string): string {
   );
 }
 
-function removeNonContentBlocks(html: string): string {
-  const withoutSemanticUi = removeSemanticUiSubtrees(html);
+function removeNonContentBlocks(
+  html: string,
+): string {
+  const withoutSemanticUi =
+    removeSemanticUiSubtrees(html);
 
-  return removeRoleUiSubtrees(withoutSemanticUi);
+  return removeRoleUiSubtrees(
+    withoutSemanticUi,
+  );
 }
 
-function selectSemanticContent(html: string): string {
+function selectSemanticContent(
+  html: string,
+): string {
   const sanitized = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<template[\s\S]*?<\/template>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ");
+    .replace(
+      /<script[\s\S]*?<\/script>/gi,
+      " ",
+    )
+    .replace(
+      /<style[\s\S]*?<\/style>/gi,
+      " ",
+    )
+    .replace(
+      /<noscript[\s\S]*?<\/noscript>/gi,
+      " ",
+    )
+    .replace(
+      /<template[\s\S]*?<\/template>/gi,
+      " ",
+    )
+    .replace(
+      /<svg[\s\S]*?<\/svg>/gi,
+      " ",
+    );
 
-  const mainRegions = extractAllMatchingRegions(
-    sanitized,
-    MAIN_CONTENT_PATTERN,
-  );
+  const mainRegions =
+    extractAllMatchingRegions(
+      sanitized,
+      MAIN_CONTENT_PATTERN,
+    );
 
   if (mainRegions.length > 0) {
     return removeNonContentBlocks(
@@ -412,10 +465,11 @@ function selectSemanticContent(html: string): string {
     );
   }
 
-  const articleRegions = extractAllMatchingRegions(
-    sanitized,
-    ARTICLE_CONTENT_PATTERN,
-  );
+  const articleRegions =
+    extractAllMatchingRegions(
+      sanitized,
+      ARTICLE_CONTENT_PATTERN,
+    );
 
   if (articleRegions.length > 0) {
     return removeNonContentBlocks(
@@ -423,16 +477,21 @@ function selectSemanticContent(html: string): string {
     );
   }
 
-  const bodyRegion = extractFirstMatchingRegion(
-    sanitized,
-    BODY_CONTENT_PATTERN,
-  );
+  const bodyRegion =
+    extractFirstMatchingRegion(
+      sanitized,
+      BODY_CONTENT_PATTERN,
+    );
 
   if (bodyRegion) {
-    return removeNonContentBlocks(bodyRegion);
+    return removeNonContentBlocks(
+      bodyRegion,
+    );
   }
 
-  return removeNonContentBlocks(sanitized);
+  return removeNonContentBlocks(
+    sanitized,
+  );
 }
 
 function buildSectionMap(
@@ -448,8 +507,17 @@ function buildSectionMap(
 
   let match: RegExpExecArray | null;
 
-  while ((match = HTML_HEADING_PATTERN.exec(html)) !== null) {
-    const section = normalizeText(match[2] ?? "");
+  HTML_HEADING_PATTERN.lastIndex = 0;
+
+  while (
+    (match =
+      HTML_HEADING_PATTERN.exec(
+        html,
+      )) !== null
+  ) {
+    const section = normalizeText(
+      match[2] ?? "",
+    );
 
     if (!section) continue;
 
@@ -482,51 +550,649 @@ function sectionForIndex(
   return current;
 }
 
+function normalizeRangeUnit(
+  firstUnit: string,
+  secondUnit?: string,
+): string {
+  const first = normalizeUnit(firstUnit);
+  const second =
+    secondUnit === undefined
+      ? undefined
+      : normalizeUnit(secondUnit);
+
+  if (
+    second !== undefined &&
+    second !== first
+  ) {
+    return `${first}-${second}`;
+  }
+
+  return first;
+}
+
+function rangeValue(
+  firstValue: string,
+  firstUnit: string,
+  secondValue: string,
+  secondUnit?: string,
+): string {
+  const normalizedFirstUnit =
+    normalizeUnit(firstUnit);
+
+  const normalizedSecondUnit =
+    secondUnit === undefined
+      ? normalizedFirstUnit
+      : normalizeUnit(secondUnit);
+
+  const suffix =
+    normalizedSecondUnit ===
+    normalizedFirstUnit
+      ? normalizedFirstUnit
+      : `${normalizedFirstUnit}/${normalizedSecondUnit}`;
+
+  return `${firstValue}-${secondValue} ${suffix}`;
+}
+
+function extractRangeFromText(
+  text: string,
+): {
+  readonly value: string;
+  readonly unit: string;
+} | undefined {
+  const match =
+    NUMERIC_RANGE_PATTERN.exec(text);
+
+  NUMERIC_RANGE_PATTERN.lastIndex = 0;
+
+  if (!match) return undefined;
+
+  const firstValue =
+    match[1]?.trim();
+
+  const firstUnit =
+    match[2]?.trim();
+
+  const secondValue =
+    match[3]?.trim();
+
+  const secondUnit =
+    match[4]?.trim() ||
+    firstUnit;
+
+  if (
+    !firstValue ||
+    !firstUnit ||
+    !secondValue ||
+    !secondUnit
+  ) {
+    return undefined;
+  }
+
+  return {
+    value: rangeValue(
+      firstValue,
+      firstUnit,
+      secondValue,
+      secondUnit,
+    ),
+    unit: normalizeRangeUnit(
+      firstUnit,
+      secondUnit,
+    ),
+  };
+}
+
+function parseTableCells(
+  rowHtml: string,
+): readonly string[] {
+  const cells: string[] = [];
+
+  TABLE_CELL_PATTERN.lastIndex = 0;
+
+  let match: RegExpExecArray | null;
+
+  while (
+    (match =
+      TABLE_CELL_PATTERN.exec(
+        rowHtml,
+      )) !== null
+  ) {
+    const value = normalizeText(
+      match[1] ?? "",
+    );
+
+    if (value) {
+      cells.push(value);
+    }
+  }
+
+  TABLE_CELL_PATTERN.lastIndex = 0;
+
+  return cells;
+}
+
+function plausibleTableName(
+  section: string | undefined,
+  headerCells: readonly string[],
+): string | undefined {
+  const header = headerCells
+    .filter(Boolean)
+    .join(" | ");
+
+  if (!header) {
+    return section;
+  }
+
+  if (section) {
+    return `${section} — ${header}`.slice(
+      0,
+      500,
+    );
+  }
+
+  return header.slice(
+    0,
+    500,
+  );
+}
+
+function findTableSection(
+  content: string,
+  tableIndex: number,
+  sections: readonly {
+    readonly index: number;
+    readonly section: string;
+  }[],
+): string | undefined {
+  return sectionForIndex(
+    sections,
+    tableIndex,
+  );
+}
+
+function buildTableEvidence(
+  html: string,
+): readonly ExtractedEvidenceCandidate[] {
+  const content =
+    selectSemanticContent(html);
+
+  const sections =
+    buildSectionMap(content);
+
+  const candidates: ExtractedEvidenceCandidate[] =
+    [];
+
+  TABLE_PATTERN.lastIndex = 0;
+
+  let tableMatch: RegExpExecArray | null;
+
+  while (
+    (tableMatch =
+      TABLE_PATTERN.exec(
+        content,
+      )) !== null
+  ) {
+    const tableHtml =
+      tableMatch[1] ?? "";
+
+    const tableSection =
+      findTableSection(
+        content,
+        tableMatch.index,
+        sections,
+      );
+
+    const rows: {
+      readonly index: number;
+      readonly cells: readonly string[];
+    }[] = [];
+
+    TABLE_ROW_PATTERN.lastIndex = 0;
+
+    let rowMatch: RegExpExecArray | null;
+
+    while (
+      (rowMatch =
+        TABLE_ROW_PATTERN.exec(
+          tableHtml,
+        )) !== null
+    ) {
+      const cells =
+        parseTableCells(
+          rowMatch[1] ?? "",
+        );
+
+      if (cells.length === 0) {
+        continue;
+      }
+
+      rows.push({
+        index: rowMatch.index,
+        cells,
+      });
+    }
+
+    TABLE_ROW_PATTERN.lastIndex = 0;
+
+    if (rows.length === 0) {
+      continue;
+    }
+
+    const headerCells =
+      rows[0]?.cells ?? [];
+
+    const tableName =
+      plausibleTableName(
+        tableSection,
+        headerCells,
+      );
+
+    for (
+      let rowIndex = 1;
+      rowIndex < rows.length;
+      rowIndex += 1
+    ) {
+      const row =
+        rows[rowIndex];
+
+      if (!row) continue;
+
+      const cells =
+        row.cells;
+
+      if (cells.length === 0) {
+        continue;
+      }
+
+      const rowText =
+        cells.join(" | ");
+
+      const range =
+        extractRangeFromText(
+          rowText,
+        );
+
+      if (!range) {
+        continue;
+      }
+
+      const material =
+        cells[0]?.trim();
+
+      const parameter =
+        headerCells.length >= 2
+          ? headerCells[
+              headerCells.length - 1
+            ]
+          : tableSection;
+
+      if (
+        !material ||
+        !parameter
+      ) {
+        continue;
+      }
+
+      const normalizedParameter =
+        normalizeParameter(
+          parameter,
+        );
+
+      if (
+        !isPlausibleParameter(
+          normalizedParameter,
+        )
+      ) {
+        continue;
+      }
+
+      const excerpt =
+        normalizeText(
+          [
+            tableSection,
+            headerCells.join(
+              " | ",
+            ),
+            rowText,
+          ]
+            .filter(Boolean)
+            .join(" — "),
+        );
+
+      if (!excerpt) {
+        continue;
+      }
+
+      candidates.push({
+        locator:
+          `document:table:${tableMatch.index}:row:${rowIndex}`,
+        excerpt:
+          excerpt.slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        ...(tableSection
+          ? {
+              section:
+                tableSection,
+            }
+          : {}),
+        ...(tableName
+          ? {
+              table:
+                tableName,
+            }
+          : {}),
+        row: material,
+        parameter:
+          normalizedParameter,
+        value:
+          range.value,
+        unit:
+          range.unit,
+        extractionConfidence:
+          "HIGH",
+      });
+    }
+
+    /*
+     * Some production pages encode a table with a single row
+     * containing both the header and values, or expose numeric
+     * ranges without a conventional <tr>/<td> structure.
+     *
+     * Do not manufacture semantics from arbitrary prose. The
+     * fallback below only emits a candidate when:
+     *
+     *   1. the table has an explicit section;
+     *   2. the table text contains an engineering range;
+     *   3. a plausible material/row label is present.
+     */
+    if (
+      candidates.every(
+        (candidate) =>
+          !candidate.locator.startsWith(
+            `document:table:${tableMatch.index}:`,
+          ),
+      )
+    ) {
+      const tableText =
+        normalizeText(
+          tableHtml,
+        );
+
+      const range =
+        extractRangeFromText(
+          tableText,
+        );
+
+      if (
+        range &&
+        tableSection &&
+        headerCells.length >= 2
+      ) {
+        const materialCandidate =
+          headerCells[0];
+
+        const parameterCandidate =
+          headerCells[
+            headerCells.length - 1
+          ];
+
+        if (
+          materialCandidate &&
+          parameterCandidate &&
+          isPlausibleParameter(
+            parameterCandidate,
+          )
+        ) {
+          candidates.push({
+            locator:
+              `document:table:${tableMatch.index}:range`,
+            excerpt:
+              tableText.slice(
+                0,
+                MAX_EXCERPT_LENGTH,
+              ),
+            section:
+              tableSection,
+            table:
+              plausibleTableName(
+                tableSection,
+                headerCells,
+              ),
+            row:
+              materialCandidate,
+            parameter:
+              normalizeParameter(
+                parameterCandidate,
+              ),
+            value:
+              range.value,
+            unit:
+              range.unit,
+            extractionConfidence:
+              "MEDIUM",
+          });
+        }
+      }
+    }
+  }
+
+  TABLE_PATTERN.lastIndex = 0;
+
+  return candidates;
+}
+
 function buildStructuredEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const sections = buildSectionMap(content);
-  const candidates: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
 
-  for (const pattern of PARAMETER_VALUE_UNIT_PATTERNS) {
+  const sections =
+    buildSectionMap(content);
+
+  const candidates: ExtractedEvidenceCandidate[] =
+    [];
+
+  for (
+    const pattern of RANGE_PARAMETER_VALUE_UNIT_PATTERNS
+  ) {
     pattern.lastIndex = 0;
 
     let match: RegExpExecArray | null;
 
-    while ((match = pattern.exec(content)) !== null) {
-      const parameter = normalizeParameter(
-        match[1] ?? "",
-      );
+    while (
+      (match =
+        pattern.exec(
+          content,
+        )) !== null
+    ) {
+      const parameter =
+        normalizeParameter(
+          match[1] ?? "",
+        );
 
-      const value = (match[2] ?? "").trim();
-      const unit = normalizeUnit(match[3] ?? "");
+      const firstValue =
+        (match[2] ?? "").trim();
 
-      if (!isPlausibleParameter(parameter)) continue;
-      if (!value || !unit) continue;
+      const firstUnit =
+        normalizeUnit(
+          match[3] ?? "",
+        );
 
-      const rawExcerpt = normalizeText(
-        match[0] ?? "",
-      );
+      const secondValue =
+        (match[4] ?? "").trim();
 
-      if (!rawExcerpt) continue;
+      const secondUnit =
+        normalizeUnit(
+          match[5] ??
+            match[3] ??
+            "",
+        );
 
-      const section = sectionForIndex(
-        sections,
-        match.index,
-      );
+      if (
+        !isPlausibleParameter(
+          parameter,
+        )
+      ) {
+        continue;
+      }
+
+      if (
+        !firstValue ||
+        !firstUnit ||
+        !secondValue
+      ) {
+        continue;
+      }
+
+      const rawExcerpt =
+        normalizeText(
+          match[0] ?? "",
+        );
+
+      if (!rawExcerpt) {
+        continue;
+      }
+
+      const section =
+        sectionForIndex(
+          sections,
+          match.index,
+        );
 
       candidates.push({
-        locator: `document:parameter:${parameter.toLowerCase()}`,
-        excerpt: rawExcerpt.slice(
-          0,
-          MAX_EXCERPT_LENGTH,
-        ),
-        ...(section ? { section } : {}),
+        locator:
+          `document:parameter:${parameter.toLowerCase()}:range`,
+        excerpt:
+          rawExcerpt.slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        ...(section
+          ? { section }
+          : {}),
+        parameter,
+        value:
+          rangeValue(
+            firstValue,
+            firstUnit,
+            secondValue,
+            secondUnit,
+          ),
+        unit:
+          normalizeRangeUnit(
+            firstUnit,
+            secondUnit,
+          ),
+        extractionConfidence:
+          "HIGH",
+      });
+    }
+
+    pattern.lastIndex = 0;
+  }
+
+  for (
+    const pattern of PARAMETER_VALUE_UNIT_PATTERNS
+  ) {
+    pattern.lastIndex = 0;
+
+    let match: RegExpExecArray | null;
+
+    while (
+      (match =
+        pattern.exec(
+          content,
+        )) !== null
+    ) {
+      const parameter =
+        normalizeParameter(
+          match[1] ?? "",
+        );
+
+      const value =
+        (match[2] ?? "").trim();
+
+      const unit =
+        normalizeUnit(
+          match[3] ?? "",
+        );
+
+      if (
+        !isPlausibleParameter(
+          parameter,
+        )
+      ) {
+        continue;
+      }
+
+      if (
+        !value ||
+        !unit
+      ) {
+        continue;
+      }
+
+      const rawExcerpt =
+        normalizeText(
+          match[0] ?? "",
+        );
+
+      if (!rawExcerpt) {
+        continue;
+      }
+
+      /*
+       * If this match is actually the first half of a numeric
+       * range, the range extractor above is authoritative. Do not
+       * emit a misleading single-value Evidence record.
+       */
+      const trailingText =
+        content.slice(
+          match.index,
+          match.index +
+            Math.min(
+              200,
+              (match[0] ?? "").length +
+                100,
+            ),
+        );
+
+      if (
+        NUMERIC_RANGE_PATTERN.test(
+          trailingText,
+        )
+      ) {
+        NUMERIC_RANGE_PATTERN.lastIndex = 0;
+        continue;
+      }
+
+      NUMERIC_RANGE_PATTERN.lastIndex = 0;
+
+      const section =
+        sectionForIndex(
+          sections,
+          match.index,
+        );
+
+      candidates.push({
+        locator:
+          `document:parameter:${parameter.toLowerCase()}`,
+        excerpt:
+          rawExcerpt.slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        ...(section
+          ? { section }
+          : {}),
         parameter,
         value,
         unit,
-        extractionConfidence: "HIGH",
+        extractionConfidence:
+          "HIGH",
       });
     }
 
@@ -539,34 +1205,51 @@ function buildStructuredEvidence(
 function buildBlockEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const sections = buildSectionMap(content);
-  const candidates: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
+
+  const sections =
+    buildSectionMap(content);
+
+  const candidates: ExtractedEvidenceCandidate[] =
+    [];
 
   HTML_BLOCK_PATTERN.lastIndex = 0;
 
   let match: RegExpExecArray | null;
 
-  while ((match = HTML_BLOCK_PATTERN.exec(content)) !== null) {
-    const excerpt = normalizeText(
-      match[1] ?? "",
-    );
+  while (
+    (match =
+      HTML_BLOCK_PATTERN.exec(
+        content,
+      )) !== null
+  ) {
+    const excerpt =
+      normalizeText(
+        match[1] ?? "",
+      );
 
     if (!excerpt) continue;
 
-    const section = sectionForIndex(
-      sections,
-      match.index,
-    );
+    const section =
+      sectionForIndex(
+        sections,
+        match.index,
+      );
 
     candidates.push({
-      locator: `document:block:${match.index}`,
-      excerpt: excerpt.slice(
-        0,
-        MAX_EXCERPT_LENGTH,
-      ),
-      ...(section ? { section } : {}),
-      extractionConfidence: "MEDIUM",
+      locator:
+        `document:block:${match.index}`,
+      excerpt:
+        excerpt.slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
+      ...(section
+        ? { section }
+        : {}),
+      extractionConfidence:
+        "MEDIUM",
     });
   }
 
@@ -579,13 +1262,18 @@ function deduplicateEvidence(
   candidates: readonly ExtractedEvidenceCandidate[],
 ): readonly ExtractedEvidenceCandidate[] {
   const seen = new Set<string>();
-  const output: ExtractedEvidenceCandidate[] = [];
+  const output: ExtractedEvidenceCandidate[] =
+    [];
 
-  for (const candidate of candidates) {
+  for (
+    const candidate of candidates
+  ) {
     const key = [
       candidate.locator,
       candidate.excerpt,
       candidate.section ?? "",
+      candidate.table ?? "",
+      candidate.row ?? "",
       candidate.parameter ?? "",
       candidate.value ?? "",
       candidate.unit ?? "",
@@ -604,19 +1292,24 @@ export function extractTextEvidence(
   html: string,
   locator = "document:text",
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const text = decodeHtml(content);
+  const content =
+    selectSemanticContent(html);
+
+  const text =
+    decodeHtml(content);
 
   if (!text) return [];
 
   return [
     {
       locator,
-      excerpt: text.slice(
-        0,
-        MAX_EXCERPT_LENGTH,
-      ),
-      extractionConfidence: "MEDIUM",
+      excerpt:
+        text.slice(
+          0,
+          MAX_EXCERPT_LENGTH,
+        ),
+      extractionConfidence:
+        "MEDIUM",
     },
   ];
 }
@@ -625,23 +1318,34 @@ export function extractEvidenceByPattern(
   html: string,
   patterns: readonly RegExp[],
 ): readonly ExtractedEvidenceCandidate[] {
-  const content = selectSemanticContent(html);
-  const text = decodeHtml(content);
-  const output: ExtractedEvidenceCandidate[] = [];
+  const content =
+    selectSemanticContent(html);
 
-  for (const pattern of patterns) {
+  const text =
+    decodeHtml(content);
+
+  const output: ExtractedEvidenceCandidate[] =
+    [];
+
+  for (
+    const pattern of patterns
+  ) {
     pattern.lastIndex = 0;
 
-    const match = pattern.exec(text);
+    const match =
+      pattern.exec(text);
 
     if (match?.[0]) {
       output.push({
-        locator: `document:pattern:${pattern.source}`,
-        excerpt: match[0].slice(
-          0,
-          MAX_EXCERPT_LENGTH,
-        ),
-        extractionConfidence: "MEDIUM",
+        locator:
+          `document:pattern:${pattern.source}`,
+        excerpt:
+          match[0].slice(
+            0,
+            MAX_EXCERPT_LENGTH,
+          ),
+        extractionConfidence:
+          "MEDIUM",
       });
     }
 
@@ -656,6 +1360,8 @@ export function extractStructuredEvidence(
 ): readonly ExtractedEvidenceCandidate[] {
   return deduplicateEvidence([
     ...buildStructuredEvidence(html),
+    ...buildTableEvidence(html),
     ...buildBlockEvidence(html),
   ]);
 }
+
