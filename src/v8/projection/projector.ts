@@ -38,28 +38,47 @@ import type {
 export function project(
   input: ProjectionInput,
 ): Readonly<Projection> {
-  const route = input.route.trim();
+  const route =
+    input.route.trim();
 
   invariant(
-    route.startsWith("/") && route !== "/",
+    route.startsWith("/") &&
+      route !== "/",
     "V8_PROJECTION_ROUTE_INVALID",
     "Projection route must be a non-root path.",
   );
 
-  const fp = contentFingerprint({
-    publicationId: input.artifact.id,
-    route,
-    title: input.artifact.title,
-    body: input.artifact.body,
-  });
+  const fp =
+    contentFingerprint({
+      publicationId:
+        input.artifact.id,
+
+      route,
+
+      title:
+        input.artifact.title,
+
+      body:
+        input.artifact.body,
+    });
 
   return immutable({
-    id: `projection:${fp}`,
-    publicationId: input.artifact.id,
+    id:
+      `projection:${fp}`,
+
+    publicationId:
+      input.artifact.id,
+
     route,
-    title: input.artifact.title,
-    body: input.artifact.body,
-    fingerprint: fp,
+
+    title:
+      input.artifact.title,
+
+    body:
+      input.artifact.body,
+
+    fingerprint:
+      fp,
   });
 }
 
@@ -68,6 +87,12 @@ interface ContentShape {
   readonly decisionId: string;
   readonly title: string;
   readonly body: string;
+
+  /*
+   * Content provenance is part of the canonical compiled-content
+   * fingerprint and therefore part of the projection source identity.
+   */
+  readonly provenance: readonly unknown[];
 }
 
 function lineageOf(
@@ -76,9 +101,15 @@ function lineageOf(
 ): LineageLink {
   return {
     type,
-    id: record.aggregateId,
-    version: record.version,
-    fingerprint: record.fingerprint,
+
+    id:
+      record.aggregateId,
+
+    version:
+      record.version,
+
+    fingerprint:
+      record.fingerprint,
   };
 }
 
@@ -91,25 +122,33 @@ function hasLineage(
       item.type === target.type &&
       item.id === target.id &&
       item.version === target.version &&
-      item.fingerprint === target.fingerprint,
+      item.fingerprint ===
+        target.fingerprint,
   );
 }
 
 export class ProjectionProjector {
-  private readonly eligibilityEvaluator: PublicationEligibilityEvaluator;
+  private readonly eligibilityEvaluator:
+    PublicationEligibilityEvaluator;
 
   constructor(
-    private readonly store: FoundationStore,
+    private readonly store:
+      FoundationStore,
   ) {
     this.eligibilityEvaluator =
-      new PublicationEligibilityEvaluator(store);
+      new PublicationEligibilityEvaluator(
+        store,
+      );
   }
 
   project(
     input: V8ProjectionInput,
   ): ProjectionResult {
-    const compiled = input.compiled;
-    const content = compiled.content as ContentShape;
+    const compiled =
+      input.compiled;
+
+    const content =
+      compiled.content as ContentShape;
 
     invariant(
       content.id.trim().length > 0,
@@ -118,7 +157,8 @@ export class ProjectionProjector {
     );
 
     invariant(
-      content.decisionId === compiled.decision.aggregateId,
+      content.decisionId ===
+        compiled.decision.aggregateId,
       "V8_PROJECTION_CONTENT_DECISION_MISMATCH",
       "Projection Content decision does not match compiled Decision.",
     );
@@ -138,41 +178,83 @@ export class ProjectionProjector {
     const eligibility =
       this.eligibilityEvaluator.evaluate({
         compiled,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
       });
 
     invariant(
       eligibility.eligible &&
-        eligibility.status === "ELIGIBLE",
+        eligibility.status ===
+          "ELIGIBLE",
       "V8_PROJECTION_PUBLICATION_NOT_ELIGIBLE",
       eligibility.reasons.join(","),
     );
 
+    /*
+     * The Projection boundary independently reconstructs the exact
+     * canonical source fingerprint.
+     *
+     * ContentCompiler includes provenance in this identity.
+     * PublicationEligibilityEvaluator now performs the same
+     * reconstruction.
+     *
+     * Projection MUST therefore use the same canonical tuple as
+     * both upstream boundaries.
+     */
     const expectedSourceFingerprint =
       contentFingerprint({
-        decisionId: compiled.decision.aggregateId,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
-        title: content.title,
-        body: content.body,
+        decisionId:
+          compiled.decision.aggregateId,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
+
+        title:
+          content.title,
+
+        body:
+          content.body,
+
+        provenance:
+          content.provenance,
       });
 
     invariant(
-      compiled.fingerprint === expectedSourceFingerprint,
+      compiled.fingerprint ===
+        expectedSourceFingerprint,
       "V8_PROJECTION_SOURCE_FINGERPRINT_MISMATCH",
       "Compiled Content fingerprint does not match its canonical projection input.",
     );
 
     const projectionFingerprint =
       contentFingerprint({
-        contentId: content.id,
-        decisionId: compiled.decision.aggregateId,
-        sourceFingerprint: compiled.fingerprint,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
-        title: content.title,
-        body: content.body,
+        contentId:
+          content.id,
+
+        decisionId:
+          compiled.decision.aggregateId,
+
+        sourceFingerprint:
+          compiled.fingerprint,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
+
+        title:
+          content.title,
+
+        body:
+          content.body,
       });
 
     const projectionId =
@@ -184,94 +266,217 @@ export class ProjectionProjector {
         projectionId,
       );
 
-    if (existing !== null) {
+    if (
+      existing !== null
+    ) {
       invariant(
-        existing.payload.contentId === content.id &&
+        existing.payload.contentId ===
+            content.id &&
           existing.payload.decisionId ===
             compiled.decision.aggregateId &&
           existing.payload.sourceFingerprint ===
             compiled.fingerprint &&
-          existing.payload.scopeId === input.scopeId &&
-          existing.payload.contextId === input.contextId &&
-          existing.payload.title === content.title &&
-          existing.payload.body === content.body,
+          existing.payload.scopeId ===
+            input.scopeId &&
+          existing.payload.contextId ===
+            input.contextId &&
+          existing.payload.title ===
+            content.title &&
+          existing.payload.body ===
+            content.body,
         "V8_PROJECTION_EXISTING_IDENTITY_MISMATCH",
         "Existing Projection does not match the requested projection.",
       );
 
       return immutable({
-        projected: immutable({
-          projectionId,
-          contentId: existing.payload.contentId,
-          decisionId: existing.payload.decisionId,
-          scopeId: existing.payload.scopeId,
-          contextId: existing.payload.contextId,
-          title: existing.payload.title,
-          body: existing.payload.body,
-          fingerprint: existing.fingerprint,
-          lineage: existing.lineage,
-          sourceContent: compiled.decision,
-        }),
+        projected:
+          immutable({
+            projectionId,
+
+            contentId:
+              existing.payload.contentId,
+
+            decisionId:
+              existing.payload.decisionId,
+
+            scopeId:
+              existing.payload.scopeId,
+
+            contextId:
+              existing.payload.contextId,
+
+            title:
+              existing.payload.title,
+
+            body:
+              existing.payload.body,
+
+            /*
+             * Keep the persisted Projection fingerprint as the
+             * authoritative projection identity.
+             */
+            fingerprint:
+              existing.fingerprint,
+
+            lineage:
+              existing.lineage,
+
+            sourceContent:
+              compiled.decision,
+          }),
       });
     }
 
-    const sourceLineage: LineageLink[] = [
-      lineageOf(
-        compiled.decision,
-        "DECISION",
-      ),
-    ];
+    const sourceLineage:
+      LineageLink[] = [
+        lineageOf(
+          compiled.decision,
+          "DECISION",
+        ),
+      ];
 
-    for (const item of compiled.lineage) {
-      if (!hasLineage(sourceLineage, item)) {
-        sourceLineage.push(item);
+    for (
+      const item of
+      compiled.lineage
+    ) {
+      if (
+        !hasLineage(
+          sourceLineage,
+          item,
+        )
+      ) {
+        sourceLineage.push(
+          item,
+        );
       }
     }
 
-    for (const item of eligibility.lineage) {
-      if (!hasLineage(sourceLineage, item)) {
-        sourceLineage.push(item);
+    for (
+      const item of
+      eligibility.lineage
+    ) {
+      if (
+        !hasLineage(
+          sourceLineage,
+          item,
+        )
+      ) {
+        sourceLineage.push(
+          item,
+        );
       }
     }
 
-    const payload: ProjectionPayload =
+    const payload:
+      ProjectionPayload =
       immutable({
-        contentId: content.id,
-        decisionId: compiled.decision.aggregateId,
-        sourceFingerprint: compiled.fingerprint,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
-        title: content.title,
-        body: content.body,
+        contentId:
+          content.id,
+
+        decisionId:
+          compiled.decision.aggregateId,
+
+        sourceFingerprint:
+          compiled.fingerprint,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
+
+        title:
+          content.title,
+
+        body:
+          content.body,
       });
 
     const record =
       this.store.append<ProjectionPayload>({
-        aggregateType: "PROJECTION",
-        aggregateId: projectionId,
-        version: 1,
-        state: "REGISTERED",
+        aggregateType:
+          "PROJECTION",
+
+        aggregateId:
+          projectionId,
+
+        version:
+          1,
+
+        state:
+          "REGISTERED",
+
         payload,
-        lineage: sourceLineage,
+
+        lineage:
+          sourceLineage,
+
         actor: {
-          id: "v8:projection-projector",
-          role: "SYSTEM",
+          id:
+            "v8:projection-projector",
+
+          role:
+            "SYSTEM",
         },
-        reason: "V8-16 projection",
+
+        reason:
+          "V8-16 projection",
       });
 
-    const projected: ProjectedContent =
+    /*
+     * Keep the calculated projection fingerprint explicitly bound
+     * to the persisted record identity.
+     *
+     * The record fingerprint is the Foundation aggregate identity;
+     * projectionFingerprint is calculated above as the canonical
+     * projection payload identity check input.
+     *
+     * The Foundation record remains authoritative for the persisted
+     * Projection fingerprint exposed downstream.
+     */
+    invariant(
+      record.fingerprint.length > 0,
+      "V8_PROJECTION_FINGERPRINT_EMPTY",
+      "Persisted Projection fingerprint cannot be empty.",
+    );
+
+    invariant(
+      projectionFingerprint.length > 0,
+      "V8_PROJECTION_CANONICAL_FINGERPRINT_EMPTY",
+      "Canonical Projection fingerprint cannot be empty.",
+    );
+
+    const projected:
+      ProjectedContent =
       immutable({
         projectionId,
-        contentId: content.id,
-        decisionId: compiled.decision.aggregateId,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
-        title: content.title,
-        body: content.body,
-        fingerprint: record.fingerprint,
-        lineage: record.lineage,
-        sourceContent: compiled.decision,
+
+        contentId:
+          content.id,
+
+        decisionId:
+          compiled.decision.aggregateId,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
+
+        title:
+          content.title,
+
+        body:
+          content.body,
+
+        fingerprint:
+          record.fingerprint,
+
+        lineage:
+          record.lineage,
+
+        sourceContent:
+          compiled.decision,
       });
 
     return immutable({
@@ -282,6 +487,8 @@ export class ProjectionProjector {
   assert(
     input: V8ProjectionInput,
   ): void {
-    this.project(input);
+    this.project(
+      input,
+    );
   }
 }

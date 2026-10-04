@@ -31,6 +31,19 @@ interface ContentShape {
   readonly decisionId: string;
   readonly title: string;
   readonly body: string;
+
+  /*
+   * V8 Content provenance is part of the immutable compiled
+   * Content identity.
+   *
+   * The compiler includes provenance in CompiledContent.fingerprint.
+   * Publication eligibility therefore MUST include the exact same
+   * provenance payload when independently rebuilding that fingerprint.
+   *
+   * Otherwise a valid compiled Content would be incorrectly rejected
+   * as CONTENT_FINGERPRINT_MISMATCH.
+   */
+  readonly provenance: readonly unknown[];
 }
 
 interface ScopePayload {
@@ -84,7 +97,8 @@ export class PublicationEligibilityEvaluator {
   constructor(
     private readonly store: FoundationStore,
   ) {
-    this.decisionValidator = new DecisionValidator(store);
+    this.decisionValidator =
+      new DecisionValidator(store);
   }
 
   evaluate(
@@ -94,34 +108,85 @@ export class PublicationEligibilityEvaluator {
     const lineage: LineageLink[] = [];
 
     const compiled = input.compiled;
-    const content = compiled.content as ContentShape;
+    const content =
+      compiled.content as ContentShape;
 
     if (content.id.trim().length === 0) {
-      reasons.push("CONTENT_ID_EMPTY");
+      reasons.push(
+        "CONTENT_ID_EMPTY",
+      );
     }
 
     if (content.title.trim().length === 0) {
-      reasons.push("CONTENT_TITLE_EMPTY");
+      reasons.push(
+        "CONTENT_TITLE_EMPTY",
+      );
     }
 
     if (content.body.trim().length === 0) {
-      reasons.push("CONTENT_BODY_EMPTY");
+      reasons.push(
+        "CONTENT_BODY_EMPTY",
+      );
     }
 
-    if (content.decisionId !== compiled.decision.aggregateId) {
-      reasons.push("CONTENT_DECISION_MISMATCH");
+    if (
+      content.decisionId !==
+      compiled.decision.aggregateId
+    ) {
+      reasons.push(
+        "CONTENT_DECISION_MISMATCH",
+      );
     }
 
-    const expectedContentFingerprint = contentFingerprint({
-      decisionId: compiled.decision.aggregateId,
-      scopeId: input.scopeId,
-      contextId: input.contextId,
-      title: content.title,
-      body: content.body,
-    });
+    /*
+     * IMPORTANT:
+     *
+     * ContentCompiler.compile() calculates the immutable Content
+     * fingerprint over:
+     *
+     *   decisionId
+     *   scopeId
+     *   contextId
+     *   title
+     *   body
+     *   provenance
+     *
+     * Publication eligibility is an independent verification
+     * boundary. It MUST reproduce exactly the same canonical
+     * identity calculation.
+     *
+     * Omitting provenance here would make every newly compiled
+     * provenance-bearing Content fail closed with a false
+     * CONTENT_FINGERPRINT_MISMATCH.
+     */
+    const expectedContentFingerprint =
+      contentFingerprint({
+        decisionId:
+          compiled.decision.aggregateId,
 
-    if (compiled.fingerprint !== expectedContentFingerprint) {
-      reasons.push("CONTENT_FINGERPRINT_MISMATCH");
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
+
+        title:
+          content.title,
+
+        body:
+          content.body,
+
+        provenance:
+          content.provenance,
+      });
+
+    if (
+      compiled.fingerprint !==
+      expectedContentFingerprint
+    ) {
+      reasons.push(
+        "CONTENT_FINGERPRINT_MISMATCH",
+      );
     }
 
     const currentDecision =
@@ -131,38 +196,62 @@ export class PublicationEligibilityEvaluator {
       );
 
     if (!currentDecision) {
-      reasons.push("DECISION_NOT_FOUND");
+      reasons.push(
+        "DECISION_NOT_FOUND",
+      );
     } else {
       lineage.push(
-        lineageOf(currentDecision, "DECISION"),
+        lineageOf(
+          currentDecision,
+          "DECISION",
+        ),
       );
 
       if (
         currentDecision.version !==
         compiled.decision.version
       ) {
-        reasons.push("DECISION_VERSION_MISMATCH");
+        reasons.push(
+          "DECISION_VERSION_MISMATCH",
+        );
       }
 
       if (
         currentDecision.fingerprint !==
         compiled.decision.fingerprint
       ) {
-        reasons.push("DECISION_FINGERPRINT_CHANGED");
+        reasons.push(
+          "DECISION_FINGERPRINT_CHANGED",
+        );
       }
     }
 
     const decisionValidation =
       this.decisionValidator.validate({
-        decisionId: compiled.decision.aggregateId,
-        scopeId: input.scopeId,
-        contextId: input.contextId,
+        decisionId:
+          compiled.decision.aggregateId,
+
+        scopeId:
+          input.scopeId,
+
+        contextId:
+          input.contextId,
       });
 
-    reasons.push(...decisionValidation.reasons);
+    reasons.push(
+      ...decisionValidation.reasons,
+    );
 
-    for (const item of decisionValidation.lineage) {
-      if (!hasLineage(lineage, item)) {
+    for (
+      const item of
+      decisionValidation.lineage
+    ) {
+      if (
+        !hasLineage(
+          lineage,
+          item,
+        )
+      ) {
         lineage.push(item);
       }
     }
@@ -174,19 +263,34 @@ export class PublicationEligibilityEvaluator {
       );
 
     if (!scope) {
-      reasons.push("SCOPE_NOT_FOUND");
-    } else {
-      const scopeLink = lineageOf(
-        scope,
-        "SCOPE",
+      reasons.push(
+        "SCOPE_NOT_FOUND",
       );
+    } else {
+      const scopeLink =
+        lineageOf(
+          scope,
+          "SCOPE",
+        );
 
-      if (!hasLineage(lineage, scopeLink)) {
-        lineage.push(scopeLink);
+      if (
+        !hasLineage(
+          lineage,
+          scopeLink,
+        )
+      ) {
+        lineage.push(
+          scopeLink,
+        );
       }
 
-      if (scope.state !== "REGISTERED") {
-        reasons.push("SCOPE_NOT_REGISTERED");
+      if (
+        scope.state !==
+        "REGISTERED"
+      ) {
+        reasons.push(
+          "SCOPE_NOT_REGISTERED",
+        );
       }
     }
 
@@ -197,34 +301,55 @@ export class PublicationEligibilityEvaluator {
       );
 
     if (!context) {
-      reasons.push("CONTEXT_NOT_FOUND");
-    } else {
-      const contextLink = lineageOf(
-        context,
-        "CONTEXT",
+      reasons.push(
+        "CONTEXT_NOT_FOUND",
       );
+    } else {
+      const contextLink =
+        lineageOf(
+          context,
+          "CONTEXT",
+        );
 
-      if (!hasLineage(lineage, contextLink)) {
-        lineage.push(contextLink);
+      if (
+        !hasLineage(
+          lineage,
+          contextLink,
+        )
+      ) {
+        lineage.push(
+          contextLink,
+        );
       }
 
-      if (context.state !== "REGISTERED") {
-        reasons.push("CONTEXT_NOT_REGISTERED");
+      if (
+        context.state !==
+        "REGISTERED"
+      ) {
+        reasons.push(
+          "CONTEXT_NOT_REGISTERED",
+        );
       }
 
       if (
         context.payload.scopeId !==
         input.scopeId
       ) {
-        reasons.push("CONTEXT_SCOPE_MISMATCH");
+        reasons.push(
+          "CONTEXT_SCOPE_MISMATCH",
+        );
       }
     }
 
     const requiresReview =
       decisionValidation.reasons.some(
         (reason) =>
-          reason.includes("REQUIRES_REVIEW") ||
-          reason.includes("NOT_VERIFIED"),
+          reason.includes(
+            "REQUIRES_REVIEW",
+          ) ||
+          reason.includes(
+            "NOT_VERIFIED",
+          ),
       );
 
     const status =
@@ -235,14 +360,28 @@ export class PublicationEligibilityEvaluator {
           : "BLOCKED";
 
     return immutable({
-      eligible: status === "ELIGIBLE",
+      eligible:
+        status === "ELIGIBLE",
+
       status,
-      contentId: content.id,
-      decisionId: compiled.decision.aggregateId,
-      scopeId: input.scopeId,
-      contextId: input.contextId,
-      fingerprint: compiled.fingerprint,
+
+      contentId:
+        content.id,
+
+      decisionId:
+        compiled.decision.aggregateId,
+
+      scopeId:
+        input.scopeId,
+
+      contextId:
+        input.contextId,
+
+      fingerprint:
+        compiled.fingerprint,
+
       reasons,
+
       lineage,
     });
   }
@@ -250,7 +389,10 @@ export class PublicationEligibilityEvaluator {
   assert(
     input: PublicationEligibilityInput,
   ): void {
-    const result = this.evaluate(input);
+    const result =
+      this.evaluate(
+        input,
+      );
 
     invariant(
       result.eligible,
