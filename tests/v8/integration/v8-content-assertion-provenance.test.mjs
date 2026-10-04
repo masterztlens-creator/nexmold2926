@@ -459,14 +459,59 @@ test(
     const fixture =
       buildFixture();
 
-    fixture.store.delete?.(
-      "EVIDENCE",
-      fixture.evidence.aggregateId,
-    );
+    const originalGet =
+      fixture.store.get.bind(
+        fixture.store,
+      );
+
+    const disappearingEvidenceStore =
+      new Proxy(
+        fixture.store,
+        {
+          get(
+            target,
+            property,
+            receiver,
+          ) {
+            if (
+              property ===
+              "get"
+            ) {
+              return (
+                type,
+                id,
+                version,
+              ) => {
+                if (
+                  type ===
+                    "EVIDENCE" &&
+                  id ===
+                    fixture.evidence
+                      .aggregateId
+                ) {
+                  return null;
+                }
+
+                return originalGet(
+                  type,
+                  id,
+                  version,
+                );
+              };
+            }
+
+            return Reflect.get(
+              target,
+              property,
+              receiver,
+            );
+          },
+        },
+      );
 
     const compiler =
       new ContentCompiler(
-        fixture.store,
+        disappearingEvidenceStore,
       );
 
     assert.throws(
