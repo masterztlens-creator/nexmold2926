@@ -70,7 +70,7 @@ function buildFixture() {
   const sourceContent =
     "Wall thickness selection depends on material and process conditions.";
 
-  const source =
+  const sourceRecord =
     service.registerSource(
       {
         id:
@@ -101,6 +101,9 @@ function buildFixture() {
       actor,
     );
 
+  const source =
+    sourceRecord.payload;
+
   const snapshot =
     service.captureSnapshot(
       {
@@ -128,7 +131,7 @@ function buildFixture() {
         id:
           "evidence:v8-content-provenance",
         sourceId:
-          source.aggregateId,
+          source.id,
         snapshotId:
           snapshot.aggregateId,
         locator:
