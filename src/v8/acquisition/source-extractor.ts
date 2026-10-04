@@ -732,13 +732,16 @@ function buildTableEvidence(
         content,
       )) !== null
   ) {
+    const tableIndex =
+      tableMatch.index;
+
     const tableHtml =
       tableMatch[1] ?? "";
 
     const tableSection =
       findTableSection(
         content,
-        tableMatch.index,
+        tableIndex,
         sections,
       );
 
@@ -865,7 +868,7 @@ function buildTableEvidence(
 
       candidates.push({
         locator:
-          `document:table:${tableMatch.index}:row:${rowIndex}`,
+          `document:table:${tableIndex}:row:${rowIndex}`,
         excerpt:
           excerpt.slice(
             0,
@@ -911,7 +914,7 @@ function buildTableEvidence(
       candidates.every(
         (candidate) =>
           !candidate.locator.startsWith(
-            `document:table:${tableMatch.index}:`,
+            `document:table:${tableIndex}:`,
           ),
       )
     ) {
@@ -947,7 +950,7 @@ function buildTableEvidence(
         ) {
           candidates.push({
             locator:
-              `document:table:${tableMatch.index}:range`,
+              `document:table:${tableIndex}:range`,
             excerpt:
               tableText.slice(
                 0,
@@ -1364,4 +1367,3 @@ export function extractStructuredEvidence(
     ...buildBlockEvidence(html),
   ]);
 }
-
