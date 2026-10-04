@@ -18,6 +18,10 @@ import {
 } from "../../../.v8-build/src/v8/projection/index.js";
 
 import {
+  createClaim,
+} from "../../../.v8-build/src/v8/domain/claim.js";
+
+import {
   createKnowledge,
 } from "../../../.v8-build/src/v8/domain/knowledge.js";
 
@@ -30,107 +34,216 @@ const actor = {
   role: "SYSTEM",
 };
 
-const store = new InMemoryFoundationStore();
-const foundation = new FoundationService(store);
+const store =
+  new InMemoryFoundationStore();
 
-const scope = foundation.registerScope(
-  {
-    id: "scope:v8-16",
-    geography: "GLOBAL",
-    industries: ["MANUFACTURING"],
-    languages: ["en"],
-  },
-  actor,
-);
+const foundation =
+  new FoundationService(store);
 
-const context = foundation.registerContext(
-  {
-    id: "context:v8-16",
-    scopeId: scope.aggregateId,
-    purpose: "projection test",
-    variables: {
-      market: "industrial",
+const scope =
+  foundation.registerScope(
+    {
+      id: "scope:v8-16",
+      geography: "GLOBAL",
+      industries: ["MANUFACTURING"],
+      languages: ["en"],
     },
-  },
-  actor,
-);
+    actor,
+  );
 
-const knowledge = createKnowledge({
-  id: "knowledge:v8-16",
-  proposition: "Injection molding requires controlled process conditions.",
-  claimIds: ["claim:v8-16"],
-  status: "APPROVED",
-});
+const context =
+  foundation.registerContext(
+    {
+      id: "context:v8-16",
+      scopeId:
+        scope.aggregateId,
+      purpose:
+        "projection test",
+      variables: {
+        market: "industrial",
+      },
+    },
+    actor,
+  );
 
-store.append({
-  aggregateType: "KNOWLEDGE",
-  aggregateId: knowledge.id,
-  version: 1,
-  state: "VERIFIED",
-  payload: {
-    proposition: knowledge.proposition,
-    claimIds: knowledge.claimIds,
-  },
-  lineage: [],
-  actor,
-  reason: "V8-16 verified knowledge fixture",
-});
-
-const problem = foundation.registerProblem(
-  {
-    id: "problem:v8-16",
-    contextId: context.aggregateId,
-    question: "What process condition should be maintained?",
-    constraints: ["Use verified knowledge only."],
-  },
-  actor,
-);
-
-const decision = foundation.createDecision(
-  {
-    id: "decision:v8-16",
-    problemId: problem.aggregateId,
-    knowledgeIds: [knowledge.id],
-    outcome: "Maintain controlled process conditions.",
-    status: "APPROVED",
-    fingerprint: contentFingerprint({
-      problemId: problem.aggregateId,
-      knowledgeIds: [knowledge.id],
-      outcome: "Maintain controlled process conditions.",
-      status: "APPROVED",
-    }),
-  },
-  scope.aggregateId,
-  context.aggregateId,
-  actor,
-);
-
-const compiler = new ContentCompiler(store);
-
-const compiled = compiler.compile({
-  decisionId: decision.aggregateId,
-  scopeId: scope.aggregateId,
-  contextId: context.aggregateId,
-  title: "Injection Molding Process Conditions",
-});
-
-const eligibility =
-  new PublicationEligibilityEvaluator(store).evaluate({
-    compiled,
-    scopeId: scope.aggregateId,
-    contextId: context.aggregateId,
+const evidence =
+  store.append({
+    aggregateType:
+      "EVIDENCE",
+    aggregateId:
+      "evidence:v8-16",
+    version: 1,
+    state:
+      "VERIFIED",
+    payload: {
+      sourceId:
+        "source:v8-16",
+      locator:
+        "https://example.test/v8-16/injection-molding-process-conditions",
+      excerpt:
+        "Injection molding requires controlled process conditions.",
+      capturedAt:
+        "2026-01-01T00:00:00.000Z",
+      verificationStatus:
+        "VERIFIED",
+    },
+    lineage: [],
+    actor,
+    reason:
+      "V8-16 verified evidence fixture",
   });
 
-assert.equal(eligibility.status, "ELIGIBLE");
-assert.equal(eligibility.eligible, true);
+const claim =
+  foundation.createClaim(
+    createClaim({
+      id:
+        "claim:v8-16",
+      statement:
+        "Injection molding requires controlled process conditions.",
+      evidenceIds: [
+        evidence.aggregateId,
+      ],
+      status:
+        "VERIFIED",
+      confidence:
+        "HIGH",
+      epistemicLevel:
+        "OBSERVATION",
+    }),
+    actor,
+    "V8-16 verified claim fixture",
+  );
 
-const projector = new ProjectionProjector(store);
+const knowledge =
+  foundation.createKnowledge(
+    createKnowledge({
+      id:
+        "knowledge:v8-16",
+      proposition:
+        "Injection molding requires controlled process conditions.",
+      claimIds: [
+        claim.aggregateId,
+      ],
+      status:
+        "APPROVED",
+    }),
+    actor,
+    "V8-16 verified knowledge fixture",
+  );
 
-const result = projector.project({
-  compiled,
-  scopeId: scope.aggregateId,
-  contextId: context.aggregateId,
-});
+const problem =
+  foundation.registerProblem(
+    {
+      id:
+        "problem:v8-16",
+      contextId:
+        context.aggregateId,
+      question:
+        "What process condition should be maintained?",
+      constraints: [
+        "Use verified knowledge only.",
+      ],
+    },
+    actor,
+  );
+
+const decision =
+  foundation.createDecision(
+    {
+      id:
+        "decision:v8-16",
+      problemId:
+        problem.aggregateId,
+      knowledgeIds: [
+        knowledge.aggregateId,
+      ],
+      outcome:
+        "Maintain controlled process conditions.",
+      status:
+        "APPROVED",
+      fingerprint:
+        contentFingerprint({
+          problemId:
+            problem.aggregateId,
+          knowledgeIds: [
+            knowledge.aggregateId,
+          ],
+          outcome:
+            "Maintain controlled process conditions.",
+          status:
+            "APPROVED",
+        }),
+    },
+    scope.aggregateId,
+    context.aggregateId,
+    actor,
+  );
+
+const compiler =
+  new ContentCompiler(store);
+
+const compiled =
+  compiler.compile({
+    decisionId:
+      decision.aggregateId,
+    scopeId:
+      scope.aggregateId,
+    contextId:
+      context.aggregateId,
+    title:
+      "Injection Molding Process Conditions",
+  });
+
+const eligibility =
+  new PublicationEligibilityEvaluator(
+    store,
+  ).evaluate({
+    compiled,
+    scopeId:
+      scope.aggregateId,
+    contextId:
+      context.aggregateId,
+  });
+
+assert.equal(
+  eligibility.status,
+  "ELIGIBLE",
+);
+
+assert.equal(
+  eligibility.eligible,
+  true,
+);
+
+assert.ok(
+  compiled.lineage.some(
+    (item) =>
+      item.type === "CLAIM" &&
+      item.id ===
+        claim.aggregateId,
+  ),
+);
+
+assert.ok(
+  compiled.lineage.some(
+    (item) =>
+      item.type === "EVIDENCE" &&
+      item.id ===
+        evidence.aggregateId,
+  ),
+);
+
+const projector =
+  new ProjectionProjector(store);
+
+const result =
+  projector.project({
+    compiled,
+    scopeId:
+      scope.aggregateId,
+    contextId:
+      context.aggregateId,
+  });
 
 assert.equal(
   result.projected.contentId,
@@ -152,22 +265,34 @@ assert.equal(
   compiled.content.body,
 );
 
-assert.ok(result.projected.fingerprint.length > 0);
-assert.ok(result.projected.lineage.length > 0);
-
-const storedProjection = store.get(
-  "PROJECTION",
-  result.projected.projectionId,
+assert.ok(
+  result.projected.fingerprint.length >
+    0,
 );
 
-assert.ok(storedProjection);
+assert.ok(
+  result.projected.lineage.length >
+    0,
+);
+
+const storedProjection =
+  store.get(
+    "PROJECTION",
+    result.projected.projectionId,
+  );
+
+assert.ok(
+  storedProjection,
+);
+
 assert.equal(
   storedProjection.state,
   "REGISTERED",
 );
 
 assert.equal(
-  storedProjection.payload.sourceFingerprint,
+  storedProjection.payload
+    .sourceFingerprint,
   compiled.fingerprint,
 );
 
@@ -181,11 +306,14 @@ assert.equal(
   context.aggregateId,
 );
 
-const second = projector.project({
-  compiled,
-  scopeId: scope.aggregateId,
-  contextId: context.aggregateId,
-});
+const second =
+  projector.project({
+    compiled,
+    scopeId:
+      scope.aggregateId,
+    contextId:
+      context.aggregateId,
+  });
 
 assert.equal(
   second.projected.projectionId,
@@ -202,10 +330,13 @@ assert.throws(
     projector.project({
       compiled: {
         ...compiled,
-        fingerprint: "tampered",
+        fingerprint:
+          "tampered",
       },
-      scopeId: scope.aggregateId,
-      contextId: context.aggregateId,
+      scopeId:
+        scope.aggregateId,
+      contextId:
+        context.aggregateId,
     }),
   /V8_PROJECTION_SOURCE_FINGERPRINT_MISMATCH|V8_PROJECTION_PUBLICATION_NOT_ELIGIBLE/,
 );
@@ -214,8 +345,10 @@ assert.throws(
   () =>
     projector.project({
       compiled,
-      scopeId: "scope:v8-16-missing",
-      contextId: context.aggregateId,
+      scopeId:
+        "scope:v8-16-missing",
+      contextId:
+        context.aggregateId,
     }),
   /V8_PROJECTION_PUBLICATION_NOT_ELIGIBLE/,
 );
@@ -226,8 +359,42 @@ const projectionHistory =
     result.projected.projectionId,
   );
 
-assert.equal(projectionHistory.length, 1);
+assert.equal(
+  projectionHistory.length,
+  1,
+);
+
+assert.equal(
+  evidence.state,
+  "VERIFIED",
+);
+
+assert.equal(
+  claim.state,
+  "VERIFIED",
+);
+
+assert.equal(
+  knowledge.state,
+  "VERIFIED",
+);
+
+assert.equal(
+  knowledge.payload.claimIds.includes(
+    claim.aggregateId,
+  ),
+  true,
+);
+
+assert.equal(
+  claim.payload.evidenceIds.includes(
+    evidence.aggregateId,
+  ),
+  true,
+);
 
 store.verifyChain();
 
-console.log("V8-16 Projection PASS");
+console.log(
+  "V8-16 Projection PASS",
+);
