@@ -338,6 +338,7 @@ function canonicalEvidenceId(
  *     incidental excerpt matches
  *   - generic phrases that occur throughout the Evidence inventory receive
  *     less weight through deterministic document-frequency weighting
+ *   - at least one core topic anchor must match
  *   - at least one meaningful topic phrase must match
  *   - an individual irrelevant acquisition may contribute zero Evidence
  *   - zero contributing Evidence across the complete acquisition set FAILS
@@ -531,6 +532,61 @@ function buildTopicPhrases(
         value.split(" ").length,
     }),
   );
+}
+
+function buildCoreTopicAnchors(
+  question: string,
+): readonly string[] {
+  const normalized =
+    normalizeTopicText(question);
+
+  const aboutMatch =
+    normalized.match(
+      /\b(?:about|regarding|concerning)\b(.+)$/u,
+    );
+
+  const focusText =
+    aboutMatch?.[1]?.trim() ??
+    normalized;
+
+  const tokens =
+    topicTokens(focusText);
+
+  if (tokens.length < 2) {
+    return [];
+  }
+
+  /*
+   * The core topic is the semantic object at the end of the question,
+   * not the broad domain context that precedes it.
+   *
+   * Example:
+   *
+   *   What evidence-backed information can be stated about
+   *   plastic injection molding wall thickness?
+   *
+   * becomes:
+   *
+   *   wall thickness
+   *
+   * The broader phrase "plastic injection molding" remains useful for
+   * relevance scoring, but it cannot satisfy this gate by itself.
+   *
+   * This is intentionally deterministic and lexical. It does not infer
+   * facts from Evidence and does not introduce an external ontology.
+   */
+  const anchors: string[] = [];
+
+  const finalPair =
+    tokens
+      .slice(-2)
+      .join(" ");
+
+  if (finalPair.length > 0) {
+    anchors.push(finalPair);
+  }
+
+  return uniqueStrings(anchors);
 }
 
 function evidenceSearchText(
@@ -894,6 +950,11 @@ function selectRuntimeEvidence(
       question,
     );
 
+  const coreTopicAnchors =
+    buildCoreTopicAnchors(
+      question,
+    );
+
   const questionTokens =
     topicTokens(
       question,
@@ -901,9 +962,10 @@ function selectRuntimeEvidence(
 
   invariant(
     topicPhrases.length > 0 &&
-      questionTokens.length > 0,
+      questionTokens.length > 0 &&
+      coreTopicAnchors.length > 0,
     "V8_ARTICLE_RUNTIME_INVALID_TOPIC",
-    "Problem.question does not contain a selectable semantic topic.",
+    "Problem.question does not contain a selectable semantic topic anchor.",
   );
 
   const phraseFrequency =
@@ -996,12 +1058,29 @@ function selectRuntimeEvidence(
         );
 
       /*
-       * A meaningful topic phrase is mandatory.
+       * A core topic anchor is mandatory.
        *
-       * Generic token overlap alone is not sufficient because a page may
-       * contain broad manufacturing terminology around several unrelated
-       * parameters.
+       * Generic domain overlap such as "plastic injection molding" is not
+       * sufficient because one page may contain several unrelated
+       * manufacturing parameters.
        */
+      const normalizedEvidenceText =
+        evidenceSearchText(
+          payload,
+        );
+
+      const coreTopicMatched =
+        coreTopicAnchors.some(
+          (anchor) =>
+            normalizedEvidenceText.includes(
+              anchor,
+            ),
+        );
+
+      if (!coreTopicMatched) {
+        continue;
+      }
+
       if (
         relevance.phraseMatches.length ===
         0
