@@ -155,7 +155,7 @@ function createAcquisitionConfig(
           url,
 
           source:
-            "TEST",
+            "DIRECT",
 
           reason:
             "V8 Runtime topic-selection regression fixture.",
