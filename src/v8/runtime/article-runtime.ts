@@ -540,53 +540,263 @@ function buildCoreTopicAnchors(
   const normalized =
     normalizeTopicText(question);
 
-  const aboutMatch =
-    normalized.match(
-      /\b(?:about|regarding|concerning)\b(.+)$/u,
+  /*
+   * These are semantic nouns that can occur in a question but do not
+   * constitute a selectable industrial topic by themselves.
+   *
+   * The selector must fail closed for questions such as:
+   *
+   *   "What information?"
+   *
+   * rather than treating "information" as a topic anchor.
+   */
+  const genericTopicTerms = new Set([
+    "answer",
+    "answers",
+    "data",
+    "detail",
+    "details",
+    "fact",
+    "facts",
+    "information",
+    "item",
+    "items",
+    "thing",
+    "things",
+    "value",
+    "values",
+  ]);
+
+  const semanticTopicTokens = (
+    value: string,
+  ): readonly string[] =>
+    topicTokens(value).filter(
+      (token) =>
+        !genericTopicTerms.has(token),
     );
 
-  const focusText =
-    aboutMatch?.[1]?.trim() ??
-    normalized;
-
-  const tokens =
-    topicTokens(focusText);
-
-  if (tokens.length < 2) {
-    return [];
-  }
-
   /*
-   * The core topic is the semantic object at the end of the question,
-   * not the broad domain context that precedes it.
+   * Remove grammatical/contextual material that follows the semantic
+   * object requested by the Problem.
    *
-   * Example:
+   * For example:
    *
-   *   What evidence-backed information can be stated about
-   *   plastic injection molding wall thickness?
+   *   wall thickness for plastic injection molding
    *
    * becomes:
    *
    *   wall thickness
    *
-   * The broader phrase "plastic injection molding" remains useful for
-   * relevance scoring, but it cannot satisfy this gate by itself.
+   * Likewise:
    *
-   * This is intentionally deterministic and lexical. It does not infer
-   * facts from Evidence and does not introduce an external ontology.
+   *   wall thickness is appropriate for ...
+   *
+   * becomes:
+   *
+   *   wall thickness
+   *
+   * This prevents broad domain context from becoming the core topic.
    */
-  const anchors: string[] = [];
+  const normalizeFocusText = (
+    value: string,
+  ): string =>
+    value
+      .replace(
+        /\b(?:for|with|under|using|within|during|on)\b.+$/u,
+        "",
+      )
+      .replace(
+        /\b(?:is|are|was|were|be|being|been|should|can|could|would|will|may|might)\b.+$/u,
+        "",
+      )
+      .trim();
 
-  const finalPair =
-    tokens
-      .slice(-2)
-      .join(" ");
+  let focusText =
+    normalized;
 
-  if (finalPair.length > 0) {
-    anchors.push(finalPair);
+  /*
+   * "about / regarding / concerning" explicitly identifies the semantic
+   * object in the question.
+   *
+   * Example:
+   *
+   *   What evidence-backed information can be stated about
+   *   wall thickness for plastic injection molding?
+   *
+   * becomes:
+   *
+   *   wall thickness
+   */
+  const aboutMatch =
+    normalized.match(
+      /\b(?:about|regarding|concerning)\b(.+)$/u,
+    );
+
+  if (
+    aboutMatch?.[1]
+  ) {
+    focusText =
+      normalizeFocusText(
+        aboutMatch[1],
+      );
+  } else {
+    /*
+     * "What ..." questions frequently put the requested object immediately
+     * after the interrogative and before the predicate.
+     *
+     * Examples:
+     *
+     *   What wall thickness is appropriate ...
+     *   What are the recommended wall thickness, draft angle, and
+     *   rib thickness values for ...
+     */
+    const whatMatch =
+      normalized.match(
+        /^what\s+(?:are\s+|is\s+)?(.+)$/u,
+      );
+
+    if (
+      whatMatch?.[1]
+    ) {
+      focusText =
+        whatMatch[1];
+
+      /*
+       * For list-style questions, "values" marks the end of the requested
+       * topic list and the beginning of the domain/context clause.
+       */
+      const valuesMatch =
+        focusText.match(
+          /^(.+?)\s+values?\b/u,
+        );
+
+      if (
+        valuesMatch?.[1]
+      ) {
+        focusText =
+          valuesMatch[1];
+      } else {
+        focusText =
+          normalizeFocusText(
+            focusText,
+          );
+      }
+    }
   }
 
-  return uniqueStrings(anchors);
+  /*
+   * Split explicit topic lists.
+   *
+   * Example:
+   *
+   *   recommended wall thickness, draft angle, and rib thickness
+   *
+   * becomes three semantic segments.
+   */
+  const segments =
+    focusText
+      .split(
+        /\s*(?:,|;|\band\b)\s*/u,
+      )
+      .map(
+        (segment) =>
+          segment
+            .replace(
+              /^(?:the|a|an|recommended|appropriate|suitable|proper|nominal)\b\s+/u,
+              "",
+            )
+            .trim(),
+      )
+      .filter(
+        (segment) =>
+          semanticTopicTokens(
+            segment,
+          ).length >= 2,
+      );
+
+  const anchors: string[] = [];
+
+  for (
+    const segment of segments
+  ) {
+    const tokens =
+      semanticTopicTokens(
+        segment,
+      );
+
+    if (
+      tokens.length >= 2
+    ) {
+      /*
+       * The final two semantic tokens are the compact deterministic topic
+       * representation.
+       *
+       *   wall thickness
+       *   draft angle
+       *   rib thickness
+       */
+      anchors.push(
+        tokens
+          .slice(-2)
+          .join(" "),
+      );
+    }
+  }
+
+  /*
+   * Fallback for a non-list question whose semantic object survives as one
+   * contiguous phrase.
+   */
+  if (
+    anchors.length === 0
+  ) {
+    const fallbackTokens =
+      semanticTopicTokens(
+        normalizeFocusText(
+          focusText,
+        ),
+      );
+
+    if (
+      fallbackTokens.length >= 2
+    ) {
+      anchors.push(
+        fallbackTokens
+          .slice(-2)
+          .join(" "),
+      );
+    }
+  }
+
+  /*
+   * Core Topic anchors represent the semantic object requested by the
+   * Problem, not the broad manufacturing domain surrounding that object.
+   *
+   * Examples:
+   *
+   *   What wall thickness is appropriate for plastic injection molding
+   *   with high shrinkage materials?
+   *
+   *   -> wall thickness
+   *
+   *   What are the recommended wall thickness, draft angle, and rib
+   *   thickness values for plastic injection molding?
+   *
+   *   -> wall thickness
+   *   -> draft angle
+   *   -> rib thickness
+   *
+   * The domain phrase "plastic injection molding" is deliberately excluded
+   * from this gate. It may contribute to deterministic relevance scoring,
+   * but it cannot by itself satisfy the core-topic requirement.
+   *
+   * This remains lexical and deterministic. No external ontology, model,
+   * generated fact, or Evidence-derived topic is introduced.
+   */
+
+  return uniqueStrings(
+    anchors,
+  );
 }
 
 function evidenceSearchText(
