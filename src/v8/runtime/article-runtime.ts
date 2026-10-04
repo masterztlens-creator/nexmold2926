@@ -565,6 +565,29 @@ function buildCoreTopicAnchors(
     "things",
     "value",
     "values",
+
+    /*
+     * These are semantic wrapper nouns rather than the industrial object
+     * being requested.
+     *
+     * Example:
+     *
+     *   What wall-thickness considerations should be applied ...
+     *
+     * must resolve to:
+     *
+     *   wall thickness
+     *
+     * rather than:
+     *
+     *   thickness considerations
+     *
+     * Treating these words as non-topic wrappers preserves the fail-closed
+     * requirement while preventing grammatical framing from becoming the
+     * topic anchor.
+     */
+    "consideration",
+    "considerations",
   ]);
 
   const semanticTopicTokens = (
