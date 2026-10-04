@@ -289,7 +289,34 @@ function canonicalEvidenceId(
  *        ↓
  *   deterministic relevance score
  *        ↓
- *   one canonical Evidence per acquisition
+ *   zero or one canonical contributing Evidence per acquisition
+ *
+ * An Acquisition is an observation boundary. It is NOT itself proof that
+ * the fetched page contains Evidence relevant to the current Problem.
+ *
+ * Therefore:
+ *
+ *   Acquisition
+ *        ↓
+ *   complete persisted Evidence inventory
+ *        ↓
+ *   topic relevance selection
+ *        ↓
+ *   0..1 contributing Evidence
+ *
+ * is valid.
+ *
+ * An irrelevant page MUST NOT be fabricated into a relevant Evidence record
+ * merely to satisfy a cardinality requirement.
+ *
+ * However, the Article Runtime remains fail-closed globally:
+ *
+ *   total topic-relevant Evidence === 0
+ *        ↓
+ *      FAIL
+ *
+ * This preserves the fundamental V8 contract that unsupported Claims,
+ * Knowledge, Decisions, and Content cannot be produced.
  *
  * The selector never falls back to "the first Evidence".
  *
@@ -312,7 +339,8 @@ function canonicalEvidenceId(
  *   - generic phrases that occur throughout the Evidence inventory receive
  *     less weight through deterministic document-frequency weighting
  *   - at least one meaningful topic phrase must match
- *   - no topic-relevant Evidence means FAIL CLOSED
+ *   - an individual irrelevant acquisition may contribute zero Evidence
+ *   - zero contributing Evidence across the complete acquisition set FAILS
  *
  * No Evidence is deleted or mutated by this function.
  */
@@ -1001,15 +1029,36 @@ function selectRuntimeEvidence(
       }
     }
 
-    invariant(
-      selectedForAcquisition !==
-        undefined,
-      "V8_ARTICLE_RUNTIME_NO_TOPIC_RELEVANT_EVIDENCE",
-      [
-        `Acquisition ${record.candidateUrl} produced no Evidence relevant to Problem.question.`,
-        `question=${question}`,
-      ].join(" "),
-    );
+    /*
+     * An Acquisition is allowed to be non-contributing.
+     *
+     * This is not an Evidence rejection and it does not remove anything
+     * from the Foundation inventory. It simply means that the fetched
+     * Internet page did not provide Evidence relevant enough to the current
+     * Problem.question to enter this Article Runtime's Truth Production
+     * boundary.
+     *
+     * In particular, an unrelated page such as an About page must not be
+     * manufactured into a topic Evidence record merely because the
+     * Acquisition itself succeeded.
+     */
+    if (
+      selectedForAcquisition ===
+      undefined
+    ) {
+      console.debug(
+        "[V8-ARTICLE-RUNTIME][NON-CONTRIBUTING]",
+        JSON.stringify({
+          candidateUrl:
+            record.candidateUrl,
+          question,
+          reason:
+            "NO_TOPIC_RELEVANT_EVIDENCE",
+        }),
+      );
+
+      continue;
+    }
 
     /*
      * Deterministic diagnostic only. No external state is changed.
@@ -1049,11 +1098,22 @@ function selectRuntimeEvidence(
     });
   }
 
+  /*
+   * Global fail-closed boundary.
+   *
+   * Individual irrelevant acquisitions are valid and preserved.
+   * What is invalid is attempting to produce an article when the complete
+   * Internet acquisition set contains no Evidence relevant to the Problem.
+   */
   invariant(
-    selected.length ===
-      acquisitions.length,
-    "V8_ARTICLE_RUNTIME_EVIDENCE_SELECTION_INCOMPLETE",
-    "Runtime Evidence selection did not produce one topic-relevant canonical Evidence record per acquisition.",
+    selected.length > 0,
+    "V8_ARTICLE_RUNTIME_NO_TOPIC_RELEVANT_EVIDENCE",
+    [
+      "No acquired Evidence is relevant to Problem.question.",
+      `question=${question}`,
+      `acquisitions=${acquisitions.length}`,
+      `totalEvidence=${totalEvidenceCount}`,
+    ].join(" "),
   );
 
   return selected;
@@ -1175,12 +1235,14 @@ export async function runV8ArticleRuntime(
   /*
    * The Foundation retains the complete Evidence inventory.
    *
-   * Runtime Truth Production uses one deterministic topic-relevant canonical
-   * Evidence aggregate per acquisition rather than promoting the entire
-   * extraction inventory into Claims and Knowledge.
+   * Runtime Truth Production uses zero or one deterministic topic-relevant
+   * canonical Evidence aggregate per acquisition.
    *
-   * Critically, this selection is driven by Problem.question rather than
-   * extractor order.
+   * An acquisition that has no relevant Evidence remains fully preserved in
+   * the Foundation but does not cross the Truth Production boundary.
+   *
+   * The selector itself remains globally fail-closed when no contributing
+   * Evidence exists anywhere in the acquired Internet evidence inventory.
    */
   const selectedEvidence =
     selectRuntimeEvidence(
@@ -1200,8 +1262,6 @@ export async function runV8ArticleRuntime(
 
   invariant(
     evidenceIds.length > 0 &&
-      evidenceIds.length ===
-        acquisition.acquisitions.length &&
       evidenceIds.length ===
         selectedEvidencePayloads.length,
     "V8_ARTICLE_RUNTIME_EVIDENCE_ID_MAPPING_FAILED",
@@ -1245,11 +1305,17 @@ export async function runV8ArticleRuntime(
     );
   }
 
+  /*
+   * Verification cardinality is based on the number of selected contributing
+   * Evidence records, not the number of Internet Acquisition records.
+   *
+   * An irrelevant Acquisition may legitimately contribute zero Evidence.
+   */
   invariant(
     verifiedEvidenceIds.length ===
-      acquisition.acquisitions.length,
+      evidenceIds.length,
     "V8_ARTICLE_RUNTIME_VERIFIED_EVIDENCE_COUNT_MISMATCH",
-    "The number of verified runtime Evidence records does not match the number of acquisitions.",
+    "The number of verified runtime Evidence records does not match the number of selected runtime Evidence records.",
   );
 
   const verifiedPayloads =
