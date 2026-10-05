@@ -705,8 +705,6 @@ function scoreResearchCandidate(
 
   return score;
 }
-
-
 function selectResearchSeeds(
   candidates,
   query,
@@ -950,6 +948,30 @@ function isStructuralContentLine(
   if (
     normalized ===
     "---"
+  ) {
+    return true;
+  }
+
+  /*
+   * V8 Content structural-line contract.
+   *
+   * These labels are presentation structure emitted by
+   * ContentCompiler and are NOT independent factual assertions.
+   *
+   * The Article Assertion Audit must use the same structural
+   * definition as src/v8/domain/content.ts.
+   */
+  if (
+    normalized ===
+      "Problem" ||
+    normalized ===
+      "Decision" ||
+    normalized ===
+      "Verified knowledge" ||
+    normalized ===
+      "Context" ||
+    normalized ===
+      "Constraints"
   ) {
     return true;
   }
@@ -1298,13 +1320,12 @@ function createManifest({
           [
             runtime.verifiedEvidenceIds[
               index
-            ] ??
-              null,
-          ],
+            ],
+          ] ??
+          null,
       }),
     );
-
-  const base = {
+      const base = {
     schema:
       "nexmold.v8.first-article-manifest.v3",
 
@@ -2185,9 +2206,7 @@ async function main() {
   console.log(
     `13. Article body length: ${runtime.content.body.length}`,
   );
-
-
-  /*
+    /*
    * ----------------------------------------------------------
    * 5. ARTICLE ARTIFACT
    * ----------------------------------------------------------
