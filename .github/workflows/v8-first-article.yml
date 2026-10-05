@@ -113,7 +113,7 @@ jobs:
 
           if (
             manifest.schema !==
-            "nexmold.v8.first-article-manifest.v2"
+            "nexmold.v8.first-article-manifest.v3"
           ) {
             throw new Error(
               `V8_FIRST_ARTICLE_MANIFEST_SCHEMA_INVALID:${manifest.schema ?? "missing"}`,
@@ -610,6 +610,214 @@ jobs:
           }
 
           if (
+            !Array.isArray(
+              runtime.content.provenance,
+            ) ||
+            runtime.content.provenance.length === 0
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_CONTENT_PROVENANCE_MISSING",
+            );
+          }
+
+          if (
+            !Number.isInteger(
+              runtime.assertionCount,
+            ) ||
+            runtime.assertionCount < 1
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ASSERTION_COUNT_INVALID",
+            );
+          }
+
+          if (
+            runtime.assertionCount !==
+            runtime.content.provenance.length
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ASSERTION_COUNT_MISMATCH",
+            );
+          }
+
+          const claimSet =
+            new Set(
+              claimIds,
+            );
+
+          const knowledgeSet =
+            new Set(
+              knowledgeIds,
+            );
+
+          for (
+            const assertion of
+              runtime.content.provenance
+          ) {
+            if (
+              !assertion ||
+              typeof assertion !== "object"
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_ASSERTION_PROVENANCE_INVALID",
+              );
+            }
+
+            if (
+              !Number.isInteger(
+                assertion.ordinal,
+              )
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_ASSERTION_ORDINAL_INVALID",
+              );
+            }
+
+            if (
+              typeof assertion.text !==
+                "string" ||
+              assertion.text.trim().length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_TEXT_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              typeof assertion.fingerprint !==
+                "string" ||
+              assertion.fingerprint.length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_FINGERPRINT_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              typeof assertion.kind !==
+                "string" ||
+              assertion.kind.trim().length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_KIND_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.knowledgeIds,
+              ) ||
+              assertion.knowledgeIds.length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_KNOWLEDGE_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.claimIds,
+              ) ||
+              assertion.claimIds.length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_CLAIMS_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.evidenceIds,
+              ) ||
+              assertion.evidenceIds.length === 0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_ASSERTION_EVIDENCE_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            for (
+              const knowledgeId of
+                assertion.knowledgeIds
+            ) {
+              if (
+                !knowledgeSet.has(
+                  knowledgeId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_ASSERTION_KNOWLEDGE_NOT_IN_FOUNDATION:${assertion.ordinal}:${knowledgeId}`,
+                );
+              }
+            }
+
+            for (
+              const claimId of
+                assertion.claimIds
+            ) {
+              if (
+                !claimSet.has(
+                  claimId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_ASSERTION_CLAIM_NOT_IN_FOUNDATION:${assertion.ordinal}:${claimId}`,
+                );
+              }
+            }
+
+            for (
+              const evidenceId of
+                assertion.evidenceIds
+            ) {
+              if (
+                !verifiedEvidenceSet.has(
+                  evidenceId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_ASSERTION_EVIDENCE_NOT_IN_FOUNDATION:${assertion.ordinal}:${evidenceId}`,
+                );
+              }
+            }
+          }
+
+          const expectedOrdinals =
+            Array.from(
+              {
+                length:
+                  runtime.content.provenance.length,
+              },
+              (
+                _,
+                index,
+              ) =>
+                index,
+            );
+
+          const actualOrdinals =
+            runtime.content.provenance
+              .map(
+                (
+                  assertion,
+                ) =>
+                  assertion.ordinal,
+              );
+
+          if (
+            JSON.stringify(
+              actualOrdinals,
+            ) !==
+            JSON.stringify(
+              expectedOrdinals,
+            )
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_ASSERTION_ORDINAL_SEQUENCE_INVALID",
+            );
+          }
+
+          if (
             discovery.candidatesAccepted <
             acquisition.candidates
           ) {
@@ -656,6 +864,10 @@ jobs:
 
           console.log(
             `Decision: ${decisionId}`,
+          );
+
+          console.log(
+            `Assertions: ${runtime.content.provenance.length}`,
           );
           NODE
 
@@ -782,6 +994,16 @@ jobs:
               source.snapshotId,
             );
 
+            if (
+              !Array.isArray(
+                source.evidenceIds,
+              )
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_SOURCE_EVIDENCE_IDS_INVALID:${source.sourceId}`,
+              );
+            }
+
             for (
               const evidenceId of
                 source.evidenceIds
@@ -840,20 +1062,233 @@ jobs:
             );
           }
 
+          const provenance =
+            runtime?.content?.provenance;
+
           if (
-            foundation.claimIds.length < 1
+            !Array.isArray(
+              provenance,
+            ) ||
+            provenance.length === 0
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_NO_CLAIMS",
+              "V8_FIRST_ARTICLE_PROVENANCE_ASSERTIONS_MISSING",
             );
           }
 
           if (
-            foundation.knowledgeIds.length < 1
+            runtime.assertionCount !==
+            provenance.length
           ) {
             throw new Error(
-              "V8_FIRST_ARTICLE_PROVENANCE_NO_KNOWLEDGE",
+              "V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_COUNT_MISMATCH",
             );
+          }
+
+          const claimSet =
+            new Set(
+              foundation.claimIds,
+            );
+
+          const knowledgeSet =
+            new Set(
+              foundation.knowledgeIds,
+            );
+
+          const expectedOrdinals =
+            Array.from(
+              {
+                length:
+                  provenance.length,
+              },
+              (
+                _,
+                index,
+              ) =>
+                index,
+            );
+
+          const actualOrdinals =
+            provenance.map(
+              (
+                assertion,
+              ) =>
+                assertion?.ordinal,
+            );
+
+          if (
+            JSON.stringify(
+              actualOrdinals,
+            ) !==
+            JSON.stringify(
+              expectedOrdinals,
+            )
+          ) {
+            throw new Error(
+              "V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_ORDINAL_SEQUENCE_INVALID",
+            );
+          }
+
+          for (
+            const assertion of
+              provenance
+          ) {
+            if (
+              !assertion ||
+              typeof assertion !==
+                "object"
+            ) {
+              throw new Error(
+                "V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_INVALID",
+              );
+            }
+
+            if (
+              typeof assertion.text !==
+                "string" ||
+              assertion.text.trim().length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_TEXT_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              typeof assertion.fingerprint !==
+                "string" ||
+              assertion.fingerprint.length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_FINGERPRINT_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              typeof assertion.kind !==
+                "string" ||
+              assertion.kind.trim().length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_KIND_INVALID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.knowledgeIds,
+              ) ||
+              assertion.knowledgeIds.length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_KNOWLEDGE_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.claimIds,
+              ) ||
+              assertion.claimIds.length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_CLAIMS_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              !Array.isArray(
+                assertion.evidenceIds,
+              ) ||
+              assertion.evidenceIds.length ===
+                0
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_EVIDENCE_MISSING:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              new Set(
+                assertion.knowledgeIds,
+              ).size !==
+              assertion.knowledgeIds.length
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_DUPLICATE_KNOWLEDGE_ID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              new Set(
+                assertion.claimIds,
+              ).size !==
+              assertion.claimIds.length
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_DUPLICATE_CLAIM_ID:${assertion.ordinal}`,
+              );
+            }
+
+            if (
+              new Set(
+                assertion.evidenceIds,
+              ).size !==
+              assertion.evidenceIds.length
+            ) {
+              throw new Error(
+                `V8_FIRST_ARTICLE_PROVENANCE_DUPLICATE_EVIDENCE_ID:${assertion.ordinal}`,
+              );
+            }
+
+            for (
+              const knowledgeId of
+                assertion.knowledgeIds
+            ) {
+              if (
+                !knowledgeSet.has(
+                  knowledgeId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_PROVENANCE_KNOWLEDGE_NOT_IN_FOUNDATION:${assertion.ordinal}:${knowledgeId}`,
+                );
+              }
+            }
+
+            for (
+              const claimId of
+                assertion.claimIds
+            ) {
+              if (
+                !claimSet.has(
+                  claimId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_PROVENANCE_CLAIM_NOT_IN_FOUNDATION:${assertion.ordinal}:${claimId}`,
+                );
+              }
+            }
+
+            for (
+              const evidenceId of
+                assertion.evidenceIds
+            ) {
+              if (
+                !verifiedEvidenceIds.has(
+                  evidenceId,
+                )
+              ) {
+                throw new Error(
+                  `V8_FIRST_ARTICLE_PROVENANCE_EVIDENCE_NOT_IN_FOUNDATION:${assertion.ordinal}:${evidenceId}`,
+                );
+              }
+            }
           }
 
           console.log(
@@ -882,6 +1317,10 @@ jobs:
 
           console.log(
             `Decision: ${foundation.decisionId}`,
+          );
+
+          console.log(
+            `Assertions: ${provenance.length}`,
           );
 
           console.log(

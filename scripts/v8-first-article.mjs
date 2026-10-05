@@ -843,16 +843,8 @@ function requireTopicRelevantResearchSeed(
  * ARTICLE CONTENT
  * ============================================================
  *
- * Current Content contract:
- *
- *   {
- *     id,
- *     decisionId,
- *     title,
- *     body
- *   }
- *
- * No Content.provenance is assumed.
+ * Content.provenance is the authoritative assertion-level
+ * epistemic lineage emitted by Article Runtime.
  */
 
 function createArticleMarkdown(
@@ -881,6 +873,15 @@ function createArticleMarkdown(
     "runtime content contains no article body",
   );
 
+  requireCondition(
+    Array.isArray(
+      content.provenance,
+    ) &&
+      content.provenance.length >
+        0,
+    "runtime content contains no assertion provenance",
+  );
+
   return [
     `# ${content.title.trim()}`,
     "",
@@ -899,24 +900,12 @@ function createArticleMarkdown(
  * ARTICLE ASSERTION AUDIT
  * ============================================================
  *
- * This audit is intentionally independent of Content.provenance.
+ * Content.provenance is authoritative.
  *
- * The current Content aggregate contains only:
- *
- *   id
- *   decisionId
- *   title
- *   body
- *
- * The epistemic lineage is therefore verified through the Runtime
- * closure:
- *
- *   Evidence IDs
- *   Claim IDs
- *   Knowledge IDs
- *   Decision ID
- *
- * rather than through an invented Content.provenance property.
+ * The body is independently reconstructed into the same
+ * auditable assertion sequence and every persisted provenance
+ * record is checked against its exact ordinal, text and
+ * fingerprint.
  */
 
 function isStructuralContentLine(
@@ -969,6 +958,51 @@ function isStructuralContentLine(
 }
 
 
+function normalizeProvenanceIds(
+  value,
+  label,
+  ordinal,
+) {
+  requireCondition(
+    Array.isArray(
+      value,
+    ),
+    `${label} is not an array at assertion ${ordinal}`,
+  );
+
+  requireCondition(
+    value.length >
+      0,
+    `${label} is empty at assertion ${ordinal}`,
+  );
+
+  const normalized =
+    value.map(
+      (id) =>
+        String(id),
+    );
+
+  requireCondition(
+    normalized.every(
+      (id) =>
+        id.trim().length >
+        0,
+    ),
+    `${label} contains an empty ID at assertion ${ordinal}`,
+  );
+
+  requireCondition(
+    new Set(
+      normalized,
+    ).size ===
+      normalized.length,
+    `${label} contains duplicate IDs at assertion ${ordinal}`,
+  );
+
+  return normalized;
+}
+
+
 function buildArticleAssertionAudit(
   content,
 ) {
@@ -985,6 +1019,19 @@ function buildArticleAssertionAudit(
       content.body.trim().length >
         0,
     "compiled content body is empty",
+  );
+
+  requireCondition(
+    Array.isArray(
+      content.provenance,
+    ),
+    "compiled content provenance is missing",
+  );
+
+  requireCondition(
+    content.provenance.length >
+      0,
+    "compiled content provenance is empty",
   );
 
   const assertions =
@@ -1011,20 +1058,92 @@ function buildArticleAssertionAudit(
     "compiled content contains no auditable assertions",
   );
 
-  return assertions.map(
+  requireCondition(
+    assertions.length ===
+      content.provenance.length,
+    `compiled content assertion count ${assertions.length} differs from Content.provenance count ${content.provenance.length}`,
+  );
+
+  return content.provenance.map(
     (
-      text,
+      provenance,
       ordinal,
-    ) => ({
-      ordinal,
+    ) => {
+      requireCondition(
+        provenance !== null &&
+          typeof provenance ===
+            "object",
+        `Content.provenance[${ordinal}] is invalid`,
+      );
 
-      text,
+      requireCondition(
+        provenance.ordinal ===
+          ordinal,
+        `Content.provenance[${ordinal}] ordinal mismatch`,
+      );
 
-      fingerprint:
+      const text =
+        assertions[
+          ordinal
+        ];
+
+      const fingerprint =
         contentFingerprint(
           text,
-        ),
-    }),
+        );
+
+      requireCondition(
+        provenance.text ===
+          text,
+        `Content.provenance[${ordinal}] text mismatch`,
+      );
+
+      requireCondition(
+        provenance.fingerprint ===
+          fingerprint,
+        `Content.provenance[${ordinal}] fingerprint mismatch`,
+      );
+
+      requireCondition(
+        typeof provenance.kind ===
+          "string" &&
+          provenance.kind.trim().length >
+            0,
+        `Content.provenance[${ordinal}] kind is missing`,
+      );
+
+      return {
+        ordinal,
+
+        text,
+
+        fingerprint,
+
+        kind:
+          provenance.kind,
+
+        knowledgeIds:
+          normalizeProvenanceIds(
+            provenance.knowledgeIds,
+            "knowledgeIds",
+            ordinal,
+          ),
+
+        claimIds:
+          normalizeProvenanceIds(
+            provenance.claimIds,
+            "claimIds",
+            ordinal,
+          ),
+
+        evidenceIds:
+          normalizeProvenanceIds(
+            provenance.evidenceIds,
+            "evidenceIds",
+            ordinal,
+          ),
+      };
+    },
   );
 }
 
@@ -1362,6 +1481,40 @@ function createManifest({
 
             bodyLength:
               runtime.content.body.length,
+
+            provenance:
+              assertionAudit.map(
+                (
+                  assertion,
+                ) => ({
+                  ordinal:
+                    assertion.ordinal,
+
+                  text:
+                    assertion.text,
+
+                  fingerprint:
+                    assertion.fingerprint,
+
+                  kind:
+                    assertion.kind,
+
+                  knowledgeIds:
+                    [
+                      ...assertion.knowledgeIds,
+                    ],
+
+                  claimIds:
+                    [
+                      ...assertion.claimIds,
+                    ],
+
+                  evidenceIds:
+                    [
+                      ...assertion.evidenceIds,
+                    ],
+                }),
+              ),
           },
 
         assertionCount:
@@ -1403,6 +1556,7 @@ function createManifest({
 function verifyPersistedArtifacts({
   articleContent,
   runtime,
+  assertionAudit,
 }) {
   requireCondition(
     fs.existsSync(
@@ -1483,6 +1637,95 @@ function verifyPersistedArtifacts({
   );
 
   requireCondition(
+    Array.isArray(
+      persistedManifest.runtime
+        ?.content
+        ?.provenance,
+    ),
+    "manifest Content provenance is missing",
+  );
+
+  requireCondition(
+    persistedManifest.runtime.content
+      .provenance.length ===
+      assertionAudit.length,
+    "manifest Content provenance count differs from Runtime assertion provenance",
+  );
+
+  for (
+    const assertion of
+      assertionAudit
+  ) {
+    const persisted =
+      persistedManifest.runtime
+        .content
+        .provenance[
+          assertion.ordinal
+        ];
+
+    requireCondition(
+      persisted !== null &&
+        typeof persisted ===
+          "object",
+      `manifest Content provenance missing assertion ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.ordinal ===
+        assertion.ordinal,
+      `manifest Content provenance ordinal mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.text ===
+        assertion.text,
+      `manifest Content provenance text mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.fingerprint ===
+        assertion.fingerprint,
+      `manifest Content provenance fingerprint mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.kind ===
+        assertion.kind,
+      `manifest Content provenance kind mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.knowledgeIds,
+      ) ===
+        JSON.stringify(
+          assertion.knowledgeIds,
+        ),
+      `manifest Content provenance Knowledge closure mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.claimIds,
+      ) ===
+        JSON.stringify(
+          assertion.claimIds,
+        ),
+      `manifest Content provenance Claim closure mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.evidenceIds,
+      ) ===
+        JSON.stringify(
+          assertion.evidenceIds,
+        ),
+      `manifest Content provenance Evidence closure mismatch at ${assertion.ordinal}`,
+    );
+  }
+
+  requireCondition(
     persistedManifest.execution.mode ===
       "LIVE_INTERNET",
     "manifest does not identify a live Internet execution",
@@ -1510,6 +1753,7 @@ function verifyPersistedArtifacts({
 
   return {
     persistedArticle,
+
     persistedManifest,
   };
 }
@@ -1913,6 +2157,15 @@ async function main() {
     "Article Runtime produced Content without an article body",
   );
 
+  requireCondition(
+    Array.isArray(
+      runtime.content.provenance,
+    ) &&
+      runtime.content.provenance.length >
+        0,
+    "Article Runtime produced Content without assertion provenance",
+  );
+
 
   const closureAudit =
     buildFoundationClosureAudit(
@@ -2011,6 +2264,8 @@ async function main() {
       articleContent,
 
       runtime,
+
+      assertionAudit,
     });
 
 
@@ -2080,6 +2335,80 @@ async function main() {
     "manifest Knowledge IDs are not identical to Runtime knowledgeIds",
   );
 
+  requireCondition(
+    persistedManifest.runtime
+      .content
+      .provenance.length ===
+      assertionAudit.length,
+    "persisted assertion provenance count differs from Runtime",
+  );
+
+  for (
+    const assertion of
+      assertionAudit
+  ) {
+    const persisted =
+      persistedManifest.runtime
+        .content
+        .provenance[
+          assertion.ordinal
+        ];
+
+    requireCondition(
+      persisted.ordinal ===
+        assertion.ordinal,
+      `persisted assertion ordinal mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.text ===
+        assertion.text,
+      `persisted assertion text mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.fingerprint ===
+        assertion.fingerprint,
+      `persisted assertion fingerprint mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      persisted.kind ===
+        assertion.kind,
+      `persisted assertion kind mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.knowledgeIds,
+      ) ===
+        JSON.stringify(
+          assertion.knowledgeIds,
+        ),
+      `persisted assertion Knowledge lineage mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.claimIds,
+      ) ===
+        JSON.stringify(
+          assertion.claimIds,
+        ),
+      `persisted assertion Claim lineage mismatch:${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.evidenceIds,
+      ) ===
+        JSON.stringify(
+          assertion.evidenceIds,
+        ),
+      `persisted assertion Evidence lineage mismatch:${assertion.ordinal}`,
+    );
+  }
+
 
   console.log(
     "14. Article artifact: PASS",
@@ -2096,7 +2425,6 @@ async function main() {
   console.log(
     "",
   );
-
 
   console.log(
     "==============================================",
