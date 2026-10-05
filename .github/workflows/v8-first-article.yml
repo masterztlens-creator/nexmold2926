@@ -694,16 +694,6 @@ jobs:
             }
 
             if (
-              typeof assertion.kind !==
-                "string" ||
-              assertion.kind.trim().length === 0
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_ASSERTION_KIND_INVALID:${assertion.ordinal}`,
-              );
-            }
-
-            if (
               !Array.isArray(
                 assertion.knowledgeIds,
               ) ||
@@ -1162,17 +1152,6 @@ jobs:
             ) {
               throw new Error(
                 `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_FINGERPRINT_INVALID:${assertion.ordinal}`,
-              );
-            }
-
-            if (
-              typeof assertion.kind !==
-                "string" ||
-              assertion.kind.trim().length ===
-                0
-            ) {
-              throw new Error(
-                `V8_FIRST_ARTICLE_PROVENANCE_ASSERTION_KIND_INVALID:${assertion.ordinal}`,
               );
             }
 

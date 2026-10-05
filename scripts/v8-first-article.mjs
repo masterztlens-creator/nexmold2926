@@ -1104,23 +1104,12 @@ function buildArticleAssertionAudit(
         `Content.provenance[${ordinal}] fingerprint mismatch`,
       );
 
-      requireCondition(
-        typeof provenance.kind ===
-          "string" &&
-          provenance.kind.trim().length >
-            0,
-        `Content.provenance[${ordinal}] kind is missing`,
-      );
-
       return {
         ordinal,
 
         text,
 
         fingerprint,
-
-        kind:
-          provenance.kind,
 
         knowledgeIds:
           normalizeProvenanceIds(
@@ -1496,9 +1485,6 @@ function createManifest({
                   fingerprint:
                     assertion.fingerprint,
 
-                  kind:
-                    assertion.kind,
-
                   knowledgeIds:
                     [
                       ...assertion.knowledgeIds,
@@ -1686,12 +1672,6 @@ function verifyPersistedArtifacts({
       persisted.fingerprint ===
         assertion.fingerprint,
       `manifest Content provenance fingerprint mismatch at ${assertion.ordinal}`,
-    );
-
-    requireCondition(
-      persisted.kind ===
-        assertion.kind,
-      `manifest Content provenance kind mismatch at ${assertion.ordinal}`,
     );
 
     requireCondition(
@@ -2370,12 +2350,6 @@ async function main() {
       persisted.fingerprint ===
         assertion.fingerprint,
       `persisted assertion fingerprint mismatch:${assertion.ordinal}`,
-    );
-
-    requireCondition(
-      persisted.kind ===
-        assertion.kind,
-      `persisted assertion kind mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
