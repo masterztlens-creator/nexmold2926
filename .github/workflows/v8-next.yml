@@ -1,12 +1,6 @@
 name: NEXMOLD V8 Next Operational Gate
 
 on:
-  workflow_run:
-    workflows:
-      - NEXMOLD V8 Final + Production Integration
-    types:
-      - completed
-
   workflow_dispatch:
     inputs:
       source_sha:
@@ -26,11 +20,6 @@ jobs:
   v8-next:
     name: V8 Next Operational Verification
 
-    if: >
-      (github.event_name == 'workflow_run' &&
-      github.event.workflow_run.conclusion == 'success') ||
-      github.event_name == 'workflow_dispatch'
-
     runs-on: ubuntu-latest
 
     steps:
@@ -38,24 +27,13 @@ jobs:
         id: source
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
-          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
           DISPATCH_SHA: ${{ inputs.source_sha }}
           DISPATCH_RUN_ID: ${{ inputs.source_run_id }}
         run: |
           set -euo pipefail
 
-          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
-            SHA="$WORKFLOW_RUN_SHA"
-            RUN_ID="$WORKFLOW_RUN_ID"
-          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            SHA="$DISPATCH_SHA"
-            RUN_ID="$DISPATCH_RUN_ID"
-          else
-            echo "ERROR: Unsupported event: $EVENT_NAME"
-            exit 1
-          fi
+          SHA="$DISPATCH_SHA"
+          RUN_ID="$DISPATCH_RUN_ID"
 
           SHA="$(printf '%s' "$SHA" | tr '[:upper:]' '[:lower:]')"
           RUN_ID="$(printf '%s' "$RUN_ID" | tr -d '[:space:]')"
@@ -73,7 +51,7 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
 
-          echo "Event: $EVENT_NAME"
+          echo "Event: workflow_dispatch"
           echo "Source SHA: $SHA"
           echo "Source workflow run: $RUN_ID"
 
@@ -179,75 +157,112 @@ jobs:
           node - <<'NODE'
           const https = require('node:https');
 
-          const runId = process.env.SOURCE_RUN_ID;
-          const expectedSha = process.env.SOURCE_SHA;
-          const repository = process.env.GITHUB_REPOSITORY;
-          const token = process.env.GITHUB_TOKEN;
+          const runId =
+            process.env.SOURCE_RUN_ID;
+
+          const expectedSha =
+            process.env.SOURCE_SHA;
+
+          const repository =
+            process.env.GITHUB_REPOSITORY;
+
+          const token =
+            process.env.GITHUB_TOKEN;
 
           function requestJson(url) {
-            return new Promise((resolve, reject) => {
-              const request = https.request(
-                url,
-                {
-                  method: 'GET',
-                  headers: {
-                    Accept: 'application/vnd.github+json',
-                    Authorization: `Bearer ${token}`,
-                    'X-GitHub-Api-Version': '2022-11-28',
-                    'User-Agent': 'nexmold-v8-next-gate',
-                  },
-                },
-                (response) => {
-                  let body = '';
+            return new Promise(
+              (resolve, reject) => {
+                const request =
+                  https.request(
+                    url,
+                    {
+                      method: 'GET',
+                      headers: {
+                        Accept:
+                          'application/vnd.github+json',
+                        Authorization:
+                          `Bearer ${token}`,
+                        'X-GitHub-Api-Version':
+                          '2022-11-28',
+                        'User-Agent':
+                          'nexmold-v8-next-gate',
+                      },
+                    },
+                    (response) => {
+                      let body = '';
 
-                  response.setEncoding('utf8');
-
-                  response.on('data', (chunk) => {
-                    body += chunk;
-                  });
-
-                  response.on('end', () => {
-                    if (
-                      response.statusCode < 200 ||
-                      response.statusCode >= 300
-                    ) {
-                      reject(
-                        new Error(
-                          `GitHub API ${response.statusCode}: ${body}`,
-                        ),
+                      response.setEncoding(
+                        'utf8',
                       );
-                      return;
-                    }
 
-                    try {
-                      resolve(JSON.parse(body));
-                    } catch (error) {
-                      reject(error);
-                    }
-                  });
-                },
-              );
+                      response.on(
+                        'data',
+                        (chunk) => {
+                          body += chunk;
+                        },
+                      );
 
-              request.on('error', reject);
-              request.end();
-            });
+                      response.on(
+                        'end',
+                        () => {
+                          if (
+                            response.statusCode <
+                              200 ||
+                            response.statusCode >=
+                              300
+                          ) {
+                            reject(
+                              new Error(
+                                `GitHub API ${response.statusCode}: ${body}`,
+                              ),
+                            );
+                            return;
+                          }
+
+                          try {
+                            resolve(
+                              JSON.parse(body),
+                            );
+                          } catch (error) {
+                            reject(error);
+                          }
+                        },
+                      );
+                    },
+                  );
+
+                request.on(
+                  'error',
+                  reject,
+                );
+
+                request.end();
+              },
+            );
           }
 
           (async () => {
-            if (!/^[0-9]+$/.test(runId)) {
+            if (
+              !/^[0-9]+$/.test(runId)
+            ) {
               throw new Error(
                 `Invalid source workflow run ID: ${runId}`,
               );
             }
 
-            if (!/^[0-9a-f]{40}$/i.test(expectedSha)) {
+            if (
+              !/^[0-9a-f]{40}$/i.test(
+                expectedSha,
+              )
+            ) {
               throw new Error(
                 `Invalid source SHA: ${expectedSha}`,
               );
             }
 
             if (
-              typeof repository !== 'string' ||
+              typeof repository !==
+                'string' ||
               repository.length === 0
             ) {
               throw new Error(
@@ -256,7 +271,8 @@ jobs:
             }
 
             if (
-              typeof token !== 'string' ||
+              typeof token !==
+                'string' ||
               token.length === 0
             ) {
               throw new Error(
@@ -264,12 +280,14 @@ jobs:
               );
             }
 
-            const run = await requestJson(
-              `https://api.github.com/repos/${repository}/actions/runs/${runId}`,
-            );
+            const run =
+              await requestJson(
+                `https://api.github.com/repos/${repository}/actions/runs/${runId}`,
+              );
 
             if (
-              typeof run?.head_sha !== 'string' ||
+              typeof run?.head_sha !==
+                'string' ||
               run.head_sha.toLowerCase() !==
                 expectedSha.toLowerCase()
             ) {
@@ -287,7 +305,10 @@ jobs:
               );
             }
 
-            if (run?.conclusion !== 'success') {
+            if (
+              run?.conclusion !==
+              'success'
+            ) {
               throw new Error(
                 `Source Final workflow is not successful: ${run?.conclusion}`,
               );
@@ -312,19 +333,22 @@ jobs:
             console.log(
               `Source conclusion: ${run.conclusion}`,
             );
-          })().catch((error) => {
-            console.error(
-              'Source Final workflow verification: FAIL',
-            );
+          })().catch(
+            (error) => {
+              console.error(
+                'Source Final workflow verification: FAIL',
+              );
 
-            console.error(
-              error instanceof Error
-                ? error.stack || error.message
-                : error,
-            );
+              console.error(
+                error instanceof Error
+                  ? error.stack ||
+                    error.message
+                  : error,
+              );
 
-            process.exit(1);
-          });
+              process.exit(1);
+            },
+          );
           NODE
 
       - name: Download V8 publication handoff
@@ -354,9 +378,13 @@ jobs:
           const path =
             '.nexmold/v8-real-publication-handoff.json';
 
-          const payload = JSON.parse(
-            fs.readFileSync(path, 'utf8'),
-          );
+          const payload =
+            JSON.parse(
+              fs.readFileSync(
+                path,
+                'utf8',
+              ),
+            );
 
           if (
             payload?.schema !==
@@ -368,8 +396,11 @@ jobs:
           }
 
           if (
-            typeof payload.fingerprint !== 'string' ||
-            !/^[0-9a-f]{64}$/.test(payload.fingerprint)
+            typeof payload.fingerprint !==
+              'string' ||
+            !/^[0-9a-f]{64}$/.test(
+              payload.fingerprint,
+            )
           ) {
             throw new Error(
               'Publication handoff fingerprint is missing or invalid',
@@ -377,7 +408,9 @@ jobs:
           }
 
           if (
-            !Array.isArray(payload.pages) ||
+            !Array.isArray(
+              payload.pages,
+            ) ||
             payload.pages.length !== 3
           ) {
             throw new Error(
@@ -387,26 +420,36 @@ jobs:
             );
           }
 
-          const requiredRoutes = new Set([
-            '/knowledge/plastic-injection-molding-wall-thickness/',
-            '/de/wissen/plastic-injection-molding-wall-thickness/',
-            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
-          ]);
+          const requiredRoutes =
+            new Set([
+              '/knowledge/plastic-injection-molding-wall-thickness/',
+              '/de/wissen/plastic-injection-molding-wall-thickness/',
+              '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+            ]);
 
-          const actualRoutes = new Set(
-            payload.pages.map(
-              (page) => page?.canonicalRoute,
-            ),
-          );
+          const actualRoutes =
+            new Set(
+              payload.pages.map(
+                (page) =>
+                  page?.canonicalRoute,
+              ),
+            );
 
-          if (actualRoutes.size !== requiredRoutes.size) {
+          if (
+            actualRoutes.size !==
+            requiredRoutes.size
+          ) {
             throw new Error(
               'Publication handoff contains duplicate or invalid routes',
             );
           }
 
-          for (const route of requiredRoutes) {
-            if (!actualRoutes.has(route)) {
+          for (
+            const route of requiredRoutes
+          ) {
+            if (
+              !actualRoutes.has(route)
+            ) {
               throw new Error(
                 `Publication handoff missing required route: ${route}`,
               );
@@ -449,4 +492,3 @@ jobs:
 
       - name: Run V8 next gate
         run: npm run v8:next
-
