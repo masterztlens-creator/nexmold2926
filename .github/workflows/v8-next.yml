@@ -95,20 +95,32 @@ jobs:
           const fs = require('node:fs');
 
           const packageJson = JSON.parse(
-            fs.readFileSync('package.json', 'utf8'),
+            fs.readFileSync(
+              'package.json',
+              'utf8',
+            ),
           );
 
           const lockfile = JSON.parse(
-            fs.readFileSync('package-lock.json', 'utf8'),
+            fs.readFileSync(
+              'package-lock.json',
+              'utf8',
+            ),
           );
 
-          if (packageJson.name !== 'nexmold-v8-full') {
+          if (
+            packageJson.name !==
+            'nexmold-v8-full'
+          ) {
             throw new Error(
               `Unexpected package name: ${packageJson.name}`,
             );
           }
 
-          if (packageJson.engines?.node !== '>=22.12.0') {
+          if (
+            packageJson.engines?.node !==
+            '>=22.12.0'
+          ) {
             throw new Error(
               `Unexpected Node engine: ${packageJson.engines?.node}`,
             );
@@ -125,7 +137,10 @@ jobs:
             );
           }
 
-          if (lockfile.lockfileVersion !== 3) {
+          if (
+            lockfile.lockfileVersion !==
+            3
+          ) {
             throw new Error(
               `Unexpected lockfileVersion: ${
                 lockfile.lockfileVersion
@@ -134,15 +149,19 @@ jobs:
           }
 
           if (
-            lockfile.packages?.['']?.devDependencies
-              ?.typescript !== '6.0.3'
+            lockfile.packages?.['']
+              ?.devDependencies
+              ?.typescript !==
+            '6.0.3'
           ) {
             throw new Error(
               'package-lock.json TypeScript baseline mismatch',
             );
           }
 
-          console.log('LKG package contract: PASS');
+          console.log(
+            'LKG package contract: PASS',
+          );
           NODE
 
       - name: Verify source Final workflow run
@@ -216,15 +235,22 @@ jobs:
                                 `GitHub API ${response.statusCode}: ${body}`,
                               ),
                             );
+
                             return;
                           }
 
                           try {
                             resolve(
-                              JSON.parse(body),
+                              JSON.parse(
+                                body,
+                              ),
                             );
-                          } catch (error) {
-                            reject(error);
+                          } catch (
+                            error
+                          ) {
+                            reject(
+                              error,
+                            );
                           }
                         },
                       );
@@ -243,7 +269,9 @@ jobs:
 
           (async () => {
             if (
-              !/^[0-9]+$/.test(runId)
+              !/^[0-9]+$/.test(
+                runId,
+              )
             ) {
               throw new Error(
                 `Invalid source workflow run ID: ${runId}`,
@@ -263,7 +291,8 @@ jobs:
             if (
               typeof repository !==
                 'string' ||
-              repository.length === 0
+              repository.length ===
+                0
             ) {
               throw new Error(
                 'GITHUB_REPOSITORY is missing',
@@ -273,7 +302,8 @@ jobs:
             if (
               typeof token !==
                 'string' ||
-              token.length === 0
+              token.length ===
+                0
             ) {
               throw new Error(
                 'GITHUB_TOKEN is missing',
@@ -346,7 +376,9 @@ jobs:
                   : error,
               );
 
-              process.exit(1);
+              process.exit(
+                1,
+              );
             },
           );
           NODE
@@ -411,11 +443,13 @@ jobs:
             !Array.isArray(
               payload.pages,
             ) ||
-            payload.pages.length !== 3
+            payload.pages.length !==
+              3
           ) {
             throw new Error(
               `Expected exactly 3 publication pages, received ${
-                payload.pages?.length ?? 0
+                payload.pages?.length ??
+                0
               }`,
             );
           }
@@ -448,7 +482,9 @@ jobs:
             const route of requiredRoutes
           ) {
             if (
-              !actualRoutes.has(route)
+              !actualRoutes.has(
+                route,
+              )
             ) {
               throw new Error(
                 `Publication handoff missing required route: ${route}`,
@@ -491,4 +527,217 @@ jobs:
             build-orchestrator.mjs
 
       - name: Run V8 next gate
+        env:
+          NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: npm run v8:next
+
+      - name: Prepare persisted V8 production artifact
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          SOURCE_RUN_ID: ${{ steps.source.outputs.run_id }}
+        run: |
+          set -euo pipefail
+
+          STAGE="v8-production-artifact"
+
+          CLOSURE=".nexmold/v8-actual-dist-production-closure.json"
+
+          HANDOFF=".nexmold/v8-real-publication-handoff.json"
+
+          LKG=".nexmold/last-known-good.json"
+
+          rm -rf "$STAGE"
+
+          mkdir -p \
+            "$STAGE/dist" \
+            "$STAGE/proof" \
+            "$STAGE/release"
+
+          test -d dist
+
+          test -f "$CLOSURE"
+
+          test -f "$HANDOFF"
+
+          test -f "$LKG"
+
+          BUILD_EPOCH="$(
+            node -e '
+              const fs = require("node:fs");
+
+              const value =
+                JSON.parse(
+                  fs.readFileSync(
+                    process.argv[1],
+                    "utf8",
+                  ),
+                ).buildEpoch;
+
+              if (
+                typeof value !== "string" ||
+                value.length === 0
+              ) {
+                throw new Error(
+                  "Closure buildEpoch is missing",
+                );
+              }
+
+              process.stdout.write(
+                value,
+              );
+            ' "$CLOSURE"
+          )"
+
+          RELEASE_DIR=".nexmold/releases/$BUILD_EPOCH"
+
+          test -d "$RELEASE_DIR"
+
+          test -f "$RELEASE_DIR/html-manifest.json"
+
+          cp -a \
+            dist/. \
+            "$STAGE/dist/"
+
+          cp \
+            "$CLOSURE" \
+            "$STAGE/proof/v8-actual-dist-production-closure.json"
+
+          cp \
+            "$HANDOFF" \
+            "$STAGE/proof/v8-real-publication-handoff.json"
+
+          cp \
+            "$LKG" \
+            "$STAGE/proof/last-known-good.json"
+
+          cp -a \
+            "$RELEASE_DIR/." \
+            "$STAGE/release/"
+
+          node - <<'NODE'
+          const fs =
+            require('node:fs');
+
+          const crypto =
+            require('node:crypto');
+
+          const closurePath =
+            'v8-production-artifact/proof/v8-actual-dist-production-closure.json';
+
+          const closure =
+            JSON.parse(
+              fs.readFileSync(
+                closurePath,
+                'utf8',
+              ),
+            );
+
+          const sha256 =
+            crypto
+              .createHash(
+                'sha256',
+              )
+              .update(
+                fs.readFileSync(
+                  closurePath,
+                ),
+              )
+              .digest(
+                'hex',
+              );
+
+          const metadata = {
+            schema:
+              'nexmold.v8.persisted-production-artifact.v1',
+
+            sourceSha:
+              process.env.SOURCE_SHA,
+
+            sourceRunId:
+              process.env.SOURCE_RUN_ID,
+
+            nextRunId:
+              process.env.GITHUB_RUN_ID,
+
+            repository:
+              process.env.GITHUB_REPOSITORY,
+
+            buildEpoch:
+              closure.buildEpoch,
+
+            handoffFingerprint:
+              closure.handoff.fingerprint,
+
+            contentId:
+              closure.content.id,
+
+            decisionId:
+              closure.decision.id,
+
+            projectionId:
+              closure.projection.id,
+
+            projectionFingerprint:
+              closure.projection.fingerprint,
+
+            releaseId:
+              closure.release.id,
+
+            releaseFingerprint:
+              closure.release.fingerprint,
+
+            productionExecutionId:
+              closure.productionExecution.executionId,
+
+            productionExecutionFingerprint:
+              closure.productionExecution.executionFingerprint,
+
+            productionConsumptionId:
+              closure.productionConsumption.consumptionId,
+
+            productionConsumptionFingerprint:
+              closure.productionConsumption.consumptionFingerprint,
+
+            closureSha256:
+              sha256,
+          };
+
+          fs.writeFileSync(
+            'v8-production-artifact/proof/persisted-artifact-manifest.json',
+            JSON.stringify(
+              metadata,
+              null,
+              2,
+            ) + '\n',
+            'utf8',
+          );
+
+          console.log(
+            'Persisted production artifact manifest: PASS',
+          );
+
+          console.log(
+            `sourceSha: ${metadata.sourceSha}`,
+          );
+
+          console.log(
+            `buildEpoch: ${metadata.buildEpoch}`,
+          );
+
+          console.log(
+            `releaseId: ${metadata.releaseId}`,
+          );
+
+          console.log(
+            `closureSha256: ${metadata.closureSha256}`,
+          );
+          NODE
+
+      - name: Upload verified V8 production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexmold-v8-production-${{ steps.source.outputs.sha }}
+          path: v8-production-artifact
+          if-no-files-found: error
+          retention-days: 90
