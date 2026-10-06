@@ -622,8 +622,51 @@ function buildCoreTopicAnchors(
    */
   const normalizeFocusText = (
     value: string,
-  ): string =>
-    value
+  ): string => {
+    const normalizedValue =
+      value.trim();
+
+    /*
+     * Evaluative questions require explicit grammatical handling.
+     *
+     * Example:
+     *
+     *   How should injection molding wall thickness be evaluated
+     *   for a global B2B audience?
+     *
+     * must resolve to:
+     *
+     *   injection molding wall thickness
+     *
+     * The transformation is deterministic and lexical. It does not infer
+     * topics from Evidence, an ontology, an external model, or generated
+     * content.
+     */
+    const evaluationMatch =
+      normalizedValue.match(
+        /^how\s+(?:should|can|could|would|will|may|might)\s+(.+)$/u,
+      );
+
+    if (
+      evaluationMatch?.[1]
+    ) {
+      return evaluationMatch[1]
+        .replace(
+          /\b(?:for|with|under|using|within|during|on)\b.+$/u,
+          "",
+        )
+        .replace(
+          /\s+(?:be|being|been)\s+(?:evaluated|assessed|considered|determined|applied|selected|used|measured|defined|controlled|optimized|designed|calculated|specified)\s*$/u,
+          "",
+        )
+        .replace(
+          /\s+(?:evaluated|assessed|considered|determined|applied|selected|used|measured|defined|controlled|optimized|designed|calculated|specified)\s*$/u,
+          "",
+        )
+        .trim();
+    }
+
+    return normalizedValue
       .replace(
         /\b(?:for|with|under|using|within|during|on)\b.+$/u,
         "",
@@ -633,6 +676,7 @@ function buildCoreTopicAnchors(
         "",
       )
       .trim();
+  };
 
   let focusText =
     normalized;

@@ -512,9 +512,21 @@ async function main() {
 
       acquisition: {
         researchSeeds,
-        maxCandidates: 1,
-        maxPages: 3,
+
+        maxCandidates:
+          Math.max(
+            1,
+            researchSeeds.length,
+          ),
+
+        maxPages:
+          Math.max(
+            1,
+            researchSeeds.length,
+          ),
+
         maxDepth: 1,
+
         sameHostOnly: true,
       },
 
