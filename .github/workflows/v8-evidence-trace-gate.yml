@@ -1,4 +1,4 @@
-name: V8 Evidence Trace Gate
+name: NEXMOLD V8 Evidence Trace Gate
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
     paths:
       - "src/v8/**"
       - "scripts/v8-evidence-trace-gate.mjs"
+      - "scripts/v8-evidence-inventory-forensics.mjs"
       - ".github/workflows/v8-evidence-trace-gate.yml"
       - "tsconfig.v8.json"
       - "package.json"
@@ -14,19 +15,48 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: v8-evidence-trace-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
 jobs:
   v8-evidence-trace:
+    name: V8 Evidence Trace
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
+
+      - name: Verify source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_SHA="${GITHUB_SHA}"
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+
+          echo "=== V8 Evidence Trace Source Identity ==="
+          echo "github.sha=${EXPECTED_SHA}"
+          echo "checkout.sha=${ACTUAL_SHA}"
+
+          test "${ACTUAL_SHA}" = "${EXPECTED_SHA}"
 
       - name: Install dependencies
         run: npm ci
@@ -81,5 +111,110 @@ jobs:
           test -f .v8-build/src/v8/domain/primitives.js
           test -f .v8-build/src/v8/runtime/article-runtime.js
 
+          echo "=== V8 build output verified ==="
+          echo ".v8-build/src/v8/foundation/store.js"
+          echo ".v8-build/src/v8/foundation/hash.js"
+          echo ".v8-build/src/v8/acquisition/page-fetcher.js"
+          echo ".v8-build/src/v8/domain/primitives.js"
+          echo ".v8-build/src/v8/runtime/article-runtime.js"
+
+      - name: Prepare forensic diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p .v8-artifacts/evidence-trace
+
+          {
+            echo "NEXMOLD V8 EVIDENCE TRACE FORENSIC SESSION"
+            echo "========================================="
+            echo "github.sha=${GITHUB_SHA}"
+            echo "github.ref=${GITHUB_REF}"
+            echo "github.run_id=${GITHUB_RUN_ID}"
+            echo "github.run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "runner.os=${RUNNER_OS}"
+            echo "runner.arch=${RUNNER_ARCH}"
+            echo "node_version=$(node --version)"
+            echo "npm_version=$(npm --version)"
+            echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            echo
+          } | tee .v8-artifacts/evidence-trace/session.txt
+
+      - name: V8 Evidence Inventory Forensics
+        id: evidence_forensics
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -o pipefail
+
+          echo "=== NEXMOLD V8 Evidence Inventory Forensics ===" \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          echo "This is a read-only diagnostic sidecar." \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          echo "It does not modify Runtime, Evidence, Snapshot, or acquisition semantics." \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          echo \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          node scripts/v8-evidence-inventory-forensics.mjs \
+            2>&1 \
+            | tee .v8-artifacts/evidence-trace/forensics.log
+
+          FORENSICS_EXIT="${PIPESTATUS[0]}"
+
+          echo \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          echo "forensics_exit=${FORENSICS_EXIT}" \
+            | tee -a .v8-artifacts/evidence-trace/session.txt
+
+          if [ "${FORENSICS_EXIT}" -ne 0 ]; then
+            echo "WARNING: forensic diagnostic failed." \
+              | tee -a .v8-artifacts/evidence-trace/session.txt
+
+            echo "The authoritative Evidence Trace Gate will still execute." \
+              | tee -a .v8-artifacts/evidence-trace/session.txt
+          else
+            echo "Forensic diagnostic completed." \
+              | tee -a .v8-artifacts/evidence-trace/session.txt
+          fi
+
+          exit "${FORENSICS_EXIT}"
+
+      - name: Upload V8 Evidence Forensics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexmold-v8-evidence-forensics-${{ github.sha }}
+          path: .v8-artifacts/evidence-trace/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Real Internet Evidence Trace Gate
-        run: node scripts/v8-evidence-trace-gate.mjs
+        env:
+          V8_SEARCH_API_KEY: ${{ secrets.V8_SEARCH_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          echo "=== NEXMOLD V8 REAL INTERNET EVIDENCE TRACE GATE ==="
+          echo "source_sha=${GITHUB_SHA}"
+          echo "node=$(node --version)"
+          echo "npm=$(npm --version)"
+          echo
+
+          node scripts/v8-evidence-trace-gate.mjs
+
+      - name: Evidence Trace Completion
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== NEXMOLD V8 Evidence Trace Job Completion ==="
+          echo "source_sha=${GITHUB_SHA}"
+          echo "run_id=${GITHUB_RUN_ID}"
+          echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+          echo "forensic_artifact=nexmold-v8-evidence-forensics-${GITHUB_SHA}"
