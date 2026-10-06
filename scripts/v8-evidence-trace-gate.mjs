@@ -241,17 +241,8 @@ const result =
       id:
         "problem:v8:evidence-trace-gate",
 
-      constraints: [
-        "Use real Internet-acquired sources only.",
-        "Every Evidence record must reference a persisted Snapshot.",
-        "Every text Evidence excerpt must exist in the persisted Snapshot-derived text projection.",
-        "Every structured parameter Evidence excerpt must exist in the persisted Snapshot raw payload.",
-        "Every Evidence hash must match the immutable Snapshot content and Evidence fields.",
-        "Every Claim must reference at least one Evidence record.",
-        "Only VERIFIED Evidence may produce Claims.",
-        "Only VERIFIED Claims may produce Knowledge.",
-        "Decision must be APPROVED.",
-      ],
+      question:
+        "How should plastic injection molding wall thickness be evaluated?",
 
       constraints: [
         "Use real Internet-acquired sources only.",
