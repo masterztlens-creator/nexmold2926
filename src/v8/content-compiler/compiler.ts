@@ -489,8 +489,33 @@ export class ContentCompiler {
      * The compiler creates provenance from the exact deterministic
      * body it is about to publish.
      *
-     * Every non-structural line is therefore covered before Content
-     * is constructed.
+     * Every non-structural line must receive provenance.
+     *
+     * Provenance is intentionally minimal:
+     *
+     *   KNOWLEDGE
+     *     -> exact Knowledge
+     *     -> exact Claims
+     *     -> exact Evidence
+     *
+     *   QUESTION
+     *     -> Problem
+     *
+     *   DECISION
+     *     -> Decision
+     *
+     *   CONSTRAINT
+     *     -> Problem constraint
+     *
+     *   CONTEXT
+     *     -> Context
+     *
+     * Problem / Decision / Constraint / Context assertions MUST NOT
+     * inherit unrelated Knowledge / Claim / Evidence IDs merely because
+     * those aggregates participate in the same Decision.
+     *
+     * This prevents aggregate-level lineage from being mistaken for
+     * assertion-level evidentiary support.
      */
     const bodyAssertions =
       body
@@ -519,7 +544,7 @@ export class ContentCompiler {
     for (
       let index = 0;
       index <
-        bodyAssertions.length;
+      bodyAssertions.length;
       index += 1
     ) {
       const assertion =
@@ -567,19 +592,32 @@ export class ContentCompiler {
           "CONSTRAINT";
       }
 
-      let assertionKnowledgeIds =
-        knowledgeIdStrings;
+      /*
+       * The default provenance for a non-Knowledge assertion is
+       * intentionally empty.
+       *
+       * The existing Content domain contract requires Knowledge,
+       * Claim, and Evidence IDs on every provenance record. Therefore
+       * the compiler cannot silently manufacture a structurally valid
+       * but semantically false lineage record.
+       *
+       * Such assertions are rejected below until the Content provenance
+       * contract is capable of representing structural lineage without
+       * evidentiary lineage.
+       */
+      let assertionKnowledgeIds:
+        readonly string[] = [];
 
-      let assertionClaimIds =
-        allClaimIds;
+      let assertionClaimIds:
+        readonly string[] = [];
 
-      let assertionEvidenceIds =
-        allEvidenceIds;
+      let assertionEvidenceIds:
+        readonly string[] = [];
 
       /*
-       * Knowledge assertions receive the smallest possible
-       * epistemic closure: exactly the Knowledge -> Claim ->
-       * Evidence chain belonging to that Knowledge.
+       * Knowledge assertions receive the smallest possible epistemic
+       * closure: exactly the Knowledge -> Claim -> Evidence chain
+       * belonging to that Knowledge.
        */
       if (
         kind ===
@@ -610,6 +648,13 @@ export class ContentCompiler {
               .claimIds,
           );
 
+        invariant(
+          knowledgeClaimIds.length >
+            0,
+          "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_CLAIMS",
+          `Knowledge assertion ${index} has no Claim lineage.`,
+        );
+
         assertionClaimIds =
           knowledgeClaimIds;
 
@@ -637,6 +682,31 @@ export class ContentCompiler {
               },
             ),
           );
+
+        invariant(
+          assertionEvidenceIds.length >
+            0,
+          "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_EVIDENCE",
+          `Knowledge assertion ${index} has no Evidence lineage.`,
+        );
+      } else {
+        /*
+         * The current ContentProvenance contract cannot represent
+         * non-evidentiary structural lineage.
+         *
+         * Fail closed rather than attaching unrelated Evidence.
+         */
+        invariant(
+          false,
+          "V8_CONTENT_COMPILER_NON_EVIDENTIARY_ASSERTION_UNREPRESENTABLE",
+          [
+            `Compiled assertion ${index}`,
+            `kind=${kind}`,
+            "requires structural provenance support",
+            "but the current ContentProvenance contract only permits",
+            "Knowledge/Claim/Evidence lineage.",
+          ].join(" "),
+        );
       }
 
       provenance.push(
@@ -743,3 +813,4 @@ export class ContentCompiler {
     });
   }
 }
+
