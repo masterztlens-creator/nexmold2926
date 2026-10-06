@@ -1,6 +1,16 @@
-import type { PageFetcher } from "../acquisition/types.js";
-import { evaluateSourceUrl } from "../acquisition/source-policy.js";
-import { canonicalizeUrl } from "./discovery.js";
+import type {
+  FetchedPage,
+  PageFetcher,
+} from "../acquisition/types.js";
+
+import {
+  evaluateSourceUrl,
+} from "../acquisition/source-policy.js";
+
+import {
+  canonicalizeUrl,
+} from "./discovery.js";
+
 import {
   ResearchFrontier,
   type FrontierItem,
@@ -17,6 +27,20 @@ export interface CrawlPage {
   readonly links: readonly string[];
   readonly body: string;
   readonly fetchedAt: string;
+
+  /**
+   * The exact FetchedPage returned by the PageFetcher.
+   *
+   * This is the immutable acquisition observation boundary.
+   *
+   * Downstream discovery/acquisition consumers MUST reuse this object
+   * when the corresponding candidate originated from this crawled page.
+   *
+   * A second network fetch for the same observed page is therefore
+   * prohibited by the self-owned acquisition pipeline.
+   */
+  readonly fetchedPage: FetchedPage;
+
   readonly discoveredFrom?: string;
 
   /**
@@ -284,6 +308,16 @@ export async function crawl(
 
           fetchedAt:
             page.fetchedAt,
+
+          /**
+           * Preserve the exact PageFetcher observation.
+           *
+           * This is intentionally not reconstructed from body/finalUrl.
+           * The complete FetchedPage contains redirect, status, media type,
+           * byte and requested-URL information required for exact lineage.
+           */
+          fetchedPage:
+            page,
 
           ...(item.discoveredFrom
             ? {

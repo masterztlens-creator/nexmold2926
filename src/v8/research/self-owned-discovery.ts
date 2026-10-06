@@ -14,6 +14,7 @@ import {
   crawl,
   type CrawlFailure,
   type CrawlOptions,
+  type CrawlPage,
 } from "./crawler.js";
 
 export interface SelfOwnedDiscoveryOptions
@@ -25,11 +26,26 @@ export interface SelfOwnedDiscoveryOptions
 export interface SelfOwnedDiscoveryResult {
   readonly provider:
     "SELF_OWNED_CRAWL";
+
   readonly seeds:
     readonly string[];
+
   readonly candidates:
     readonly DiscoveryCandidate[];
+
+  /**
+   * Exact pages already fetched by the crawl boundary.
+   *
+   * Acquisition MUST reuse these observations whenever a candidate
+   * corresponds to one of these pages.
+   *
+   * This prevents a Discovery → Acquisition double-fetch.
+   */
+  readonly pages:
+    readonly CrawlPage[];
+
   readonly pagesFetched: number;
+
   readonly fetchErrors:
     readonly CrawlFailure[];
 }
@@ -273,6 +289,11 @@ export async function discoverWithSelfOwnedCrawl(
         ...candidates,
       ]),
 
+    pages:
+      Object.freeze([
+        ...pages,
+      ]),
+
     pagesFetched:
       pages.length,
 
@@ -288,7 +309,7 @@ function normalizeSeeds(
 ): readonly string[] {
   const normalized:
     string[] =
-    [];
+      [];
 
   const seen =
     new Set<string>();
@@ -332,10 +353,13 @@ function normalizeSeeds(
 function addCandidate(args: {
   readonly candidates:
     DiscoveryCandidate[];
+
   readonly seen:
     Set<string>;
+
   readonly candidate:
     DiscoveryCandidate;
+
   readonly maxCandidates:
     number;
 }): void {
