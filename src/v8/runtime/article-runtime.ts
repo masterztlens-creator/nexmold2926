@@ -642,6 +642,36 @@ function buildCoreTopicAnchors(
      * topics from Evidence, an ontology, an external model, or generated
      * content.
      */
+        /*
+     * Imperative guidance questions require the same deterministic semantic
+     * focus handling as evaluative "How should ..." questions.
+     *
+     * Example:
+     *
+     *   Determine applicable engineering guidance for plastic injection
+     *   molding wall thickness.
+     *
+     * The requested engineering object is the clause after "guidance for",
+     * not the wrapper phrase "applicable engineering guidance".
+     *
+     * This remains lexical and fail-closed. No Evidence, ontology, model,
+     * synonym expansion, or generated topic is introduced.
+     */
+    const imperativeGuidanceMatch =
+      normalizedValue.match(
+        /^(?:determine|identify|establish|define|specify|select|choose)\s+(?:the\s+)?(?:applicable|appropriate|relevant|recommended|suitable|proper|specific)?\s*(?:engineering|technical|design|industry)?\s*guidance\s+(?:for|on|about|regarding|concerning)\s+(.+)$/u,
+      );
+
+    if (
+      imperativeGuidanceMatch?.[1]
+    ) {
+      return imperativeGuidanceMatch[1]
+        .replace(
+          /\b(?:for|with|under|using|within|during|on)\b.+$/u,
+          "",
+        )
+        .trim();
+    }
     const evaluationMatch =
       normalizedValue.match(
         /^how\s+(?:should|can|could|would|will|may|might)\s+(.+)$/u,
