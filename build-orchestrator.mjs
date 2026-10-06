@@ -1099,9 +1099,127 @@ function readClosureReleaseIdentity() {
     }
   }
 
+  /*
+   * V8 HANDOFF IDENTITY BOUNDARY
+   *
+   * The closure is the first immutable production artifact
+   * after the actual dist boundary. Therefore the publication
+   * handoff consumed by production must remain attached to the
+   * closure and must be propagated unchanged into Release/LKG.
+   *
+   * Fail closed:
+   *   Closure without Handoff = invalid.
+   *   Invalid Handoff schema = invalid.
+   *   Invalid Handoff fingerprint = invalid.
+   *   Explicit expected fingerprint mismatch = invalid.
+   *
+   * This prevents:
+   *
+   *   Final Handoff A
+   *        ->
+   *   Production A
+   *        ->
+   *   Closure without identity
+   *        ->
+   *   Release/LKG with a detached identity
+   *
+   * and preserves:
+   *
+   *   Handoff A
+   *        ->
+   *   Production A
+   *        ->
+   *   Dist Closure A
+   *        ->
+   *   Release A
+   *        ->
+   *   LKG A
+   */
+  if (
+    !closure.handoff ||
+    typeof closure.handoff !== "object" ||
+    Array.isArray(closure.handoff)
+  ) {
+    throw new Error(
+      "V8 closure handoff identity is missing",
+    );
+  }
+
+  if (
+    closure.handoff.schema !==
+    "nexmold.v8.real-publication-handoff.v1"
+  ) {
+    throw new Error(
+      `V8 closure handoff schema mismatch: ${closure.handoff.schema}`,
+    );
+  }
+
+  if (
+    typeof closure.handoff.fingerprint !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(
+      closure.handoff.fingerprint,
+    )
+  ) {
+    throw new Error(
+      "V8 closure handoff.fingerprint is missing or invalid",
+    );
+  }
+
+  const expectedHandoffFingerprint =
+    process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT;
+
+  if (
+    typeof expectedHandoffFingerprint === "string" &&
+    expectedHandoffFingerprint.trim()
+  ) {
+    if (
+      !/^[a-f0-9]{64}$/i.test(
+        expectedHandoffFingerprint.trim(),
+      )
+    ) {
+      throw new Error(
+        "NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT is invalid",
+      );
+    }
+
+    if (
+      closure.handoff.fingerprint.toLowerCase() !==
+      expectedHandoffFingerprint.trim().toLowerCase()
+    ) {
+      throw new Error(
+        `V8 closure handoff fingerprint mismatch: expected ${expectedHandoffFingerprint.trim()}, received ${closure.handoff.fingerprint}`,
+      );
+    }
+  }
+
+  if (
+    !closure.content ||
+    typeof closure.content !== "object" ||
+    Array.isArray(closure.content) ||
+    typeof closure.content.id !== "string" ||
+    !closure.content.id
+  ) {
+    throw new Error(
+      "V8 closure content identity is missing",
+    );
+  }
+
+  if (
+    !closure.decision ||
+    typeof closure.decision !== "object" ||
+    Array.isArray(closure.decision) ||
+    typeof closure.decision.id !== "string" ||
+    !closure.decision.id
+  ) {
+    throw new Error(
+      "V8 closure decision identity is missing",
+    );
+  }
+
   if (
     !closure.projection ||
-    typeof closure.projection !== "object"
+    typeof closure.projection !== "object" ||
+    Array.isArray(closure.projection)
   ) {
     throw new Error(
       "V8 closure projection identity is missing",
@@ -1130,7 +1248,8 @@ function readClosureReleaseIdentity() {
 
   if (
     !closure.release ||
-    typeof closure.release !== "object"
+    typeof closure.release !== "object" ||
+    Array.isArray(closure.release)
   ) {
     throw new Error(
       "V8 closure release identity is missing",
@@ -1203,7 +1322,8 @@ function readClosureReleaseIdentity() {
 
   if (
     !closure.productionExecution ||
-    typeof closure.productionExecution !== "object"
+    typeof closure.productionExecution !== "object" ||
+    Array.isArray(closure.productionExecution)
   ) {
     throw new Error(
       "V8 closure production execution identity is missing",
@@ -1232,7 +1352,8 @@ function readClosureReleaseIdentity() {
 
   if (
     !closure.productionConsumption ||
-    typeof closure.productionConsumption !== "object"
+    typeof closure.productionConsumption !== "object" ||
+    Array.isArray(closure.productionConsumption)
   ) {
     throw new Error(
       "V8 closure production consumption identity is missing",
@@ -1301,6 +1422,20 @@ function readClosureReleaseIdentity() {
 
     sourceSha:
       closure.sourceSha,
+
+    handoff: Object.freeze({
+      schema:
+        closure.handoff.schema,
+
+      fingerprint:
+        closure.handoff.fingerprint,
+    }),
+
+    contentId:
+      closure.content.id,
+
+    decisionId:
+      closure.decision.id,
 
     projectionId:
       closure.projection.id,
