@@ -248,7 +248,7 @@ const result =
         "Use real Internet-acquired sources only.",
         "Every Evidence record must reference a persisted Snapshot.",
         "Every text Evidence excerpt must exist in the persisted Snapshot-derived text projection.",
-        "Every structured parameter Evidence excerpt must exist in the persisted Snapshot raw payload.",
+        "Every structured parameter Evidence excerpt must be traceable to the persisted Snapshot raw payload through a deterministic structural projection.",
         "Every Evidence hash must match the immutable Snapshot content and Evidence fields.",
         "Every Claim must reference at least one Evidence record.",
         "Only VERIFIED Evidence may produce Claims.",
@@ -663,11 +663,6 @@ for (
  * Snapshot payload is HTML.
  *
  * This projection is used for ordinary text Evidence.
- *
- * Structured parameter Evidence is deliberately NOT validated against this
- * projection because structured extraction may legitimately originate from
- * HTML attributes, embedded structured markup, CSS, or other raw Snapshot
- * content that is removed by this projection.
  * ============================================================================
  */
 
@@ -725,6 +720,327 @@ function snapshotTextProjection(
 
 /*
  * ============================================================================
+ * Snapshot structural projection
+ *
+ * Structured Evidence is not normally stored as literal HTML source.
+ *
+ * Example:
+ *
+ *   Evidence excerpt:
+ *
+ *     ABS | 0.045 in - 0.140 in
+ *
+ * The immutable Snapshot may contain:
+ *
+ *     <tr>
+ *       <td>ABS</td>
+ *       <td>0.045 in.</td>
+ *       <td>-</td>
+ *       <td>0.140 in.</td>
+ *     </tr>
+ *
+ * Therefore:
+ *
+ *     snapshotPayload.includes(evidence.excerpt)
+ *
+ * is NOT a valid lineage test.
+ *
+ * This function creates a deterministic projection directly from the
+ * immutable Snapshot HTML. It does not obtain data from Evidence, Claim,
+ * Knowledge, generated content, or an external source.
+ *
+ * The projection:
+ *
+ *   1. removes executable/document metadata blocks;
+ *   2. preserves table row boundaries;
+ *   3. preserves table-cell boundaries using " | ";
+ *   4. decodes the HTML entities handled by the existing text projection;
+ *   5. normalizes whitespace;
+ *   6. emits both table-row projections and the complete structural text.
+ *
+ * This remains a one-way deterministic projection of immutable Snapshot
+ * payload. It does not alter the Snapshot and does not replace the raw
+ * Snapshot fingerprint.
+ * ============================================================================
+ */
+
+function snapshotStructuralProjection(
+  html,
+) {
+  let value =
+    html
+      .replace(
+        /<script[\s\S]*?<\/script>/gi,
+        " ",
+      )
+      .replace(
+        /<style[\s\S]*?<\/style>/gi,
+        " ",
+      )
+      .replace(
+        /<noscript[\s\S]*?<\/noscript>/gi,
+        " ",
+      );
+
+  const tableRows = [];
+
+  value =
+    value.replace(
+      /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi,
+      (
+        _match,
+        rowHtml,
+      ) => {
+        const cells = [];
+
+        String(rowHtml)
+          .replace(
+            /<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi,
+            (
+              _cellMatch,
+              cellHtml,
+            ) => {
+              const cellText =
+                snapshotTextProjection(
+                  String(cellHtml),
+                );
+
+              if (
+                cellText.length > 0
+              ) {
+                cells.push(
+                  cellText,
+                );
+              }
+
+              return " ";
+            },
+          );
+
+        if (
+          cells.length > 0
+        ) {
+          tableRows.push(
+            cells.join(
+              " | ",
+            ),
+          );
+        }
+
+        return ` ${cells.join(" | ")} `;
+      },
+    );
+
+  const structuralText =
+    snapshotTextProjection(
+      value,
+    );
+
+  const rowProjection =
+    tableRows.join(
+      " ",
+    );
+
+  return [
+    structuralText,
+    rowProjection,
+  ]
+    .filter(
+      (item) =>
+        item.length > 0,
+    )
+    .join(
+      " ",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
+
+
+/*
+ * ============================================================================
+ * Structured Evidence canonical matching
+ *
+ * Evidence extraction normalizes values before persistence. In particular,
+ * punctuation used by HTML presentation may be removed from terminal unit
+ * values:
+ *
+ *     "0.045 in."
+ *
+ * may become:
+ *
+ *     "0.045 in"
+ *
+ * The Snapshot structural projection therefore needs a deterministic
+ * comparison normalization that tolerates presentation-only whitespace and
+ * terminal punctuation while preserving every substantive token.
+ *
+ * This is NOT a fuzzy semantic comparison.
+ *
+ * The following transformations are allowed:
+ *
+ *   - Unicode normalization;
+ *   - HTML whitespace normalization;
+ *   - collapsing repeated whitespace;
+ *   - terminal punctuation normalization;
+ *   - case normalization.
+ *
+ * No token may be dropped.
+ * ============================================================================
+ */
+
+function canonicalizeStructuredTraceText(
+  value,
+) {
+  return String(
+    value,
+  )
+    .normalize(
+      "NFKC",
+    )
+    .replace(
+      /[\u00a0\u2007\u202f]/gu,
+      " ",
+    )
+    .replace(
+      /[ \t\r\n]+/gu,
+      " ",
+    )
+    .replace(
+      /\s*\|\s*/gu,
+      " | ",
+    )
+    .replace(
+      /\s*-\s*/gu,
+      " - ",
+    )
+    .replace(
+      /[.,;:]+(?=\s|$)/gu,
+      "",
+    )
+    .trim()
+    .toLocaleLowerCase("en-US");
+}
+
+
+function structuredExcerptExistsInSnapshot(
+  snapshotPayload,
+  evidenceExcerpt,
+) {
+  const snapshotProjection =
+    snapshotStructuralProjection(
+      snapshotPayload,
+    );
+
+  const canonicalSnapshot =
+    canonicalizeStructuredTraceText(
+      snapshotProjection,
+    );
+
+  const canonicalExcerpt =
+    canonicalizeStructuredTraceText(
+      evidenceExcerpt,
+    );
+
+  if (
+    canonicalExcerpt.length === 0
+  ) {
+    return false;
+  }
+
+  /*
+   * Primary deterministic containment check.
+   */
+  if (
+    canonicalSnapshot.includes(
+      canonicalExcerpt,
+    )
+  ) {
+    return true;
+  }
+
+  /*
+   * Table-row specific deterministic check.
+   *
+   * This avoids allowing an excerpt to cross unrelated table rows.
+   */
+  const rawRows = [];
+
+  String(snapshotPayload)
+    .replace(
+      /<script[\s\S]*?<\/script>/gi,
+      " ",
+    )
+    .replace(
+      /<style[\s\S]*?<\/style>/gi,
+      " ",
+    )
+    .replace(
+      /<noscript[\s\S]*?<\/noscript>/gi,
+      " ",
+    )
+    .replace(
+      /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi,
+      (
+        _match,
+        rowHtml,
+      ) => {
+        const cells = [];
+
+        String(rowHtml)
+          .replace(
+            /<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi,
+            (
+              _cellMatch,
+              cellHtml,
+            ) => {
+              const text =
+                snapshotTextProjection(
+                  String(cellHtml),
+                );
+
+              if (
+                text.length > 0
+              ) {
+                cells.push(
+                  text,
+                );
+              }
+
+              return " ";
+            },
+          );
+
+        if (
+          cells.length > 0
+        ) {
+          rawRows.push(
+            canonicalizeStructuredTraceText(
+              cells.join(
+                " | ",
+              ),
+            ),
+          );
+        }
+
+        return " ";
+      },
+    );
+
+  return rawRows.some(
+    (row) =>
+      row.includes(
+        canonicalExcerpt,
+      ),
+  );
+}
+
+
+/*
+ * ============================================================================
  * Gate 7
  *
  * Runtime Truth Evidence excerpt must be traceable to the immutable Snapshot.
@@ -737,23 +1053,30 @@ function snapshotTextProjection(
  *          ∈
  *      Snapshot-derived text projection
  *
- * 2. Structured parameter Evidence:
+ * 2. Structured Evidence:
  *
  *      locator = document:parameter:*
+ *      locator = document:table:*
  *
  *      Evidence.excerpt
  *          ∈
+ *      deterministic structural projection
+ *          of
  *      immutable Snapshot raw payload
  *
- * The second form is required because structured extraction may legitimately
- * originate from CSS, HTML attributes, embedded structured data, or other
- * raw Snapshot content which the ordinary text projection intentionally
- * removes.
+ * IMPORTANT:
  *
- * This does NOT weaken traceability:
+ * We deliberately do NOT use:
  *
- * The exact Evidence excerpt must still exist in the immutable Snapshot
- * payload.
+ *   snapshotPayload.includes(
+ *     evidence.excerpt,
+ *   )
+ *
+ * because Evidence.excerpt is a canonical extracted representation rather
+ * than a literal HTML byte sequence.
+ *
+ * The immutable Snapshot remains the sole source. The structural projection
+ * is only a deterministic verification view over that immutable payload.
  * ============================================================================
  */
 
@@ -794,28 +1117,32 @@ for (
     `Evidence ${evidenceRecord.aggregateId} excerpt is empty.`,
   );
 
-const isStructuredParameterEvidence =
-  typeof evidence.locator ===
-    "string" &&
-  (
-    evidence.locator.startsWith(
+  const locator =
+    typeof evidence.locator ===
+      "string"
+      ? evidence.locator
+      : "";
+
+  const isStructuredEvidence =
+    locator.startsWith(
       "document:parameter:",
     ) ||
-    evidence.locator.startsWith(
+    locator.startsWith(
       "document:table:",
-    )
-  );
+    );
 
   if (
-    isStructuredParameterEvidence
+    isStructuredEvidence
   ) {
     assert.ok(
-      snapshotPayload.includes(
+      structuredExcerptExistsInSnapshot(
+        snapshotPayload,
         evidence.excerpt,
       ),
       [
-        `Evidence ${evidenceRecord.aggregateId} structured parameter excerpt is not present in the immutable Snapshot raw payload.`,
-        `Evidence locator: ${evidence.locator}`,
+        `Evidence ${evidenceRecord.aggregateId} structured excerpt is not traceable to the immutable Snapshot raw payload.`,
+        `Evidence locator: ${locator}`,
+        `Evidence excerpt: ${evidence.excerpt}`,
         `Evidence excerpt length: ${evidence.excerpt.length}`,
         `Snapshot payload length: ${snapshotPayload.length}`,
       ].join("\n"),
