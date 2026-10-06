@@ -931,7 +931,7 @@ export class ContentCompiler {
           knowledgeRecord !==
             undefined,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NOT_FOUND",
-          `Knowledge provenance source not found for assertion ${index}.`,
+          `Knowledge provenance source not found for assertion ${provenance.length}.`,
         );
 
         assertionKnowledgeIds = [
@@ -949,7 +949,7 @@ export class ContentCompiler {
           knowledgeClaimIds.length >
             0,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_CLAIMS",
-          `Knowledge assertion ${index} has no Claim lineage.`,
+          `Knowledge assertion ${provenance.length} has no Claim lineage.`,
         );
 
         assertionClaimIds =
@@ -984,7 +984,7 @@ export class ContentCompiler {
           assertionEvidenceIds.length >
             0,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_EVIDENCE",
-          `Knowledge assertion ${index} has no Evidence lineage.`,
+          `Knowledge assertion ${provenance.length} has no Evidence lineage.`,
         );
       }
 
