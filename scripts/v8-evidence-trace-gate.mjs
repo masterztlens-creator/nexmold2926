@@ -683,6 +683,14 @@ function snapshotTextProjection(
       " ",
     )
     .replace(
+      /<template[\s\S]*?<\/template>/gi,
+      " ",
+    )
+    .replace(
+      /<svg[\s\S]*?<\/svg>/gi,
+      " ",
+    )
+    .replace(
       /<[^>]+>/g,
       " ",
     )
@@ -711,6 +719,57 @@ function snapshotTextProjection(
       '"',
     )
     .replace(
+      /&#(\d+);/g,
+      (
+        _match,
+        code,
+      ) => {
+        const numericCode =
+          Number(code);
+
+        if (
+          !Number.isInteger(
+            numericCode,
+          ) ||
+          numericCode < 0 ||
+          numericCode > 0x10ffff
+        ) {
+          return " ";
+        }
+
+        return String.fromCodePoint(
+          numericCode,
+        );
+      },
+    )
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (
+        _match,
+        code,
+      ) => {
+        const numericCode =
+          Number.parseInt(
+            code,
+            16,
+          );
+
+        if (
+          !Number.isInteger(
+            numericCode,
+          ) ||
+          numericCode < 0 ||
+          numericCode > 0x10ffff
+        ) {
+          return " ";
+        }
+
+        return String.fromCodePoint(
+          numericCode,
+        );
+      },
+    )
+    .replace(
       /\s+/g,
       " ",
     )
@@ -722,52 +781,48 @@ function snapshotTextProjection(
  * ============================================================================
  * Snapshot structural projection
  *
- * Structured Evidence is not normally stored as literal HTML source.
+ * IMPORTANT:
  *
- * Example:
+ * This projection intentionally mirrors the TABLE Evidence contract in:
  *
- *   Evidence excerpt:
+ *   src/v8/acquisition/source-extractor.ts
  *
- *     ABS | 0.045 in - 0.140 in
+ * Existing extractor contract:
  *
- * The immutable Snapshot may contain:
+ *   tableSection
+ *     —
+ *   headerCells.join(" | ")
+ *     —
+ *   rowText
  *
- *     <tr>
- *       <td>ABS</td>
- *       <td>0.045 in.</td>
- *       <td>-</td>
- *       <td>0.140 in.</td>
- *     </tr>
+ * Therefore an Evidence excerpt such as:
  *
- * Therefore:
+ *   Wall Thickness — MATERIAL | RECOMMENDED WALL THICKNESS — ABS | 1.143mm - 3.556mm
  *
- *     snapshotPayload.includes(evidence.excerpt)
+ * must be reproducible from the immutable Snapshot itself.
  *
- * is NOT a valid lineage test.
+ * We do NOT compare the canonical Evidence excerpt against raw HTML bytes.
  *
- * This function creates a deterministic projection directly from the
- * immutable Snapshot HTML. It does not obtain data from Evidence, Claim,
- * Knowledge, generated content, or an external source.
+ * We reconstruct deterministic table projections directly from the immutable
+ * Snapshot HTML:
  *
- * The projection:
+ *   heading before table
+ *        ↓
+ *   first table row / header
+ *        ↓
+ *   subsequent data row
  *
- *   1. removes executable/document metadata blocks;
- *   2. preserves table row boundaries;
- *   3. preserves table-cell boundaries using " | ";
- *   4. decodes the HTML entities handled by the existing text projection;
- *   5. normalizes whitespace;
- *   6. emits both table-row projections and the complete structural text.
+ * No Evidence value is used to manufacture the projection.
  *
- * This remains a one-way deterministic projection of immutable Snapshot
- * payload. It does not alter the Snapshot and does not replace the raw
- * Snapshot fingerprint.
+ * The Evidence excerpt is only the value being verified against the
+ * independently-derived Snapshot projection.
  * ============================================================================
  */
 
 function snapshotStructuralProjection(
   html,
 ) {
-  let value =
+  const source =
     html
       .replace(
         /<script[\s\S]*?<\/script>/gi,
@@ -780,74 +835,256 @@ function snapshotStructuralProjection(
       .replace(
         /<noscript[\s\S]*?<\/noscript>/gi,
         " ",
+      )
+      .replace(
+        /<template[\s\S]*?<\/template>/gi,
+        " ",
+      )
+      .replace(
+        /<svg[\s\S]*?<\/svg>/gi,
+        " ",
       );
 
-  const tableRows = [];
+  const projections = [];
 
-  value =
-    value.replace(
-      /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi,
-      (
-        _match,
-        rowHtml,
-      ) => {
-        const cells = [];
+  /*
+   * Build heading map.
+   *
+   * This mirrors the extractor's sectionForIndex() contract:
+   * the latest heading occurring before the table is the table section.
+   */
+  const headings = [];
 
-        String(rowHtml)
-          .replace(
-            /<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi,
-            (
-              _cellMatch,
-              cellHtml,
-            ) => {
-              const cellText =
-                snapshotTextProjection(
-                  String(cellHtml),
-                );
+  const headingPattern =
+    /<h([1-6])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>/gi;
 
-              if (
-                cellText.length > 0
-              ) {
-                cells.push(
-                  cellText,
-                );
-              }
+  let headingMatch;
 
-              return " ";
-            },
+  while (
+    (headingMatch =
+      headingPattern.exec(
+        source,
+      )) !== null
+  ) {
+    const section =
+      snapshotTextProjection(
+        headingMatch[2] ?? "",
+      );
+
+    if (
+      section.length > 0
+    ) {
+      headings.push({
+        index:
+          headingMatch.index,
+        section,
+      });
+    }
+  }
+
+  /*
+   * Locate every table independently.
+   *
+   * We intentionally do not trust the Evidence locator's numeric table
+   * position as a source of truth. The locator is an Evidence field and must
+   * itself be traceable. The actual HTML structure is authoritative here.
+   */
+  const tablePattern =
+    /<table(?:\s[^>]*)?>([\s\S]*?)<\/table>/gi;
+
+  let tableMatch;
+
+  while (
+    (tableMatch =
+      tablePattern.exec(
+        source,
+      )) !== null
+  ) {
+    const tableIndex =
+      tableMatch.index;
+
+    const tableHtml =
+      tableMatch[1] ?? "";
+
+    let tableSection;
+
+    for (
+      const heading of
+        headings
+    ) {
+      if (
+        heading.index >
+        tableIndex
+      ) {
+        break;
+      }
+
+      tableSection =
+        heading.section;
+    }
+
+    const rows = [];
+
+    const rowPattern =
+      /<tr(?:\s[^>]*)?>([\s\S]*?)<\/tr>/gi;
+
+    let rowMatch;
+
+    while (
+      (rowMatch =
+        rowPattern.exec(
+          tableHtml,
+        )) !== null
+    ) {
+      const cells = [];
+
+      const cellPattern =
+        /<(?:th|td)(?:\s[^>]*)?>([\s\S]*?)<\/(?:th|td)>/gi;
+
+      let cellMatch;
+
+      while (
+        (cellMatch =
+          cellPattern.exec(
+            rowMatch[1] ?? "",
+          )) !== null
+      ) {
+        const cell =
+          snapshotTextProjection(
+            cellMatch[1] ?? "",
           );
 
         if (
-          cells.length > 0
+          cell.length > 0
         ) {
-          tableRows.push(
-            cells.join(
-              " | ",
-            ),
+          cells.push(
+            cell,
           );
         }
+      }
 
-        return ` ${cells.join(" | ")} `;
-      },
-    );
+      if (
+        cells.length > 0
+      ) {
+        rows.push(
+          cells,
+        );
+      }
+    }
 
-  const structuralText =
+    if (
+      rows.length === 0
+    ) {
+      continue;
+    }
+
+    const headerCells =
+      rows[0] ?? [];
+
+    if (
+      headerCells.length === 0
+    ) {
+      continue;
+    }
+
+    /*
+     * Reproduce the exact table Evidence excerpt contract used by
+     * source-extractor.ts:
+     *
+     * [
+     *   tableSection,
+     *   headerCells.join(" | "),
+     *   rowText,
+     * ]
+     *   .filter(Boolean)
+     *   .join(" — ")
+     */
+    for (
+      let rowIndex = 1;
+      rowIndex < rows.length;
+      rowIndex += 1
+    ) {
+      const row =
+        rows[rowIndex];
+
+      if (
+        !row ||
+        row.length === 0
+      ) {
+        continue;
+      }
+
+      const rowText =
+        row.join(
+          " | ",
+        );
+
+      const excerpt =
+        [
+          tableSection,
+          headerCells.join(
+            " | ",
+          ),
+          rowText,
+        ]
+          .filter(Boolean)
+          .join(
+            " — ",
+          );
+
+      if (
+        excerpt.length > 0
+      ) {
+        projections.push(
+          excerpt,
+        );
+      }
+    }
+
+    /*
+     * Also preserve a pure row projection.
+     *
+     * This is useful for table Evidence generated by a narrower extractor
+     * contract and does not weaken the primary section/header/row check.
+     */
+    for (
+      let rowIndex = 1;
+      rowIndex < rows.length;
+      rowIndex += 1
+    ) {
+      const row =
+        rows[rowIndex];
+
+      if (
+        !row ||
+        row.length === 0
+      ) {
+        continue;
+      }
+
+      projections.push(
+        row.join(
+          " | ",
+        ),
+      );
+    }
+  }
+
+  /*
+   * Keep the complete ordinary text projection as a secondary representation.
+   *
+   * This does not replace the structural table projection.
+   */
+  projections.push(
     snapshotTextProjection(
-      value,
-    );
+      source,
+    ),
+  );
 
-  const rowProjection =
-    tableRows.join(
-      " ",
-    );
-
-  return [
-    structuralText,
-    rowProjection,
-  ]
+  return projections
     .filter(
-      (item) =>
-        item.length > 0,
+      (value) =>
+        value.length > 0,
     )
     .join(
       " ",
@@ -878,17 +1115,19 @@ function snapshotStructuralProjection(
  * comparison normalization that tolerates presentation-only whitespace and
  * terminal punctuation while preserving every substantive token.
  *
- * This is NOT a fuzzy semantic comparison.
+ * This is NOT fuzzy semantic matching.
  *
- * The following transformations are allowed:
+ * Allowed normalization:
  *
- *   - Unicode normalization;
- *   - HTML whitespace normalization;
- *   - collapsing repeated whitespace;
- *   - terminal punctuation normalization;
- *   - case normalization.
+ *   - Unicode NFKC normalization
+ *   - HTML whitespace normalization
+ *   - repeated whitespace collapsing
+ *   - table pipe spacing normalization
+ *   - presentation dash normalization
+ *   - terminal punctuation normalization
+ *   - case normalization
  *
- * No token may be dropped.
+ * No substantive token is removed.
  * ============================================================================
  */
 
@@ -910,6 +1149,10 @@ function canonicalizeStructuredTraceText(
       " ",
     )
     .replace(
+      /[–—−]/gu,
+      "-",
+    )
+    .replace(
       /\s*\|\s*/gu,
       " | ",
     )
@@ -922,7 +1165,9 @@ function canonicalizeStructuredTraceText(
       "",
     )
     .trim()
-    .toLocaleLowerCase("en-US");
+    .toLocaleLowerCase(
+      "en-US",
+    );
 }
 
 
@@ -953,6 +1198,10 @@ function structuredExcerptExistsInSnapshot(
 
   /*
    * Primary deterministic containment check.
+   *
+   * Because snapshotStructuralProjection() independently reconstructs the
+   * section/header/row contract, an exact canonical containment match is
+   * sufficient.
    */
   if (
     canonicalSnapshot.includes(
@@ -963,74 +1212,109 @@ function structuredExcerptExistsInSnapshot(
   }
 
   /*
-   * Table-row specific deterministic check.
+   * Secondary table-row check.
    *
-   * This avoids allowing an excerpt to cross unrelated table rows.
+   * This deliberately reconstructs table rows independently instead of
+   * deriving them from Evidence.
+   *
+   * It prevents a future projection formatting change from turning an
+   * otherwise valid exact row into a false negative while still requiring
+   * every substantive token in the Evidence excerpt.
    */
-  const rawRows = [];
+  const rows = [];
 
-  String(snapshotPayload)
-    .replace(
-      /<script[\s\S]*?<\/script>/gi,
-      " ",
+  const source =
+    String(
+      snapshotPayload,
     )
-    .replace(
-      /<style[\s\S]*?<\/style>/gi,
-      " ",
-    )
-    .replace(
-      /<noscript[\s\S]*?<\/noscript>/gi,
-      " ",
-    )
-    .replace(
-      /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi,
-      (
-        _match,
-        rowHtml,
-      ) => {
-        const cells = [];
+      .replace(
+        /<script[\s\S]*?<\/script>/gi,
+        " ",
+      )
+      .replace(
+        /<style[\s\S]*?<\/style>/gi,
+        " ",
+      )
+      .replace(
+        /<noscript[\s\S]*?<\/noscript>/gi,
+        " ",
+      )
+      .replace(
+        /<template[\s\S]*?<\/template>/gi,
+        " ",
+      )
+      .replace(
+        /<svg[\s\S]*?<\/svg>/gi,
+        " ",
+      );
 
-        String(rowHtml)
-          .replace(
-            /<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi,
-            (
-              _cellMatch,
-              cellHtml,
-            ) => {
-              const text =
-                snapshotTextProjection(
-                  String(cellHtml),
-                );
+  const tablePattern =
+    /<table(?:\s[^>]*)?>([\s\S]*?)<\/table>/gi;
 
-              if (
-                text.length > 0
-              ) {
-                cells.push(
-                  text,
-                );
-              }
+  let tableMatch;
 
-              return " ";
-            },
+  while (
+    (tableMatch =
+      tablePattern.exec(
+        source,
+      )) !== null
+  ) {
+    const tableHtml =
+      tableMatch[1] ?? "";
+
+    const rowPattern =
+      /<tr(?:\s[^>]*)?>([\s\S]*?)<\/tr>/gi;
+
+    let rowMatch;
+
+    while (
+      (rowMatch =
+        rowPattern.exec(
+          tableHtml,
+        )) !== null
+    ) {
+      const cells = [];
+
+      const cellPattern =
+        /<(?:th|td)(?:\s[^>]*)?>([\s\S]*?)<\/(?:th|td)>/gi;
+
+      let cellMatch;
+
+      while (
+        (cellMatch =
+          cellPattern.exec(
+            rowMatch[1] ?? "",
+          )) !== null
+      ) {
+        const cell =
+          snapshotTextProjection(
+            cellMatch[1] ?? "",
           );
 
         if (
-          cells.length > 0
+          cell.length > 0
         ) {
-          rawRows.push(
-            canonicalizeStructuredTraceText(
-              cells.join(
-                " | ",
-              ),
-            ),
+          cells.push(
+            cell,
           );
         }
+      }
 
-        return " ";
-      },
-    );
+      if (
+        cells.length > 0
+      ) {
+        rows.push(
+          canonicalizeStructuredTraceText(
+            cells.join(
+              " | ",
+            ),
+          ),
+        );
+      }
+    }
+  }
 
-  return rawRows.some(
+  return rows.some(
     (row) =>
       row.includes(
         canonicalExcerpt,
@@ -1522,7 +1806,7 @@ for (
   assert.equal(
     knowledgeRecord.state,
     "VERIFIED",
-    `Knowledge ${knowledgeId} latest state is not VERIFIED.`,
+    `Knowledge ${knowledgeId} latest Foundation state is not VERIFIED.`,
   );
 
   const knowledge =
