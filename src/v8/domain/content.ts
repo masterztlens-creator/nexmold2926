@@ -22,54 +22,6 @@ export type ContentProvenanceKind =
   | "CONTEXT"
   | "CONSTRAINT";
 
-/*
- * ============================================================
- * CONTENT PROVENANCE CONTRACT
- * ============================================================
- *
- * Provenance is divided into two epistemic classes:
- *
- *   STRUCTURAL
- *     QUESTION
- *     DECISION
- *     CONTEXT
- *     CONSTRAINT
- *
- *   EVIDENTIARY
- *     KNOWLEDGE
- *
- * Structural assertions MUST NOT be assigned unrelated
- * Knowledge / Claim / Evidence lineage merely to satisfy a
- * cardinality requirement.
- *
- * Evidentiary assertions MUST carry the complete minimal:
- *
- *   Knowledge -> Claim -> Evidence
- *
- * closure belonging to that Knowledge assertion.
- *
- * The following fields therefore have distinct meanings:
- *
- *   problemIds
- *       Structural source for QUESTION and CONSTRAINT.
- *
- *   decisionIds
- *       Structural source for DECISION.
- *
- *   contextIds
- *       Structural source for CONTEXT.
- *
- *   knowledgeIds
- *   claimIds
- *   evidenceIds
- *       Epistemic source closure for KNOWLEDGE.
- *
- * There is intentionally no constraintIds field because V8 does
- * not currently model a Constraint as an independent Foundation
- * aggregate. A constraint is therefore bound to its registered
- * Problem and exact assertion text.
- */
-
 export interface ContentProvenance {
   readonly ordinal: number;
   readonly text: string;
@@ -78,21 +30,29 @@ export interface ContentProvenance {
 
   /*
    * Structural lineage.
+   *
+   * QUESTION / CONSTRAINT assertions bind to exactly one Problem.
+   * CONTEXT assertions bind to exactly one Context.
+   * DECISION assertions bind to exactly one Decision.
+   *
+   * There is deliberately no constraintIds field because V8 does
+   * not model Constraint as an independent aggregate in this layer.
    */
   readonly problemIds: readonly string[];
   readonly decisionIds: readonly string[];
   readonly contextIds: readonly string[];
 
   /*
-   * Evidentiary lineage.
+   * Epistemic lineage.
    *
-   * These arrays MUST be empty for structural provenance kinds.
+   * Only KNOWLEDGE assertions require the complete
    *
-   * KNOWLEDGE assertions MUST contain the minimal:
-   *
-   *   Knowledge -> Claim -> Evidence
+   *   Knowledge → Claim → Evidence
    *
    * closure.
+   *
+   * Structural assertions must not manufacture Knowledge, Claim or
+   * Evidence references merely to satisfy a provenance contract.
    */
   readonly knowledgeIds: readonly string[];
   readonly claimIds: readonly string[];
@@ -106,14 +66,39 @@ export interface Content {
   body: string;
 
   /*
-   * Every auditable content assertion emitted by the compiler
-   * carries immutable provenance.
+   * Every content assertion emitted by the compiler carries an
+   * immutable provenance record.
    *
-   * Structural assertions are bound to their structural aggregate.
-   * Knowledge assertions are bound to their epistemic closure.
+   * Provenance has two deliberately separate dimensions:
    *
-   * No assertion is permitted to acquire unrelated Evidence merely
-   * because Evidence exists elsewhere in the Decision closure.
+   *   structural lineage
+   *     QUESTION / CONSTRAINT → Problem
+   *     CONTEXT              → Context
+   *     DECISION             → Decision
+   *
+   *   epistemic lineage
+   *     KNOWLEDGE → Claim → Evidence
+   *
+   * This separation is essential. Structural presentation assertions
+   * are not Evidence-backed factual assertions and must not be made
+   * to appear epistemic merely to satisfy an old provenance contract.
+   *
+   * Therefore:
+   *
+   *   source evidence
+   *        ↓
+   *   verified claim
+   *        ↓
+   *   verified knowledge
+   *        ↓
+   *   approved decision
+   *        ↓
+   *   deterministic content
+   *        ↓
+   *   exact content assertion
+   *
+   * remains inspectable after compilation without introducing false
+   * epistemic lineage.
    */
   readonly provenance: readonly ContentProvenance[];
 }
@@ -135,6 +120,26 @@ function normalizeIds(
       ),
     ].sort(),
   );
+}
+
+function validateExactlyOneStructuralId(
+  values: readonly string[],
+  code: string,
+  label: string,
+  index: number,
+): readonly string[] {
+  const normalized =
+    normalizeIds(
+      values,
+    );
+
+  invariant(
+    normalized.length === 1,
+    code,
+    `Content provenance assertion ${index} must bind exactly one ${label}.`,
+  );
+
+  return normalized;
 }
 
 function validateProvenance(
@@ -201,175 +206,240 @@ function validateProvenance(
             item.evidenceIds,
           );
 
-        invariant(
-          [
-            "QUESTION",
-            "DECISION",
-            "KNOWLEDGE",
-            "CONTEXT",
-            "CONSTRAINT",
-          ].includes(
-            item.kind,
-          ),
-          "V8_CONTENT_PROVENANCE_INVALID_KIND",
-          `Content provenance assertion ${index} has an invalid provenance kind.`,
-        );
-
-        /*
-         * ========================================================
-         * STRUCTURAL PROVENANCE
-         * ========================================================
-         */
-
-        if (
-          item.kind ===
-          "QUESTION"
+        switch (
+          item.kind
         ) {
-          invariant(
-            problemIds.length ===
-              1,
-            "V8_CONTENT_PROVENANCE_QUESTION_PROBLEM_CARDINALITY",
-            `QUESTION provenance assertion ${index} must reference exactly one Problem.`,
-          );
+          case "QUESTION":
+            invariant(
+              problemIds.length ===
+                1,
+              "V8_CONTENT_PROVENANCE_QUESTION_NO_PROBLEM",
+              `QUESTION assertion ${index} must bind exactly one Problem.`,
+            );
 
-          invariant(
-            decisionIds.length ===
-              0 &&
-              contextIds.length ===
-                0 &&
-              knowledgeIds.length ===
-                0 &&
-              claimIds.length ===
-                0 &&
-              evidenceIds.length ===
-                0,
-            "V8_CONTENT_PROVENANCE_QUESTION_HAS_FOREIGN_LINEAGE",
-            `QUESTION provenance assertion ${index} contains lineage belonging to another provenance class.`,
-          );
-        }
-
-        if (
-          item.kind ===
-          "DECISION"
-        ) {
-          invariant(
-            decisionIds.length ===
-              1,
-            "V8_CONTENT_PROVENANCE_DECISION_CARDINALITY",
-            `DECISION provenance assertion ${index} must reference exactly one Decision.`,
-          );
-
-          invariant(
-            problemIds.length ===
-              0 &&
-              contextIds.length ===
-                0 &&
-              knowledgeIds.length ===
-                0 &&
-              claimIds.length ===
-                0 &&
-              evidenceIds.length ===
-                0,
-            "V8_CONTENT_PROVENANCE_DECISION_HAS_FOREIGN_LINEAGE",
-            `DECISION provenance assertion ${index} contains lineage belonging to another provenance class.`,
-          );
-        }
-
-        if (
-          item.kind ===
-          "CONTEXT"
-        ) {
-          invariant(
-            contextIds.length ===
-              1,
-            "V8_CONTENT_PROVENANCE_CONTEXT_CARDINALITY",
-            `CONTEXT provenance assertion ${index} must reference exactly one Context.`,
-          );
-
-          invariant(
-            problemIds.length ===
-              0 &&
+            invariant(
               decisionIds.length ===
-                0 &&
-              knowledgeIds.length ===
-                0 &&
-              claimIds.length ===
-                0 &&
-              evidenceIds.length ===
                 0,
-            "V8_CONTENT_PROVENANCE_CONTEXT_HAS_FOREIGN_LINEAGE",
-            `CONTEXT provenance assertion ${index} contains lineage belonging to another provenance class.`,
-          );
-        }
+              "V8_CONTENT_PROVENANCE_QUESTION_DECISION",
+              `QUESTION assertion ${index} must not bind a Decision.`,
+            );
 
-        if (
-          item.kind ===
-          "CONSTRAINT"
-        ) {
-          invariant(
-            problemIds.length ===
-              1,
-            "V8_CONTENT_PROVENANCE_CONSTRAINT_PROBLEM_CARDINALITY",
-            `CONSTRAINT provenance assertion ${index} must reference exactly one Problem.`,
-          );
-
-          invariant(
-            decisionIds.length ===
-              0 &&
+            invariant(
               contextIds.length ===
-                0 &&
+                0,
+              "V8_CONTENT_PROVENANCE_QUESTION_CONTEXT",
+              `QUESTION assertion ${index} must not bind a Context.`,
+            );
+
+            invariant(
               knowledgeIds.length ===
-                0 &&
+                0,
+              "V8_CONTENT_PROVENANCE_QUESTION_KNOWLEDGE",
+              `QUESTION assertion ${index} must not bind Knowledge.`,
+            );
+
+            invariant(
               claimIds.length ===
-                0 &&
+                0,
+              "V8_CONTENT_PROVENANCE_QUESTION_CLAIM",
+              `QUESTION assertion ${index} must not bind Claim.`,
+            );
+
+            invariant(
               evidenceIds.length ===
                 0,
-            "V8_CONTENT_PROVENANCE_CONSTRAINT_HAS_FOREIGN_LINEAGE",
-            `CONSTRAINT provenance assertion ${index} contains lineage belonging to another provenance class.`,
-          );
-        }
+              "V8_CONTENT_PROVENANCE_QUESTION_EVIDENCE",
+              `QUESTION assertion ${index} must not bind Evidence.`,
+            );
 
-        /*
-         * ========================================================
-         * EVIDENTIARY PROVENANCE
-         * ========================================================
-         */
+            break;
 
-        if (
-          item.kind ===
-          "KNOWLEDGE"
-        ) {
-          invariant(
-            knowledgeIds.length >
-              0,
-            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_KNOWLEDGE",
-            `KNOWLEDGE provenance assertion ${index} has no Knowledge lineage.`,
-          );
+          case "CONSTRAINT":
+            invariant(
+              problemIds.length ===
+                1,
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_NO_PROBLEM",
+              `CONSTRAINT assertion ${index} must bind exactly one Problem.`,
+            );
 
-          invariant(
-            claimIds.length >
-              0,
-            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_CLAIM",
-            `KNOWLEDGE provenance assertion ${index} has no Claim lineage.`,
-          );
-
-          invariant(
-            evidenceIds.length >
-              0,
-            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_EVIDENCE",
-            `KNOWLEDGE provenance assertion ${index} has no Evidence lineage.`,
-          );
-
-          invariant(
-            problemIds.length ===
-              0 &&
+            invariant(
               decisionIds.length ===
-                0 &&
+                0,
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_DECISION",
+              `CONSTRAINT assertion ${index} must not bind a Decision.`,
+            );
+
+            invariant(
               contextIds.length ===
                 0,
-            "V8_CONTENT_PROVENANCE_KNOWLEDGE_HAS_STRUCTURAL_LINEAGE",
-            `KNOWLEDGE provenance assertion ${index} contains structural lineage.`,
-          );
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_CONTEXT",
+              `CONSTRAINT assertion ${index} must not bind a Context.`,
+            );
+
+            invariant(
+              knowledgeIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_KNOWLEDGE",
+              `CONSTRAINT assertion ${index} must not bind Knowledge.`,
+            );
+
+            invariant(
+              claimIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_CLAIM",
+              `CONSTRAINT assertion ${index} must not bind Claim.`,
+            );
+
+            invariant(
+              evidenceIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONSTRAINT_EVIDENCE",
+              `CONSTRAINT assertion ${index} must not bind Evidence.`,
+            );
+
+            break;
+
+          case "CONTEXT":
+            invariant(
+              problemIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONTEXT_PROBLEM",
+              `CONTEXT assertion ${index} must not bind a Problem.`,
+            );
+
+            invariant(
+              decisionIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONTEXT_DECISION",
+              `CONTEXT assertion ${index} must not bind a Decision.`,
+            );
+
+            invariant(
+              contextIds.length ===
+                1,
+              "V8_CONTENT_PROVENANCE_CONTEXT_NO_CONTEXT",
+              `CONTEXT assertion ${index} must bind exactly one Context.`,
+            );
+
+            invariant(
+              knowledgeIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONTEXT_KNOWLEDGE",
+              `CONTEXT assertion ${index} must not bind Knowledge.`,
+            );
+
+            invariant(
+              claimIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONTEXT_CLAIM",
+              `CONTEXT assertion ${index} must not bind Claim.`,
+            );
+
+            invariant(
+              evidenceIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_CONTEXT_EVIDENCE",
+              `CONTEXT assertion ${index} must not bind Evidence.`,
+            );
+
+            break;
+
+          case "DECISION":
+            invariant(
+              problemIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_DECISION_PROBLEM",
+              `DECISION assertion ${index} must not bind a Problem.`,
+            );
+
+            invariant(
+              decisionIds.length ===
+                1,
+              "V8_CONTENT_PROVENANCE_DECISION_NO_DECISION",
+              `DECISION assertion ${index} must bind exactly one Decision.`,
+            );
+
+            invariant(
+              contextIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_DECISION_CONTEXT",
+              `DECISION assertion ${index} must not bind a Context.`,
+            );
+
+            invariant(
+              knowledgeIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_DECISION_KNOWLEDGE",
+              `DECISION assertion ${index} must not bind Knowledge.`,
+            );
+
+            invariant(
+              claimIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_DECISION_CLAIM",
+              `DECISION assertion ${index} must not bind Claim.`,
+            );
+
+            invariant(
+              evidenceIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_DECISION_EVIDENCE",
+              `DECISION assertion ${index} must not bind Evidence.`,
+            );
+
+            break;
+
+          case "KNOWLEDGE":
+            invariant(
+              problemIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_KNOWLEDGE_PROBLEM",
+              `KNOWLEDGE assertion ${index} must not bind a Problem.`,
+            );
+
+            invariant(
+              decisionIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_KNOWLEDGE_DECISION",
+              `KNOWLEDGE assertion ${index} must not bind a Decision.`,
+            );
+
+            invariant(
+              contextIds.length ===
+                0,
+              "V8_CONTENT_PROVENANCE_KNOWLEDGE_CONTEXT",
+              `KNOWLEDGE assertion ${index} must not bind a Context.`,
+            );
+
+            invariant(
+              knowledgeIds.length >
+                0,
+              "V8_CONTENT_PROVENANCE_NO_KNOWLEDGE",
+              `KNOWLEDGE assertion ${index} has no Knowledge lineage.`,
+            );
+
+            invariant(
+              claimIds.length >
+                0,
+              "V8_CONTENT_PROVENANCE_NO_CLAIM",
+              `KNOWLEDGE assertion ${index} has no Claim lineage.`,
+            );
+
+            invariant(
+              evidenceIds.length >
+                0,
+              "V8_CONTENT_PROVENANCE_NO_EVIDENCE",
+              `KNOWLEDGE assertion ${index} has no Evidence lineage.`,
+            );
+
+            break;
+
+          default:
+            invariant(
+              false,
+              "V8_CONTENT_PROVENANCE_UNKNOWN_KIND",
+              `Content provenance assertion ${index} has an unsupported provenance kind.`,
+            );
         }
 
         return immutable({
@@ -432,11 +502,11 @@ export function createContent(
   /*
    * Content body and provenance must agree structurally.
    *
-   * A compiled Content object without provenance remains allowed
-   * at the low-level domain factory for compatibility with historical
+   * A compiled Content object without provenance is still allowed at
+   * the low-level domain factory for compatibility with historical
    * domain fixtures.
    *
-   * Production compilers MUST provide provenance.
+   * Production compilers are required to provide provenance.
    */
   if (
     provenance.length > 0
@@ -516,9 +586,8 @@ export function createContent(
  * Structural lines are presentation structure rather than factual
  * assertions.
  *
- * These labels do not need independent Evidence because they are
- * presentation markers. The actual Problem, Decision, Context,
- * Constraint and Knowledge values remain auditable assertions.
+ * These lines do not need independent Evidence because the following
+ * content assertions carry the actual epistemic lineage.
  */
 export function isStructuralContentLine(
   line: string,
@@ -527,8 +596,7 @@ export function isStructuralContentLine(
     line.trim();
 
   if (
-    normalized.length ===
-    0
+    normalized.length === 0
   ) {
     return true;
   }

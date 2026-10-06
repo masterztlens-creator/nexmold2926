@@ -238,155 +238,170 @@ function createProvenanceRecord(
       evidenceIds,
     );
 
-  /*
-   * Structural provenance.
-   */
-  if (
-    kind ===
-    "QUESTION"
-  ) {
-    invariant(
-      normalizedProblemIds.length ===
-        1,
-      "V8_CONTENT_COMPILER_QUESTION_NO_PROBLEM",
-      `QUESTION assertion ${ordinal} must bind exactly one Problem.`,
-    );
+  switch (kind) {
+    case "QUESTION":
+    case "CONSTRAINT":
+      invariant(
+        normalizedProblemIds.length === 1,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_PROBLEM",
+        `Compiled assertion ${ordinal} kind=${kind} must bind exactly one Problem.`,
+      );
 
-    invariant(
-      normalizedDecisionIds.length ===
-        0 &&
-        normalizedContextIds.length ===
-          0 &&
-        normalizedKnowledgeIds.length ===
-          0 &&
-        normalizedClaimIds.length ===
-          0 &&
-        normalizedEvidenceIds.length ===
-          0,
-      "V8_CONTENT_COMPILER_QUESTION_FOREIGN_LINEAGE",
-      `QUESTION assertion ${ordinal} contains foreign lineage.`,
-    );
-  }
+      invariant(
+        normalizedDecisionIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_DECISION",
+        `Compiled assertion ${ordinal} kind=${kind} must not bind a Decision.`,
+      );
 
-  if (
-    kind ===
-    "DECISION"
-  ) {
-    invariant(
-      normalizedDecisionIds.length ===
-        1,
-      "V8_CONTENT_COMPILER_DECISION_NO_DECISION",
-      `DECISION assertion ${ordinal} must bind exactly one Decision.`,
-    );
+      invariant(
+        normalizedContextIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CONTEXT",
+        `Compiled assertion ${ordinal} kind=${kind} must not bind a Context.`,
+      );
 
-    invariant(
-      normalizedProblemIds.length ===
-        0 &&
-        normalizedContextIds.length ===
-          0 &&
-        normalizedKnowledgeIds.length ===
-          0 &&
-        normalizedClaimIds.length ===
-          0 &&
-        normalizedEvidenceIds.length ===
-          0,
-      "V8_CONTENT_COMPILER_DECISION_FOREIGN_LINEAGE",
-      `DECISION assertion ${ordinal} contains foreign lineage.`,
-    );
-  }
+      invariant(
+        normalizedKnowledgeIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_KNOWLEDGE",
+        `Compiled assertion ${ordinal} kind=${kind} must not bind Knowledge.`,
+      );
 
-  if (
-    kind ===
-    "CONTEXT"
-  ) {
-    invariant(
-      normalizedContextIds.length ===
-        1,
-      "V8_CONTENT_COMPILER_CONTEXT_NO_CONTEXT",
-      `CONTEXT assertion ${ordinal} must bind exactly one Context.`,
-    );
+      invariant(
+        normalizedClaimIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
+        `Compiled assertion ${ordinal} kind=${kind} must not bind Claim.`,
+      );
 
-    invariant(
-      normalizedProblemIds.length ===
-        0 &&
-        normalizedDecisionIds.length ===
-          0 &&
-        normalizedKnowledgeIds.length ===
-          0 &&
-        normalizedClaimIds.length ===
-          0 &&
-        normalizedEvidenceIds.length ===
-          0,
-      "V8_CONTENT_COMPILER_CONTEXT_FOREIGN_LINEAGE",
-      `CONTEXT assertion ${ordinal} contains foreign lineage.`,
-    );
-  }
+      invariant(
+        normalizedEvidenceIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_EVIDENCE",
+        `Compiled assertion ${ordinal} kind=${kind} must not bind Evidence.`,
+      );
 
-  if (
-    kind ===
-    "CONSTRAINT"
-  ) {
-    invariant(
-      normalizedProblemIds.length ===
-        1,
-      "V8_CONTENT_COMPILER_CONSTRAINT_NO_PROBLEM",
-      `CONSTRAINT assertion ${ordinal} must bind exactly one Problem.`,
-    );
+      break;
 
-    invariant(
-      normalizedDecisionIds.length ===
-        0 &&
-        normalizedContextIds.length ===
-          0 &&
-        normalizedKnowledgeIds.length ===
-          0 &&
-        normalizedClaimIds.length ===
-          0 &&
-        normalizedEvidenceIds.length ===
-          0,
-      "V8_CONTENT_COMPILER_CONSTRAINT_FOREIGN_LINEAGE",
-      `CONSTRAINT assertion ${ordinal} contains foreign lineage.`,
-    );
-  }
+    case "DECISION":
+      invariant(
+        normalizedDecisionIds.length === 1,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_DECISION",
+        `Compiled assertion ${ordinal} kind=DECISION must bind exactly one Decision.`,
+      );
 
-  /*
-   * Evidentiary provenance.
-   */
-  if (
-    kind ===
-    "KNOWLEDGE"
-  ) {
-    invariant(
-      normalizedKnowledgeIds.length >
-        0,
-      "V8_CONTENT_COMPILER_ASSERTION_NO_KNOWLEDGE",
-      `KNOWLEDGE assertion ${ordinal} has no Knowledge lineage.`,
-    );
+      invariant(
+        normalizedProblemIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_PROBLEM",
+        `Compiled assertion ${ordinal} kind=DECISION must not bind a Problem.`,
+      );
 
-    invariant(
-      normalizedClaimIds.length >
-        0,
-      "V8_CONTENT_COMPILER_ASSERTION_NO_CLAIM",
-      `KNOWLEDGE assertion ${ordinal} has no Claim lineage.`,
-    );
+      invariant(
+        normalizedContextIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CONTEXT",
+        `Compiled assertion ${ordinal} kind=DECISION must not bind a Context.`,
+      );
 
-    invariant(
-      normalizedEvidenceIds.length >
-        0,
-      "V8_CONTENT_COMPILER_ASSERTION_NO_EVIDENCE",
-      `KNOWLEDGE assertion ${ordinal} has no Evidence lineage.`,
-    );
+      invariant(
+        normalizedKnowledgeIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_KNOWLEDGE",
+        `Compiled assertion ${ordinal} kind=DECISION must not bind Knowledge.`,
+      );
 
-    invariant(
-      normalizedProblemIds.length ===
-        0 &&
-        normalizedDecisionIds.length ===
-          0 &&
-        normalizedContextIds.length ===
-          0,
-      "V8_CONTENT_COMPILER_KNOWLEDGE_FOREIGN_LINEAGE",
-      `KNOWLEDGE assertion ${ordinal} contains structural lineage.`,
-    );
+      invariant(
+        normalizedClaimIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
+        `Compiled assertion ${ordinal} kind=DECISION must not bind Claim.`,
+      );
+
+      invariant(
+        normalizedEvidenceIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_EVIDENCE",
+        `Compiled assertion ${ordinal} kind=DECISION must not bind Evidence.`,
+      );
+
+      break;
+
+    case "CONTEXT":
+      invariant(
+        normalizedContextIds.length === 1,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_CONTEXT",
+        `Compiled assertion ${ordinal} kind=CONTEXT must bind exactly one Context.`,
+      );
+
+      invariant(
+        normalizedProblemIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_PROBLEM",
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind a Problem.`,
+      );
+
+      invariant(
+        normalizedDecisionIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_DECISION",
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind a Decision.`,
+      );
+
+      invariant(
+        normalizedKnowledgeIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_KNOWLEDGE",
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind Knowledge.`,
+      );
+
+      invariant(
+        normalizedClaimIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind Claim.`,
+      );
+
+      invariant(
+        normalizedEvidenceIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_EVIDENCE",
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind Evidence.`,
+      );
+
+      break;
+
+    case "KNOWLEDGE":
+      invariant(
+        normalizedProblemIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_PROBLEM",
+        `Compiled assertion ${ordinal} kind=KNOWLEDGE must not bind a Problem.`,
+      );
+
+      invariant(
+        normalizedDecisionIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_DECISION",
+        `Compiled assertion ${ordinal} kind=KNOWLEDGE must not bind a Decision.`,
+      );
+
+      invariant(
+        normalizedContextIds.length === 0,
+        "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CONTEXT",
+        `Compiled assertion ${ordinal} kind=KNOWLEDGE must not bind a Context.`,
+      );
+
+      invariant(
+        normalizedKnowledgeIds.length > 0,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_KNOWLEDGE",
+        `Compiled assertion ${ordinal} has no Knowledge lineage.`,
+      );
+
+      invariant(
+        normalizedClaimIds.length > 0,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_CLAIM",
+        `Compiled assertion ${ordinal} has no Claim lineage.`,
+      );
+
+      invariant(
+        normalizedEvidenceIds.length > 0,
+        "V8_CONTENT_COMPILER_ASSERTION_NO_EVIDENCE",
+        `Compiled assertion ${ordinal} has no Evidence lineage.`,
+      );
+
+      break;
+
+    default:
+      invariant(
+        false,
+        "V8_CONTENT_COMPILER_ASSERTION_UNKNOWN_KIND",
+        `Unsupported provenance kind for compiled assertion ${ordinal}.`,
+      );
   }
 
   return {
@@ -642,6 +657,38 @@ export class ContentCompiler {
         ),
       );
 
+    /*
+     * The compiler creates provenance from the exact deterministic
+     * body it is about to publish.
+     *
+     * Every non-structural line must receive provenance.
+     *
+     * Provenance is intentionally minimal:
+     *
+     *   KNOWLEDGE
+     *     -> exact Knowledge
+     *     -> exact Claims
+     *     -> exact Evidence
+     *
+     *   QUESTION
+     *     -> Problem
+     *
+     *   DECISION
+     *     -> Decision
+     *
+     *   CONSTRAINT
+     *     -> Problem
+     *
+     *   CONTEXT
+     *     -> Context
+     *
+     * Problem / Decision / Constraint / Context assertions MUST NOT
+     * inherit unrelated Knowledge / Claim / Evidence IDs merely because
+     * those aggregates participate in the same Decision.
+     *
+     * This prevents aggregate-level lineage from being mistaken for
+     * assertion-level evidentiary support.
+     */
     const bodyAssertions =
       body
         .split("\n")
@@ -663,27 +710,21 @@ export class ContentCompiler {
       "Compiled content contains no auditable assertions.",
     );
 
-    const provenance:
-      ContentProvenance[] =
+    const provenance: ContentProvenance[] =
       [];
 
     for (
       let index = 0;
       index <
-        bodyAssertions.length;
+      bodyAssertions.length;
       index += 1
     ) {
       const assertion =
         bodyAssertions[index];
 
       let kind:
-        ContentProvenanceKind;
-
-      /*
-       * ========================================================
-       * ASSERTION CLASSIFICATION
-       * ========================================================
-       */
+        ContentProvenanceKind =
+        "CONTEXT";
 
       if (
         assertion ===
@@ -721,84 +762,69 @@ export class ContentCompiler {
       ) {
         kind =
           "CONSTRAINT";
-      } else {
-        /*
-         * Remaining auditable assertions are emitted by the Context
-         * section: Purpose, Context ID and deterministic variables.
-         *
-         * They are structural/contextual assertions and therefore
-         * MUST bind to Context only.
-         */
-        kind =
-          "CONTEXT";
       }
 
       let assertionProblemIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
       let assertionDecisionIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
       let assertionContextIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
       let assertionKnowledgeIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
       let assertionClaimIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
       let assertionEvidenceIds:
-        readonly string[] =
-        [];
+        readonly string[] = [];
 
+      /*
+       * Structural provenance is represented by its actual aggregate.
+       *
+       * QUESTION / CONSTRAINT
+       *     -> current Problem
+       *
+       * DECISION
+       *     -> current Decision
+       *
+       * CONTEXT
+       *     -> current Context
+       *
+       * No unrelated epistemic lineage is attached.
+       */
       if (
         kind ===
-        "QUESTION"
+          "QUESTION" ||
+        kind ===
+          "CONSTRAINT"
       ) {
-        assertionProblemIds =
-          [
-            problem.aggregateId,
-          ];
-      }
-
-      if (
+        assertionProblemIds = [
+          problem.aggregateId,
+        ];
+      } else if (
         kind ===
         "DECISION"
       ) {
-        assertionDecisionIds =
-          [
-            decision.aggregateId,
-          ];
-      }
-
-      if (
+        assertionDecisionIds = [
+          decision.aggregateId,
+        ];
+      } else if (
         kind ===
         "CONTEXT"
       ) {
-        assertionContextIds =
-          [
-            context.aggregateId,
-          ];
+        assertionContextIds = [
+          context.aggregateId,
+        ];
       }
 
       /*
-       * Knowledge assertions receive the smallest possible
-       * epistemic closure:
-       *
-       *   exact Knowledge
-       *       ↓
-       *   its Claims
-       *       ↓
-       *   their Evidence
-       *
-       * No unrelated Decision-wide Knowledge/Claim/Evidence IDs
-       * are attached.
+       * Knowledge assertions receive the smallest possible epistemic
+       * closure: exactly the Knowledge -> Claim -> Evidence chain
+       * belonging to that Knowledge.
        */
       if (
         kind ===
@@ -818,10 +844,9 @@ export class ContentCompiler {
           `Knowledge provenance source not found for assertion ${index}.`,
         );
 
-        assertionKnowledgeIds =
-          [
-            knowledgeRecord.aggregateId,
-          ];
+        assertionKnowledgeIds = [
+          knowledgeRecord.aggregateId,
+        ];
 
         const knowledgeClaimIds =
           uniqueSorted(
@@ -829,6 +854,13 @@ export class ContentCompiler {
               .payload
               .claimIds,
           );
+
+        invariant(
+          knowledgeClaimIds.length >
+            0,
+          "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_CLAIMS",
+          `Knowledge assertion ${index} has no Claim lineage.`,
+        );
 
         assertionClaimIds =
           knowledgeClaimIds;
@@ -857,6 +889,13 @@ export class ContentCompiler {
               },
             ),
           );
+
+        invariant(
+          assertionEvidenceIds.length >
+            0,
+          "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_EVIDENCE",
+          `Knowledge assertion ${index} has no Evidence lineage.`,
+        );
       }
 
       provenance.push(
@@ -864,17 +903,11 @@ export class ContentCompiler {
           index,
           assertion,
           kind,
-
           assertionProblemIds,
-
           assertionDecisionIds,
-
           assertionContextIds,
-
           assertionKnowledgeIds,
-
           assertionClaimIds,
-
           assertionEvidenceIds,
         ),
       );
