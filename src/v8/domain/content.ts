@@ -22,12 +22,78 @@ export type ContentProvenanceKind =
   | "CONTEXT"
   | "CONSTRAINT";
 
+/*
+ * ============================================================
+ * CONTENT PROVENANCE CONTRACT
+ * ============================================================
+ *
+ * Provenance is divided into two epistemic classes:
+ *
+ *   STRUCTURAL
+ *     QUESTION
+ *     DECISION
+ *     CONTEXT
+ *     CONSTRAINT
+ *
+ *   EVIDENTIARY
+ *     KNOWLEDGE
+ *
+ * Structural assertions MUST NOT be assigned unrelated
+ * Knowledge / Claim / Evidence lineage merely to satisfy a
+ * cardinality requirement.
+ *
+ * Evidentiary assertions MUST carry the complete minimal:
+ *
+ *   Knowledge -> Claim -> Evidence
+ *
+ * closure belonging to that Knowledge assertion.
+ *
+ * The following fields therefore have distinct meanings:
+ *
+ *   problemIds
+ *       Structural source for QUESTION and CONSTRAINT.
+ *
+ *   decisionIds
+ *       Structural source for DECISION.
+ *
+ *   contextIds
+ *       Structural source for CONTEXT.
+ *
+ *   knowledgeIds
+ *   claimIds
+ *   evidenceIds
+ *       Epistemic source closure for KNOWLEDGE.
+ *
+ * There is intentionally no constraintIds field because V8 does
+ * not currently model a Constraint as an independent Foundation
+ * aggregate. A constraint is therefore bound to its registered
+ * Problem and exact assertion text.
+ */
+
 export interface ContentProvenance {
   readonly ordinal: number;
   readonly text: string;
   readonly fingerprint: string;
   readonly kind: ContentProvenanceKind;
 
+  /*
+   * Structural lineage.
+   */
+  readonly problemIds: readonly string[];
+  readonly decisionIds: readonly string[];
+  readonly contextIds: readonly string[];
+
+  /*
+   * Evidentiary lineage.
+   *
+   * These arrays MUST be empty for structural provenance kinds.
+   *
+   * KNOWLEDGE assertions MUST contain the minimal:
+   *
+   *   Knowledge -> Claim -> Evidence
+   *
+   * closure.
+   */
   readonly knowledgeIds: readonly string[];
   readonly claimIds: readonly string[];
   readonly evidenceIds: readonly string[];
@@ -40,27 +106,14 @@ export interface Content {
   body: string;
 
   /*
-   * Every non-structural content assertion emitted by the compiler
-   * carries an immutable provenance record.
+   * Every auditable content assertion emitted by the compiler
+   * carries immutable provenance.
    *
-   * This is deliberately stored on Content rather than inferred later
-   * from the final Markdown artifact.
+   * Structural assertions are bound to their structural aggregate.
+   * Knowledge assertions are bound to their epistemic closure.
    *
-   * Therefore:
-   *
-   *   source evidence
-   *        ↓
-   *   verified claim
-   *        ↓
-   *   verified knowledge
-   *        ↓
-   *   approved decision
-   *        ↓
-   *   deterministic content
-   *        ↓
-   *   exact content assertion
-   *
-   * remains inspectable after compilation.
+   * No assertion is permitted to acquire unrelated Evidence merely
+   * because Evidence exists elsewhere in the Decision closure.
    */
   readonly provenance: readonly ContentProvenance[];
 }
@@ -118,6 +171,21 @@ function validateProvenance(
             "content.provenance.fingerprint",
           );
 
+        const problemIds =
+          normalizeIds(
+            item.problemIds,
+          );
+
+        const decisionIds =
+          normalizeIds(
+            item.decisionIds,
+          );
+
+        const contextIds =
+          normalizeIds(
+            item.contextIds,
+          );
+
         const knowledgeIds =
           normalizeIds(
             item.knowledgeIds,
@@ -134,32 +202,197 @@ function validateProvenance(
           );
 
         invariant(
-          knowledgeIds.length > 0,
-          "V8_CONTENT_PROVENANCE_NO_KNOWLEDGE",
-          `Content provenance assertion ${index} has no Knowledge lineage.`,
+          [
+            "QUESTION",
+            "DECISION",
+            "KNOWLEDGE",
+            "CONTEXT",
+            "CONSTRAINT",
+          ].includes(
+            item.kind,
+          ),
+          "V8_CONTENT_PROVENANCE_INVALID_KIND",
+          `Content provenance assertion ${index} has an invalid provenance kind.`,
         );
 
-        invariant(
-          claimIds.length > 0,
-          "V8_CONTENT_PROVENANCE_NO_CLAIM",
-          `Content provenance assertion ${index} has no Claim lineage.`,
-        );
+        /*
+         * ========================================================
+         * STRUCTURAL PROVENANCE
+         * ========================================================
+         */
 
-        invariant(
-          evidenceIds.length > 0,
-          "V8_CONTENT_PROVENANCE_NO_EVIDENCE",
-          `Content provenance assertion ${index} has no Evidence lineage.`,
-        );
+        if (
+          item.kind ===
+          "QUESTION"
+        ) {
+          invariant(
+            problemIds.length ===
+              1,
+            "V8_CONTENT_PROVENANCE_QUESTION_PROBLEM_CARDINALITY",
+            `QUESTION provenance assertion ${index} must reference exactly one Problem.`,
+          );
+
+          invariant(
+            decisionIds.length ===
+              0 &&
+              contextIds.length ===
+                0 &&
+              knowledgeIds.length ===
+                0 &&
+              claimIds.length ===
+                0 &&
+              evidenceIds.length ===
+                0,
+            "V8_CONTENT_PROVENANCE_QUESTION_HAS_FOREIGN_LINEAGE",
+            `QUESTION provenance assertion ${index} contains lineage belonging to another provenance class.`,
+          );
+        }
+
+        if (
+          item.kind ===
+          "DECISION"
+        ) {
+          invariant(
+            decisionIds.length ===
+              1,
+            "V8_CONTENT_PROVENANCE_DECISION_CARDINALITY",
+            `DECISION provenance assertion ${index} must reference exactly one Decision.`,
+          );
+
+          invariant(
+            problemIds.length ===
+              0 &&
+              contextIds.length ===
+                0 &&
+              knowledgeIds.length ===
+                0 &&
+              claimIds.length ===
+                0 &&
+              evidenceIds.length ===
+                0,
+            "V8_CONTENT_PROVENANCE_DECISION_HAS_FOREIGN_LINEAGE",
+            `DECISION provenance assertion ${index} contains lineage belonging to another provenance class.`,
+          );
+        }
+
+        if (
+          item.kind ===
+          "CONTEXT"
+        ) {
+          invariant(
+            contextIds.length ===
+              1,
+            "V8_CONTENT_PROVENANCE_CONTEXT_CARDINALITY",
+            `CONTEXT provenance assertion ${index} must reference exactly one Context.`,
+          );
+
+          invariant(
+            problemIds.length ===
+              0 &&
+              decisionIds.length ===
+                0 &&
+              knowledgeIds.length ===
+                0 &&
+              claimIds.length ===
+                0 &&
+              evidenceIds.length ===
+                0,
+            "V8_CONTENT_PROVENANCE_CONTEXT_HAS_FOREIGN_LINEAGE",
+            `CONTEXT provenance assertion ${index} contains lineage belonging to another provenance class.`,
+          );
+        }
+
+        if (
+          item.kind ===
+          "CONSTRAINT"
+        ) {
+          invariant(
+            problemIds.length ===
+              1,
+            "V8_CONTENT_PROVENANCE_CONSTRAINT_PROBLEM_CARDINALITY",
+            `CONSTRAINT provenance assertion ${index} must reference exactly one Problem.`,
+          );
+
+          invariant(
+            decisionIds.length ===
+              0 &&
+              contextIds.length ===
+                0 &&
+              knowledgeIds.length ===
+                0 &&
+              claimIds.length ===
+                0 &&
+              evidenceIds.length ===
+                0,
+            "V8_CONTENT_PROVENANCE_CONSTRAINT_HAS_FOREIGN_LINEAGE",
+            `CONSTRAINT provenance assertion ${index} contains lineage belonging to another provenance class.`,
+          );
+        }
+
+        /*
+         * ========================================================
+         * EVIDENTIARY PROVENANCE
+         * ========================================================
+         */
+
+        if (
+          item.kind ===
+          "KNOWLEDGE"
+        ) {
+          invariant(
+            knowledgeIds.length >
+              0,
+            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_KNOWLEDGE",
+            `KNOWLEDGE provenance assertion ${index} has no Knowledge lineage.`,
+          );
+
+          invariant(
+            claimIds.length >
+              0,
+            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_CLAIM",
+            `KNOWLEDGE provenance assertion ${index} has no Claim lineage.`,
+          );
+
+          invariant(
+            evidenceIds.length >
+              0,
+            "V8_CONTENT_PROVENANCE_KNOWLEDGE_NO_EVIDENCE",
+            `KNOWLEDGE provenance assertion ${index} has no Evidence lineage.`,
+          );
+
+          invariant(
+            problemIds.length ===
+              0 &&
+              decisionIds.length ===
+                0 &&
+              contextIds.length ===
+                0,
+            "V8_CONTENT_PROVENANCE_KNOWLEDGE_HAS_STRUCTURAL_LINEAGE",
+            `KNOWLEDGE provenance assertion ${index} contains structural lineage.`,
+          );
+        }
 
         return immutable({
           ordinal:
             index,
+
           text,
+
           fingerprint,
+
           kind:
             item.kind,
+
+          problemIds,
+
+          decisionIds,
+
+          contextIds,
+
           knowledgeIds,
+
           claimIds,
+
           evidenceIds,
         });
       },
@@ -199,11 +432,11 @@ export function createContent(
   /*
    * Content body and provenance must agree structurally.
    *
-   * A compiled Content object without provenance is still allowed at
-   * the low-level domain factory for compatibility with historical
+   * A compiled Content object without provenance remains allowed
+   * at the low-level domain factory for compatibility with historical
    * domain fixtures.
    *
-   * Production compilers are required to provide provenance.
+   * Production compilers MUST provide provenance.
    */
   if (
     provenance.length > 0
@@ -283,8 +516,9 @@ export function createContent(
  * Structural lines are presentation structure rather than factual
  * assertions.
  *
- * These lines do not need independent Evidence because the following
- * content assertions carry the actual epistemic lineage.
+ * These labels do not need independent Evidence because they are
+ * presentation markers. The actual Problem, Decision, Context,
+ * Constraint and Knowledge values remain auditable assertions.
  */
 export function isStructuralContentLine(
   line: string,
@@ -293,7 +527,8 @@ export function isStructuralContentLine(
     line.trim();
 
   if (
-    normalized.length === 0
+    normalized.length ===
+    0
   ) {
     return true;
   }
