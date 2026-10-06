@@ -92,6 +92,11 @@ export interface ResearchAcquisitionResult {
 
 interface SelfOwnedDiscoveryExecution {
   readonly discovery: DiscoveryBatch;
+  readonly pages: readonly {
+    readonly url: string;
+    readonly fetchedPage: FetchedPage;
+    readonly discoveryRoot?: string;
+  }[];
   readonly fetchErrors: readonly ResearchAcquisitionError[];
 }
 
@@ -399,8 +404,66 @@ async function runSelfOwnedDiscovery(
 
   return {
     discovery,
+
+    /*
+     * Preserve the exact fetched pages from the crawl boundary.
+     *
+     * Acquisition uses these observations directly instead of fetching
+     * the same URL a second time.
+     */
+    pages:
+      result.pages.map(
+        (page) => ({
+          url:
+            page.url,
+
+          fetchedPage:
+            page.fetchedPage,
+
+          ...(page.discoveryRoot
+            ? {
+                discoveryRoot:
+                  page.discoveryRoot,
+              }
+            : {}),
+        }),
+      ),
+
     fetchErrors,
   };
+}
+
+function canonicalFetchedPageMap(
+  pages:
+    readonly {
+      readonly url: string;
+      readonly fetchedPage: FetchedPage;
+    }[],
+): ReadonlyMap<string, FetchedPage> {
+  const map =
+    new Map<string, FetchedPage>();
+
+  for (
+    const page of pages
+  ) {
+    const normalized =
+      page.fetchedPage.finalUrl;
+
+    if (
+      map.has(
+        normalized,
+      )
+    ) {
+      continue;
+    }
+
+    map.set(
+      normalized,
+      page.fetchedPage,
+    );
+  }
+
+  return map;
 }
 
 export async function runResearchAcquisition(
@@ -472,6 +535,11 @@ export async function runResearchAcquisition(
         ...selfOwned.fetchErrors,
       ];
 
+    const fetchedPages =
+      canonicalFetchedPageMap(
+        selfOwned.pages,
+      );
+
     for (
       const candidate of
         selfOwned.discovery.candidates
@@ -513,24 +581,57 @@ export async function runResearchAcquisition(
       }
 
       try {
+        /*
+         * Critical Single-Fetch Contract:
+         *
+         * A candidate that was already fetched by the self-owned crawler
+         * MUST reuse that exact FetchedPage observation.
+         *
+         * It must never be fetched again merely because the Discovery
+         * candidate now enters the Acquisition boundary.
+         */
         const page =
-          await pageFetcher.fetch(
+          fetchedPages.get(
+            candidate.normalizedUrl,
+          ) ??
+          fetchedPages.get(
             candidate.url,
-            {
-              signal:
-                config.signal,
-            },
           );
+
+        let observedPage:
+          FetchedPage;
+
+        if (
+          page !==
+          undefined
+        ) {
+          observedPage =
+            page;
+        } else {
+          /*
+           * A discovered LINK can legitimately be present in the bounded
+           * candidate set without having been crawled yet. Such a candidate
+           * requires exactly one acquisition fetch.
+           */
+          observedPage =
+            await pageFetcher.fetch(
+              candidate.url,
+              {
+                signal:
+                  config.signal,
+              },
+            );
+        }
 
         const extracted =
           extractResearchEvidence(
-            page,
+            observedPage,
           );
 
         const acquisition =
           ingestFetchedPage(
             store,
-            page,
+            observedPage,
             extracted,
             {
               actorId:
@@ -544,7 +645,8 @@ export async function runResearchAcquisition(
           candidateUrl:
             candidate.url,
 
-          page,
+          page:
+            observedPage,
 
           acquisition,
         });
