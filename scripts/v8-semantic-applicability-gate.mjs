@@ -181,6 +181,27 @@ const BOOTSTRAP_CORPUS = [
     authority:
       "AUTHORITATIVE_STANDARD",
   },
+  {
+    id:
+      "protolabs:plastic-injection-molding-design-guidelines",
+    url:
+      "https://www.protolabs.com/services/injection-molding/plastic-injection-molding/design-guidelines/",
+    title:
+      "Protolabs Plastic Injection Molding Design Guidelines",
+    terms: [
+      "plastic",
+      "injection",
+      "molding",
+      "design",
+      "guidelines",
+      "wall",
+      "thickness",
+      "recommended wall thickness",
+      "moldability",
+    ],
+    authority:
+      "ENGINEERING_REFERENCE",
+  },
 ];
 
 function assertTrue(
@@ -199,7 +220,7 @@ function assertEqual(
 ) {
   if (actual !== expected) {
     throw new Error(
-      `${message}: expected=${String(expected)} actual=${String(expected)}`,
+      `${message}: expected=${String(expected)} actual=${String(actual)}`,
     );
   }
 }
