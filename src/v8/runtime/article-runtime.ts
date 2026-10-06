@@ -656,7 +656,7 @@ function buildCoreTopicAnchors(
           "",
         )
         .replace(
-          /\s+(?:be|being|been)\s+(?:evaluated|assessed|considered|determined|applied|selected|used|measured|defined|controlled|optimized|designed|calculated|specified)\s*$/u,
+          /\s+(?:evaluated|assessed|considered|determined|applied|selected|used|measured|defined|controlled|optimized|designed|calculated|specified)\s*$/u,
           "",
         )
         .replace(
@@ -678,8 +678,10 @@ function buildCoreTopicAnchors(
       .trim();
   };
 
-  let focusText =
-    normalized;
+let focusText =
+  normalizeFocusText(
+    normalized,
+  );
 
   /*
    * "about / regarding / concerning" explicitly identifies the semantic
