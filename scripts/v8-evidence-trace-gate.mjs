@@ -794,12 +794,17 @@ for (
     `Evidence ${evidenceRecord.aggregateId} excerpt is empty.`,
   );
 
-  const isStructuredParameterEvidence =
-    typeof evidence.locator ===
-      "string" &&
+const isStructuredParameterEvidence =
+  typeof evidence.locator ===
+    "string" &&
+  (
     evidence.locator.startsWith(
       "document:parameter:",
-    );
+    ) ||
+    evidence.locator.startsWith(
+      "document:table:",
+    )
+  );
 
   if (
     isStructuredParameterEvidence
