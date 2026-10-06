@@ -492,16 +492,35 @@ jobs:
             }
           }
 
+          const fingerprint =
+            payload.fingerprint.toLowerCase();
+
+          fs.appendFileSync(
+            process.env.GITHUB_ENV,
+            `NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=CONSUME_EXISTING\n`,
+            'utf8',
+          );
+
+          fs.appendFileSync(
+            process.env.GITHUB_ENV,
+            `NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT=${fingerprint}\n`,
+            'utf8',
+          );
+
           console.log(
             'Downloaded V8 publication handoff: PASS',
           );
 
           console.log(
-            `handoff fingerprint: ${payload.fingerprint}`,
+            `handoff fingerprint: ${fingerprint}`,
           );
 
           console.log(
             `publication pages: ${payload.pages.length}`,
+          );
+
+          console.log(
+            'Production handoff mode: CONSUME_EXISTING',
           );
           NODE
 
@@ -518,10 +537,16 @@ jobs:
         shell: bash
         env:
           NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT }}
         run: |
           set -euo pipefail
 
           echo "NEXMOLD_SOURCE_SHA=$NEXMOLD_SOURCE_SHA"
+          echo "NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=$NEXMOLD_V8_PUBLICATION_HANDOFF_MODE"
+          echo "NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT=$NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT"
+
+          test -n "$NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT"
 
           node --experimental-strip-types \
             build-orchestrator.mjs
@@ -529,6 +554,8 @@ jobs:
       - name: Run V8 next gate
         env:
           NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT }}
         run: npm run v8:next
 
       - name: Prepare persisted V8 production artifact
@@ -625,10 +652,21 @@ jobs:
           const closurePath =
             'v8-production-artifact/proof/v8-actual-dist-production-closure.json';
 
+          const handoffPath =
+            'v8-production-artifact/proof/v8-real-publication-handoff.json';
+
           const closure =
             JSON.parse(
               fs.readFileSync(
                 closurePath,
+                'utf8',
+              ),
+            );
+
+          const handoff =
+            JSON.parse(
+              fs.readFileSync(
+                handoffPath,
                 'utf8',
               ),
             );
@@ -646,6 +684,24 @@ jobs:
               .digest(
                 'hex',
               );
+
+          if (
+            closure?.handoff?.fingerprint?.toLowerCase() !==
+            handoff?.fingerprint?.toLowerCase()
+          ) {
+            throw new Error(
+              'Persisted production artifact handoff fingerprint mismatch',
+            );
+          }
+
+          if (
+            handoff?.fingerprint?.toLowerCase() !==
+            process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT?.toLowerCase()
+          ) {
+            throw new Error(
+              'Persisted production artifact does not match pinned publication handoff',
+            );
+          }
 
           const metadata = {
             schema:
@@ -667,7 +723,7 @@ jobs:
               closure.buildEpoch,
 
             handoffFingerprint:
-              closure.handoff.fingerprint,
+              handoff.fingerprint,
 
             contentId:
               closure.content.id,
@@ -723,6 +779,18 @@ jobs:
 
           console.log(
             `buildEpoch: ${metadata.buildEpoch}`,
+          );
+
+          console.log(
+            `handoffFingerprint: ${metadata.handoffFingerprint}`,
+          );
+
+          console.log(
+            `decisionId: ${metadata.decisionId}`,
+          );
+
+          console.log(
+            `projectionFingerprint: ${metadata.projectionFingerprint}`,
           );
 
           console.log(

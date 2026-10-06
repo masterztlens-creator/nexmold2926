@@ -1540,15 +1540,138 @@ async function main() {
     "V8_REAL_PUBLICATION_GATE",
   );
 
-  await runCommand(
-    "node scripts/v8-final-publication-gate.mjs",
-    "V8_REAL_PUBLICATION_GATE",
-  );
+  const publicationHandoffMode =
+    String(
+      process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_MODE ??
+        "GENERATE",
+    )
+      .trim()
+      .toUpperCase();
 
-  pass(
-    "V8_REAL_PUBLICATION_GATE",
-    "Real Internet V8 publication handoff generated and verified.",
-  );
+  if (
+    publicationHandoffMode ===
+    "GENERATE"
+  ) {
+    await runCommand(
+      "node scripts/v8-final-publication-gate.mjs",
+      "V8_REAL_PUBLICATION_GATE",
+    );
+
+    pass(
+      "V8_REAL_PUBLICATION_GATE",
+      "Real Internet V8 publication handoff generated and verified.",
+    );
+  } else if (
+    publicationHandoffMode ===
+    "CONSUME_EXISTING"
+  ) {
+    const handoffPath =
+      path.join(
+        CONTROL,
+        "v8-real-publication-handoff.json",
+      );
+
+    if (
+      !fs.existsSync(handoffPath)
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        "CONSUME_EXISTING requires .nexmold/v8-real-publication-handoff.json",
+      );
+    }
+
+    const expectedFingerprint =
+      String(
+        process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT ??
+          "",
+      ).trim();
+
+    if (
+      expectedFingerprint &&
+      !/^[a-f0-9]{64}$/i.test(
+        expectedFingerprint,
+      )
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        "NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT is invalid",
+      );
+    }
+
+    let handoff;
+
+    try {
+      handoff =
+        JSON.parse(
+          fs.readFileSync(
+            handoffPath,
+            "utf8",
+          ),
+        );
+    } catch (error) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        error instanceof Error
+          ? error.message
+          : String(error),
+      );
+    }
+
+    if (
+      !handoff ||
+      typeof handoff !== "object" ||
+      Array.isArray(handoff)
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        "Existing V8 publication handoff must be a JSON object",
+      );
+    }
+
+    if (
+      handoff.schema !==
+      "nexmold.v8.real-publication-handoff.v1"
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        `Unsupported existing V8 publication handoff schema: ${handoff.schema}`,
+      );
+    }
+
+    if (
+      typeof handoff.fingerprint !==
+        "string" ||
+      !/^[a-f0-9]{64}$/i.test(
+        handoff.fingerprint,
+      )
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        "Existing V8 publication handoff fingerprint is missing or invalid",
+      );
+    }
+
+    if (
+      expectedFingerprint &&
+      handoff.fingerprint.toLowerCase() !==
+        expectedFingerprint.toLowerCase()
+    ) {
+      fail(
+        "V8_REAL_PUBLICATION_GATE",
+        `Existing V8 publication handoff fingerprint mismatch: expected ${expectedFingerprint}, received ${handoff.fingerprint}`,
+      );
+    }
+
+    pass(
+      "V8_REAL_PUBLICATION_GATE",
+      `Consumed pre-verified V8 real Internet publication handoff ${handoff.fingerprint}; no second Internet acquisition was executed.`,
+    );
+  } else {
+    fail(
+      "V8_REAL_PUBLICATION_GATE",
+      `Unsupported NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: ${publicationHandoffMode}`,
+    );
+  }
 
   section(
     "V8_ASTRO_PUBLICATION_ADAPTER",
@@ -1561,7 +1684,7 @@ async function main() {
 
   pass(
     "V8_ASTRO_PUBLICATION_ADAPTER",
-    "Real Internet V8 publication artifact materialized for Astro.",
+    "V8 publication handoff materialized for Astro.",
   );
 
   section(

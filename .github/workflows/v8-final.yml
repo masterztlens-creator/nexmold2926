@@ -155,11 +155,22 @@ jobs:
           }
 
           if (
-            typeof payload.fingerprint !== 'string' ||
-            !payload.fingerprint.trim()
+            payload.schema !==
+            'nexmold.v8.real-publication-handoff.v1'
           ) {
             throw new Error(
-              'V8 publication handoff fingerprint is missing',
+              `Unexpected V8 publication handoff schema: ${payload.schema}`,
+            );
+          }
+
+          if (
+            typeof payload.fingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/i.test(
+              payload.fingerprint,
+            )
+          ) {
+            throw new Error(
+              'V8 publication handoff fingerprint is missing or invalid',
             );
           }
 
@@ -204,6 +215,18 @@ jobs:
             }
           }
 
+          fs.appendFileSync(
+            process.env.GITHUB_ENV,
+            `NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=CONSUME_EXISTING\n`,
+            'utf8',
+          );
+
+          fs.appendFileSync(
+            process.env.GITHUB_ENV,
+            `NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT=${payload.fingerprint.toLowerCase()}\n`,
+            'utf8',
+          );
+
           console.log(
             'V8 publication handoff: PASS',
           );
@@ -214,6 +237,14 @@ jobs:
 
           console.log(
             `publication pages: ${payload.pages.length}`,
+          );
+
+          console.log(
+            'Production handoff mode: CONSUME_EXISTING',
+          );
+
+          console.log(
+            `Pinned production handoff fingerprint: ${payload.fingerprint.toLowerCase()}`,
           );
           NODE
 
@@ -227,8 +258,17 @@ jobs:
 
       - name: Real production build + V8-09 integration chain
         shell: bash
+        env:
+          NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT }}
         run: |
           set -euo pipefail
+
+          echo "NEXMOLD_SOURCE_SHA=$NEXMOLD_SOURCE_SHA"
+          echo "NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=$NEXMOLD_V8_PUBLICATION_HANDOFF_MODE"
+          echo "NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT=$NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT"
+
+          test -n "$NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT"
 
           node --experimental-strip-types \
             build-orchestrator.mjs
@@ -341,6 +381,9 @@ jobs:
           const expectedSourceSha =
             process.env.NEXMOLD_SOURCE_SHA;
 
+          const expectedHandoffFingerprint =
+            process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT;
+
           if (
             typeof expectedSourceSha !== 'string' ||
             !/^[0-9a-f]{40}$/i.test(
@@ -349,6 +392,17 @@ jobs:
           ) {
             throw new Error(
               'NEXMOLD_SOURCE_SHA is missing or invalid',
+            );
+          }
+
+          if (
+            typeof expectedHandoffFingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/i.test(
+              expectedHandoffFingerprint,
+            )
+          ) {
+            throw new Error(
+              'NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT is missing or invalid',
             );
           }
 
@@ -402,6 +456,35 @@ jobs:
           ) {
             throw new Error(
               `Closure source SHA mismatch: expected ${expectedSourceSha}, received ${closure.sourceSha}`,
+            );
+          }
+
+          if (
+            !closure.handoff ||
+            typeof closure.handoff !== 'object'
+          ) {
+            throw new Error(
+              'Closure handoff identity is missing',
+            );
+          }
+
+          if (
+            typeof closure.handoff.fingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/i.test(
+              closure.handoff.fingerprint,
+            )
+          ) {
+            throw new Error(
+              'Closure handoff fingerprint is missing or invalid',
+            );
+          }
+
+          if (
+            closure.handoff.fingerprint.toLowerCase() !==
+            expectedHandoffFingerprint.toLowerCase()
+          ) {
+            throw new Error(
+              `Closure handoff fingerprint mismatch: expected ${expectedHandoffFingerprint}, received ${closure.handoff.fingerprint}`,
             );
           }
 
@@ -738,11 +821,15 @@ jobs:
           }
 
           console.log(
-            'Source SHA → Closure → Release → LKG identity: PASS',
+            'Source SHA → Handoff → Closure → Release → LKG identity: PASS',
           );
 
           console.log(
             `Source SHA: ${expectedSourceSha}`,
+          );
+
+          console.log(
+            `Handoff fingerprint: ${expectedHandoffFingerprint}`,
           );
 
           console.log(
@@ -785,6 +872,9 @@ jobs:
           const expectedSourceSha =
             process.env.NEXMOLD_SOURCE_SHA;
 
+          const expectedHandoffFingerprint =
+            process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT;
+
           if (
             typeof expectedSourceSha !== 'string' ||
             !/^[0-9a-f]{40}$/i.test(
@@ -793,6 +883,17 @@ jobs:
           ) {
             throw new Error(
               'NEXMOLD_SOURCE_SHA is missing or invalid',
+            );
+          }
+
+          if (
+            typeof expectedHandoffFingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/i.test(
+              expectedHandoffFingerprint,
+            )
+          ) {
+            throw new Error(
+              'NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT is missing or invalid',
             );
           }
 
@@ -830,11 +931,29 @@ jobs:
           }
 
           if (
+            closure?.handoff?.fingerprint?.toLowerCase() !==
+            expectedHandoffFingerprint.toLowerCase()
+          ) {
+            throw new Error(
+              'Final closure/handoff fingerprint mismatch',
+            );
+          }
+
+          if (
             lkg?.closure?.sourceSha !==
             expectedSourceSha
           ) {
             throw new Error(
               'Final LKG/source SHA mismatch',
+            );
+          }
+
+          if (
+            lkg?.closure?.handoff?.fingerprint?.toLowerCase() !==
+            expectedHandoffFingerprint.toLowerCase()
+          ) {
+            throw new Error(
+              'Final LKG/handoff fingerprint mismatch',
             );
           }
 
@@ -872,6 +991,10 @@ jobs:
           console.log(
             `Final source SHA: ${expectedSourceSha}`,
           );
+
+          console.log(
+            `Final handoff fingerprint: ${expectedHandoffFingerprint}`,
+          );
           NODE
 
       - name: Final integrity summary
@@ -884,6 +1007,7 @@ jobs:
           echo "========================================"
           echo "Commit: ${{ github.sha }}"
           echo "Source SHA: $NEXMOLD_SOURCE_SHA"
+          echo "Handoff fingerprint: $NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT"
           echo "Repository: ${{ github.repository }}"
           echo "Workflow: ${{ github.workflow }}"
           echo "Run ID: ${{ github.run_id }}"
