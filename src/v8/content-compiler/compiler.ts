@@ -635,28 +635,6 @@ export class ContentCompiler {
         knowledge,
       );
 
-    const knowledgeIdStrings =
-      knowledge.map(
-        (record) =>
-          record.aggregateId,
-      );
-
-    const allClaimIds =
-      uniqueSorted(
-        claimRecords.map(
-          (record) =>
-            record.aggregateId,
-        ),
-      );
-
-    const allEvidenceIds =
-      uniqueSorted(
-        evidenceRecords.map(
-          (record) =>
-            record.aggregateId,
-        ),
-      );
-
     /*
      * The compiler creates provenance from the exact deterministic
      * body it is about to publish.
@@ -713,55 +691,167 @@ export class ContentCompiler {
     const provenance: ContentProvenance[] =
       [];
 
-    for (
-      let index = 0;
-      index <
-      bodyAssertions.length;
-      index += 1
-    ) {
-      const assertion =
-        bodyAssertions[index];
+    type BodySection =
+      | "PROBLEM"
+      | "DECISION"
+      | "KNOWLEDGE"
+      | "CONTEXT"
+      | "CONSTRAINTS"
+      | "NONE";
 
-      let kind:
-        ContentProvenanceKind =
-        "CONTEXT";
+    let section: BodySection =
+      "NONE";
+
+    /*
+     * Classification is driven by the deterministic body section,
+     * not by assertion text alone.
+     *
+     * This is critical for fail-closed provenance:
+     *
+     *   - identical text in different sections remains semantically
+     *     distinct;
+     *   - "- None specified." under Constraints is CONSTRAINT;
+     *   - context variable lines cannot accidentally become Knowledge;
+     *   - a constraint cannot accidentally become Knowledge merely
+     *     because its text matches a Knowledge proposition.
+     */
+    for (const line of body.split("\n")) {
+      const normalizedLine =
+        line.trim();
 
       if (
-        assertion ===
-        problem.payload.question.trim()
+        normalizedLine ===
+        "Problem"
       ) {
-        kind =
-          "QUESTION";
-      } else if (
-        assertion ===
-        decision.payload.outcome.trim()
+        section =
+          "PROBLEM";
+        continue;
+      }
+
+      if (
+        normalizedLine ===
+        "Decision"
       ) {
-        kind =
+        section =
           "DECISION";
-      } else if (
-        assertion.startsWith(
-          "- ",
-        ) &&
-        knowledge.some(
-          (record) =>
-            `- ${record.payload.proposition.trim()}` ===
-            assertion,
-        )
+        continue;
+      }
+
+      if (
+        normalizedLine ===
+        "Verified knowledge"
       ) {
-        kind =
+        section =
           "KNOWLEDGE";
-      } else if (
-        assertion.startsWith(
-          "- ",
-        ) &&
-        problem.payload.constraints.some(
-          (constraint) =>
-            `- ${constraint.trim()}` ===
-            assertion,
+        continue;
+      }
+
+      if (
+        normalizedLine ===
+        "Context"
+      ) {
+        section =
+          "CONTEXT";
+        continue;
+      }
+
+      if (
+        normalizedLine ===
+        "Constraints"
+      ) {
+        section =
+          "CONSTRAINTS";
+        continue;
+      }
+
+      if (
+        normalizedLine.length ===
+        0
+      ) {
+        continue;
+      }
+
+      if (
+        isStructuralContentLine(
+          normalizedLine,
         )
       ) {
-        kind =
-          "CONSTRAINT";
+        continue;
+      }
+
+      const assertion =
+        normalizedLine;
+
+      let kind:
+        ContentProvenanceKind;
+
+      switch (section) {
+        case "PROBLEM":
+          invariant(
+            assertion ===
+              problem.payload.question.trim(),
+            "V8_CONTENT_COMPILER_PROBLEM_SECTION_MISMATCH",
+            "Compiled Problem assertion does not match the registered Problem question.",
+          );
+
+          kind =
+            "QUESTION";
+
+          break;
+
+        case "DECISION":
+          invariant(
+            assertion ===
+              decision.payload.outcome.trim(),
+            "V8_CONTENT_COMPILER_DECISION_SECTION_MISMATCH",
+            "Compiled Decision assertion does not match the approved Decision outcome.",
+          );
+
+          kind =
+            "DECISION";
+
+          break;
+
+        case "KNOWLEDGE":
+          invariant(
+            assertion.startsWith(
+              "- ",
+            ),
+            "V8_CONTENT_COMPILER_KNOWLEDGE_SECTION_MISMATCH",
+            "Compiled Knowledge assertion must use the deterministic list representation.",
+          );
+
+          kind =
+            "KNOWLEDGE";
+
+          break;
+
+        case "CONTEXT":
+          kind =
+            "CONTEXT";
+
+          break;
+
+        case "CONSTRAINTS":
+          invariant(
+            assertion.startsWith(
+              "- ",
+            ),
+            "V8_CONTENT_COMPILER_CONSTRAINT_SECTION_MISMATCH",
+            "Compiled Constraint assertion must use the deterministic list representation.",
+          );
+
+          kind =
+            "CONSTRAINT";
+
+          break;
+
+        default:
+          invariant(
+            false,
+            "V8_CONTENT_COMPILER_ASSERTION_OUTSIDE_SECTION",
+            "Compiled assertion is outside a recognized content section.",
+          );
       }
 
       let assertionProblemIds:
@@ -900,7 +990,7 @@ export class ContentCompiler {
 
       provenance.push(
         createProvenanceRecord(
-          index,
+          provenance.length,
           assertion,
           kind,
           assertionProblemIds,
