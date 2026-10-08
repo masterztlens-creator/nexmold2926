@@ -303,6 +303,287 @@ test(
         ),
       );
 
+      switch (
+        provenance.kind
+      ) {
+        case "QUESTION":
+          assert.deepEqual(
+            provenance.problemIds,
+            [
+              fixture.problem.aggregateId,
+            ],
+          );
+
+          assert.deepEqual(
+            provenance.decisionIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.contextIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.knowledgeIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.claimIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.evidenceIds,
+            [],
+          );
+
+          break;
+
+        case "DECISION":
+          assert.deepEqual(
+            provenance.problemIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.decisionIds,
+            [
+              fixture.decision.aggregateId,
+            ],
+          );
+
+          assert.deepEqual(
+            provenance.contextIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.knowledgeIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.claimIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.evidenceIds,
+            [],
+          );
+
+          break;
+
+        case "CONTEXT":
+          assert.deepEqual(
+            provenance.problemIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.decisionIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.contextIds,
+            [
+              fixture.context.aggregateId,
+            ],
+          );
+
+          assert.deepEqual(
+            provenance.knowledgeIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.claimIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.evidenceIds,
+            [],
+          );
+
+          break;
+
+        case "CONSTRAINT":
+          assert.deepEqual(
+            provenance.problemIds,
+            [
+              fixture.problem.aggregateId,
+            ],
+          );
+
+          assert.deepEqual(
+            provenance.decisionIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.contextIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.knowledgeIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.claimIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.evidenceIds,
+            [],
+          );
+
+          break;
+
+        case "KNOWLEDGE": {
+          assert.deepEqual(
+            provenance.problemIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.decisionIds,
+            [],
+          );
+
+          assert.deepEqual(
+            provenance.contextIds,
+            [],
+          );
+
+          assert.ok(
+            provenance.knowledgeIds.length >
+              0,
+          );
+
+          assert.ok(
+            provenance.claimIds.length >
+              0,
+          );
+
+          assert.ok(
+            provenance.evidenceIds.length >
+              0,
+          );
+
+          for (
+            const knowledgeId of
+              provenance.knowledgeIds
+          ) {
+            const knowledge =
+              fixture.store.get(
+                "KNOWLEDGE",
+                knowledgeId,
+              );
+
+            assert.ok(
+              knowledge,
+            );
+
+            assert.equal(
+              knowledge.state,
+              "VERIFIED",
+            );
+
+            for (
+              const claimId of
+                knowledge.payload
+                  .claimIds
+            ) {
+              assert.ok(
+                provenance.claimIds.includes(
+                  claimId,
+                ),
+              );
+            }
+          }
+
+          for (
+            const claimId of
+              provenance.claimIds
+          ) {
+            const claim =
+              fixture.store.get(
+                "CLAIM",
+                claimId,
+              );
+
+            assert.ok(
+              claim,
+            );
+
+            assert.equal(
+              claim.state,
+              "VERIFIED",
+            );
+
+            assert.ok(
+              claim.payload.evidenceIds.some(
+                (evidenceId) =>
+                  provenance.evidenceIds.includes(
+                    evidenceId,
+                  ),
+              ),
+            );
+          }
+
+          for (
+            const evidenceId of
+              provenance.evidenceIds
+          ) {
+            const evidence =
+              fixture.store.get(
+                "EVIDENCE",
+                evidenceId,
+              );
+
+            assert.ok(
+              evidence,
+            );
+
+            assert.equal(
+              evidence.state,
+              "VERIFIED",
+            );
+          }
+
+          break;
+        }
+
+        default:
+          assert.fail(
+            `Unexpected provenance kind: ${provenance.kind}`,
+          );
+      }
+    }
+
+    const knowledgeProvenance =
+      compiled.content.provenance.filter(
+        (provenance) =>
+          provenance.kind ===
+          "KNOWLEDGE",
+      );
+
+    assert.ok(
+      knowledgeProvenance.length >
+        0,
+    );
+
+    for (
+      const provenance of
+        knowledgeProvenance
+    ) {
       assert.ok(
         provenance.knowledgeIds.length >
           0,
@@ -317,87 +598,6 @@ test(
         provenance.evidenceIds.length >
           0,
       );
-
-      for (
-        const knowledgeId of
-          provenance.knowledgeIds
-      ) {
-        const knowledge =
-          fixture.store.get(
-            "KNOWLEDGE",
-            knowledgeId,
-          );
-
-        assert.ok(
-          knowledge,
-        );
-
-        assert.equal(
-          knowledge.state,
-          "VERIFIED",
-        );
-
-        for (
-          const claimId of
-            knowledge.payload
-              .claimIds
-        ) {
-          assert.ok(
-            provenance.claimIds.includes(
-              claimId,
-            ),
-          );
-        }
-      }
-
-      for (
-        const claimId of
-          provenance.claimIds
-      ) {
-        const claim =
-          fixture.store.get(
-            "CLAIM",
-            claimId,
-          );
-
-        assert.ok(
-          claim,
-        );
-
-        assert.equal(
-          claim.state,
-          "VERIFIED",
-        );
-
-        assert.ok(
-          claim.payload.evidenceIds.some(
-            (evidenceId) =>
-              provenance.evidenceIds.includes(
-                evidenceId,
-              ),
-          ),
-        );
-      }
-
-      for (
-        const evidenceId of
-          provenance.evidenceIds
-      ) {
-        const evidence =
-          fixture.store.get(
-            "EVIDENCE",
-            evidenceId,
-          );
-
-        assert.ok(
-          evidence,
-        );
-
-        assert.equal(
-          evidence.state,
-          "VERIFIED",
-        );
-      }
     }
 
     fixture.store.verifyChain();

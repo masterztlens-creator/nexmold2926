@@ -708,10 +708,10 @@ function buildCoreTopicAnchors(
       .trim();
   };
 
-let focusText =
-  normalizeFocusText(
-    normalized,
-  );
+  let focusText =
+    normalizeFocusText(
+      normalized,
+    );
 
   /*
    * "about / regarding / concerning" explicitly identifies the semantic
@@ -1981,23 +1981,30 @@ export async function runV8ArticleRuntime(
    * FINAL CONTENT PROVENANCE CLOSURE
    * ============================================================
    *
-   * At this boundary the article runtime must no longer rely on
-   * aggregate-level lineage alone.
+   * The ContentCompiler already defines five provenance semantics:
    *
-   * The exact compiled body must have complete assertion-level
-   * provenance.
+   *   QUESTION
+   *       -> Problem
    *
-   * Therefore:
+   *   CONSTRAINT
+   *       -> Problem
    *
-   *   Content assertion
-   *        ↓
-   *   Knowledge
-   *        ↓
-   *   Claim
-   *        ↓
-   *   Evidence
+   *   CONTEXT
+   *       -> Context
    *
-   * is checked before the ArticleRuntimeResult can escape.
+   *   DECISION
+   *       -> Decision
+   *
+   *   KNOWLEDGE
+   *       -> Knowledge
+   *       -> Claim
+   *       -> Evidence
+   *
+   * The runtime boundary must preserve those semantics exactly.
+   *
+   * In particular, structural assertions MUST NOT be forced to inherit
+   * epistemic lineage merely because they coexist with Knowledge inside
+   * the same compiled Content aggregate.
    */
 
   const contentAssertions =
@@ -2029,6 +2036,17 @@ export async function runV8ArticleRuntime(
       contentAssertions.length,
     "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_COUNT_MISMATCH",
     "Compiled Content provenance does not cover every content assertion.",
+  );
+
+  invariant(
+    compiled.content.provenance.every(
+      (provenance) =>
+        provenance.ordinal >= 0 &&
+        provenance.ordinal <
+          contentAssertions.length,
+    ),
+    "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_ORDINAL_INVALID",
+    "Compiled Content provenance contains an invalid ordinal.",
   );
 
   for (
@@ -2068,174 +2086,240 @@ export async function runV8ArticleRuntime(
       `Content provenance fingerprint mismatch at ${index}.`,
     );
 
-    invariant(
-      provenance.knowledgeIds.length >
-        0,
-      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_KNOWLEDGE",
-      `Content assertion ${index} has no Knowledge lineage.`,
-    );
-
-    invariant(
-      provenance.claimIds.length >
-        0,
-      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_CLAIM",
-      `Content assertion ${index} has no Claim lineage.`,
-    );
-
-    invariant(
-      provenance.evidenceIds.length >
-        0,
-      "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_EVIDENCE",
-      `Content assertion ${index} has no Evidence lineage.`,
-    );
-
-    for (
-      const knowledgeId of
-        provenance.knowledgeIds
+    switch (
+      provenance.kind
     ) {
-      /*
-       * Explicit generic parameter is intentional.
-       *
-       * FoundationStore.get<T>() defaults to unknown. The runtime is
-       * crossing an aggregate boundary here, so the payload contract must
-       * be stated explicitly instead of relying on inference or weakening
-       * the type with `any`.
-       */
-      const knowledge =
-        store.get<KnowledgePayload>(
-          "KNOWLEDGE",
-          knowledgeId,
-        );
-
-      invariant(
-        knowledge !== null &&
-          knowledge.state ===
-            "VERIFIED",
-        "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_NOT_VERIFIED",
-        `Content assertion ${index} references non-verified Knowledge ${knowledgeId}.`,
-      );
-    }
-
-    for (
-      const claimId of
-        provenance.claimIds
-    ) {
-      /*
-       * Explicit ClaimPayload typing closes the FoundationStore boundary.
-       */
-      const claim =
-        store.get<ClaimPayload>(
-          "CLAIM",
-          claimId,
-        );
-
-      invariant(
-        claim !== null &&
-          claim.state ===
-            "VERIFIED",
-        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_NOT_VERIFIED",
-        `Content assertion ${index} references non-verified Claim ${claimId}.`,
-      );
-    }
-
-    for (
-      const evidenceId of
-        provenance.evidenceIds
-    ) {
-      const evidence =
-        store.get<EvidencePayload>(
-          "EVIDENCE",
-          evidenceId,
-        );
-
-      invariant(
-        evidence !== null &&
-          evidence.state ===
-            "VERIFIED",
-        "V8_ARTICLE_RUNTIME_CONTENT_EVIDENCE_NOT_VERIFIED",
-        `Content assertion ${index} references non-verified Evidence ${evidenceId}.`,
-      );
-    }
-
-    /*
-     * Closure must be semantically valid:
-     *
-     * every Claim used by an assertion must actually cite at least
-     * one Evidence used by that same assertion.
-     */
-    for (
-      const claimId of
-        provenance.claimIds
-    ) {
-      const claim =
-        store.get<ClaimPayload>(
-          "CLAIM",
-          claimId,
-        );
-
-      invariant(
-        claim !== null,
-        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_MISSING",
-        `Claim ${claimId} disappeared during content closure.`,
-      );
-
-      const claimEvidenceIds =
-        claim.payload
-          .evidenceIds;
-
-      invariant(
-        claimEvidenceIds.some(
-          (evidenceId) =>
-            provenance.evidenceIds.includes(
-              evidenceId,
-            ),
-        ),
-        "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_EVIDENCE_CLOSURE_BROKEN",
-        [
-          `Content assertion ${index}`,
-          `Claim ${claimId}`,
-          "does not intersect its declared Evidence lineage.",
-        ].join(" "),
-      );
-    }
-
-    /*
-     * Knowledge -> Claim closure.
-     */
-    for (
-      const knowledgeId of
-        provenance.knowledgeIds
-    ) {
-      const knowledge =
-        store.get<KnowledgePayload>(
-          "KNOWLEDGE",
-          knowledgeId,
-        );
-
-      invariant(
-        knowledge !== null,
-        "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_MISSING",
-        `Knowledge ${knowledgeId} disappeared during content closure.`,
-      );
-
-      for (
-        const claimId of
-          knowledge.payload
-            .claimIds
-      ) {
+      case "QUESTION":
+      case "CONSTRAINT": {
         invariant(
-          provenance.claimIds.includes(
-            claimId,
-          ),
-          "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_CLAIM_CLOSURE_BROKEN",
-          [
-            `Content assertion ${index}`,
-            `Knowledge ${knowledgeId}`,
-            `requires Claim ${claimId},`,
-            "but the assertion does not bind that Claim.",
-          ].join(" "),
+          provenance.problemIds.length ===
+            1 &&
+            provenance.problemIds[0] ===
+              problemRecord.aggregateId,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_PROBLEM_MISMATCH",
+          `Content assertion ${index} kind=${provenance.kind} is not bound to the runtime Problem.`,
         );
+
+        invariant(
+          provenance.decisionIds.length ===
+              0 &&
+            provenance.contextIds.length ===
+              0 &&
+            provenance.knowledgeIds.length ===
+              0 &&
+            provenance.claimIds.length ===
+              0 &&
+            provenance.evidenceIds.length ===
+              0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_STRUCTURAL_CONTAMINATION",
+          `Content assertion ${index} kind=${provenance.kind} contains unrelated lineage.`,
+        );
+
+        break;
       }
+
+      case "CONTEXT": {
+        invariant(
+          provenance.contextIds.length ===
+            1 &&
+            provenance.contextIds[0] ===
+              contextRecord.aggregateId,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_CONTEXT_MISMATCH",
+          `Content assertion ${index} kind=CONTEXT is not bound to the runtime Context.`,
+        );
+
+        invariant(
+          provenance.problemIds.length ===
+              0 &&
+            provenance.decisionIds.length ===
+              0 &&
+            provenance.knowledgeIds.length ===
+              0 &&
+            provenance.claimIds.length ===
+              0 &&
+            provenance.evidenceIds.length ===
+              0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_STRUCTURAL_CONTAMINATION",
+          "Content assertion ${index} kind=CONTEXT contains unrelated lineage.",
+        );
+
+        break;
+      }
+
+      case "DECISION": {
+        invariant(
+          provenance.decisionIds.length ===
+            1 &&
+            provenance.decisionIds[0] ===
+              decisionRecord.aggregateId,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_DECISION_MISMATCH",
+          `Content assertion ${index} kind=DECISION is not bound to the runtime Decision.`,
+        );
+
+        invariant(
+          provenance.problemIds.length ===
+              0 &&
+            provenance.contextIds.length ===
+              0 &&
+            provenance.knowledgeIds.length ===
+              0 &&
+            provenance.claimIds.length ===
+              0 &&
+            provenance.evidenceIds.length ===
+              0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_STRUCTURAL_CONTAMINATION",
+          `Content assertion ${index} kind=DECISION contains unrelated lineage.`,
+        );
+
+        break;
+      }
+
+      case "KNOWLEDGE": {
+        invariant(
+          provenance.knowledgeIds.length >
+            0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_KNOWLEDGE",
+          `Content assertion ${index} has no Knowledge lineage.`,
+        );
+
+        invariant(
+          provenance.claimIds.length >
+            0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_CLAIM",
+          `Content assertion ${index} has no Claim lineage.`,
+        );
+
+        invariant(
+          provenance.evidenceIds.length >
+            0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_NO_EVIDENCE",
+          `Content assertion ${index} has no Evidence lineage.`,
+        );
+
+        invariant(
+          provenance.problemIds.length ===
+              0 &&
+            provenance.decisionIds.length ===
+              0 &&
+            provenance.contextIds.length ===
+              0,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_KNOWLEDGE_STRUCTURAL_CONTAMINATION",
+          `Content assertion ${index} kind=KNOWLEDGE contains structural lineage.`,
+        );
+
+        for (
+          const knowledgeId of
+            provenance.knowledgeIds
+        ) {
+          const knowledge =
+            store.get<KnowledgePayload>(
+              "KNOWLEDGE",
+              knowledgeId,
+            );
+
+          invariant(
+            knowledge !== null &&
+              knowledge.state ===
+                "VERIFIED",
+            "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_NOT_VERIFIED",
+            `Content assertion ${index} references non-verified Knowledge ${knowledgeId}.`,
+          );
+
+          invariant(
+            knowledge.payload.claimIds.length >
+              0,
+            "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_NO_CLAIMS",
+            `Content assertion ${index} references Knowledge ${knowledgeId} without Claims.`,
+          );
+
+          for (
+            const claimId of
+              knowledge.payload.claimIds
+          ) {
+            invariant(
+              provenance.claimIds.includes(
+                claimId,
+              ),
+              "V8_ARTICLE_RUNTIME_CONTENT_KNOWLEDGE_CLAIM_CLOSURE_BROKEN",
+              [
+                `Content assertion ${index}`,
+                `Knowledge ${knowledgeId}`,
+                `requires Claim ${claimId},`,
+                "but the assertion does not bind that Claim.",
+              ].join(" "),
+            );
+          }
+        }
+
+        for (
+          const claimId of
+            provenance.claimIds
+        ) {
+          const claim =
+            store.get<ClaimPayload>(
+              "CLAIM",
+              claimId,
+            );
+
+          invariant(
+            claim !== null &&
+              claim.state ===
+                "VERIFIED",
+            "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_NOT_VERIFIED",
+            `Content assertion ${index} references non-verified Claim ${claimId}.`,
+          );
+
+          invariant(
+            claim.payload.evidenceIds.length >
+              0,
+            "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_NO_EVIDENCE",
+            `Content assertion ${index} references Claim ${claimId} without Evidence.`,
+          );
+
+          invariant(
+            claim.payload.evidenceIds.some(
+              (evidenceId) =>
+                provenance.evidenceIds.includes(
+                  evidenceId,
+                ),
+            ),
+            "V8_ARTICLE_RUNTIME_CONTENT_CLAIM_EVIDENCE_CLOSURE_BROKEN",
+            [
+              `Content assertion ${index}`,
+              `Claim ${claimId}`,
+              "does not intersect its declared Evidence lineage.",
+            ].join(" "),
+          );
+        }
+
+        for (
+          const evidenceId of
+            provenance.evidenceIds
+        ) {
+          const evidence =
+            store.get<EvidencePayload>(
+              "EVIDENCE",
+              evidenceId,
+            );
+
+          invariant(
+            evidence !== null &&
+              evidence.state ===
+                "VERIFIED",
+            "V8_ARTICLE_RUNTIME_CONTENT_EVIDENCE_NOT_VERIFIED",
+            `Content assertion ${index} references non-verified Evidence ${evidenceId}.`,
+          );
+        }
+
+        break;
+      }
+
+      default:
+        invariant(
+          false,
+          "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_UNKNOWN_KIND",
+          `Unsupported Content provenance kind at assertion ${index}.`,
+        );
     }
   }
 
