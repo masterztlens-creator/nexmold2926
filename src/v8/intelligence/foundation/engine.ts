@@ -1,16 +1,14 @@
-import { invariant } from "../../constitution/invariants.js";
 import {
-  clamp,
+  invariant,
+} from "../../constitution/invariants.js";
+import {
   contentFingerprint,
-  normalizeText,
-  uniqueStrings,
-} from "../shared.js";
+} from "../../foundation/hash.js";
 import {
   assertIntelligenceCycleCollection,
   assertIntelligenceCycleIntegrity,
-  createIntelligenceCycle,
   advanceIntelligenceCycle,
-  type CreateIntelligenceCycleInput,
+  createIntelligenceCycle,
 } from "./cycle.js";
 import {
   assertDecisionCollection,
@@ -38,6 +36,8 @@ import {
 } from "./signal.js";
 import type {
   IntelligenceCycle,
+  IntelligenceCycleStage,
+  IntelligenceCycleStatus,
   IntelligenceDecision,
   IntelligenceExperiment,
   IntelligenceFeedback,
@@ -71,16 +71,20 @@ export interface IntelligenceFoundationRunInput {
   readonly objective: string;
   readonly cycleId: string;
   readonly parentCycleId?: string;
-  readonly rootCycleId?: string;
-  readonly scope?: readonly string[];
+  readonly stage?: IntelligenceCycleStage;
+  readonly status?: IntelligenceCycleStatus;
+  readonly entityIds?: readonly string[];
   readonly signalIds?: readonly string[];
+  readonly observationIds?: readonly string[];
   readonly metricIds?: readonly string[];
+  readonly analysisIds?: readonly string[];
   readonly decisionIds?: readonly string[];
   readonly experimentIds?: readonly string[];
+  readonly outcomeIds?: readonly string[];
   readonly learningIds?: readonly string[];
   readonly feedbackIds?: readonly string[];
-  readonly confidence?: number;
-  readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly lineage?: IntelligenceCycle["lineage"];
+  readonly completedAt?: string;
 }
 
 export interface IntelligenceFoundationRunResult {
@@ -107,137 +111,76 @@ export interface IntelligenceFoundationInvariantReport {
   readonly fingerprint: string;
 }
 
-export interface IntelligenceFoundationEngineOptions {
-  readonly strict?: boolean;
-  readonly requireReferences?: boolean;
-  readonly minimumConfidence?: number;
-  readonly rejectTerminalCycleReuse?: boolean;
-}
+const TERMINAL_CYCLE_STATUSES:
+  readonly IntelligenceCycleStatus[] = [
+    "COMPLETED",
+    "FAILED",
+    "RETIRED",
+  ];
 
 function requireNonEmpty(
   value: string,
   field: string,
 ): string {
-  const normalized = normalizeText(value);
-
   invariant(
-    normalized.length > 0,
-    `${field} must not be empty`,
+    typeof value === "string" &&
+      value.trim().length > 0,
+    "V8-INTELLIGENCE-FOUNDATION-VALUE-REQUIRED",
+    `${field} must be non-empty`,
   );
 
-  return normalized;
-}
-
-function normalizeConfidence(
-  value: number | undefined,
-): number {
-  const normalized = value ?? 0;
-
-  invariant(
-    Number.isFinite(normalized),
-    "engine confidence must be finite",
-  );
-
-  invariant(
-    normalized >= 0 &&
-      normalized <= 1,
-    "engine confidence must be between 0 and 1",
-  );
-
-  return (
-    Math.round(
-      clamp(normalized, 0, 1) *
-        1_000_000,
-    ) / 1_000_000
-  );
+  return value.trim();
 }
 
 function normalizeIds(
   values: readonly string[] | undefined,
+  field: string,
 ): readonly string[] {
-  return uniqueStrings(
-    (values ?? []).map((value) =>
+  const normalized = (values ?? []).map(
+    (value) =>
       requireNonEmpty(
         value,
-        "foundation reference id",
+        field,
       ),
+  );
+
+  return Object.freeze(
+    [...new Set(normalized)].sort(
+      (left, right) =>
+        left.localeCompare(right),
     ),
   );
 }
 
-function normalizeMetadata(
-  metadata:
-    | Readonly<Record<string, unknown>>
-    | undefined,
-): Readonly<Record<string, unknown>> {
-  if (!metadata) {
-    return {};
-  }
+function sortById<T>(
+  values: readonly T[],
+  getId: (value: T) => string,
+): readonly T[] {
+  return Object.freeze(
+    [...values].sort(
+      (left, right) =>
+        getId(left).localeCompare(
+          getId(right),
+        ),
+    ),
+  );
+}
 
-  const normalizeValue = (
-    value: unknown,
-  ): unknown => {
-    if (
-      value === null ||
-      typeof value === "string" ||
-      typeof value === "boolean"
-    ) {
-      return value;
-    }
+function assertUniqueIds(
+  values: readonly string[],
+  entity: string,
+): void {
+  const seen = new Set<string>();
 
-    if (typeof value === "number") {
-      invariant(
-        Number.isFinite(value),
-        "foundation metadata contains invalid number",
-      );
-
-      return value;
-    }
-
-    if (Array.isArray(value)) {
-      return value.map(
-        normalizeValue,
-      );
-    }
-
-    if (typeof value === "object") {
-      const record =
-        value as Record<
-          string,
-          unknown
-        >;
-
-      const result:
-        Record<
-          string,
-          unknown
-        > = {};
-
-      for (
-        const key of Object.keys(
-          record,
-        ).sort()
-      ) {
-        result[key] =
-          normalizeValue(
-            record[key],
-          );
-      }
-
-      return result;
-    }
-
+  for (const id of values) {
     invariant(
-      false,
-      "foundation metadata contains unsupported value",
+      !seen.has(id),
+      "V8-INTELLIGENCE-FOUNDATION-DUPLICATE-ID",
+      `duplicate ${entity} id: ${id}`,
     );
-  };
 
-  return normalizeValue(
-    metadata,
-  ) as Readonly<
-    Record<string, unknown>
-  >;
+    seen.add(id);
+  }
 }
 
 function serializeState(
@@ -296,17 +239,17 @@ function serializeState(
       ),
     feedback:
       state.feedback.map(
-        (item) => ({
+        (feedback) => ({
           feedbackId:
-            item.feedbackId,
+            feedback.feedbackId,
           fingerprint:
-            item.fingerprint,
+            feedback.fingerprint,
         }),
       ),
   };
 }
 
-function stateFingerprint(
+function calculateStateFingerprint(
   state: IntelligenceFoundationState,
 ): string {
   return contentFingerprint(
@@ -317,158 +260,129 @@ function stateFingerprint(
 function normalizeState(
   input: IntelligenceFoundationInput,
 ): IntelligenceFoundationState {
-  const cycles = [
-    ...(input.cycles ?? []),
-  ].sort((left, right) =>
-    left.cycleId.localeCompare(
-      right.cycleId,
-    ),
+  const cycles = sortById(
+    input.cycles ?? [],
+    (item) => item.cycleId,
   );
 
-  const signals = [
-    ...(input.signals ?? []),
-  ].sort((left, right) =>
-    left.signalId.localeCompare(
-      right.signalId,
-    ),
+  const signals = sortById(
+    input.signals ?? [],
+    (item) => item.signalId,
   );
 
-  const metrics = [
-    ...(input.metrics ?? []),
-  ].sort((left, right) =>
-    left.metricId.localeCompare(
-      right.metricId,
-    ),
+  const metrics = sortById(
+    input.metrics ?? [],
+    (item) => item.metricId,
   );
 
-  const decisions = [
-    ...(input.decisions ?? []),
-  ].sort((left, right) =>
-    left.decisionId.localeCompare(
-      right.decisionId,
-    ),
+  const decisions = sortById(
+    input.decisions ?? [],
+    (item) => item.decisionId,
   );
 
-  const experiments = [
-    ...(input.experiments ?? []),
-  ].sort((left, right) =>
-    left.experimentId.localeCompare(
-      right.experimentId,
-    ),
-  );
-
-  const learnings = [
-    ...(input.learnings ?? []),
-  ].sort((left, right) =>
-    left.learningId.localeCompare(
-      right.learningId,
-    ),
-  );
-
-  const feedback = [
-    ...(input.feedback ?? []),
-  ].sort((left, right) =>
-    left.feedbackId.localeCompare(
-      right.feedbackId,
-    ),
-  );
-
-  const provisional: IntelligenceFoundationState =
-    {
-      cycles,
-      signals,
-      metrics,
-      decisions,
-      experiments,
-      learnings,
-      feedback,
-      fingerprint: "",
-    };
-
-  return {
-    ...provisional,
-    fingerprint:
-      stateFingerprint(
-        provisional,
-      ),
-  };
-}
-
-function assertUniqueIds(
-  values: readonly string[],
-  entity: string,
-): void {
-  const seen =
-    new Set<string>();
-
-  for (const value of values) {
-    invariant(
-      !seen.has(value),
-      `duplicate ${entity} id: ${value}`,
+  const experiments =
+    sortById(
+      input.experiments ?? [],
+      (item) =>
+        item.experimentId,
     );
 
-    seen.add(value);
+  const learnings =
+    sortById(
+      input.learnings ?? [],
+      (item) =>
+        item.learningId,
+    );
+
+  const feedback =
+    sortById(
+      input.feedback ?? [],
+      (item) =>
+        item.feedbackId,
+    );
+
+  const provisional:
+    IntelligenceFoundationState = {
+    cycles,
+    signals,
+    metrics,
+    decisions,
+    experiments,
+    learnings,
+    feedback,
+    fingerprint:
+      "" as IntelligenceFoundationState["fingerprint"],
+  };
+
+  return Object.freeze({
+    ...provisional,
+    fingerprint:
+      calculateStateFingerprint(
+        provisional,
+      ),
+  });
+}
+
+function assertReferenceIds(
+  ids: readonly string[],
+  available: ReadonlySet<string>,
+  ownerType: string,
+  ownerId: string,
+  referenceType: string,
+): void {
+  for (const id of ids) {
+    invariant(
+      available.has(id),
+      "V8-INTELLIGENCE-FOUNDATION-ORPHAN-REFERENCE",
+      `${ownerType} ${ownerId} references missing ${referenceType} ${id}`,
+    );
   }
 }
 
 function assertCrossEntityReferences(
   state: IntelligenceFoundationState,
 ): void {
-  const cycleIds =
-    new Set(
-      state.cycles.map(
-        (item) =>
-          item.cycleId,
-      ),
-    );
+  const cycleIds = new Set(
+    state.cycles.map(
+      (item) => item.cycleId,
+    ),
+  );
 
-  const signalIds =
-    new Set(
-      state.signals.map(
-        (item) =>
-          item.signalId,
-      ),
-    );
+  const signalIds = new Set(
+    state.signals.map(
+      (item) => item.signalId,
+    ),
+  );
 
-  const metricIds =
-    new Set(
-      state.metrics.map(
-        (item) =>
-          item.metricId,
-      ),
-    );
+  const metricIds = new Set(
+    state.metrics.map(
+      (item) => item.metricId,
+    ),
+  );
 
-  const decisionIds =
-    new Set(
-      state.decisions.map(
-        (item) =>
-          item.decisionId,
-      ),
-    );
+  const decisionIds = new Set(
+    state.decisions.map(
+      (item) => item.decisionId,
+    ),
+  );
 
-  const experimentIds =
-    new Set(
-      state.experiments.map(
-        (item) =>
-          item.experimentId,
-      ),
-    );
+  const experimentIds = new Set(
+    state.experiments.map(
+      (item) => item.experimentId,
+    ),
+  );
 
-  const learningIds =
-    new Set(
-      state.learnings.map(
-        (item) =>
-          item.learningId,
-      ),
-    );
+  const learningIds = new Set(
+    state.learnings.map(
+      (item) => item.learningId,
+    ),
+  );
 
-  const feedbackIds =
-    new Set(
-      state.feedback.map(
-        (item) =>
-          item.feedbackId,
-      ),
-    );
+  const feedbackIds = new Set(
+    state.feedback.map(
+      (item) => item.feedbackId,
+    ),
+  );
 
   for (const cycle of state.cycles) {
     if (
@@ -479,121 +393,153 @@ function assertCrossEntityReferences(
         cycleIds.has(
           cycle.parentCycleId,
         ),
+        "V8-INTELLIGENCE-FOUNDATION-ORPHAN-REFERENCE",
         `cycle ${cycle.cycleId} references missing parent cycle ${cycle.parentCycleId}`,
       );
     }
 
-    for (const id of cycle.signalIds) {
-      invariant(
-        signalIds.has(id),
-        `cycle ${cycle.cycleId} references missing signal ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.signalIds,
+      signalIds,
+      "cycle",
+      cycle.cycleId,
+      "signal",
+    );
 
-    for (const id of cycle.metricIds) {
-      invariant(
-        metricIds.has(id),
-        `cycle ${cycle.cycleId} references missing metric ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.metricIds,
+      metricIds,
+      "cycle",
+      cycle.cycleId,
+      "metric",
+    );
 
-    for (const id of cycle.decisionIds) {
-      invariant(
-        decisionIds.has(id),
-        `cycle ${cycle.cycleId} references missing decision ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.decisionIds,
+      decisionIds,
+      "cycle",
+      cycle.cycleId,
+      "decision",
+    );
 
-    for (const id of cycle.experimentIds) {
-      invariant(
-        experimentIds.has(id),
-        `cycle ${cycle.cycleId} references missing experiment ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.experimentIds,
+      experimentIds,
+      "cycle",
+      cycle.cycleId,
+      "experiment",
+    );
 
-    for (const id of cycle.learningIds) {
-      invariant(
-        learningIds.has(id),
-        `cycle ${cycle.cycleId} references missing learning ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.learningIds,
+      learningIds,
+      "cycle",
+      cycle.cycleId,
+      "learning",
+    );
 
-    for (const id of cycle.feedbackIds) {
-      invariant(
-        feedbackIds.has(id),
-        `cycle ${cycle.cycleId} references missing feedback ${id}`,
-      );
-    }
+    assertReferenceIds(
+      cycle.feedbackIds,
+      feedbackIds,
+      "cycle",
+      cycle.cycleId,
+      "feedback",
+    );
+  }
+
+  for (const metric of state.metrics) {
+    assertReferenceIds(
+      metric.signalIds,
+      signalIds,
+      "metric",
+      metric.metricId,
+      "signal",
+    );
   }
 
   for (const decision of state.decisions) {
-    for (const id of decision.signalIds) {
-      invariant(
-        signalIds.has(id),
-        `decision ${decision.decisionId} references missing signal ${id}`,
-      );
-    }
+    assertReferenceIds(
+      decision.signalIds,
+      signalIds,
+      "decision",
+      decision.decisionId,
+      "signal",
+    );
 
-    for (const id of decision.metricIds) {
-      invariant(
-        metricIds.has(id),
-        `decision ${decision.decisionId} references missing metric ${id}`,
-      );
-    }
+    assertReferenceIds(
+      decision.metricIds,
+      metricIds,
+      "decision",
+      decision.decisionId,
+      "metric",
+    );
   }
 
   for (const experiment of state.experiments) {
-    for (const id of experiment.metricIds) {
-      invariant(
-        metricIds.has(id),
-        `experiment ${experiment.experimentId} references missing metric ${id}`,
-      );
-    }
+    assertReferenceIds(
+      experiment.signalIds,
+      signalIds,
+      "experiment",
+      experiment.experimentId,
+      "signal",
+    );
 
-    for (const id of experiment.decisionIds) {
-      invariant(
-        decisionIds.has(id),
-        `experiment ${experiment.experimentId} references missing decision ${id}`,
-      );
-    }
+    assertReferenceIds(
+      experiment.metricIds,
+      metricIds,
+      "experiment",
+      experiment.experimentId,
+      "metric",
+    );
   }
 
   for (const learning of state.learnings) {
-    for (const id of learning.sourceDecisionIds) {
-      invariant(
-        decisionIds.has(id),
-        `learning ${learning.learningId} references missing decision ${id}`,
-      );
-    }
+    assertReferenceIds(
+      learning.sourceSignalIds,
+      signalIds,
+      "learning",
+      learning.learningId,
+      "signal",
+    );
 
-    for (const id of learning.signalIds) {
-      invariant(
-        signalIds.has(id),
-        `learning ${learning.learningId} references missing signal ${id}`,
-      );
-    }
+    assertReferenceIds(
+      learning.sourceExperimentIds,
+      experimentIds,
+      "learning",
+      learning.learningId,
+      "experiment",
+    );
+
+    assertReferenceIds(
+      learning.supportingMetricIds,
+      metricIds,
+      "learning",
+      learning.learningId,
+      "metric",
+    );
   }
 
-  for (const item of state.feedback) {
-    for (const id of item.sourceDecisionIds) {
-      invariant(
-        decisionIds.has(id),
-        `feedback ${item.feedbackId} references missing decision ${id}`,
-      );
-    }
+  for (const feedback of state.feedback) {
+    assertReferenceIds(
+      feedback.signalIds,
+      signalIds,
+      "feedback",
+      feedback.feedbackId,
+      "signal",
+    );
 
-    for (const id of item.sourceSignalIds) {
-      invariant(
-        signalIds.has(id),
-        `feedback ${item.feedbackId} references missing signal ${id}`,
-      );
-    }
+    assertReferenceIds(
+      feedback.metricIds,
+      metricIds,
+      "feedback",
+      feedback.feedbackId,
+      "metric",
+    );
   }
 }
 
 export function assertIntelligenceFoundationState(
   state: IntelligenceFoundationState,
-  options: IntelligenceFoundationEngineOptions = {},
 ): void {
   assertUniqueIds(
     state.cycles.map(
@@ -683,9 +629,9 @@ export function assertIntelligenceFoundationState(
     );
   }
 
-  for (const item of state.feedback) {
+  for (const feedback of state.feedback) {
     assertFeedbackIntegrity(
-      item,
+      feedback,
     );
   }
 
@@ -723,132 +669,25 @@ export function assertIntelligenceFoundationState(
 
   invariant(
     state.fingerprint ===
-      stateFingerprint(state),
+      calculateStateFingerprint(
+        state,
+      ),
+    "V8-INTELLIGENCE-FOUNDATION-FINGERPRINT",
     "foundation state fingerprint mismatch",
   );
-
-  if (
-    options.minimumConfidence !==
-    undefined
-  ) {
-    invariant(
-      Number.isFinite(
-        options.minimumConfidence,
-      ),
-      "minimumConfidence must be finite",
-    );
-
-    invariant(
-      options.minimumConfidence >=
-        0 &&
-        options.minimumConfidence <=
-          1,
-      "minimumConfidence must be between 0 and 1",
-    );
-  }
 }
 
 export function createIntelligenceFoundationState(
   input: IntelligenceFoundationInput = {},
-  options: IntelligenceFoundationEngineOptions = {},
 ): IntelligenceFoundationState {
   const state =
     normalizeState(input);
 
   assertIntelligenceFoundationState(
     state,
-    options,
   );
 
   return state;
-}
-
-export function mergeIntelligenceFoundationState(
-  left: IntelligenceFoundationState,
-  right: IntelligenceFoundationState,
-  options: IntelligenceFoundationEngineOptions = {},
-): IntelligenceFoundationState {
-  assertIntelligenceFoundationState(
-    left,
-    options,
-  );
-
-  assertIntelligenceFoundationState(
-    right,
-    options,
-  );
-
-  const cycles = mergeById(
-    left.cycles,
-    right.cycles,
-    (item) =>
-      item.cycleId,
-    "cycle",
-  );
-
-  const signals = mergeById(
-    left.signals,
-    right.signals,
-    (item) =>
-      item.signalId,
-    "signal",
-  );
-
-  const metrics = mergeById(
-    left.metrics,
-    right.metrics,
-    (item) =>
-      item.metricId,
-    "metric",
-  );
-
-  const decisions = mergeById(
-    left.decisions,
-    right.decisions,
-    (item) =>
-      item.decisionId,
-    "decision",
-  );
-
-  const experiments =
-    mergeById(
-      left.experiments,
-      right.experiments,
-      (item) =>
-        item.experimentId,
-      "experiment",
-    );
-
-  const learnings =
-    mergeById(
-      left.learnings,
-      right.learnings,
-      (item) =>
-        item.learningId,
-      "learning",
-    );
-
-  const feedback =
-    mergeById(
-      left.feedback,
-      right.feedback,
-      (item) =>
-        item.feedbackId,
-      "feedback",
-    );
-
-  return createIntelligenceFoundationState(
-    {
-      cycles,
-      signals,
-      metrics,
-      decisions,
-      experiments,
-      learnings,
-      feedback,
-    },
-    options,
-  );
 }
 
 function mergeById<T>(
@@ -857,11 +696,11 @@ function mergeById<T>(
   getId: (value: T) => string,
   entity: string,
 ): readonly T[] {
-  const map =
+  const merged =
     new Map<string, T>();
 
   for (const item of left) {
-    map.set(
+    merged.set(
       getId(item),
       item,
     );
@@ -870,10 +709,16 @@ function mergeById<T>(
   for (const item of right) {
     const id = getId(item);
     const existing =
-      map.get(id);
+      merged.get(id);
 
-    if (!existing) {
-      map.set(id, item);
+    if (
+      existing ===
+      undefined
+    ) {
+      merged.set(
+        id,
+        item,
+      );
       continue;
     }
 
@@ -881,30 +726,88 @@ function mergeById<T>(
       JSON.stringify(
         existing,
       ) ===
-        JSON.stringify(item),
+        JSON.stringify(
+          item,
+        ),
+      "V8-INTELLIGENCE-FOUNDATION-CONFLICT",
       `conflicting ${entity} definitions for id ${id}`,
     );
   }
 
-  return [...map.values()];
+  return Object.freeze(
+    [...merged.values()],
+  );
+}
+
+export function mergeIntelligenceFoundationState(
+  left: IntelligenceFoundationState,
+  right: IntelligenceFoundationState,
+): IntelligenceFoundationState {
+  assertIntelligenceFoundationState(
+    left,
+  );
+
+  assertIntelligenceFoundationState(
+    right,
+  );
+
+  return createIntelligenceFoundationState({
+    cycles: mergeById(
+      left.cycles,
+      right.cycles,
+      (item) =>
+        item.cycleId,
+      "cycle",
+    ),
+    signals: mergeById(
+      left.signals,
+      right.signals,
+      (item) =>
+        item.signalId,
+      "signal",
+    ),
+    metrics: mergeById(
+      left.metrics,
+      right.metrics,
+      (item) =>
+        item.metricId,
+      "metric",
+    ),
+    decisions: mergeById(
+      left.decisions,
+      right.decisions,
+      (item) =>
+        item.decisionId,
+      "decision",
+    ),
+    experiments: mergeById(
+      left.experiments,
+      right.experiments,
+      (item) =>
+        item.experimentId,
+      "experiment",
+    ),
+    learnings: mergeById(
+      left.learnings,
+      right.learnings,
+      (item) =>
+        item.learningId,
+      "learning",
+    ),
+    feedback: mergeById(
+      left.feedback,
+      right.feedback,
+      (item) =>
+        item.feedbackId,
+      "feedback",
+    ),
+  });
 }
 
 export function runIntelligenceFoundationCycle(
   input: IntelligenceFoundationRunInput,
   existing: IntelligenceFoundationInput = {},
-  options: IntelligenceFoundationEngineOptions = {},
 ): IntelligenceFoundationRunResult {
-  const strict =
-    options.strict ?? true;
-
-  const requireReferences =
-    options.requireReferences ??
-    true;
-
-  const minimumConfidence =
-    options.minimumConfidence ??
-    0;
-
   const objective =
     requireNonEmpty(
       input.objective,
@@ -917,15 +820,69 @@ export function runIntelligenceFoundationCycle(
       "cycleId",
     );
 
-  const metadata =
-    normalizeMetadata(
-      input.metadata,
-    );
-
   const baseState =
     createIntelligenceFoundationState(
       existing,
-      options,
+    );
+
+  const signalIds =
+    normalizeIds(
+      input.signalIds,
+      "signalId",
+    );
+
+  const observationIds =
+    normalizeIds(
+      input.observationIds,
+      "observationId",
+    );
+
+  const metricIds =
+    normalizeIds(
+      input.metricIds,
+      "metricId",
+    );
+
+  const analysisIds =
+    normalizeIds(
+      input.analysisIds,
+      "analysisId",
+    );
+
+  const decisionIds =
+    normalizeIds(
+      input.decisionIds,
+      "decisionId",
+    );
+
+  const experimentIds =
+    normalizeIds(
+      input.experimentIds,
+      "experimentId",
+    );
+
+  const outcomeIds =
+    normalizeIds(
+      input.outcomeIds,
+      "outcomeId",
+    );
+
+  const learningIds =
+    normalizeIds(
+      input.learningIds,
+      "learningId",
+    );
+
+  const feedbackIds =
+    normalizeIds(
+      input.feedbackIds,
+      "feedbackId",
+    );
+
+  const entityIds =
+    normalizeIds(
+      input.entityIds,
+      "entityId",
     );
 
   const existingCycle =
@@ -935,253 +892,120 @@ export function runIntelligenceFoundationCycle(
         cycleId,
     );
 
+  let cycle: IntelligenceCycle;
+
   if (
-    existingCycle &&
-    (options.rejectTerminalCycleReuse ??
-      true)
+    existingCycle ===
+    undefined
   ) {
-    invariant(
-      ![
-        "COMPLETED",
-        "FAILED",
-        "BLOCKED",
-      ].includes(
-        existingCycle.status,
-      ),
-      `terminal cycle cannot be reused: ${cycleId}`,
-    );
-  }
+    const sequence =
+      input.parentCycleId ===
+      undefined
+        ? 0
+        : 1;
 
-  const signalIds =
-    normalizeIds(
-      input.signalIds,
-    );
-
-  const metricIds =
-    normalizeIds(
-      input.metricIds,
-    );
-
-  const decisionIds =
-    normalizeIds(
-      input.decisionIds,
-    );
-
-  const experimentIds =
-    normalizeIds(
-      input.experimentIds,
-    );
-
-  const learningIds =
-    normalizeIds(
-      input.learningIds,
-    );
-
-  const feedbackIds =
-    normalizeIds(
-      input.feedbackIds,
-    );
-
-  if (requireReferences) {
-    for (const id of signalIds) {
-      invariant(
-        baseState.signals.some(
-          (item) =>
-            item.signalId === id,
-        ),
-        `run references missing signal: ${id}`,
-      );
-    }
-
-    for (const id of metricIds) {
-      invariant(
-        baseState.metrics.some(
-          (item) =>
-            item.metricId === id,
-        ),
-        `run references missing metric: ${id}`,
-      );
-    }
-
-    for (const id of decisionIds) {
-      invariant(
-        baseState.decisions.some(
-          (item) =>
-            item.decisionId === id,
-        ),
-        `run references missing decision: ${id}`,
-      );
-    }
-
-    for (const id of experimentIds) {
-      invariant(
-        baseState.experiments.some(
-          (item) =>
-            item.experimentId ===
-            id,
-        ),
-        `run references missing experiment: ${id}`,
-      );
-    }
-
-    for (const id of learningIds) {
-      invariant(
-        baseState.learnings.some(
-          (item) =>
-            item.learningId ===
-            id,
-        ),
-        `run references missing learning: ${id}`,
-      );
-    }
-
-    for (const id of feedbackIds) {
-      invariant(
-        baseState.feedback.some(
-          (item) =>
-            item.feedbackId ===
-            id,
-        ),
-        `run references missing feedback: ${id}`,
-      );
-    }
-  }
-
-  const confidence =
-    normalizeConfidence(
-      input.confidence,
-    );
-
-  if (strict) {
-    invariant(
-      confidence >=
-        minimumConfidence,
-      `cycle confidence ${confidence} is below required minimum ${minimumConfidence}`,
-    );
-  }
-
-  const cycleInput:
-    CreateIntelligenceCycleInput =
-      {
+    cycle =
+      createIntelligenceCycle({
         cycleId,
+        sequence,
+        stage:
+          input.stage ??
+          "DISCOVER",
+        status:
+          input.status ??
+          "INITIALIZED",
         parentCycleId:
           input.parentCycleId,
-        rootCycleId:
-          input.rootCycleId,
-        objective,
-        scope:
-          input.scope,
-        status:
-          existingCycle?.status ??
-          "ACTIVE",
+        entityIds,
         signalIds,
+        observationIds,
         metricIds,
+        analysisIds,
         decisionIds,
         experimentIds,
+        outcomeIds,
         learningIds,
         feedbackIds,
-        confidence,
-        metadata: {
-          ...metadata,
-          engine:
-            "v8-intelligence-foundation",
-        },
-      };
+        lineage:
+          input.lineage,
+        completedAt:
+          input.completedAt,
+      });
+  } else {
+    invariant(
+      !TERMINAL_CYCLE_STATUSES.includes(
+        existingCycle.status,
+      ),
+      "V8-INTELLIGENCE-FOUNDATION-TERMINAL-CYCLE",
+      `terminal cycle cannot be reused: ${cycleId}`,
+    );
 
-  const cycle =
-    existingCycle
-      ? advanceIntelligenceCycle({
-          cycle: existingCycle,
-          stage: "MEASUREMENT",
-          signalIds,
-          metricIds,
-          decisionIds,
-          experimentIds,
-          learningIds,
-          feedbackIds,
-          confidence,
-          metadata,
-        })
-      : createIntelligenceCycle(
-          cycleInput,
-        );
+    cycle =
+      advanceIntelligenceCycle({
+        cycle:
+          existingCycle,
+        stage:
+          input.stage,
+        status:
+          input.status,
+        completedAt:
+          input.completedAt,
+        entityIds,
+        signalIds,
+        observationIds,
+        metricIds,
+        analysisIds,
+        decisionIds,
+        experimentIds,
+        outcomeIds,
+        learningIds,
+        feedbackIds,
+        lineage:
+          input.lineage,
+      });
+  }
 
-  const nextCycles =
-    existingCycle
-      ? baseState.cycles.map(
-          (item) =>
-            item.cycleId ===
-            cycle.cycleId
-              ? cycle
-              : item,
-        )
-      : [
-          ...baseState.cycles,
-          cycle,
-        ];
+  const warnings = [
+    `cycle objective: ${objective}`,
+  ];
+
+  const nextStateInput:
+    IntelligenceFoundationInput = {
+    cycles: [
+      ...baseState.cycles.filter(
+        (item) =>
+          item.cycleId !==
+          cycle.cycleId,
+      ),
+      cycle,
+    ],
+    signals:
+      baseState.signals,
+    metrics:
+      baseState.metrics,
+    decisions:
+      baseState.decisions,
+    experiments:
+      baseState.experiments,
+    learnings:
+      baseState.learnings,
+    feedback:
+      baseState.feedback,
+  };
 
   const state =
     createIntelligenceFoundationState(
-      {
-        cycles: nextCycles,
-        signals:
-          baseState.signals,
-        metrics:
-          baseState.metrics,
-        decisions:
-          baseState.decisions,
-        experiments:
-          baseState.experiments,
-        learnings:
-          baseState.learnings,
-        feedback:
-          baseState.feedback,
-      },
-      options,
+      nextStateInput,
     );
-
-  const warnings: string[] = [];
-
-  if (
-    cycle.confidence <
-    0.5
-  ) {
-    warnings.push(
-      "cycle confidence is below 0.5",
-    );
-  }
-
-  if (
-    cycle.decisionIds.length ===
-      0 &&
-    cycle.experimentIds.length ===
-      0
-  ) {
-    warnings.push(
-      "cycle contains no decision or experiment reference",
-    );
-  }
-
-  if (
-    cycle.learningIds.length ===
-      0 &&
-    cycle.feedbackIds.length ===
-      0
-  ) {
-    warnings.push(
-      "cycle contains no learning or feedback reference",
-    );
-  }
-
-  const accepted =
-    strict
-      ? warnings.length === 0
-      : true;
 
   const blocked =
-    strict &&
-    cycle.confidence <
-      minimumConfidence;
+    cycle.status ===
+    "BLOCKED";
+
+  const accepted =
+    !blocked &&
+    cycle.status !==
+      "FAILED";
 
   return {
     cycle,
@@ -1190,58 +1014,96 @@ export function runIntelligenceFoundationCycle(
       cycle.fingerprint,
     stateFingerprint:
       state.fingerprint,
-    accepted:
-      accepted && !blocked,
+    accepted,
     blocked,
-    warnings,
+    warnings:
+      Object.freeze(
+        warnings,
+      ),
   };
 }
 
 export function advanceFoundationCycle(
   cycle: IntelligenceCycle,
-  stage:
-    | IntelligenceCycle["stages"][number],
-  references: {
-    readonly signalIds?: readonly string[];
-    readonly metricIds?: readonly string[];
-    readonly decisionIds?: readonly string[];
-    readonly experimentIds?: readonly string[];
-    readonly learningIds?: readonly string[];
-    readonly feedbackIds?: readonly string[];
-    readonly confidence?: number;
-    readonly status?: IntelligenceCycle["status"];
-    readonly completedAt?: string;
-    readonly metadata?: Readonly<Record<string, unknown>>;
-  } = {},
+  input: Omit<
+    IntelligenceFoundationRunInput,
+    "objective" | "cycleId"
+  > & {
+    readonly objective?: string;
+  },
 ): IntelligenceCycle {
   assertIntelligenceCycleIntegrity(
     cycle,
   );
 
-  return advanceIntelligenceCycle({
-    cycle,
-    stage,
-    status:
-      references.status,
-    signalIds:
-      references.signalIds,
-    metricIds:
-      references.metricIds,
-    decisionIds:
-      references.decisionIds,
-    experimentIds:
-      references.experimentIds,
-    learningIds:
-      references.learningIds,
-    feedbackIds:
-      references.feedbackIds,
-    confidence:
-      references.confidence,
-    completedAt:
-      references.completedAt,
-    metadata:
-      references.metadata,
-  });
+  const next =
+    advanceIntelligenceCycle({
+      cycle,
+      stage:
+        input.stage,
+      status:
+        input.status,
+      completedAt:
+        input.completedAt,
+      entityIds:
+        normalizeIds(
+          input.entityIds,
+          "entityId",
+        ),
+      signalIds:
+        normalizeIds(
+          input.signalIds,
+          "signalId",
+        ),
+      observationIds:
+        normalizeIds(
+          input.observationIds,
+          "observationId",
+        ),
+      metricIds:
+        normalizeIds(
+          input.metricIds,
+          "metricId",
+        ),
+      analysisIds:
+        normalizeIds(
+          input.analysisIds,
+          "analysisId",
+        ),
+      decisionIds:
+        normalizeIds(
+          input.decisionIds,
+          "decisionId",
+        ),
+      experimentIds:
+        normalizeIds(
+          input.experimentIds,
+          "experimentId",
+        ),
+      outcomeIds:
+        normalizeIds(
+          input.outcomeIds,
+          "outcomeId",
+        ),
+      learningIds:
+        normalizeIds(
+          input.learningIds,
+          "learningId",
+        ),
+      feedbackIds:
+        normalizeIds(
+          input.feedbackIds,
+          "feedbackId",
+        ),
+      lineage:
+        input.lineage,
+    });
+
+  assertIntelligenceCycleIntegrity(
+    next,
+  );
+
+  return next;
 }
 
 export function foundationStateFingerprint(
@@ -1272,49 +1134,37 @@ export function buildFoundationInvariantReport(
     );
   }
 
-  if (
-    state.cycles.length ===
-    0
-  ) {
-    warnings.push(
-      "foundation contains no intelligence cycles",
-    );
+  for (const cycle of state.cycles) {
+    if (
+      cycle.status ===
+      "BLOCKED"
+    ) {
+      warnings.push(
+        `cycle ${cycle.cycleId} is BLOCKED`,
+      );
+    }
+
+    if (
+      cycle.status ===
+      "FAILED"
+    ) {
+      warnings.push(
+        `cycle ${cycle.cycleId} is FAILED`,
+      );
+    }
   }
 
-  if (
-    state.signals.length ===
-    0
-  ) {
-    warnings.push(
-      "foundation contains no signals",
-    );
-  }
-
-  if (
-    state.decisions.length ===
-    0
-  ) {
-    warnings.push(
-      "foundation contains no decisions",
-    );
-  }
-
-  if (
-    state.feedback.length ===
-      0 &&
-    state.learnings.length ===
-      0
-  ) {
-    warnings.push(
-      "foundation contains no feedback or learning records",
-    );
-  }
-
-  return {
+  const reportPayload = {
     valid:
       errors.length === 0,
-    errors,
-    warnings,
+    errors:
+      Object.freeze(
+        [...errors],
+      ),
+    warnings:
+      Object.freeze(
+        [...warnings],
+      ),
     cycleCount:
       state.cycles.length,
     signalCount:
@@ -1329,7 +1179,13 @@ export function buildFoundationInvariantReport(
       state.learnings.length,
     feedbackCount:
       state.feedback.length,
+  };
+
+  return {
+    ...reportPayload,
     fingerprint:
-      state.fingerprint,
+      contentFingerprint(
+        reportPayload,
+      ),
   };
 }
