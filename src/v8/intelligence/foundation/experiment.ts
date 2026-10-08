@@ -1,62 +1,64 @@
-import {
-  clamp,
-  type JsonValue,
-} from "../shared.js";
-import {
-  contentFingerprint,
-  immutable,
-} from "../../constitution/invariants.js";
+import { contentFingerprint } from "../../foundation/hash.js";
+import { immutable } from "../../constitution/invariants.js";
+import type { Fingerprint } from "../../domain/primitives.js";
 import type {
+  IntelligenceConfidence,
+  IntelligenceEvidenceRef,
   IntelligenceExperiment,
-  IntelligenceExperimentMetric,
   IntelligenceExperimentStatus,
   IntelligenceExperimentVariant,
+  IntelligenceLineageRef,
 } from "./types.js";
 
 export interface CreateIntelligenceExperimentInput {
   readonly experimentId?: string;
   readonly name: string;
-  readonly normalizedName?: string;
-  readonly objective: string;
   readonly hypothesis: string;
   readonly status?: IntelligenceExperimentStatus;
-  readonly createdAt: string;
-  readonly startedAt?: string | null;
-  readonly endedAt?: string | null;
-  readonly confidence?: number;
+  readonly subject: string;
+  readonly metricIds: readonly string[];
+  readonly signalIds: readonly string[];
   readonly variants: readonly IntelligenceExperimentVariant[];
-  readonly metrics?: readonly IntelligenceExperimentMetric[];
-  readonly entityIds?: readonly string[];
-  readonly decisionIds?: readonly string[];
-  readonly signalIds?: readonly string[];
-  readonly metadata?: Readonly<Record<string, JsonValue>> | null;
+  readonly controlVariantId?: string;
+  readonly successCriteria: readonly string[];
+  readonly constraints: readonly string[];
+  readonly startAt?: string;
+  readonly endAt?: string;
+  readonly observations?: readonly string[];
+  readonly outcomeIds?: readonly string[];
+  readonly confidence: IntelligenceConfidence;
+  readonly lineage?: readonly IntelligenceLineageRef[];
+  readonly evidenceRefs?: readonly IntelligenceEvidenceRef[];
 }
 
 export interface ExperimentFilter {
   readonly statuses?: readonly IntelligenceExperimentStatus[];
-  readonly names?: readonly string[];
-  readonly entityIds?: readonly string[];
-  readonly decisionIds?: readonly string[];
+  readonly subjects?: readonly string[];
   readonly signalIds?: readonly string[];
-  readonly minConfidence?: number;
+  readonly metricIds?: readonly string[];
+  readonly minConfidence?: IntelligenceConfidence;
 }
 
 export interface ExperimentSummary {
   readonly count: number;
   readonly running: number;
   readonly completed: number;
-  readonly cancelled: number;
+  readonly stopped: number;
   readonly draft: number;
-  readonly names: readonly string[];
-  readonly averageConfidence: number;
-  readonly fingerprint: string;
+  readonly fingerprint: Fingerprint;
 }
 
-function normalizeIdentifier(value: string): string {
-  return value.trim();
-}
+const CONFIDENCE_RANK: Readonly<
+  Record<IntelligenceConfidence, number>
+> = {
+  VERY_LOW: 0,
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  VERY_HIGH: 4,
+};
 
-function normalizeRequiredText(
+function requiredText(
   value: string,
   field: string,
 ): string {
@@ -71,161 +73,209 @@ function normalizeRequiredText(
   return normalized;
 }
 
-function normalizeName(value: string): string {
-  return normalizeRequiredText(
-    value,
-    "name",
-  );
-}
-
-function normalizeNormalizedName(
+function normalizedText(
   value: string,
 ): string {
   return value
     .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
-function normalizeIsoTimestamp(
-  value: string,
-  field: string,
-): string {
-  const trimmed = value.trim();
-
-  if (!trimmed) {
-    throw new Error(
-      `Experiment ${field} must not be empty.`,
-    );
-  }
-
-  const timestamp = Date.parse(trimmed);
-
-  if (!Number.isFinite(timestamp)) {
-    throw new Error(
-      `Invalid experiment ${field} timestamp: ${value}`,
-    );
-  }
-
-  return new Date(timestamp).toISOString();
-}
-
-function normalizeOptionalTimestamp(
-  value: string | null | undefined,
-  field: string,
-): string | null {
-  if (value === undefined || value === null) {
-    return null;
-  }
-
-  return normalizeIsoTimestamp(
-    value,
-    field,
-  );
-}
-
-function normalizeScore(
-  value: number | undefined,
-): number {
-  return clamp(value ?? 0, 0, 1);
-}
-
-function normalizeFiniteNumber(
-  value: number,
-  field: string,
-): number {
-  if (!Number.isFinite(value)) {
-    throw new Error(
-      `Experiment ${field} must be a finite number.`,
-    );
-  }
-
-  return value;
-}
-
-function normalizeStringArray(
-  values: readonly string[] | undefined,
+function uniqueStrings(
+  values: readonly string[],
 ): readonly string[] {
   return Object.freeze(
     [
       ...new Set(
-        (values ?? [])
-          .map(normalizeIdentifier)
+        values
+          .map((value) => value.trim())
           .filter(Boolean),
       ),
     ].sort(),
   );
 }
 
-function normalizeMetadata(
-  metadata:
-    | Readonly<Record<string, JsonValue>>
-    | null
-    | undefined,
-): Readonly<Record<string, JsonValue>> | null {
-  if (!metadata) {
-    return null;
+function normalizeTimestamp(
+  value: string | undefined,
+  field: string,
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
   }
 
-  const result: Record<string, JsonValue> = {};
+  const normalized = value.trim();
 
-  for (const [key, value] of Object.entries(
-    metadata,
-  ).sort(([left], [right]) =>
-    left.localeCompare(right),
-  )) {
-    result[key] = value;
+  if (!normalized) {
+    throw new Error(
+      `Experiment ${field} must not be empty.`,
+    );
   }
 
-  return Object.freeze(result);
+  const time = Date.parse(normalized);
+
+  if (!Number.isFinite(time)) {
+    throw new Error(
+      `Invalid experiment ${field} timestamp: ${value}`,
+    );
+  }
+
+  return new Date(time).toISOString();
+}
+
+function serializeLineage(
+  refs: readonly IntelligenceLineageRef[],
+): readonly Record<string, unknown>[] {
+  return refs.map((ref) => ({
+    aggregateType: ref.aggregateType,
+    aggregateId: ref.aggregateId,
+    version: ref.version,
+    fingerprint: String(ref.fingerprint),
+  }));
+}
+
+function serializeEvidence(
+  refs: readonly IntelligenceEvidenceRef[],
+): readonly Record<string, unknown>[] {
+  return refs.map((ref) => ({
+    evidenceId: ref.evidenceId,
+    sourceId:
+      ref.sourceId === undefined
+        ? null
+        : ref.sourceId,
+    snapshotId:
+      ref.snapshotId === undefined
+        ? null
+        : ref.snapshotId,
+    aggregateType:
+      ref.aggregateType === undefined
+        ? null
+        : ref.aggregateType,
+    fingerprint:
+      ref.fingerprint === undefined
+        ? null
+        : String(ref.fingerprint),
+    locator:
+      ref.locator === undefined
+        ? null
+        : ref.locator,
+    excerpt:
+      ref.excerpt === undefined
+        ? null
+        : ref.excerpt,
+    confidence:
+      ref.confidence === undefined
+        ? null
+        : ref.confidence,
+  }));
+}
+
+function serializeVariant(
+  variant: IntelligenceExperimentVariant,
+): Record<string, unknown> {
+  return {
+    variantId: variant.variantId,
+    name: variant.name,
+    description: variant.description,
+    parameters: variant.parameters,
+    fingerprint: String(variant.fingerprint),
+  };
+}
+
+function fingerprintPayload(
+  experiment: IntelligenceExperiment,
+): Record<string, unknown> {
+  return {
+    experimentId: experiment.experimentId,
+    name: experiment.name,
+    hypothesis: experiment.hypothesis,
+    status: experiment.status,
+    subject: experiment.subject,
+    metricIds: [...experiment.metricIds],
+    signalIds: [...experiment.signalIds],
+    variants: experiment.variants.map(
+      serializeVariant,
+    ),
+    controlVariantId:
+      experiment.controlVariantId === undefined
+        ? null
+        : experiment.controlVariantId,
+    successCriteria: [
+      ...experiment.successCriteria,
+    ],
+    constraints: [
+      ...experiment.constraints,
+    ],
+    startAt:
+      experiment.startAt === undefined
+        ? null
+        : experiment.startAt,
+    endAt:
+      experiment.endAt === undefined
+        ? null
+        : experiment.endAt,
+    observations: [
+      ...experiment.observations,
+    ],
+    outcomeIds: [
+      ...experiment.outcomeIds,
+    ],
+    confidence: experiment.confidence,
+    lineage: serializeLineage(
+      experiment.lineage,
+    ),
+    evidenceRefs: serializeEvidence(
+      experiment.evidenceRefs,
+    ),
+  };
+}
+
+function variantFingerprint(
+  variant: Omit<
+    IntelligenceExperimentVariant,
+    "fingerprint"
+  >,
+): Fingerprint {
+  return contentFingerprint({
+    variantId: variant.variantId,
+    name: variant.name,
+    description: variant.description,
+    parameters: variant.parameters,
+  });
 }
 
 function normalizeVariant(
   variant: IntelligenceExperimentVariant,
 ): IntelligenceExperimentVariant {
-  const variantId = normalizeRequiredText(
+  const variantId = requiredText(
     variant.variantId,
     "variantId",
   );
 
-  const name = normalizeRequiredText(
+  const name = requiredText(
     variant.name,
     "variant name",
   );
 
-  const description = normalizeRequiredText(
+  const description = requiredText(
     variant.description,
     "variant description",
   );
 
-  const allocation = clamp(
-    normalizeFiniteNumber(
-      variant.allocation,
-      "variant allocation",
-    ),
-    0,
-    1,
-  );
-
-  const targetValue =
-    variant.targetValue === null ||
-    variant.targetValue === undefined
-      ? null
-      : normalizeFiniteNumber(
-          variant.targetValue,
-          "variant targetValue",
-        );
-
-  const metadata =
-    normalizeMetadata(variant.metadata);
-
-  return immutable({
+  const normalized = {
     variantId,
     name,
     description,
-    allocation,
-    targetValue,
-    metadata,
+    parameters: variant.parameters,
+  };
+
+  const fingerprint =
+    variant.fingerprint ||
+    variantFingerprint(normalized);
+
+  return immutable({
+    ...normalized,
+    fingerprint,
   });
 }
 
@@ -247,7 +297,6 @@ function normalizeVariants(
     );
 
   const ids = new Set<string>();
-  let allocationTotal = 0;
 
   for (const variant of normalized) {
     if (ids.has(variant.variantId)) {
@@ -257,352 +306,200 @@ function normalizeVariants(
     }
 
     ids.add(variant.variantId);
-    allocationTotal += variant.allocation;
-  }
-
-  if (
-    allocationTotal <= 0 ||
-    allocationTotal > 1.000001
-  ) {
-    throw new Error(
-      `Experiment variant allocation must total between 0 and 1; received ${allocationTotal}.`,
-    );
   }
 
   return Object.freeze(normalized);
 }
 
-function normalizeMetric(
-  metric: IntelligenceExperimentMetric,
-): IntelligenceExperimentMetric {
-  const metricId = normalizeRequiredText(
-    metric.metricId,
-    "metricId",
+function confidenceAtLeast(
+  actual: IntelligenceConfidence,
+  minimum: IntelligenceConfidence,
+): boolean {
+  return (
+    CONFIDENCE_RANK[actual] >=
+    CONFIDENCE_RANK[minimum]
   );
-
-  const name = normalizeRequiredText(
-    metric.name,
-    "metric name",
-  );
-
-  const normalizedName =
-    normalizeNormalizedName(
-      metric.normalizedName || name,
-    );
-
-  if (!normalizedName) {
-    throw new Error(
-      `Experiment metric ${metricId} normalizedName must not be empty.`,
-    );
-  }
-
-  const baseline =
-    metric.baseline === null ||
-    metric.baseline === undefined
-      ? null
-      : normalizeFiniteNumber(
-          metric.baseline,
-          "metric baseline",
-        );
-
-  const target =
-    metric.target === null ||
-    metric.target === undefined
-      ? null
-      : normalizeFiniteNumber(
-          metric.target,
-          "metric target",
-        );
-
-  const observed =
-    metric.observed === null ||
-    metric.observed === undefined
-      ? null
-      : normalizeFiniteNumber(
-          metric.observed,
-          "metric observed",
-        );
-
-  const improvement =
-    metric.improvement === null ||
-    metric.improvement === undefined
-      ? null
-      : normalizeFiniteNumber(
-          metric.improvement,
-          "metric improvement",
-        );
-
-  const confidence = normalizeScore(
-    metric.confidence,
-  );
-
-  const unit =
-    metric.unit === null ||
-    metric.unit === undefined
-      ? null
-      : normalizeIdentifier(metric.unit) ||
-        null;
-
-  return immutable({
-    metricId,
-    name,
-    normalizedName,
-    baseline,
-    target,
-    observed,
-    improvement,
-    confidence,
-    unit,
-  });
-}
-
-function normalizeMetrics(
-  metrics:
-    | readonly IntelligenceExperimentMetric[]
-    | undefined,
-): readonly IntelligenceExperimentMetric[] {
-  if (!metrics || metrics.length === 0) {
-    return Object.freeze([]);
-  }
-
-  const normalized = metrics
-    .map(normalizeMetric)
-    .sort((left, right) =>
-      left.metricId.localeCompare(
-        right.metricId,
-      ),
-    );
-
-  const ids = new Set<string>();
-
-  for (const metric of normalized) {
-    if (ids.has(metric.metricId)) {
-      throw new Error(
-        `Duplicate experiment metric ID: ${metric.metricId}`,
-      );
-    }
-
-    ids.add(metric.metricId);
-  }
-
-  return Object.freeze(normalized);
-}
-
-function serializeVariant(
-  variant: IntelligenceExperimentVariant,
-): JsonValue {
-  return {
-    variantId: variant.variantId,
-    name: variant.name,
-    description: variant.description,
-    allocation: variant.allocation,
-    targetValue: variant.targetValue,
-    metadata: variant.metadata,
-  };
-}
-
-function serializeMetric(
-  metric: IntelligenceExperimentMetric,
-): JsonValue {
-  return {
-    metricId: metric.metricId,
-    name: metric.name,
-    normalizedName: metric.normalizedName,
-    baseline: metric.baseline,
-    target: metric.target,
-    observed: metric.observed,
-    improvement: metric.improvement,
-    confidence: metric.confidence,
-    unit: metric.unit,
-  };
-}
-
-function serializeExperimentForFingerprint(
-  experiment: IntelligenceExperiment,
-): JsonValue {
-  return {
-    experimentId: experiment.experimentId,
-    name: experiment.name,
-    normalizedName:
-      experiment.normalizedName,
-    objective: experiment.objective,
-    hypothesis: experiment.hypothesis,
-    status: experiment.status,
-    createdAt: experiment.createdAt,
-    startedAt: experiment.startedAt,
-    endedAt: experiment.endedAt,
-    confidence: experiment.confidence,
-    variants: experiment.variants.map(
-      serializeVariant,
-    ),
-    metrics: experiment.metrics.map(
-      serializeMetric,
-    ),
-    entityIds: [...experiment.entityIds],
-    decisionIds: [...experiment.decisionIds],
-    signalIds: [...experiment.signalIds],
-    metadata: experiment.metadata,
-  };
 }
 
 export function createIntelligenceExperiment(
   input: CreateIntelligenceExperimentInput,
 ): IntelligenceExperiment {
-  const name = normalizeName(input.name);
-
-  const normalizedName =
-    input.normalizedName !== undefined
-      ? normalizeNormalizedName(
-          input.normalizedName,
-        )
-      : normalizeNormalizedName(name);
-
-  if (!normalizedName) {
-    throw new Error(
-      "Experiment normalizedName must not be empty.",
-    );
-  }
-
-  const objective =
-    normalizeRequiredText(
-      input.objective,
-      "objective",
-    );
-
-  const hypothesis =
-    normalizeRequiredText(
-      input.hypothesis,
-      "hypothesis",
-    );
-
-  const createdAt = normalizeIsoTimestamp(
-    input.createdAt,
-    "createdAt",
+  const name = requiredText(
+    input.name,
+    "name",
   );
 
-  const startedAt =
-    normalizeOptionalTimestamp(
-      input.startedAt,
-      "startedAt",
-    );
-
-  const endedAt =
-    normalizeOptionalTimestamp(
-      input.endedAt,
-      "endedAt",
-    );
-
-  if (
-    startedAt !== null &&
-    endedAt !== null &&
-    startedAt > endedAt
-  ) {
-    throw new Error(
-      "Experiment startedAt must not be later than endedAt.",
-    );
-  }
-
-  if (
-    startedAt !== null &&
-    startedAt < createdAt
-  ) {
-    throw new Error(
-      "Experiment startedAt must not precede createdAt.",
-    );
-  }
-
-  const confidence = normalizeScore(
-    input.confidence,
+  const hypothesis = requiredText(
+    input.hypothesis,
+    "hypothesis",
   );
+
+  const subject = requiredText(
+    input.subject,
+    "subject",
+  );
+
+  const successCriteria = Object.freeze(
+    input.successCriteria.map(
+      (value) =>
+        requiredText(
+          value,
+          "successCriteria",
+        ),
+    ),
+  );
+
+  const constraints = Object.freeze(
+    input.constraints.map(
+      (value) =>
+        requiredText(
+          value,
+          "constraints",
+        ),
+    ),
+  );
+
+  if (successCriteria.length === 0) {
+    throw new Error(
+      "Experiment must contain at least one success criterion.",
+    );
+  }
 
   const variants = normalizeVariants(
     input.variants,
   );
 
-  const metrics = normalizeMetrics(
-    input.metrics,
+  const controlVariantId =
+    input.controlVariantId?.trim() ||
+    undefined;
+
+  if (
+    controlVariantId &&
+    !variants.some(
+      (variant) =>
+        variant.variantId ===
+        controlVariantId,
+    )
+  ) {
+    throw new Error(
+      `Unknown experiment control variant: ${controlVariantId}`,
+    );
+  }
+
+  const startAt = normalizeTimestamp(
+    input.startAt,
+    "startAt",
   );
 
-  const entityIds = normalizeStringArray(
-    input.entityIds,
+  const endAt = normalizeTimestamp(
+    input.endAt,
+    "endAt",
   );
 
-  const decisionIds = normalizeStringArray(
-    input.decisionIds,
+  if (
+    startAt &&
+    endAt &&
+    startAt > endAt
+  ) {
+    throw new Error(
+      "Experiment startAt must not be later than endAt.",
+    );
+  }
+
+  const observations = uniqueStrings(
+    input.observations ?? [],
   );
 
-  const signalIds = normalizeStringArray(
+  const outcomeIds = uniqueStrings(
+    input.outcomeIds ?? [],
+  );
+
+  const metricIds = uniqueStrings(
+    input.metricIds,
+  );
+
+  const signalIds = uniqueStrings(
     input.signalIds,
   );
 
-  const metadata = normalizeMetadata(
-    input.metadata,
-  );
+  const lineage = Object.freeze([
+    ...(input.lineage ?? []),
+  ]);
+
+  const evidenceRefs = Object.freeze([
+    ...(input.evidenceRefs ?? []),
+  ]);
 
   const status =
     input.status ?? "DRAFT";
 
   const experimentId =
-    normalizeIdentifier(
-      input.experimentId ?? "",
-    ) ||
-    `experiment:v8:${contentFingerprint({
-      name,
-      normalizedName,
-      objective,
-      hypothesis,
-      createdAt,
-    })}`;
-
-  const fingerprint =
-    contentFingerprint(
-      serializeExperimentForFingerprint({
-        experimentId,
+    input.experimentId?.trim() ||
+    `experiment:v8:${String(
+      contentFingerprint({
         name,
-        normalizedName,
-        objective,
         hypothesis,
-        status,
-        createdAt,
-        startedAt,
-        endedAt,
-        confidence,
-        variants,
-        metrics,
-        entityIds,
-        decisionIds,
+        subject,
+        metricIds,
         signalIds,
-        metadata,
-        fingerprint: "",
+        variants:
+          variants.map(
+            serializeVariant,
+          ),
+        successCriteria,
+        constraints,
       }),
-    );
+    )}`;
 
-  return immutable({
+  const base = {
     experimentId,
     name,
-    normalizedName,
-    objective,
     hypothesis,
     status,
-    createdAt,
-    startedAt,
-    endedAt,
-    confidence,
-    variants,
-    metrics,
-    entityIds,
-    decisionIds,
+    subject,
+    metricIds,
     signalIds,
-    metadata,
-    fingerprint,
+    variants,
+    ...(controlVariantId
+      ? { controlVariantId }
+      : {}),
+    successCriteria,
+    constraints,
+    ...(startAt
+      ? { startAt }
+      : {}),
+    ...(endAt
+      ? { endAt }
+      : {}),
+    observations,
+    outcomeIds,
+    confidence:
+      input.confidence,
+    lineage,
+    evidenceRefs,
+  } satisfies Omit<
+    IntelligenceExperiment,
+    "fingerprint"
+  >;
+
+  return immutable({
+    ...base,
+    fingerprint:
+      contentFingerprint(
+        fingerprintPayload({
+          ...base,
+          fingerprint:
+            "" as Fingerprint,
+        }),
+      ),
   });
 }
 
 export function experimentFingerprint(
   experiment: IntelligenceExperiment,
-): string {
+): Fingerprint {
   return contentFingerprint(
-    serializeExperimentForFingerprint(
+    fingerprintPayload(
       experiment,
     ),
   );
@@ -611,66 +508,32 @@ export function experimentFingerprint(
 export function assertExperimentIntegrity(
   experiment: IntelligenceExperiment,
 ): void {
-  if (!experiment.experimentId.trim()) {
-    throw new Error(
-      "Experiment experimentId must not be empty.",
-    );
-  }
+  requiredText(
+    experiment.experimentId,
+    "experimentId",
+  );
 
-  if (!experiment.name.trim()) {
-    throw new Error(
-      "Experiment name must not be empty.",
-    );
-  }
+  requiredText(
+    experiment.name,
+    "name",
+  );
 
-  if (!experiment.normalizedName.trim()) {
-    throw new Error(
-      "Experiment normalizedName must not be empty.",
-    );
-  }
+  requiredText(
+    experiment.hypothesis,
+    "hypothesis",
+  );
 
-  if (!experiment.objective.trim()) {
-    throw new Error(
-      "Experiment objective must not be empty.",
-    );
-  }
-
-  if (!experiment.hypothesis.trim()) {
-    throw new Error(
-      "Experiment hypothesis must not be empty.",
-    );
-  }
+  requiredText(
+    experiment.subject,
+    "subject",
+  );
 
   if (
-    !Number.isFinite(
-      experiment.confidence,
-    ) ||
-    experiment.confidence < 0 ||
-    experiment.confidence > 1
+    experiment.successCriteria.length ===
+    0
   ) {
     throw new Error(
-      "Experiment confidence must be between 0 and 1.",
-    );
-  }
-
-  if (
-    experiment.startedAt !== null &&
-    experiment.endedAt !== null &&
-    experiment.startedAt >
-      experiment.endedAt
-  ) {
-    throw new Error(
-      `Experiment ${experiment.experimentId} has an invalid time range.`,
-    );
-  }
-
-  if (
-    experiment.startedAt !== null &&
-    experiment.startedAt <
-      experiment.createdAt
-  ) {
-    throw new Error(
-      `Experiment ${experiment.experimentId} started before it was created.`,
+      `Experiment ${experiment.experimentId} has no success criteria.`,
     );
   }
 
@@ -678,15 +541,38 @@ export function assertExperimentIntegrity(
     experiment.variants,
   );
 
-  normalizeMetrics(
-    experiment.metrics,
-  );
-
-  const calculated =
-    experimentFingerprint(experiment);
+  if (
+    experiment.controlVariantId &&
+    !experiment.variants.some(
+      (variant) =>
+        variant.variantId ===
+        experiment.controlVariantId,
+    )
+  ) {
+    throw new Error(
+      `Experiment ${experiment.experimentId} has an invalid controlVariantId.`,
+    );
+  }
 
   if (
-    calculated !== experiment.fingerprint
+    experiment.startAt &&
+    experiment.endAt &&
+    experiment.startAt >
+      experiment.endAt
+  ) {
+    throw new Error(
+      `Experiment ${experiment.experimentId} has an invalid time range.`,
+    );
+  }
+
+  const calculated =
+    experimentFingerprint(
+      experiment,
+    );
+
+  if (
+    calculated !==
+    experiment.fingerprint
   ) {
     throw new Error(
       `Experiment fingerprint mismatch for ${experiment.experimentId}.`,
@@ -697,38 +583,24 @@ export function assertExperimentIntegrity(
 export function deduplicateExperiments(
   experiments: readonly IntelligenceExperiment[],
 ): readonly IntelligenceExperiment[] {
-  const byFingerprint = new Map<
-    string,
-    IntelligenceExperiment
-  >();
+  const byFingerprint =
+    new Map<
+      string,
+      IntelligenceExperiment
+    >();
 
   for (const experiment of experiments) {
-    assertExperimentIntegrity(experiment);
+    assertExperimentIntegrity(
+      experiment,
+    );
 
-    const existing = byFingerprint.get(
+    const key = String(
       experiment.fingerprint,
     );
 
-    if (!existing) {
+    if (!byFingerprint.has(key)) {
       byFingerprint.set(
-        experiment.fingerprint,
-        experiment,
-      );
-      continue;
-    }
-
-    if (
-      experiment.confidence >
-        existing.confidence ||
-      (
-        experiment.confidence ===
-          existing.confidence &&
-        experiment.createdAt >
-          existing.createdAt
-      )
-    ) {
-      byFingerprint.set(
-        experiment.fingerprint,
+        key,
         experiment,
       );
     }
@@ -737,23 +609,16 @@ export function deduplicateExperiments(
   return Object.freeze(
     [...byFingerprint.values()].sort(
       (left, right) => {
-        if (
-          right.confidence !==
-          left.confidence
-        ) {
-          return (
-            right.confidence -
+        const confidenceDelta =
+          CONFIDENCE_RANK[
+            right.confidence
+          ] -
+          CONFIDENCE_RANK[
             left.confidence
-          );
-        }
+          ];
 
-        if (
-          right.createdAt !==
-          left.createdAt
-        ) {
-          return right.createdAt.localeCompare(
-            left.createdAt,
-          );
+        if (confidenceDelta !== 0) {
+          return confidenceDelta;
         }
 
         return left.experimentId.localeCompare(
@@ -768,95 +633,85 @@ export function filterExperiments(
   experiments: readonly IntelligenceExperiment[],
   filter: ExperimentFilter,
 ): readonly IntelligenceExperiment[] {
-  const statusSet = filter.statuses
+  const statuses = filter.statuses
     ? new Set(filter.statuses)
-    : null;
+    : undefined;
 
-  const nameSet = filter.names
+  const subjects = filter.subjects
     ? new Set(
-        filter.names.map(
-          normalizeNormalizedName,
+        filter.subjects.map(
+          normalizedText,
         ),
       )
-    : null;
+    : undefined;
 
-  const entitySet = filter.entityIds
-    ? new Set(filter.entityIds)
-    : null;
+  const metricIds =
+    filter.metricIds
+      ? new Set(filter.metricIds)
+      : undefined;
 
-  const decisionSet = filter.decisionIds
-    ? new Set(filter.decisionIds)
-    : null;
-
-  const signalSet = filter.signalIds
-    ? new Set(filter.signalIds)
-    : null;
+  const signalIds =
+    filter.signalIds
+      ? new Set(filter.signalIds)
+      : undefined;
 
   return Object.freeze(
-    experiments.filter((experiment) => {
-      if (
-        statusSet &&
-        !statusSet.has(
-          experiment.status,
-        )
-      ) {
-        return false;
-      }
-
-      if (
-        nameSet &&
-        !nameSet.has(
-          experiment.normalizedName,
-        )
-      ) {
-        return false;
-      }
-
-      if (
-        filter.minConfidence !==
-          undefined &&
-        experiment.confidence <
-          clamp(
-            filter.minConfidence,
-            0,
-            1,
-          )
-      ) {
-        return false;
-      }
-
-      if (entitySet) {
+    experiments.filter(
+      (experiment) => {
         if (
-          !experiment.entityIds.some(
-            (id) => entitySet.has(id),
+          statuses &&
+          !statuses.has(
+            experiment.status,
           )
         ) {
           return false;
         }
-      }
 
-      if (decisionSet) {
         if (
-          !experiment.decisionIds.some(
-            (id) => decisionSet.has(id),
+          subjects &&
+          !subjects.has(
+            normalizedText(
+              experiment.subject,
+            ),
           )
         ) {
           return false;
         }
-      }
 
-      if (signalSet) {
         if (
+          metricIds &&
+          !experiment.metricIds.some(
+            (id) =>
+              metricIds.has(id),
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          signalIds &&
           !experiment.signalIds.some(
-            (id) => signalSet.has(id),
+            (id) =>
+              signalIds.has(id),
           )
         ) {
           return false;
         }
-      }
 
-      return true;
-    }),
+        if (
+          filter.minConfidence !==
+            undefined &&
+          !confidenceAtLeast(
+            experiment.confidence,
+            filter.minConfidence,
+          )
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+    ),
   );
 }
 
@@ -868,110 +723,97 @@ export function summarizeExperiments(
       experiments,
     );
 
-  const running = normalized.filter(
-    (experiment) =>
-      experiment.status === "RUNNING",
-  ).length;
+  const running =
+    normalized.filter(
+      (experiment) =>
+        experiment.status ===
+        "RUNNING",
+    ).length;
 
-  const completed = normalized.filter(
-    (experiment) =>
-      experiment.status === "COMPLETED",
-  ).length;
+  const completed =
+    normalized.filter(
+      (experiment) =>
+        experiment.status ===
+        "COMPLETED",
+    ).length;
 
-  const cancelled = normalized.filter(
-    (experiment) =>
-      experiment.status === "CANCELLED",
-  ).length;
+  const stopped =
+    normalized.filter(
+      (experiment) =>
+        experiment.status ===
+        "STOPPED",
+    ).length;
 
-  const draft = normalized.filter(
-    (experiment) =>
-      experiment.status === "DRAFT",
-  ).length;
+  const draft =
+    normalized.filter(
+      (experiment) =>
+        experiment.status ===
+        "DRAFT",
+    ).length;
 
-  const names = Object.freeze(
-    [
-      ...new Set(
-        normalized.map(
-          (experiment) =>
-            experiment.normalizedName,
-        ),
-      ),
-    ].sort(),
-  );
-
-  const averageConfidence =
-    normalized.length === 0
-      ? 0
-      : normalized.reduce(
-          (sum, experiment) =>
-            sum + experiment.confidence,
-          0,
-        ) / normalized.length;
-
-  const fingerprint =
-    contentFingerprint({
-      count: normalized.length,
-      running,
-      completed,
-      cancelled,
-      draft,
-      names,
-      averageConfidence,
-    });
-
-  return {
+  return immutable({
     count: normalized.length,
     running,
     completed,
-    cancelled,
+    stopped,
     draft,
-    names,
-    averageConfidence,
-    fingerprint,
-  };
+    fingerprint:
+      contentFingerprint({
+        count: normalized.length,
+        running,
+        completed,
+        stopped,
+        draft,
+        experimentIds:
+          normalized.map(
+            (experiment) =>
+              experiment.experimentId,
+          ),
+      }),
+  });
 }
 
 export function rankExperiments(
   experiments: readonly IntelligenceExperiment[],
 ): readonly IntelligenceExperiment[] {
   return Object.freeze(
-    [...deduplicateExperiments(experiments)].sort(
-      (left, right) => {
-        const leftScore =
-          left.confidence *
-          (
-            left.metrics.length > 0
-              ? Math.max(
-                  ...left.metrics.map(
-                    (metric) =>
-                      metric.confidence,
-                  ),
-                )
-              : 0
-          );
+    [
+      ...deduplicateExperiments(
+        experiments,
+      ),
+    ].sort((left, right) => {
+      const confidenceDelta =
+        CONFIDENCE_RANK[
+          right.confidence
+        ] -
+        CONFIDENCE_RANK[
+          left.confidence
+        ];
 
-        const rightScore =
-          right.confidence *
-          (
-            right.metrics.length > 0
-              ? Math.max(
-                  ...right.metrics.map(
-                    (metric) =>
-                      metric.confidence,
-                  ),
-                )
-              : 0
-          );
+      if (confidenceDelta !== 0) {
+        return confidenceDelta;
+      }
 
-        if (rightScore !== leftScore) {
-          return rightScore - leftScore;
-        }
+      const metricDelta =
+        right.metricIds.length -
+        left.metricIds.length;
 
-        return left.experimentId.localeCompare(
-          right.experimentId,
-        );
-      },
-    ),
+      if (metricDelta !== 0) {
+        return metricDelta;
+      }
+
+      const signalDelta =
+        right.signalIds.length -
+        left.signalIds.length;
+
+      if (signalDelta !== 0) {
+        return signalDelta;
+      }
+
+      return left.experimentId.localeCompare(
+        right.experimentId,
+      );
+    }),
   );
 }
 
@@ -979,7 +821,8 @@ export function assertExperimentCollection(
   experiments: readonly IntelligenceExperiment[],
 ): void {
   const ids = new Set<string>();
-  const fingerprints = new Set<string>();
+  const fingerprints =
+    new Set<string>();
 
   for (const experiment of experiments) {
     assertExperimentIntegrity(
@@ -987,26 +830,35 @@ export function assertExperimentCollection(
     );
 
     if (
-      ids.has(experiment.experimentId)
+      ids.has(
+        experiment.experimentId,
+      )
     ) {
       throw new Error(
         `Duplicate intelligence experiment ID: ${experiment.experimentId}`,
       );
     }
 
+    const fingerprint = String(
+      experiment.fingerprint,
+    );
+
     if (
       fingerprints.has(
-        experiment.fingerprint,
+        fingerprint,
       )
     ) {
       throw new Error(
-        `Duplicate intelligence experiment fingerprint: ${experiment.fingerprint}`,
+        `Duplicate intelligence experiment fingerprint: ${fingerprint}`,
       );
     }
 
-    ids.add(experiment.experimentId);
+    ids.add(
+      experiment.experimentId,
+    );
+
     fingerprints.add(
-      experiment.fingerprint,
+      fingerprint,
     );
   }
 }
