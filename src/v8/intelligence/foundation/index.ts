@@ -1,129 +1,163 @@
 /**
- * NEXMOLD V8 — Intelligence Foundation Public API
+ * NEXMOLD V8 Intelligence Foundation
  *
- * Stable public export surface for the Intelligence Foundation layer.
+ * Canonical public barrel for the Intelligence Foundation layer.
  *
- * Architecture:
- *   Entity
- *      ↓
- *   Signal / Metric
- *      ↓
- *   Decision / Experiment
- *      ↓
- *   Learning / Feedback
- *      ↓
- *   Cycle
- *      ↓
- *   Foundation Engine
- *
- * Design invariants:
- * - The public API is explicit and deterministic.
- * - No implementation-private symbols are exposed accidentally.
- * - No duplicate exports are introduced through wildcard collisions.
- * - Domain modules can depend on this barrel without importing internal files.
- * - The foundation remains independent from SEO/GEO execution layers.
- * - Runtime behavior is delegated to the underlying modules.
- *
- * This file is intentionally dependency-light and contains no orchestration
- * logic. It defines the canonical public boundary of the foundation package.
+ * Architectural rules:
+ * - Export only contracts and implementations that actually exist.
+ * - Do not expose deprecated / speculative aliases.
+ * - Do not create a second Truth-layer contract.
+ * - Foundation Truth remains authoritative for Evidence / Claim /
+ *   Knowledge / Decision.
+ * - Intelligence Foundation remains the strategic intelligence layer.
  */
 
 /* -------------------------------------------------------------------------- */
-/* Types                                                                      */
+/* Canonical Intelligence contracts                                           */
 /* -------------------------------------------------------------------------- */
 
 export type {
-  IntelligenceFoundationEntityType,
-  IntelligenceFoundationLifecycle,
-  IntelligenceFoundationStage,
-  IntelligenceFoundationStatus,
+  IntelligenceId,
+  IntelligenceConfidence,
+  IntelligenceLifecycle,
+  IntelligenceStatus,
+  IntelligenceDirection,
+  IntelligencePolarity,
 
-  IntelligenceEntity,
   IntelligenceEntityType,
-  IntelligenceEntityRelation,
+  EntityRelationshipType,
+  IntelligenceEntityAttribute,
+  IntelligenceEntityRelationship,
+  IntelligenceEntity,
 
-  IntelligenceSignal,
+  IntelligenceLineageRef,
+  IntelligenceEvidenceRef,
+  IntelligenceProvenance,
+
   IntelligenceSignalType,
-  IntelligenceSignalSeverity,
+  IntelligenceSignalSource,
+  IntelligenceSignal,
 
-  IntelligenceMetric,
+  IntelligenceObservation,
+
   IntelligenceMetricType,
-  IntelligenceMetricDirection,
+  IntelligenceMetric,
 
-  IntelligenceDecision,
+  IntelligenceAnalysisType,
+  IntelligenceAnalysis,
+
   IntelligenceDecisionType,
-  IntelligenceDecisionStatus,
+  IntelligenceDecision,
 
-  IntelligenceExperiment,
   IntelligenceExperimentStatus,
   IntelligenceExperimentVariant,
+  IntelligenceExperiment,
 
-  IntelligenceLearning,
+  IntelligenceOutcome,
+
   IntelligenceLearningType,
+  IntelligenceLearningStatus,
+  IntelligenceLearning,
 
-  IntelligenceFeedback,
   IntelligenceFeedbackType,
+  IntelligenceFeedback,
 
-  IntelligenceCycle,
   IntelligenceCycleStage,
   IntelligenceCycleStatus,
+  IntelligenceCycle,
 
-  IntelligenceEvidenceRef,
-  IntelligenceEntityRelationInput,
-  IntelligenceSignalEvidence,
+  IntelligenceFoundationInput,
+  IntelligenceFoundationResult,
 
-  IntelligenceFoundationState,
-  IntelligenceFoundationSnapshot,
+  IntelligenceBlock,
+  IntelligenceInvariantReport,
+  IntelligenceInvariantFailure,
+
+  IntelligenceObject,
+
+  IntelligenceFoundationRecordRef,
+  IntelligenceTruthAggregateType,
+  IntelligenceTruthReference,
+} from "./types.js";
+
+export {
+  isIntelligenceEntity,
+  isIntelligenceSignal,
+  isIntelligenceMetric,
+  isIntelligenceDecision,
+  isIntelligenceExperiment,
+  isIntelligenceLearning,
+  isIntelligenceFeedback,
+  isIntelligenceCycle,
 } from "./types.js";
 
 /* -------------------------------------------------------------------------- */
-/* Entity                                                                     */
+/* Entity Intelligence                                                        */
 /* -------------------------------------------------------------------------- */
-
-export {
-  createIntelligenceEntity,
-  entityFingerprint,
-  assertEntityIntegrity,
-  deduplicateEntities,
-  filterEntities,
-  mergeEntities,
-  findEntity,
-  findRelatedEntities,
-  buildEntityGraph,
-} from "./entity.js";
 
 export type {
   CreateIntelligenceEntityInput,
-  EntityFilter,
-  EntityGraph,
-  EntitySummary,
+  CreateEntityRelationshipInput,
+  EntityIdentity,
+  EntityDeduplicationResult,
+  EntityMergeResult,
+} from "./entity.js";
+
+export {
+  normalizeEntityName,
+  createEntityIdentity,
+  createEntityRelationship,
+  createIntelligenceEntity,
+  compareEntityIdentity,
+  entityIdentityFingerprint,
+  assertEntityIdentity,
+  findDuplicateEntity,
+  mergeIntelligenceEntities,
+  deduplicateEntities,
+  findEntityById,
+  findEntitiesByType,
+  findEntitiesByName,
+  relatedEntities,
+  assertEntityGraph,
+  entityFingerprint,
 } from "./entity.js";
 
 /* -------------------------------------------------------------------------- */
-/* Signal                                                                     */
+/* Signal Intelligence                                                        */
 /* -------------------------------------------------------------------------- */
 
+export type {
+  CreateIntelligenceSignalInput,
+  SignalFilter,
+  SignalAggregation,
+  SignalSummary,
+} from "./signal.js";
+
 export {
+  normalizeSignalSubject,
+  signalConfidenceScore,
   createIntelligenceSignal,
   signalFingerprint,
   assertSignalIntegrity,
   deduplicateSignals,
   filterSignals,
+  aggregateSignalsBySubject,
   summarizeSignals,
   rankSignals,
   mergeSignals,
   assertSignalCollection,
 } from "./signal.js";
 
-export type {
-  CreateIntelligenceSignalInput,
-  SignalFilter,
-  SignalSummary,
-} from "./signal.js";
+/* -------------------------------------------------------------------------- */
+/* Metric Intelligence                                                        */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Metric                                                                     */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceMetricInput,
+  MetricFilter,
+  MetricAggregation,
+  MetricSummary,
+} from "./metric.js";
 
 export {
   createIntelligenceMetric,
@@ -138,16 +172,15 @@ export {
   assertMetricCollection,
 } from "./metric.js";
 
-export type {
-  CreateIntelligenceMetricInput,
-  MetricFilter,
-  MetricAggregation,
-  MetricSummary,
-} from "./metric.js";
+/* -------------------------------------------------------------------------- */
+/* Decision Intelligence                                                      */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Decision                                                                   */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceDecisionInput,
+  DecisionFilter,
+  DecisionSummary,
+} from "./decision.js";
 
 export {
   createIntelligenceDecision,
@@ -161,15 +194,15 @@ export {
   assertDecisionCollection,
 } from "./decision.js";
 
-export type {
-  CreateIntelligenceDecisionInput,
-  DecisionFilter,
-  DecisionSummary,
-} from "./decision.js";
+/* -------------------------------------------------------------------------- */
+/* Experiment Intelligence                                                    */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Experiment                                                                 */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceExperimentInput,
+  ExperimentFilter,
+  ExperimentSummary,
+} from "./experiment.js";
 
 export {
   createIntelligenceExperiment,
@@ -182,15 +215,15 @@ export {
   assertExperimentCollection,
 } from "./experiment.js";
 
-export type {
-  CreateIntelligenceExperimentInput,
-  ExperimentFilter,
-  ExperimentSummary,
-} from "./experiment.js";
+/* -------------------------------------------------------------------------- */
+/* Learning Intelligence                                                      */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Learning                                                                   */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceLearningInput,
+  LearningFilter,
+  LearningSummary,
+} from "./learning.js";
 
 export {
   createIntelligenceLearning,
@@ -203,15 +236,15 @@ export {
   assertLearningCollection,
 } from "./learning.js";
 
-export type {
-  CreateIntelligenceLearningInput,
-  LearningFilter,
-  LearningSummary,
-} from "./learning.js";
+/* -------------------------------------------------------------------------- */
+/* Feedback Intelligence                                                      */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Feedback                                                                   */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceFeedbackInput,
+  FeedbackFilter,
+  FeedbackSummary,
+} from "./feedback.js";
 
 export {
   createIntelligenceFeedback,
@@ -219,22 +252,24 @@ export {
   assertFeedbackIntegrity,
   deduplicateFeedback,
   filterFeedback,
-  aggregateFeedback,
   summarizeFeedback,
   rankFeedback,
   assertFeedbackCollection,
 } from "./feedback.js";
 
-export type {
-  CreateIntelligenceFeedbackInput,
-  FeedbackFilter,
-  FeedbackAggregation,
-  FeedbackSummary,
-} from "./feedback.js";
+/* -------------------------------------------------------------------------- */
+/* Intelligence Cycle                                                         */
+/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* Cycle                                                                      */
-/* -------------------------------------------------------------------------- */
+export type {
+  CreateIntelligenceCycleInput,
+  AdvanceIntelligenceCycleInput,
+  CycleFilter,
+  CycleGraphNode,
+  CycleGraph,
+  CycleSummary,
+  CycleValidationReport,
+} from "./cycle.js";
 
 export {
   createIntelligenceCycle,
@@ -251,102 +286,31 @@ export {
   assertIntelligenceCycleCollection,
 } from "./cycle.js";
 
-export type {
-  CreateIntelligenceCycleInput,
-  AdvanceIntelligenceCycleInput,
-  CycleFilter,
-  CycleGraphNode,
-  CycleGraph,
-  CycleSummary,
-  CycleValidationReport,
-} from "./cycle.js";
-
 /* -------------------------------------------------------------------------- */
 /* Foundation Engine                                                          */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The engine owns its runtime state / execution result contracts.
+ *
+ * IntelligenceFoundationInput is intentionally exported from types.ts as
+ * the canonical public input contract. The engine-local input contract is
+ * exposed under an explicit name to avoid a duplicate barrel export.
+ */
+
+export type {
+  IntelligenceFoundationState,
+  IntelligenceFoundationRunInput,
+  IntelligenceFoundationRunResult,
+  IntelligenceFoundationInvariantReport,
+} from "./engine.js";
+
 export {
+  assertIntelligenceFoundationState,
   createIntelligenceFoundationState,
   mergeIntelligenceFoundationState,
   runIntelligenceFoundationCycle,
   advanceFoundationCycle,
   foundationStateFingerprint,
-  assertIntelligenceFoundationState,
   buildFoundationInvariantReport,
 } from "./engine.js";
-
-export type {
-  IntelligenceFoundationInput,
-  IntelligenceFoundationRunInput,
-  IntelligenceFoundationRunResult,
-  IntelligenceFoundationInvariantReport,
-  IntelligenceFoundationEngineOptions,
-} from "./engine.js";
-
-/* -------------------------------------------------------------------------- */
-/* Public API metadata                                                        */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Canonical package identifier for downstream capability discovery.
- *
- * This is deliberately a constant rather than a mutable configuration object.
- */
-export const INTELLIGENCE_FOUNDATION_ID =
-  "nexmold:v8:intelligence-foundation" as const;
-
-/**
- * Foundation API generation.
- *
- * Kept independent from the repository/package version so downstream modules
- * can perform capability checks without coupling themselves to npm metadata.
- */
-export const INTELLIGENCE_FOUNDATION_API_VERSION = "1.0.0" as const;
-
-/**
- * Canonical foundation capability list.
- *
- * The list is immutable and intentionally contains capability identifiers,
- * rather than implementation file names.
- */
-export const INTELLIGENCE_FOUNDATION_CAPABILITIES = Object.freeze([
-  "entity",
-  "signal",
-  "metric",
-  "decision",
-  "experiment",
-  "learning",
-  "feedback",
-  "cycle",
-  "engine",
-] as const);
-
-/**
- * Type-level representation of a foundation capability.
- */
-export type IntelligenceFoundationCapability =
-  (typeof INTELLIGENCE_FOUNDATION_CAPABILITIES)[number];
-
-/**
- * Deterministic capability membership check.
- */
-export function hasIntelligenceFoundationCapability(
-  capability: string,
-): capability is IntelligenceFoundationCapability {
-  return (
-    typeof capability === "string" &&
-    (INTELLIGENCE_FOUNDATION_CAPABILITIES as readonly string[]).includes(
-      capability,
-    )
-  );
-}
-
-/**
- * Return the immutable canonical capability manifest.
- *
- * A fresh readonly array is intentionally not created here. Consumers receive
- * the same frozen manifest, preventing accidental divergence between callers.
- */
-export function getIntelligenceFoundationCapabilities(): readonly IntelligenceFoundationCapability[] {
-  return INTELLIGENCE_FOUNDATION_CAPABILITIES;
-}
