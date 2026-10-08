@@ -271,7 +271,7 @@ test(
 
     assert.equal(
       selection.blocked.length,
-      0,
+      1,
     );
 
     assertArticleProducerSelection(
