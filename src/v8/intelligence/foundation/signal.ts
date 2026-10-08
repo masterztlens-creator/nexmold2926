@@ -25,6 +25,7 @@ import type {
   IntelligenceConfidence,
   IntelligenceDirection,
   IntelligenceEvidenceRef,
+  IntelligenceLineageRef,
   IntelligencePolarity,
   IntelligenceSignal,
   IntelligenceSignalSource,
@@ -44,7 +45,7 @@ export interface CreateIntelligenceSignalInput {
   readonly polarity?: IntelligencePolarity;
   readonly confidence?: IntelligenceConfidence;
   readonly evidenceRefs?: readonly IntelligenceEvidenceRef[];
-  readonly lineage?: IntelligenceSignal["lineage"];
+  readonly lineage?: readonly IntelligenceLineageRef[];
   readonly metadata?: Readonly<Record<string, JsonValue>>;
 }
 
@@ -191,15 +192,12 @@ function normalizeEvidenceRefs(
     | undefined,
 ): IntelligenceEvidenceRef[] {
   const seen = new Set<string>();
-
   const result: IntelligenceEvidenceRef[] = [];
 
   for (const ref of refs ?? []) {
     invariant(
-      typeof ref.evidenceId ===
-        "string" &&
-        ref.evidenceId.trim()
-          .length > 0,
+      typeof ref.evidenceId === "string" &&
+        ref.evidenceId.trim().length > 0,
       "V8_INTELLIGENCE_SIGNAL_EVIDENCE_ID_REQUIRED",
       "Evidence reference id must be non-empty.",
     );
@@ -210,6 +208,8 @@ function normalizeEvidenceRefs(
       ref.snapshotId ?? "",
       ref.fingerprint ?? "",
       ref.locator ?? "",
+      ref.excerpt ?? "",
+      ref.confidence ?? "",
     ].join("|");
 
     if (seen.has(key)) {
@@ -241,8 +241,130 @@ function normalizeEvidenceRefs(
                 ref.locator.trim(),
             }
           : {}),
+        ...(ref.excerpt
+          ? {
+              excerpt:
+                ref.excerpt,
+            }
+          : {}),
       }),
     );
+  }
+
+  return result;
+}
+
+function serializeEvidenceRef(
+  ref: IntelligenceEvidenceRef,
+): Record<string, string> {
+  const result: Record<string, string> = {
+    evidenceId: ref.evidenceId,
+  };
+
+  if (ref.sourceId !== undefined) {
+    result.sourceId = ref.sourceId;
+  }
+
+  if (ref.snapshotId !== undefined) {
+    result.snapshotId = ref.snapshotId;
+  }
+
+  if (ref.aggregateType !== undefined) {
+    result.aggregateType = ref.aggregateType;
+  }
+
+  if (ref.fingerprint !== undefined) {
+    result.fingerprint = ref.fingerprint;
+  }
+
+  if (ref.locator !== undefined) {
+    result.locator = ref.locator;
+  }
+
+  if (ref.excerpt !== undefined) {
+    result.excerpt = ref.excerpt;
+  }
+
+  if (ref.confidence !== undefined) {
+    result.confidence = ref.confidence;
+  }
+
+  return result;
+}
+
+function serializeLineageRef(
+  ref: IntelligenceLineageRef,
+): Record<string, string | number> {
+  return {
+    aggregateType: ref.aggregateType,
+    aggregateId: ref.aggregateId,
+    version: ref.version,
+    fingerprint: ref.fingerprint,
+  };
+}
+
+function normalizeLineage(
+  lineage:
+    | readonly IntelligenceLineageRef[]
+    | undefined,
+): readonly IntelligenceLineageRef[] {
+  if (!lineage || lineage.length === 0) {
+    return [];
+  }
+
+  const result: IntelligenceLineageRef[] = [];
+  const seen = new Set<string>();
+
+  for (const link of lineage) {
+    invariant(
+      typeof link.aggregateType === "string" &&
+        link.aggregateType.trim().length > 0,
+      "V8_INTELLIGENCE_SIGNAL_LINEAGE_TYPE_REQUIRED",
+      "Signal lineage aggregateType must be non-empty.",
+    );
+
+    invariant(
+      typeof link.aggregateId === "string" &&
+        link.aggregateId.trim().length > 0,
+      "V8_INTELLIGENCE_SIGNAL_LINEAGE_ID_REQUIRED",
+      "Signal lineage aggregateId must be non-empty.",
+    );
+
+    invariant(
+      Number.isInteger(link.version) &&
+        link.version > 0,
+      "V8_INTELLIGENCE_SIGNAL_LINEAGE_VERSION_INVALID",
+      "Signal lineage version must be a positive integer.",
+    );
+
+    invariant(
+      typeof link.fingerprint === "string" &&
+        link.fingerprint.length > 0,
+      "V8_INTELLIGENCE_SIGNAL_LINEAGE_FINGERPRINT_REQUIRED",
+      "Signal lineage fingerprint is required.",
+    );
+
+    const normalized: IntelligenceLineageRef = {
+      aggregateType:
+        link.aggregateType,
+      aggregateId:
+        link.aggregateId.trim(),
+      version:
+        link.version,
+      fingerprint:
+        link.fingerprint,
+    };
+
+    const key = JSON.stringify(
+      serializeLineageRef(normalized),
+    );
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(normalized);
   }
 
   return result;
@@ -252,8 +374,7 @@ function numericValue(
   value: JsonValue,
 ): number | null {
   if (
-    typeof value ===
-    "number" &&
+    typeof value === "number" &&
     Number.isFinite(value)
   ) {
     return value;
@@ -301,6 +422,20 @@ function defaultPolarity(
   return "UNKNOWN";
 }
 
+function normalizeMetadata(
+  metadata:
+    | Readonly<Record<string, JsonValue>>
+    | undefined,
+): Readonly<Record<string, JsonValue>> | undefined {
+  if (metadata === undefined) {
+    return undefined;
+  }
+
+  return immutable({
+    ...metadata,
+  });
+}
+
 function signalFingerprintPayload(
   signal: Omit<
     IntelligenceSignal,
@@ -319,7 +454,7 @@ function signalFingerprintPayload(
     normalizedSubject:
       signal.normalizedSubject,
     entityIds:
-      signal.entityIds,
+      [...signal.entityIds],
     observedAt:
       signal.observedAt,
     value:
@@ -333,9 +468,13 @@ function signalFingerprintPayload(
     confidence:
       signal.confidence,
     evidenceRefs:
-      signal.evidenceRefs,
+      signal.evidenceRefs.map(
+        serializeEvidenceRef,
+      ),
     lineage:
-      signal.lineage,
+      signal.lineage.map(
+        serializeLineageRef,
+      ),
     metadata:
       signal.metadata ?? null,
   };
@@ -419,37 +558,15 @@ export function createIntelligenceSignal(
       input.evidenceRefs,
     );
 
-  const lineage = [
-    ...(input.lineage ?? []),
-  ];
-
-  for (const link of lineage) {
-    invariant(
-      typeof link.aggregateId ===
-        "string" &&
-        link.aggregateId.trim()
-          .length > 0,
-      "V8_INTELLIGENCE_SIGNAL_LINEAGE_ID_REQUIRED",
-      "Signal lineage aggregateId must be non-empty.",
+  const lineage =
+    normalizeLineage(
+      input.lineage,
     );
 
-    invariant(
-      Number.isInteger(
-        link.version,
-      ) &&
-        link.version > 0,
-      "V8_INTELLIGENCE_SIGNAL_LINEAGE_VERSION_INVALID",
-      "Signal lineage version must be a positive integer.",
+  const metadata =
+    normalizeMetadata(
+      input.metadata,
     );
-
-    invariant(
-      typeof link.fingerprint ===
-        "string" &&
-        link.fingerprint.length > 0,
-      "V8_INTELLIGENCE_SIGNAL_LINEAGE_FINGERPRINT_REQUIRED",
-      "Signal lineage fingerprint is required.",
-    );
-  }
 
   const signalId =
     input.signalId ??
@@ -498,11 +615,9 @@ export function createIntelligenceSignal(
       confidence,
       evidenceRefs,
       lineage,
-      ...(input.metadata
+      ...(metadata !== undefined
         ? {
-            metadata: {
-              ...input.metadata,
-            },
+            metadata,
           }
         : {}),
     }) as Omit<
@@ -1166,6 +1281,8 @@ export function mergeSignals(
       ref.snapshotId ?? "",
       ref.fingerprint ?? "",
       ref.locator ?? "",
+      ref.excerpt ?? "",
+      ref.confidence ?? "",
     ].join("|");
 
     evidenceMap.set(
@@ -1183,7 +1300,7 @@ export function mergeSignals(
   const lineageMap =
     new Map<
       string,
-      IntelligenceSignal["lineage"][number]
+      IntelligenceLineageRef
     >();
 
   for (const link of [
