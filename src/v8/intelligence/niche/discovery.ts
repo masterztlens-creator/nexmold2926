@@ -1023,8 +1023,10 @@ export function discoverNiches(
 
   const topics: TopicCandidate[] = [];
 
-  const blocked: NicheDiscoveryResult["blocked"] =
-    [];
+type BlockedNiche =
+  NicheDiscoveryResult["blocked"][number];
+
+const blocked: BlockedNiche[] = [];
 
   const existingNiches =
     input.existingNiches ?? [];
