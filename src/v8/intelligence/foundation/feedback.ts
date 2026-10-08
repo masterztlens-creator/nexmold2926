@@ -233,10 +233,17 @@ function normalizeJsonValue(
     );
   }
 
+  const objectValue =
+    value as {
+      readonly [key: string]: JsonValue;
+    };
+
   const result: Record<string, JsonValue> = {};
 
-  for (const key of Object.keys(value).sort()) {
-    result[key] = normalizeJsonValue(value[key]);
+  for (const key of Object.keys(objectValue).sort()) {
+    result[key] = normalizeJsonValue(
+      objectValue[key],
+    );
   }
 
   return result;
