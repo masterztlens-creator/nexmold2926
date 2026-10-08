@@ -43,56 +43,133 @@ export const DEFAULT_NICHE_SCORE_WEIGHTS: NicheScoreWeights = {
 
 const DEFAULT_MINIMUM_SCORE = 0.65;
 const DEFAULT_MINIMUM_EVIDENCE_CONFIDENCE = 0.6;
+const MINIMUM_CAPABILITY_FIT = 0.25;
+const MINIMUM_COMMERCIAL_SIGNAL = 0.1;
+const WATCH_SCORE_RATIO = 0.8;
+
+function stableHash(value: string): string {
+  let first = 0x811c9dc5;
+  let second = 0x9e3779b9;
+
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+
+    first ^= code;
+    first = Math.imul(first, 0x01000193);
+
+    second ^= code + 0x7ed55d16;
+    second = Math.imul(second, 0x01000193);
+  }
+
+  return (
+    `${(first >>> 0).toString(16).padStart(8, "0")}` +
+    `${(second >>> 0).toString(16).padStart(8, "0")}`
+  );
+}
+
+function normalizeFiniteScore(
+  value: number | undefined,
+  fallback: number,
+): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return clamp(value);
+}
 
 function normalizeWeights(
   weights?: Partial<NicheScoreWeights>,
 ): NicheScoreWeights {
-  const merged: NicheScoreWeights = {
+  const raw = {
     ...DEFAULT_NICHE_SCORE_WEIGHTS,
     ...(weights ?? {}),
   };
 
-  const total =
-    merged.demand +
-    merged.growth +
-    merged.competition +
-    merged.contentGap +
-    merged.commercialIntent +
-    merged.capabilityFit +
-    merged.conversionPotential +
-    merged.evidenceConfidence +
-    merged.trafficPotential;
+  const values = [
+    raw.demand,
+    raw.growth,
+    raw.competition,
+    raw.contentGap,
+    raw.commercialIntent,
+    raw.capabilityFit,
+    raw.conversionPotential,
+    raw.evidenceConfidence,
+    raw.trafficPotential,
+  ];
+
+  if (
+    values.some(
+      (value) =>
+        !Number.isFinite(value) ||
+        value < 0,
+    )
+  )
+  {
+    return DEFAULT_NICHE_SCORE_WEIGHTS;
+  }
+
+  const total = values.reduce(
+    (sum, value) => sum + value,
+    0,
+  );
 
   if (!Number.isFinite(total) || total <= 0) {
     return DEFAULT_NICHE_SCORE_WEIGHTS;
   }
 
   return {
-    demand: merged.demand / total,
-    growth: merged.growth / total,
-    competition: merged.competition / total,
-    contentGap: merged.contentGap / total,
-    commercialIntent: merged.commercialIntent / total,
-    capabilityFit: merged.capabilityFit / total,
-    conversionPotential: merged.conversionPotential / total,
-    evidenceConfidence: merged.evidenceConfidence / total,
-    trafficPotential: merged.trafficPotential / total,
+    demand: raw.demand / total,
+    growth: raw.growth / total,
+    competition: raw.competition / total,
+    contentGap: raw.contentGap / total,
+    commercialIntent:
+      raw.commercialIntent / total,
+    capabilityFit: raw.capabilityFit / total,
+    conversionPotential:
+      raw.conversionPotential / total,
+    evidenceConfidence:
+      raw.evidenceConfidence / total,
+    trafficPotential:
+      raw.trafficPotential / total,
   };
 }
 
 function normalizeComponents(
   components: NicheScoreComponents,
 ): NicheScoreComponents {
+  const values = Object.values(components);
+
+  if (
+    values.some(
+      (value) => !Number.isFinite(value),
+    )
+  ) {
+    throw new Error(
+      "V8 niche scoring requires all score components to be finite",
+    );
+  }
+
   return {
     demand: clamp(components.demand),
     growth: clamp(components.growth),
     competition: clamp(components.competition),
     contentGap: clamp(components.contentGap),
-    commercialIntent: clamp(components.commercialIntent),
-    capabilityFit: clamp(components.capabilityFit),
-    conversionPotential: clamp(components.conversionPotential),
-    evidenceConfidence: clamp(components.evidenceConfidence),
-    trafficPotential: clamp(components.trafficPotential),
+    commercialIntent: clamp(
+      components.commercialIntent,
+    ),
+    capabilityFit: clamp(
+      components.capabilityFit,
+    ),
+    conversionPotential: clamp(
+      components.conversionPotential,
+    ),
+    evidenceConfidence: clamp(
+      components.evidenceConfidence,
+    ),
+    trafficPotential: clamp(
+      components.trafficPotential,
+    ),
   };
 }
 
@@ -100,24 +177,32 @@ function weightedScore(
   components: NicheScoreComponents,
   weights: NicheScoreWeights,
 ): number {
-  return clamp(
+  const score =
     components.demand * weights.demand +
-      components.growth * weights.growth +
-      components.competition * weights.competition +
-      components.contentGap * weights.contentGap +
-      components.commercialIntent * weights.commercialIntent +
-      components.capabilityFit * weights.capabilityFit +
-      components.conversionPotential * weights.conversionPotential +
-      components.evidenceConfidence * weights.evidenceConfidence +
-      components.trafficPotential * weights.trafficPotential,
-  );
+    components.growth * weights.growth +
+    components.competition *
+      weights.competition +
+    components.contentGap *
+      weights.contentGap +
+    components.commercialIntent *
+      weights.commercialIntent +
+    components.capabilityFit *
+      weights.capabilityFit +
+    components.conversionPotential *
+      weights.conversionPotential +
+    components.evidenceConfidence *
+      weights.evidenceConfidence +
+    components.trafficPotential *
+      weights.trafficPotential;
+
+  return clamp(score);
 }
 
 function formatScore(value: number): string {
   return value.toFixed(3);
 }
 
-function addPositiveReason(
+function addReason(
   reasons: string[],
   condition: boolean,
   message: string,
@@ -137,6 +222,36 @@ function addBlocker(
   }
 }
 
+function uniqueSorted(
+  values: readonly string[],
+): string[] {
+  return [...new Set(
+    values
+      .map((value) => normalizeText(value))
+      .filter(Boolean),
+  )].sort((left, right) =>
+    left.localeCompare(right),
+  );
+}
+
+function normalizeTimestamp(
+  value: string | undefined,
+): string {
+  if (!value) {
+    return "1970-01-01T00:00:00.000Z";
+  }
+
+  const timestamp = Date.parse(value);
+
+  if (!Number.isFinite(timestamp)) {
+    throw new Error(
+      "V8 niche scoring now must be a valid timestamp",
+    );
+  }
+
+  return new Date(timestamp).toISOString();
+}
+
 function determineDecision(
   score: number,
   components: NicheScoreComponents,
@@ -148,26 +263,39 @@ function determineDecision(
     return "REJECT";
   }
 
-  if (components.evidenceConfidence < minimumEvidenceConfidence) {
-    return "REJECT";
-  }
-
-  if (components.capabilityFit < 0.25) {
+  if (
+    components.evidenceConfidence <
+    minimumEvidenceConfidence
+  ) {
     return "REJECT";
   }
 
   if (
-    components.commercialIntent < 0.1 &&
-    components.conversionPotential < 0.1
+    components.capabilityFit <
+    MINIMUM_CAPABILITY_FIT
   ) {
-    return score >= minimumScore ? "WATCH" : "REJECT";
+    return "REJECT";
+  }
+
+  if (
+    components.commercialIntent <
+      MINIMUM_COMMERCIAL_SIGNAL &&
+    components.conversionPotential <
+      MINIMUM_COMMERCIAL_SIGNAL
+  ) {
+    return score >= minimumScore
+      ? "WATCH"
+      : "REJECT";
   }
 
   if (score >= minimumScore) {
     return "PURSUE";
   }
 
-  if (score >= minimumScore * 0.8) {
+  if (
+    score >=
+    minimumScore * WATCH_SCORE_RATIO
+  ) {
     return "WATCH";
   }
 
@@ -185,34 +313,16 @@ function lifecycleForDecision(
   switch (decision) {
     case "PURSUE":
       return "APPROVED";
+
     case "WATCH":
       return "VALIDATED";
+
     case "REJECT":
       return "REJECTED";
+
     case "EXHAUSTED":
       return "EXHAUSTED";
   }
-}
-
-function stableHash(value: string): string {
-  let first = 0x811c9dc5;
-  let second = 0x9e3779b9;
-
-  for (const char of value) {
-    const code = char.codePointAt(0) ?? 0;
-
-    first ^= code;
-    first = Math.imul(first, 0x01000193);
-
-    second ^= code + 0x7ed55d16;
-    second = Math.imul(second, 0x01000193);
-  }
-
-  return `${(first >>> 0).toString(16).padStart(8, "0")}${(
-    second >>> 0
-  )
-    .toString(16)
-    .padStart(8, "0")}`;
 }
 
 export function calculateNicheScore(
@@ -228,62 +338,104 @@ export function calculateNicheScore(
 export function scoreNiche(
   input: NicheScoringInput,
 ): NicheScoringResult {
-  const components = normalizeComponents(input.components);
-  const weights = normalizeWeights(input.weights);
+  const name = normalizeText(input.name);
+  const nicheId = normalizeText(input.nicheId);
+
+  if (!nicheId) {
+    throw new Error(
+      "V8 niche scoring requires a non-empty nicheId",
+    );
+  }
+
+  if (!name) {
+    throw new Error(
+      "V8 niche scoring requires a non-empty niche name",
+    );
+  }
+
+  const components = normalizeComponents(
+    input.components,
+  );
+
+  const weights = normalizeWeights(
+    input.weights,
+  );
+
   const minimumScore =
-    Number.isFinite(input.minimumScore) && input.minimumScore !== undefined
-      ? clamp(input.minimumScore)
-      : DEFAULT_MINIMUM_SCORE;
+    normalizeFiniteScore(
+      input.minimumScore,
+      DEFAULT_MINIMUM_SCORE,
+    );
 
   const minimumEvidenceConfidence =
-    Number.isFinite(input.minimumEvidenceConfidence) &&
-    input.minimumEvidenceConfidence !== undefined
-      ? clamp(input.minimumEvidenceConfidence)
-      : DEFAULT_MINIMUM_EVIDENCE_CONFIDENCE;
+    normalizeFiniteScore(
+      input.minimumEvidenceConfidence,
+      DEFAULT_MINIMUM_EVIDENCE_CONFIDENCE,
+    );
 
-  const evidenceCount = input.evidenceIds.filter(Boolean).length;
-  const score = weightedScore(components, weights);
+  const evidenceIds = uniqueSorted(
+    input.evidenceIds,
+  );
+
+  const evidenceCount = evidenceIds.length;
+
+  const score = weightedScore(
+    components,
+    weights,
+  );
 
   const reasons: string[] = [];
   const blockers: string[] = [];
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.demand >= 0.7,
-    `strong demand (${formatScore(components.demand)})`,
+    `strong demand (${formatScore(
+      components.demand,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.growth >= 0.6,
-    `positive growth (${formatScore(components.growth)})`,
+    `positive growth (${formatScore(
+      components.growth,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.competition >= 0.6,
-    `favorable competitive position (${formatScore(components.competition)})`,
+    `favorable competitive position (${formatScore(
+      components.competition,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.contentGap >= 0.6,
-    `meaningful content gap (${formatScore(components.contentGap)})`,
+    `meaningful content gap (${formatScore(
+      components.contentGap,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.commercialIntent >= 0.6,
-    `strong commercial intent (${formatScore(components.commercialIntent)})`,
+    `strong commercial intent (${formatScore(
+      components.commercialIntent,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.capabilityFit >= 0.7,
-    `strong capability fit (${formatScore(components.capabilityFit)})`,
+    `strong capability fit (${formatScore(
+      components.capabilityFit,
+    )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.conversionPotential >= 0.6,
     `strong conversion potential (${formatScore(
@@ -291,7 +443,7 @@ export function scoreNiche(
     )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.trafficPotential >= 0.6,
     `strong traffic potential (${formatScore(
@@ -299,7 +451,7 @@ export function scoreNiche(
     )})`,
   );
 
-  addPositiveReason(
+  addReason(
     reasons,
     components.evidenceConfidence >= 0.8,
     `high evidence confidence (${formatScore(
@@ -315,15 +467,19 @@ export function scoreNiche(
 
   addBlocker(
     blockers,
-    components.evidenceConfidence < minimumEvidenceConfidence,
+    components.evidenceConfidence <
+      minimumEvidenceConfidence,
     `evidence confidence below threshold (${formatScore(
       components.evidenceConfidence,
-    )} < ${formatScore(minimumEvidenceConfidence)})`,
+    )} < ${formatScore(
+      minimumEvidenceConfidence,
+    )})`,
   );
 
   addBlocker(
     blockers,
-    components.capabilityFit < 0.25,
+    components.capabilityFit <
+      MINIMUM_CAPABILITY_FIT,
     `insufficient capability fit (${formatScore(
       components.capabilityFit,
     )})`,
@@ -331,21 +487,32 @@ export function scoreNiche(
 
   addBlocker(
     blockers,
-    components.commercialIntent < 0.1 &&
-      components.conversionPotential < 0.1,
+    components.commercialIntent <
+        MINIMUM_COMMERCIAL_SIGNAL &&
+      components.conversionPotential <
+        MINIMUM_COMMERCIAL_SIGNAL,
     "insufficient commercial or conversion potential",
   );
 
   addBlocker(
     blockers,
-    score < minimumScore * 0.8,
+    score < minimumScore * WATCH_SCORE_RATIO,
     `score materially below pursuit threshold (${formatScore(
       score,
-    )} < ${formatScore(minimumScore * 0.8)})`,
+    )} < ${formatScore(
+      minimumScore * WATCH_SCORE_RATIO,
+    )})`,
   );
 
-  if (reasons.length === 0 && blockers.length === 0) {
-    reasons.push(`balanced opportunity score (${formatScore(score)})`);
+  if (
+    reasons.length === 0 &&
+    blockers.length === 0
+  ) {
+    reasons.push(
+      `balanced opportunity score (${formatScore(
+        score,
+      )})`,
+    );
   }
 
   const decision = determineDecision(
@@ -356,7 +523,11 @@ export function scoreNiche(
     minimumEvidenceConfidence,
   );
 
-  const lifecycle = lifecycleForDecision(decision, evidenceCount);
+  const lifecycle =
+    lifecycleForDecision(
+      decision,
+      evidenceCount,
+    );
 
   return {
     score,
@@ -371,40 +542,60 @@ export function scoreNiche(
 export function createNicheOpportunity(
   input: NicheScoringInput,
 ): NicheOpportunity {
-  const name = normalizeText(input.name);
+  const nicheId = normalizeText(
+    input.nicheId,
+  );
 
-  if (!name) {
-    throw new Error("V8 niche opportunity requires a non-empty name");
-  }
-
-  const nicheId = normalizeText(input.nicheId);
+  const name = normalizeText(
+    input.name,
+  );
 
   if (!nicheId) {
-    throw new Error("V8 niche opportunity requires a nicheId");
+    throw new Error(
+      "V8 niche opportunity requires a nicheId",
+    );
   }
 
-  const evidenceIds = [...new Set(input.evidenceIds.filter(Boolean))].sort();
-  const keywordIds = [...new Set(input.keywordIds.filter(Boolean))].sort();
-  const marketIds = [...new Set(input.marketIds.filter(Boolean))].sort();
+  if (!name) {
+    throw new Error(
+      "V8 niche opportunity requires a non-empty name",
+    );
+  }
+
+  const evidenceIds = uniqueSorted(
+    input.evidenceIds,
+  );
+
+  const keywordIds = uniqueSorted(
+    input.keywordIds,
+  );
+
+  const marketIds = uniqueSorted(
+    input.marketIds,
+  );
 
   const scored = scoreNiche({
     ...input,
-    name,
     nicheId,
+    name,
     evidenceIds,
     keywordIds,
     marketIds,
   });
 
   const createdAt =
-    input.now && !Number.isNaN(Date.parse(input.now))
-      ? input.now
-      : new Date().toISOString();
+    normalizeTimestamp(input.now);
+
+  const normalizedName =
+    normalizeText(name);
 
   const canonical = JSON.stringify({
     nicheId,
     name,
-    score: Number(scored.score.toFixed(8)),
+    normalizedName,
+    score: Number(
+      scored.score.toFixed(8),
+    ),
     components: scored.components,
     decision: scored.decision,
     lifecycle: scored.lifecycle,
@@ -413,13 +604,17 @@ export function createNicheOpportunity(
     marketIds,
   });
 
-  const fingerprint = `niche-opportunity:v8:${stableHash(canonical)}`;
+  const fingerprint =
+    `niche-opportunity:v8:${stableHash(
+      canonical,
+    )}`;
 
-  return {
-    opportunityId: `niche-opportunity:${nicheId}`,
+  const opportunity: NicheOpportunity = {
+    opportunityId:
+      `niche-opportunity:${nicheId}`,
     nicheId,
     name,
-    normalizedName: normalizeText(name),
+    normalizedName,
     score: scored.score,
     components: scored.components,
     reasons: scored.reasons,
@@ -432,22 +627,33 @@ export function createNicheOpportunity(
     createdAt,
     fingerprint,
   };
+
+  assertNicheOpportunityInvariant(
+    opportunity,
+  );
+
+  return opportunity;
 }
 
 export function assertNicheOpportunityInvariant(
   opportunity: NicheOpportunity,
 ): void {
-  if (!opportunity.nicheId) {
-    throw new Error("V8 niche opportunity invariant failed: missing nicheId");
-  }
-
   if (!opportunity.opportunityId) {
     throw new Error(
       "V8 niche opportunity invariant failed: missing opportunityId",
     );
   }
 
-  if (!opportunity.name || !opportunity.normalizedName) {
+  if (!opportunity.nicheId) {
+    throw new Error(
+      "V8 niche opportunity invariant failed: missing nicheId",
+    );
+  }
+
+  if (
+    !opportunity.name ||
+    !opportunity.normalizedName
+  ) {
     throw new Error(
       "V8 niche opportunity invariant failed: missing niche name",
     );
@@ -463,11 +669,16 @@ export function assertNicheOpportunityInvariant(
     );
   }
 
-  const componentValues = Object.values(opportunity.components);
+  const componentValues = Object.values(
+    opportunity.components,
+  );
 
   if (
     componentValues.some(
-      (value) => !Number.isFinite(value) || value < 0 || value > 1,
+      (value) =>
+        !Number.isFinite(value) ||
+        value < 0 ||
+        value > 1,
     )
   ) {
     throw new Error(
@@ -475,15 +686,27 @@ export function assertNicheOpportunityInvariant(
     );
   }
 
-  if (opportunity.evidenceIds.length === 0) {
-    if (
-      opportunity.decision !== "REJECT" &&
-      opportunity.decision !== "EXHAUSTED"
-    ) {
-      throw new Error(
-        "V8 niche opportunity invariant failed: evidence-free niche cannot be pursued",
-      );
-    }
+  const evidenceIds = uniqueSorted(
+    opportunity.evidenceIds,
+  );
+
+  if (
+    JSON.stringify(evidenceIds) !==
+    JSON.stringify(opportunity.evidenceIds)
+  ) {
+    throw new Error(
+      "V8 niche opportunity invariant failed: evidenceIds are not canonical",
+    );
+  }
+
+  if (
+    opportunity.decision !== "REJECT" &&
+    opportunity.decision !== "EXHAUSTED" &&
+    opportunity.evidenceIds.length === 0
+  ) {
+    throw new Error(
+      "V8 niche opportunity invariant failed: evidence-free niche cannot be pursued or watched",
+    );
   }
 
   if (
@@ -496,6 +719,15 @@ export function assertNicheOpportunityInvariant(
   }
 
   if (
+    opportunity.decision === "WATCH" &&
+    opportunity.lifecycle !== "VALIDATED"
+  ) {
+    throw new Error(
+      "V8 niche opportunity invariant failed: WATCH must be VALIDATED",
+    );
+  }
+
+  if (
     opportunity.decision === "REJECT" &&
     opportunity.lifecycle !== "REJECTED"
   ) {
@@ -504,7 +736,20 @@ export function assertNicheOpportunityInvariant(
     );
   }
 
-  if (!opportunity.fingerprint.startsWith("niche-opportunity:v8:")) {
+  if (
+    opportunity.decision === "EXHAUSTED" &&
+    opportunity.lifecycle !== "EXHAUSTED"
+  ) {
+    throw new Error(
+      "V8 niche opportunity invariant failed: EXHAUSTED must be EXHAUSTED",
+    );
+  }
+
+  if (
+    !opportunity.fingerprint.startsWith(
+      "niche-opportunity:v8:",
+    )
+  ) {
     throw new Error(
       "V8 niche opportunity invariant failed: invalid fingerprint",
     );
@@ -523,7 +768,17 @@ export function compareNicheOpportunities(
       left.components.conversionPotential ||
     right.components.evidenceConfidence -
       left.components.evidenceConfidence ||
-    left.normalizedName.localeCompare(right.normalizedName) ||
-    left.opportunityId.localeCompare(right.opportunityId)
+    right.components.demand -
+      left.components.demand ||
+    right.components.growth -
+      left.components.growth ||
+    right.components.contentGap -
+      left.components.contentGap ||
+    left.normalizedName.localeCompare(
+      right.normalizedName,
+    ) ||
+    left.opportunityId.localeCompare(
+      right.opportunityId,
+    )
   );
 }

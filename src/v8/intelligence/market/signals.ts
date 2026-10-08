@@ -11,6 +11,7 @@ import type {
   IndustryProfile,
   MarketProfile,
 } from "../growth-intelligence/types.js";
+import type { JsonValue } from "../shared.js";
 
 export interface MarketSignalInput {
   readonly signalId?: string;
@@ -43,12 +44,14 @@ export interface MarketSignalSummary {
   readonly commercialIntent: number;
   readonly capabilityFit: number;
   readonly conversionPotential: number;
-  readonly trafficPotential: number;
   readonly evidenceConfidence: number;
+  readonly trafficPotential: number;
   readonly signalCount: number;
 }
 
-const SIGNAL_TYPE_WEIGHT: Readonly<Record<GrowthSignalType, number>> = {
+const SIGNAL_TYPE_WEIGHT: Readonly<
+  Record<GrowthSignalType, number>
+> = {
   SEARCH_DEMAND: 1,
   SEARCH_GROWTH: 1,
   COMPETITOR_GAP: 1,
@@ -79,8 +82,9 @@ const COMMERCIAL_TERMS = new Set([
   "oem",
   "odm",
   "production",
-  "injection molding",
-  "mold making",
+  "injection",
+  "molding",
+  "mould",
   "tooling",
   "assembly",
   "prototype",
@@ -97,7 +101,6 @@ const HIGH_INTENT_TERMS = new Set([
   "production",
   "buy",
   "purchase",
-  "request quote",
 ]);
 
 const GENERIC_STOP_TERMS = new Set([
@@ -135,63 +138,72 @@ function stableHash(value: string): string {
     hashB = Math.imul(hashB, 0x01000193);
   }
 
-  return `${(hashA >>> 0).toString(16).padStart(8, "0")}${(
-    hashB >>> 0
-  )
-    .toString(16)
-    .padStart(8, "0")}`;
+  return (
+    `${(hashA >>> 0).toString(16).padStart(8, "0")}` +
+    `${(hashB >>> 0).toString(16).padStart(8, "0")}`
+  );
+}
+
+function normalizeJsonValue(value: unknown): JsonValue | undefined {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  if (Array.isArray(value)) {
+    const normalized: JsonValue[] = [];
+
+    for (const item of value) {
+      const normalizedItem = normalizeJsonValue(item);
+
+      if (normalizedItem !== undefined) {
+        normalized.push(normalizedItem);
+      }
+    }
+
+    return normalized;
+  }
+
+  if (typeof value === "object") {
+    const output: Record<string, JsonValue> = {};
+
+    for (const [key, nestedValue] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      const normalizedValue = normalizeJsonValue(nestedValue);
+
+      if (normalizedValue !== undefined) {
+        output[key] = normalizedValue;
+      }
+    }
+
+    return output;
+  }
+
+  return undefined;
 }
 
 function normalizeMetadata(
   metadata: Readonly<Record<string, unknown>> | undefined,
-): Readonly<Record<string, import("../shared.js").JsonValue>> {
+): Readonly<Record<string, JsonValue>> {
   if (!metadata) {
     return {};
   }
 
-  const output: Record<string, import("../shared.js").JsonValue> = {};
+  const output: Record<string, JsonValue> = {};
 
   for (const [key, value] of Object.entries(metadata)) {
-    if (
-      value === null ||
-      typeof value === "string" ||
-      typeof value === "number" ||
-      typeof value === "boolean"
-    ) {
-      output[key] = value;
-      continue;
-    }
+    const normalizedValue = normalizeJsonValue(value);
 
-    if (Array.isArray(value)) {
-      const normalizedArray = value.filter(
-        (item): item is string | number | boolean | null =>
-          item === null ||
-          typeof item === "string" ||
-          typeof item === "number" ||
-          typeof item === "boolean",
-      );
-
-      output[key] = normalizedArray;
-      continue;
-    }
-
-    if (typeof value === "object") {
-      const nested: Record<string, import("../shared.js").JsonValue> = {};
-
-      for (const [nestedKey, nestedValue] of Object.entries(
-        value as Record<string, unknown>,
-      )) {
-        if (
-          nestedValue === null ||
-          typeof nestedValue === "string" ||
-          typeof nestedValue === "number" ||
-          typeof nestedValue === "boolean"
-        ) {
-          nested[nestedKey] = nestedValue;
-        }
-      }
-
-      output[key] = nested;
+    if (normalizedValue !== undefined) {
+      output[key] = normalizedValue;
     }
   }
 
@@ -205,37 +217,72 @@ function normalizeSignalSubject(subject: string): string {
     .trim();
 }
 
-function createSignalId(input: MarketSignalInput): string {
+function normalizeIdentifier(value: string | undefined): string | undefined {
+  const normalized = value ? normalizeText(value) : "";
+
+  return normalized || undefined;
+}
+
+function normalizeTimestamp(value: string | undefined): string {
+  if (!value) {
+    return "1970-01-01T00:00:00.000Z";
+  }
+
+  const timestamp = Date.parse(value);
+
+  if (!Number.isFinite(timestamp)) {
+    throw new Error(
+      "V8 market signal observedAt must be a valid ISO-compatible timestamp",
+    );
+  }
+
+  return new Date(timestamp).toISOString();
+}
+
+function normalizeSignalValue(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return 0;
+  }
+
+  return clamp(value);
+}
+
+function normalizeConfidence(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return 0;
+  }
+
+  return clamp(value);
+}
+
+function createSignalId(input: {
+  readonly type: GrowthSignalType;
+  readonly subject: string;
+  readonly source: string;
+  readonly observedAt: string;
+  readonly marketId?: string;
+  readonly industryId?: string;
+  readonly value: number;
+  readonly confidence: number;
+  readonly evidenceRefs: readonly string[];
+}): string {
   const canonical = [
     input.type,
     normalizeSignalSubject(input.subject),
     normalizeText(input.source),
+    input.observedAt,
     normalizeText(input.marketId ?? ""),
     normalizeText(input.industryId ?? ""),
-    String(input.value ?? 0),
-    [...(input.evidenceRefs ?? [])]
+    input.value.toFixed(8),
+    input.confidence.toFixed(8),
+    [...input.evidenceRefs]
       .map(normalizeText)
+      .filter(Boolean)
       .sort()
       .join("|"),
   ].join("::");
 
   return `signal:v8:${stableHash(canonical)}`;
-}
-
-function normalizeSignalValue(value: number | undefined): number {
-  if (!Number.isFinite(value ?? 0)) {
-    return 0;
-  }
-
-  return clamp(value ?? 0);
-}
-
-function normalizeConfidence(value: number | undefined): number {
-  if (!Number.isFinite(value ?? 0)) {
-    return 0;
-  }
-
-  return clamp(value ?? 0);
 }
 
 function inferCommercialIntentScore(subject: string): number {
@@ -259,20 +306,29 @@ function inferCommercialIntentScore(subject: string): number {
     }
   }
 
-  for (const phraseTerm of COMMERCIAL_TERMS) {
-    if (phrase.includes(phraseTerm)) {
-      score += 0.1;
+  for (const commercialTerm of COMMERCIAL_TERMS) {
+    if (phrase.includes(commercialTerm)) {
+      score += 0.05;
     }
   }
 
   const intent = inferIntent(normalized);
 
-  if (intent === "TRANSACTIONAL") {
-    score += 0.3;
-  } else if (intent === "COMMERCIAL") {
-    score += 0.2;
-  } else if (intent === "COMPARISON") {
-    score += 0.08;
+  switch (intent) {
+    case "TRANSACTIONAL":
+      score += 0.3;
+      break;
+
+    case "COMMERCIAL":
+      score += 0.2;
+      break;
+
+    case "COMPARISON":
+      score += 0.08;
+      break;
+
+    default:
+      break;
   }
 
   return clamp(score);
@@ -281,7 +337,8 @@ function inferCommercialIntentScore(subject: string): number {
 function subjectTokenSet(subject: string): Set<string> {
   return new Set(
     tokenize(subject).filter(
-      (token) => token.length > 1 && !GENERIC_STOP_TERMS.has(token),
+      (token) =>
+        token.length > 1 && !GENERIC_STOP_TERMS.has(token),
     ),
   );
 }
@@ -311,7 +368,9 @@ function aggregateSignalValue(
   signals: readonly GrowthSignal[],
   type: GrowthSignalType,
 ): number {
-  const matching = signals.filter((signal) => signal.type === type);
+  const matching = signals.filter(
+    (signal) => signal.type === type,
+  );
 
   if (matching.length === 0) {
     return 0;
@@ -321,27 +380,43 @@ function aggregateSignalValue(
   let denominator = 0;
 
   for (const signal of matching) {
-    const weight =
-      SIGNAL_TYPE_WEIGHT[signal.type] * Math.max(signal.confidence, 0.01);
+    const typeWeight = SIGNAL_TYPE_WEIGHT[signal.type];
+    const confidenceWeight = Math.max(signal.confidence, 0.01);
+    const weight = typeWeight * confidenceWeight;
 
     numerator += signal.value * weight;
     denominator += weight;
   }
 
-  return denominator === 0 ? 0 : clamp(numerator / denominator);
+  return denominator === 0
+    ? 0
+    : clamp(numerator / denominator);
 }
 
-function averageConfidence(signals: readonly GrowthSignal[]): number {
+function averageConfidence(
+  signals: readonly GrowthSignal[],
+): number {
   if (signals.length === 0) {
     return 0;
   }
 
-  const weighted = signals.reduce(
-    (total, signal) => total + signal.confidence,
-    0,
-  );
+  let totalWeight = 0;
+  let weightedConfidence = 0;
 
-  return clamp(weighted / signals.length);
+  for (const signal of signals) {
+    const weight = Math.max(
+      SIGNAL_TYPE_WEIGHT[signal.type] *
+        Math.max(signal.confidence, 0.01),
+      0.01,
+    );
+
+    weightedConfidence += signal.confidence * weight;
+    totalWeight += weight;
+  }
+
+  return totalWeight === 0
+    ? 0
+    : clamp(weightedConfidence / totalWeight);
 }
 
 function capabilityFitForSubject(
@@ -354,13 +429,17 @@ function capabilityFitForSubject(
     return 0;
   }
 
-  const capabilityTokens = new Set(
-    [
-      ...industry.capabilities,
-      ...industry.products,
-      ...industry.services,
-    ].flatMap(subjectTokenSet),
-  );
+  const capabilityTokens = new Set<string>();
+
+  for (const value of [
+    ...industry.capabilities,
+    ...industry.products,
+    ...industry.services,
+  ]) {
+    for (const token of subjectTokenSet(value)) {
+      capabilityTokens.add(token);
+    }
+  }
 
   if (capabilityTokens.size === 0) {
     return 0;
@@ -374,7 +453,9 @@ function capabilityFitForSubject(
     }
   }
 
-  return clamp(matched / Math.max(subjectTokens.size, 1));
+  return clamp(
+    matched / Math.max(subjectTokens.size, 1),
+  );
 }
 
 function marketFitForSubject(
@@ -387,15 +468,19 @@ function marketFitForSubject(
     return 0;
   }
 
-  const marketTokens = new Set(
-    [
-      market.name,
-      market.region ?? "",
-      market.country ?? "",
-      market.language ?? "",
-      ...market.audienceSegments,
-    ].flatMap(subjectTokenSet),
-  );
+  const marketTokens = new Set<string>();
+
+  for (const value of [
+    market.name,
+    market.region ?? "",
+    market.country ?? "",
+    market.language ?? "",
+    ...market.audienceSegments,
+  ]) {
+    for (const token of subjectTokenSet(value)) {
+      marketTokens.add(token);
+    }
+  }
 
   if (marketTokens.size === 0) {
     return 0;
@@ -409,14 +494,51 @@ function marketFitForSubject(
     }
   }
 
-  return clamp(matched / Math.max(subjectTokens.size, 1));
+  return clamp(
+    matched / Math.max(subjectTokens.size, 1),
+  );
 }
 
 function normalizeSignal(signal: GrowthSignal): GrowthSignal {
+  const subject = normalizeText(signal.subject);
+  const normalizedSubject =
+    normalizeSignalSubject(signal.subject);
+
+  if (!signal.signalId.trim()) {
+    throw new Error(
+      "V8 market signal requires a non-empty signalId",
+    );
+  }
+
+  if (!signal.type) {
+    throw new Error(
+      "V8 market signal requires a signal type",
+    );
+  }
+
+  if (!signal.source.trim()) {
+    throw new Error(
+      "V8 market signal requires a non-empty source",
+    );
+  }
+
+  if (!subject || !normalizedSubject) {
+    throw new Error(
+      "V8 market signal requires a non-empty subject",
+    );
+  }
+
+  const observedAt = normalizeTimestamp(signal.observedAt);
+
   return {
-    ...signal,
-    subject: normalizeText(signal.subject),
-    normalizedSubject: normalizeSignalSubject(signal.subject),
+    signalId: normalizeText(signal.signalId),
+    type: signal.type,
+    source: normalizeText(signal.source),
+    observedAt,
+    subject,
+    normalizedSubject,
+    marketId: normalizeIdentifier(signal.marketId),
+    industryId: normalizeIdentifier(signal.industryId),
     value: normalizeSignalValue(signal.value),
     confidence: normalizeConfidence(signal.confidence),
     evidenceRefs: uniqueStrings(signal.evidenceRefs),
@@ -424,81 +546,129 @@ function normalizeSignal(signal: GrowthSignal): GrowthSignal {
   };
 }
 
-export function createMarketSignal(input: MarketSignalInput): GrowthSignal {
-  const subject = normalizeText(input.subject);
+function compareSignals(
+  left: GrowthSignal,
+  right: GrowthSignal,
+): number {
+  return (
+    left.signalId.localeCompare(right.signalId) ||
+    left.type.localeCompare(right.type) ||
+    left.normalizedSubject.localeCompare(
+      right.normalizedSubject,
+    ) ||
+    left.source.localeCompare(right.source)
+  );
+}
 
-  if (!subject) {
-    throw new Error("V8 market signal requires a non-empty subject");
+export function createMarketSignal(
+  input: MarketSignalInput,
+): GrowthSignal {
+  const subject = normalizeText(input.subject);
+  const normalizedSubject =
+    normalizeSignalSubject(input.subject);
+  const source = normalizeText(input.source);
+
+  if (!subject || !normalizedSubject) {
+    throw new Error(
+      "V8 market signal requires a non-empty subject",
+    );
   }
 
   if (!input.type) {
-    throw new Error("V8 market signal requires a signal type");
+    throw new Error(
+      "V8 market signal requires a signal type",
+    );
   }
 
-  if (!normalizeText(input.source)) {
-    throw new Error("V8 market signal requires a source");
+  if (!source) {
+    throw new Error(
+      "V8 market signal requires a non-empty source",
+    );
   }
 
-  const observedAt = input.observedAt ?? new Date().toISOString();
+  const observedAt = normalizeTimestamp(input.observedAt);
+  const marketId = normalizeIdentifier(input.marketId);
+  const industryId = normalizeIdentifier(input.industryId);
+  const value = normalizeSignalValue(input.value);
+  const confidence = normalizeConfidence(
+    input.confidence ?? 1,
+  );
+  const evidenceRefs = uniqueStrings(
+    input.evidenceRefs ?? [],
+  );
 
-  if (Number.isNaN(Date.parse(observedAt))) {
-    throw new Error("V8 market signal observedAt must be a valid timestamp");
-  }
+  const signalId =
+    normalizeIdentifier(input.signalId) ??
+    createSignalId({
+      type: input.type,
+      subject,
+      source,
+      observedAt,
+      marketId,
+      industryId,
+      value,
+      confidence,
+      evidenceRefs,
+    });
 
-  const signal: GrowthSignal = {
-    signalId:
-      input.signalId ??
-      createSignalId({
-        ...input,
-        subject,
-        observedAt,
-      }),
+  return normalizeSignal({
+    signalId,
     type: input.type,
-    source: normalizeText(input.source),
+    source,
     observedAt,
     subject,
-    normalizedSubject: normalizeSignalSubject(subject),
-    marketId: input.marketId ? normalizeText(input.marketId) : undefined,
-    industryId: input.industryId
-      ? normalizeText(input.industryId)
-      : undefined,
-    value: normalizeSignalValue(input.value),
-    confidence: normalizeConfidence(input.confidence ?? 1),
-    evidenceRefs: uniqueStrings(input.evidenceRefs ?? []),
+    normalizedSubject,
+    marketId,
+    industryId,
+    value,
+    confidence,
+    evidenceRefs,
     metadata: normalizeMetadata(input.metadata),
-  };
-
-  return normalizeSignal(signal);
+  });
 }
 
 export function buildMarketSignalSet(
   signals: readonly GrowthSignal[],
 ): MarketSignalSet {
-  const normalizedSignals = signals
-    .map(normalizeSignal)
-    .sort(
-      (left, right) =>
-        left.signalId.localeCompare(right.signalId) ||
-        left.normalizedSubject.localeCompare(right.normalizedSubject),
-    );
+  const normalizedSignals = deduplicateMarketSignals(
+    signals,
+  );
 
   const byType: Partial<
     Record<GrowthSignalType, readonly GrowthSignal[]>
   > = {};
 
-  const byMarket: Record<string, GrowthSignal[]> = {};
-  const bySubject: Record<string, GrowthSignal[]> = {};
+  const byMarket: Record<
+    string,
+    readonly GrowthSignal[]
+  > = {};
+
+  const bySubject: Record<
+    string,
+    readonly GrowthSignal[]
+  > = {};
 
   for (const signal of normalizedSignals) {
     const existingByType = byType[signal.type] ?? [];
-    byType[signal.type] = [...existingByType, signal];
+
+    byType[signal.type] = [
+      ...existingByType,
+      signal,
+    ];
 
     if (signal.marketId) {
-      const existingByMarket = byMarket[signal.marketId] ?? [];
-      byMarket[signal.marketId] = [...existingByMarket, signal];
+      const existingByMarket =
+        byMarket[signal.marketId] ?? [];
+
+      byMarket[signal.marketId] = [
+        ...existingByMarket,
+        signal,
+      ];
     }
 
-    const existingBySubject = bySubject[signal.normalizedSubject] ?? [];
+    const existingBySubject =
+      bySubject[signal.normalizedSubject] ?? [];
+
     bySubject[signal.normalizedSubject] = [
       ...existingBySubject,
       signal,
@@ -518,34 +688,43 @@ export function deduplicateMarketSignals(
 ): GrowthSignal[] {
   const seen = new Map<string, GrowthSignal>();
 
-  for (const signal of signals) {
-    const normalized = normalizeSignal(signal);
+  for (const rawSignal of signals) {
+    const signal = normalizeSignal(rawSignal);
+
     const key = [
-      normalized.type,
-      normalized.normalizedSubject,
-      normalized.source,
-      normalized.marketId ?? "",
-      normalized.industryId ?? "",
-      normalized.value.toFixed(6),
-      normalized.evidenceRefs.join("|"),
+      signal.type,
+      signal.normalizedSubject,
+      signal.source,
+      signal.observedAt,
+      signal.marketId ?? "",
+      signal.industryId ?? "",
+      signal.value.toFixed(8),
+      signal.evidenceRefs.join("|"),
     ].join("::");
 
     const existing = seen.get(key);
 
-    if (!existing || normalized.confidence > existing.confidence) {
-      seen.set(key, normalized);
+    if (
+      !existing ||
+      signal.confidence > existing.confidence ||
+      (
+        signal.confidence === existing.confidence &&
+        signal.signalId.localeCompare(existing.signalId) < 0
+      )
+    ) {
+      seen.set(key, signal);
     }
   }
 
-  return [...seen.values()].sort((left, right) =>
-    left.signalId.localeCompare(right.signalId),
-  );
+  return [...seen.values()].sort(compareSignals);
 }
 
 export function mergeMarketSignals(
   ...sets: readonly (readonly GrowthSignal[])[]
 ): GrowthSignal[] {
-  return deduplicateMarketSignals(sets.flat());
+  return deduplicateMarketSignals(
+    sets.flat(),
+  );
 }
 
 export function summarizeMarketSignals(
@@ -558,45 +737,80 @@ export function summarizeMarketSignals(
     ? normalizeSignalSubject(subject)
     : undefined;
 
+  const normalizedSignals = deduplicateMarketSignals(
+    signals,
+  );
+
   const scopedSignals = normalizedSubject
-    ? signals
-        .filter(
-          (signal) =>
-            signal.normalizedSubject === normalizedSubject ||
-            tokenSimilarity(signal.subject, normalizedSubject) >= 0.4,
-        )
+    ? normalizedSignals
+        .map((signal) => ({
+          signal,
+          similarity:
+            signal.normalizedSubject === normalizedSubject
+              ? 1
+              : tokenSimilarity(
+                  signal.subject,
+                  normalizedSubject,
+                ),
+        }))
+        .filter((entry) => entry.similarity >= 0.4)
         .sort(
           (left, right) =>
-            tokenSimilarity(right.subject, normalizedSubject) -
-            tokenSimilarity(left.subject, normalizedSubject),
+            right.similarity - left.similarity ||
+            compareSignals(
+              left.signal,
+              right.signal,
+            ),
         )
         .slice(0, 100)
-    : [...signals];
+        .map((entry) => entry.signal)
+    : normalizedSignals;
 
-  const demand = aggregateSignalValue(scopedSignals, "SEARCH_DEMAND");
-  const growth = aggregateSignalValue(scopedSignals, "SEARCH_GROWTH");
+  const demand = aggregateSignalValue(
+    scopedSignals,
+    "SEARCH_DEMAND",
+  );
+
+  const growth = aggregateSignalValue(
+    scopedSignals,
+    "SEARCH_GROWTH",
+  );
+
   const competitorGap = aggregateSignalValue(
     scopedSignals,
     "COMPETITOR_GAP",
   );
+
   const contentGap = aggregateSignalValue(
     scopedSignals,
     "CONTENT_GAP",
   );
+
   const commercialSignal = aggregateSignalValue(
     scopedSignals,
     "COMMERCIAL_INTENT",
   );
-  const traffic = aggregateSignalValue(scopedSignals, "TRAFFIC");
+
+  const traffic = aggregateSignalValue(
+    scopedSignals,
+    "TRAFFIC",
+  );
+
   const engagement = aggregateSignalValue(
     scopedSignals,
     "ENGAGEMENT",
   );
-  const inquiry = aggregateSignalValue(scopedSignals, "INQUIRY");
+
+  const inquiry = aggregateSignalValue(
+    scopedSignals,
+    "INQUIRY",
+  );
+
   const qualifiedLead = aggregateSignalValue(
     scopedSignals,
     "QUALIFIED_LEAD",
   );
+
   const conversion = aggregateSignalValue(
     scopedSignals,
     "CONVERSION",
@@ -607,7 +821,8 @@ export function summarizeMarketSignals(
     : 0;
 
   const commercialIntent = clamp(
-    commercialSignal * 0.65 + inferredCommercial * 0.35,
+    commercialSignal * 0.65 +
+      inferredCommercial * 0.35,
   );
 
   const conversionPotential = clamp(
@@ -626,16 +841,26 @@ export function summarizeMarketSignals(
 
   const capabilityFit =
     normalizedSubject && industry
-      ? capabilityFitForSubject(normalizedSubject, industry)
-      : aggregateSignalValue(scopedSignals, "CAPABILITY_FIT");
+      ? capabilityFitForSubject(
+          normalizedSubject,
+          industry,
+        )
+      : aggregateSignalValue(
+          scopedSignals,
+          "CAPABILITY_FIT",
+        );
 
-  const marketCapabilityFit =
+  const marketFit =
     normalizedSubject && market
-      ? marketFitForSubject(normalizedSubject, market)
+      ? marketFitForSubject(
+          normalizedSubject,
+          market,
+        )
       : 0;
 
   const normalizedCapabilityFit = clamp(
-    capabilityFit * 0.7 + marketCapabilityFit * 0.3,
+    capabilityFit * 0.7 +
+      marketFit * 0.3,
   );
 
   return {
@@ -646,7 +871,8 @@ export function summarizeMarketSignals(
     commercialIntent,
     capabilityFit: normalizedCapabilityFit,
     conversionPotential,
-    evidenceConfidence: averageConfidence(scopedSignals),
+    evidenceConfidence:
+      averageConfidence(scopedSignals),
     trafficPotential,
     signalCount: scopedSignals.length,
   };
@@ -661,12 +887,20 @@ export function rankSignalSubjects(
   readonly signalCount: number;
   readonly confidence: number;
 }[] {
-  const groups = new Map<string, GrowthSignal[]>();
+  const groups = new Map<
+    string,
+    GrowthSignal[]
+  >();
 
-  for (const signal of signals) {
-    const normalized = normalizeSignal(signal);
-    const existing = groups.get(normalized.normalizedSubject) ?? [];
-    groups.set(normalized.normalizedSubject, [...existing, normalized]);
+  for (const rawSignal of signals) {
+    const signal = normalizeSignal(rawSignal);
+    const existing =
+      groups.get(signal.normalizedSubject) ?? [];
+
+    groups.set(signal.normalizedSubject, [
+      ...existing,
+      signal,
+    ]);
   }
 
   const ranked = [...groups.entries()].map(
@@ -686,12 +920,19 @@ export function rankSignalSubjects(
           summary.evidenceConfidence * 0.1,
       );
 
+      const representative = subjectSignals
+        .slice()
+        .sort(
+          (left, right) =>
+            left.subject.localeCompare(
+              right.subject,
+            ) || compareSignals(left, right),
+        )[0];
+
       return {
         subject:
-          subjectSignals
-            .slice()
-            .sort((a, b) => a.subject.localeCompare(b.subject))[0]
-            ?.subject ?? normalizedSubject,
+          representative?.subject ??
+          normalizedSubject,
         normalizedSubject,
         score,
         signalCount: subjectSignals.length,
@@ -705,7 +946,9 @@ export function rankSignalSubjects(
       right.score - left.score ||
       right.confidence - left.confidence ||
       right.signalCount - left.signalCount ||
-      left.normalizedSubject.localeCompare(right.normalizedSubject),
+      left.normalizedSubject.localeCompare(
+        right.normalizedSubject,
+      ),
   );
 }
 
@@ -713,72 +956,120 @@ export function filterSignalsForIndustry(
   signals: readonly GrowthSignal[],
   industry: IndustryProfile,
 ): readonly GrowthSignal[] {
-  const industryId = normalizeText(industry.industryId);
+  const industryId = normalizeText(
+    industry.industryId,
+  );
 
-  return signals.filter((signal) => {
-    if (signal.industryId && signal.industryId === industryId) {
-      return true;
-    }
-
-    if (signal.industryId && signal.industryId !== industryId) {
-      return false;
-    }
-
-    const subjectTokens = subjectTokenSet(signal.subject);
-
-    if (subjectTokens.size === 0) {
-      return false;
-    }
-
-    const capabilityTokens = new Set(
-      [
-        ...industry.capabilities,
-        ...industry.products,
-        ...industry.services,
-        ...industry.targetAudiences,
-        ...industry.targetMarkets,
-      ].flatMap(subjectTokenSet),
+  if (!industryId) {
+    throw new Error(
+      "V8 industry filtering requires industryId",
     );
+  }
 
-    if (capabilityTokens.size === 0) {
-      return true;
+  const capabilityTokens = new Set<string>();
+
+  for (const value of [
+    ...industry.capabilities,
+    ...industry.products,
+    ...industry.services,
+    ...industry.targetAudiences,
+    ...industry.targetMarkets,
+  ]) {
+    for (const token of subjectTokenSet(value)) {
+      capabilityTokens.add(token);
     }
+  }
 
-    let matches = 0;
-
-    for (const token of subjectTokens) {
-      if (capabilityTokens.has(token)) {
-        matches += 1;
+  return deduplicateMarketSignals(signals).filter(
+    (signal) => {
+      if (
+        signal.industryId &&
+        signal.industryId === industryId
+      ) {
+        return true;
       }
-    }
 
-    return matches > 0;
-  });
+      if (
+        signal.industryId &&
+        signal.industryId !== industryId
+      ) {
+        return false;
+      }
+
+      if (capabilityTokens.size === 0) {
+        return false;
+      }
+
+      const subjectTokens = subjectTokenSet(
+        signal.subject,
+      );
+
+      if (subjectTokens.size === 0) {
+        return false;
+      }
+
+      for (const token of subjectTokens) {
+        if (capabilityTokens.has(token)) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+  );
 }
 
 export function filterSignalsForMarket(
   signals: readonly GrowthSignal[],
   market: MarketProfile,
 ): readonly GrowthSignal[] {
-  const marketId = normalizeText(market.marketId);
+  const marketId = normalizeText(
+    market.marketId,
+  );
 
-  return signals.filter((signal) => {
-    if (signal.marketId) {
-      return signal.marketId === marketId;
-    }
-
-    const similarity = tokenSimilarity(
-      signal.subject,
-      [
-        market.name,
-        market.region ?? "",
-        market.country ?? "",
-        ...market.audienceSegments,
-      ].join(" "),
+  if (!marketId) {
+    throw new Error(
+      "V8 market filtering requires marketId",
     );
+  }
 
-    return similarity >= 0.15;
-  });
+  const marketTokens = new Set<string>();
+
+  for (const value of [
+    market.name,
+    market.region ?? "",
+    market.country ?? "",
+    market.language ?? "",
+    ...market.audienceSegments,
+  ]) {
+    for (const token of subjectTokenSet(value)) {
+      marketTokens.add(token);
+    }
+  }
+
+  return deduplicateMarketSignals(signals).filter(
+    (signal) => {
+      if (signal.marketId) {
+        return signal.marketId === marketId;
+      }
+
+      if (marketTokens.size === 0) {
+        return false;
+      }
+
+      const similarity = tokenSimilarity(
+        signal.subject,
+        [
+          market.name,
+          market.region ?? "",
+          market.country ?? "",
+          ...market.audienceSegments,
+        ].join(" "),
+      );
+
+      return similarity >= 0.15;
+    },
+  );
 }
 
 export function createDerivedMarketSignals(
@@ -803,9 +1094,18 @@ export function createDerivedMarketSignals(
       continue;
     }
 
-    const source = keyword.source ?? "V8_KEYWORD_UNIVERSE";
+    const source = normalizeText(
+      keyword.source ?? "V8_KEYWORD_UNIVERSE",
+    );
 
-    if (keyword.demand !== undefined) {
+    if (!source) {
+      continue;
+    }
+
+    if (
+      keyword.demand !== undefined &&
+      Number.isFinite(keyword.demand)
+    ) {
       derived.push(
         createMarketSignal({
           type: "SEARCH_DEMAND",
@@ -820,7 +1120,10 @@ export function createDerivedMarketSignals(
       );
     }
 
-    if (keyword.growth !== undefined) {
+    if (
+      keyword.growth !== undefined &&
+      Number.isFinite(keyword.growth)
+    ) {
       derived.push(
         createMarketSignal({
           type: "SEARCH_GROWTH",
@@ -835,7 +1138,10 @@ export function createDerivedMarketSignals(
       );
     }
 
-    if (keyword.commercialIntent !== undefined) {
+    if (
+      keyword.commercialIntent !== undefined &&
+      Number.isFinite(keyword.commercialIntent)
+    ) {
       derived.push(
         createMarketSignal({
           type: "COMMERCIAL_INTENT",
@@ -850,7 +1156,10 @@ export function createDerivedMarketSignals(
       );
     }
 
-    if (keyword.competition !== undefined) {
+    if (
+      keyword.competition !== undefined &&
+      Number.isFinite(keyword.competition)
+    ) {
       derived.push(
         createMarketSignal({
           type: "COMPETITOR_GAP",
