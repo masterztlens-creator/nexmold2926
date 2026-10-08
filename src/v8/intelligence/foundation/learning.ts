@@ -1,120 +1,236 @@
+import { contentFingerprint } from "../../foundation/hash.js";
 import { immutable, invariant } from "../../constitution/invariants.js";
-import {
-  contentFingerprint,
-  normalizeText,
-  uniqueStrings,
-} from "../shared.js";
+import type { Fingerprint } from "../../domain/primitives.js";
 import type {
+  IntelligenceConfidence,
   IntelligenceEvidenceRef,
   IntelligenceLearning,
-  IntelligenceLearningOutcome,
-  IntelligenceLearningRule,
-  IntelligenceLearningSignal,
+  IntelligenceLearningStatus,
+  IntelligenceLearningType,
+  IntelligenceLineageRef,
 } from "./types.js";
+import { normalizeText } from "../shared.js";
 
 export interface CreateIntelligenceLearningInput {
   readonly learningId: string;
-  readonly cycleId: string;
-  readonly sourceDecisionIds?: readonly string[];
-  readonly signalIds?: readonly string[];
-  readonly evidenceRefs?: readonly IntelligenceEvidenceRef[];
-  readonly rule?: IntelligenceLearningRule;
-  readonly outcome: IntelligenceLearningOutcome;
-  readonly confidence: number;
+  readonly type: IntelligenceLearningType;
+  readonly status: IntelligenceLearningStatus;
+  readonly statement: string;
+  readonly sourceSignalIds?: readonly string[];
+  readonly sourceObservationIds?: readonly string[];
+  readonly sourceExperimentIds?: readonly string[];
+  readonly sourceOutcomeIds?: readonly string[];
+  readonly supportingMetricIds?: readonly string[];
+  readonly confidence: IntelligenceConfidence;
+  readonly relevance: number;
+  readonly decayRate: number;
   readonly createdAt?: string;
-  readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly lastValidatedAt?: string;
+  readonly expiresAt?: string;
+  readonly evidenceRefs?: readonly IntelligenceEvidenceRef[];
+  readonly lineage?: readonly IntelligenceLineageRef[];
 }
 
 export interface LearningFilter {
-  readonly cycleId?: string;
-  readonly ruleType?: string;
-  readonly minConfidence?: number;
-  readonly maxConfidence?: number;
+  readonly type?: IntelligenceLearningType;
+  readonly status?: IntelligenceLearningStatus;
+  readonly minRelevance?: number;
+  readonly maxRelevance?: number;
+  readonly minDecayRate?: number;
+  readonly maxDecayRate?: number;
+  readonly minConfidence?: IntelligenceConfidence;
+  readonly maxConfidence?: IntelligenceConfidence;
   readonly signalId?: string;
-  readonly decisionId?: string;
+  readonly observationId?: string;
+  readonly experimentId?: string;
+  readonly outcomeId?: string;
+  readonly metricId?: string;
 }
 
 export interface LearningSummary {
   readonly total: number;
-  readonly averageConfidence: number;
-  readonly highConfidence: number;
-  readonly lowConfidence: number;
-  readonly ruleTypes: readonly string[];
-  readonly cycleIds: readonly string[];
+  readonly candidate: number;
+  readonly validated: number;
+  readonly promoted: number;
+  readonly watch: number;
+  readonly rejected: number;
+  readonly retired: number;
+  readonly averageRelevance: number;
+  readonly averageDecayRate: number;
+  readonly confidenceDistribution: Readonly<
+    Record<IntelligenceConfidence, number>
+  >;
+  readonly types: readonly IntelligenceLearningType[];
+  readonly statuses: readonly IntelligenceLearningStatus[];
 }
+
+const CONFIDENCE_RANK: Readonly<Record<IntelligenceConfidence, number>> = {
+  VERY_LOW: 0,
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  VERY_HIGH: 4,
+};
+
+const LEARNING_TYPES: readonly IntelligenceLearningType[] = [
+  "PATTERN",
+  "RULE",
+  "HEURISTIC",
+  "CAUSAL_HINT",
+  "FAILURE",
+  "SUCCESS",
+  "PREFERENCE",
+  "ANOMALY",
+  "STRATEGY",
+];
+
+const LEARNING_STATUSES: readonly IntelligenceLearningStatus[] = [
+  "CANDIDATE",
+  "VALIDATED",
+  "PROMOTED",
+  "WATCH",
+  "REJECTED",
+  "RETIRED",
+];
+
+const CONFIDENCES: readonly IntelligenceConfidence[] = [
+  "VERY_LOW",
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "VERY_HIGH",
+];
 
 function requireNonEmpty(value: string, field: string): string {
-  const normalized = normalizeText(value);
-  invariant(normalized.length > 0, `${field} must not be empty`);
-  return normalized;
-}
-
-function normalizeTimestamp(value: string | undefined): string {
-  if (value === undefined) {
-    return new Date(0).toISOString();
-  }
-
-  const timestamp = new Date(value);
   invariant(
-    Number.isFinite(timestamp.getTime()),
-    "learning createdAt must be a valid timestamp",
+    typeof value === "string",
+    "INTELLIGENCE_LEARNING_INVALID_FIELD",
+    `${field} must be a string`,
   );
 
-  return timestamp.toISOString();
+  const normalized = normalizeText(value);
+
+  invariant(
+    normalized.length > 0,
+    "INTELLIGENCE_LEARNING_EMPTY_FIELD",
+    `${field} must not be empty`,
+  );
+
+  return value.trim();
 }
 
-function normalizeConfidence(value: number): number {
-  invariant(Number.isFinite(value), "learning confidence must be finite");
+function normalizeIdList(
+  values: readonly string[] | undefined,
+  field: string,
+): readonly string[] {
+  if (!values || values.length === 0) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const normalized = requireNonEmpty(value, field);
+
+    if (seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    result.push(normalized);
+  }
+
+  return result.sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeConfidence(
+  value: IntelligenceConfidence,
+): IntelligenceConfidence {
+  invariant(
+    CONFIDENCES.includes(value),
+    "INTELLIGENCE_LEARNING_INVALID_CONFIDENCE",
+    `Invalid learning confidence: ${String(value)}`,
+  );
+
+  return value;
+}
+
+function normalizeLearningType(
+  value: IntelligenceLearningType,
+): IntelligenceLearningType {
+  invariant(
+    LEARNING_TYPES.includes(value),
+    "INTELLIGENCE_LEARNING_INVALID_TYPE",
+    `Invalid learning type: ${String(value)}`,
+  );
+
+  return value;
+}
+
+function normalizeLearningStatus(
+  value: IntelligenceLearningStatus,
+): IntelligenceLearningStatus {
+  invariant(
+    LEARNING_STATUSES.includes(value),
+    "INTELLIGENCE_LEARNING_INVALID_STATUS",
+    `Invalid learning status: ${String(value)}`,
+  );
+
+  return value;
+}
+
+function normalizeRatio(value: number, field: string): number {
+  invariant(
+    typeof value === "number" && Number.isFinite(value),
+    "INTELLIGENCE_LEARNING_INVALID_NUMBER",
+    `${field} must be a finite number`,
+  );
+
   invariant(
     value >= 0 && value <= 1,
-    "learning confidence must be between 0 and 1",
+    "INTELLIGENCE_LEARNING_INVALID_RANGE",
+    `${field} must be between 0 and 1`,
   );
 
   return Math.round(value * 1_000_000) / 1_000_000;
 }
 
-function normalizeUnknown(
-  value: unknown,
-): unknown {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
-    return value;
+function normalizeTimestamp(
+  value: string | undefined,
+  field: string,
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
   }
 
-  if (typeof value === "number") {
-    invariant(Number.isFinite(value), "learning metadata contains invalid number");
-    return value;
-  }
+  const timestamp = new Date(value);
 
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeUnknown(item));
-  }
+  invariant(
+    Number.isFinite(timestamp.getTime()),
+    "INTELLIGENCE_LEARNING_INVALID_TIMESTAMP",
+    `${field} must be a valid timestamp`,
+  );
 
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    const normalized: Record<string, unknown> = {};
-
-    for (const key of Object.keys(record).sort()) {
-      normalized[key] = normalizeUnknown(record[key]);
-    }
-
-    return normalized;
-  }
-
-  invariant(false, "learning metadata contains unsupported value");
+  return timestamp.toISOString();
 }
 
-function normalizeMetadata(
-  value: Readonly<Record<string, unknown>> | undefined,
-): Readonly<Record<string, unknown>> {
-  if (!value) {
-    return {};
+function normalizeRequiredTimestamp(
+  value: string | undefined,
+): string {
+  if (value === undefined) {
+    return new Date(0).toISOString();
   }
 
-  return normalizeUnknown(value) as Readonly<Record<string, unknown>>;
+  const normalized = normalizeTimestamp(value, "createdAt");
+
+  invariant(
+    normalized !== undefined,
+    "INTELLIGENCE_LEARNING_INVALID_TIMESTAMP",
+    "createdAt must be defined",
+  );
+
+  return normalized;
 }
 
 function normalizeEvidenceRefs(
@@ -124,131 +240,206 @@ function normalizeEvidenceRefs(
     return [];
   }
 
-  const result = refs.map((ref) => {
+  const seen = new Set<string>();
+  const result: IntelligenceEvidenceRef[] = [];
+
+  for (const ref of refs) {
     invariant(
       typeof ref === "object" && ref !== null,
-      "learning evidence reference must be an object",
+      "INTELLIGENCE_LEARNING_INVALID_EVIDENCE",
+      "Every evidence reference must be an object",
     );
 
-    const normalized = {
-      evidenceId: requireNonEmpty(ref.evidenceId, "evidenceRef.evidenceId"),
-      sourceId: requireNonEmpty(ref.sourceId, "evidenceRef.sourceId"),
-      snapshotId: requireNonEmpty(ref.snapshotId, "evidenceRef.snapshotId"),
-      excerptHash: requireNonEmpty(
-        ref.excerptHash,
-        "evidenceRef.excerptHash",
-      ),
-      evidenceHash: requireNonEmpty(
-        ref.evidenceHash,
-        "evidenceRef.evidenceHash",
-      ),
-    } satisfies IntelligenceEvidenceRef;
-
-    return normalized;
-  });
-
-  const seen = new Set<string>();
-  const deduplicated: IntelligenceEvidenceRef[] = [];
-
-  for (const ref of result) {
-    const key = [
+    const evidenceId = requireNonEmpty(
       ref.evidenceId,
-      ref.sourceId,
-      ref.snapshotId,
-      ref.excerptHash,
-      ref.evidenceHash,
-    ].join("|");
+      "evidenceRef.evidenceId",
+    );
+
+    const normalized: IntelligenceEvidenceRef = {
+      evidenceId,
+      ...(ref.sourceId !== undefined
+        ? {
+            sourceId: requireNonEmpty(
+              ref.sourceId,
+              "evidenceRef.sourceId",
+            ),
+          }
+        : {}),
+      ...(ref.snapshotId !== undefined
+        ? {
+            snapshotId: requireNonEmpty(
+              ref.snapshotId,
+              "evidenceRef.snapshotId",
+            ),
+          }
+        : {}),
+      ...(ref.aggregateType !== undefined
+        ? {
+            aggregateType: ref.aggregateType,
+          }
+        : {}),
+      ...(ref.fingerprint !== undefined
+        ? {
+            fingerprint: ref.fingerprint,
+          }
+        : {}),
+      ...(ref.locator !== undefined
+        ? {
+            locator: ref.locator,
+          }
+        : {}),
+      ...(ref.excerpt !== undefined
+        ? {
+            excerpt: ref.excerpt,
+          }
+        : {}),
+      ...(ref.confidence !== undefined
+        ? {
+            confidence: normalizeConfidence(ref.confidence),
+          }
+        : {}),
+    };
+
+    const key = JSON.stringify(serializeEvidenceRef(normalized));
 
     if (seen.has(key)) {
       continue;
     }
 
     seen.add(key);
-    deduplicated.push(ref);
+    result.push(normalized);
   }
 
-  return deduplicated;
-}
-
-function normalizeSignalIds(
-  values: readonly string[] | undefined,
-): readonly string[] {
-  return uniqueStrings(
-    (values ?? []).map((value) => requireNonEmpty(value, "signalId")),
+  return result.sort((left, right) =>
+    left.evidenceId.localeCompare(right.evidenceId),
   );
 }
 
-function normalizeDecisionIds(
-  values: readonly string[] | undefined,
-): readonly string[] {
-  return uniqueStrings(
-    (values ?? []).map((value) => requireNonEmpty(value, "decisionId")),
-  );
+function serializeEvidenceRef(
+  ref: IntelligenceEvidenceRef,
+): Record<string, string> {
+  const result: Record<string, string> = {
+    evidenceId: ref.evidenceId,
+  };
+
+  if (ref.sourceId !== undefined) {
+    result.sourceId = ref.sourceId;
+  }
+
+  if (ref.snapshotId !== undefined) {
+    result.snapshotId = ref.snapshotId;
+  }
+
+  if (ref.aggregateType !== undefined) {
+    result.aggregateType = ref.aggregateType;
+  }
+
+  if (ref.fingerprint !== undefined) {
+    result.fingerprint = ref.fingerprint;
+  }
+
+  if (ref.locator !== undefined) {
+    result.locator = ref.locator;
+  }
+
+  if (ref.excerpt !== undefined) {
+    result.excerpt = ref.excerpt;
+  }
+
+  if (ref.confidence !== undefined) {
+    result.confidence = ref.confidence;
+  }
+
+  return result;
 }
 
-function normalizeRule(
-  rule: IntelligenceLearningRule,
-): IntelligenceLearningRule {
-  invariant(
-    typeof rule === "object" && rule !== null,
-    "learning rule must be an object",
-  );
-
-  const normalized = {
-    ruleId: requireNonEmpty(rule.ruleId, "learning ruleId"),
-    type: requireNonEmpty(rule.type, "learning rule type"),
-    condition: requireNonEmpty(
-      rule.condition,
-      "learning rule condition",
-    ),
-    action: requireNonEmpty(rule.action, "learning rule action"),
-    priority: Math.trunc(rule.priority),
-  } satisfies IntelligenceLearningRule;
-
-  invariant(
-    Number.isFinite(normalized.priority),
-    "learning rule priority must be finite",
-  );
-
-  invariant(
-    normalized.priority >= 0,
-    "learning rule priority must be non-negative",
-  );
-
-  return normalized;
-}
-
-function normalizeOutcome(
-  outcome: IntelligenceLearningOutcome,
-): IntelligenceLearningOutcome {
-  invariant(
-    typeof outcome === "object" && outcome !== null,
-    "learning outcome must be an object",
-  );
-
+function serializeLineageRef(
+  ref: IntelligenceLineageRef,
+): Record<string, string | number> {
   return {
-    outcomeId: requireNonEmpty(outcome.outcomeId, "learning outcomeId"),
-    status: requireNonEmpty(outcome.status, "learning outcome status"),
-    summary: requireNonEmpty(outcome.summary, "learning outcome summary"),
-    impact: outcome.impact,
-    metricIds: uniqueStrings(
-      (outcome.metricIds ?? []).map((value) =>
-        requireNonEmpty(value, "learning outcome metricId"),
-      ),
-    ),
+    aggregateType: ref.aggregateType,
+    aggregateId: ref.aggregateId,
+    version: ref.version,
+    fingerprint: ref.fingerprint,
   };
 }
 
-function serializeEvidenceRefs(
-  refs: readonly IntelligenceEvidenceRef[],
-): readonly Record<string, string>[] {
-  return refs.map((ref) => ({
-    evidenceId: ref.evidenceId,
-    sourceId: ref.sourceId,
-    snapshotId: ref.snapshotId,
-    excerptHash: ref.excerptHash,
-    evidenceHash: ref.evidenceHash,
-  }));
+function normalizeLineage(
+  lineage: readonly IntelligenceLineageRef[] | undefined,
+): readonly IntelligenceLineageRef[] {
+  if (!lineage || lineage.length === 0) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const result: IntelligenceLineageRef[] = [];
+
+  for (const ref of lineage) {
+    invariant(
+      typeof ref === "object" && ref !== null,
+      "INTELLIGENCE_LEARNING_INVALID_LINEAGE",
+      "Every lineage reference must be an object",
+    );
+
+    invariant(
+      typeof ref.aggregateType === "string" &&
+        ref.aggregateType.length > 0,
+      "INTELLIGENCE_LEARNING_INVALID_LINEAGE",
+      "lineage.aggregateType must not be empty",
+    );
+
+    const aggregateId = requireNonEmpty(
+      ref.aggregateId,
+      "lineage.aggregateId",
+    );
+
+    invariant(
+      Number.isInteger(ref.version) && ref.version >= 1,
+      "INTELLIGENCE_LEARNING_INVALID_LINEAGE",
+      "lineage.version must be a positive integer",
+    );
+
+    invariant(
+      typeof ref.fingerprint === "string" &&
+        ref.fingerprint.length > 0,
+      "INTELLIGENCE_LEARNING_INVALID_LINEAGE",
+      "lineage.fingerprint must not be empty",
+    );
+
+    const normalized: IntelligenceLineageRef = {
+      aggregateType: ref.aggregateType,
+      aggregateId,
+      version: ref.version,
+      fingerprint: ref.fingerprint,
+    };
+
+    const key = JSON.stringify(serializeLineageRef(normalized));
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result.sort((left, right) => {
+    const aggregateType = left.aggregateType.localeCompare(
+      right.aggregateType,
+    );
+
+    if (aggregateType !== 0) {
+      return aggregateType;
+    }
+
+    const aggregateId = left.aggregateId.localeCompare(right.aggregateId);
+
+    if (aggregateId !== 0) {
+      return aggregateId;
+    }
+
+    return left.version - right.version;
+  });
 }
 
 function serializeLearningForFingerprint(
@@ -256,28 +447,65 @@ function serializeLearningForFingerprint(
 ): Record<string, unknown> {
   return {
     learningId: learning.learningId,
-    cycleId: learning.cycleId,
-    sourceDecisionIds: [...learning.sourceDecisionIds],
-    signalIds: [...learning.signalIds],
-    evidenceRefs: serializeEvidenceRefs(learning.evidenceRefs),
-    rule: {
-      ruleId: learning.rule.ruleId,
-      type: learning.rule.type,
-      condition: learning.rule.condition,
-      action: learning.rule.action,
-      priority: learning.rule.priority,
-    },
-    outcome: {
-      outcomeId: learning.outcome.outcomeId,
-      status: learning.outcome.status,
-      summary: learning.outcome.summary,
-      impact: learning.outcome.impact,
-      metricIds: [...learning.outcome.metricIds],
-    },
+    type: learning.type,
+    status: learning.status,
+    statement: learning.statement,
+    normalizedStatement: learning.normalizedStatement,
+    sourceSignalIds: [...learning.sourceSignalIds],
+    sourceObservationIds: [...learning.sourceObservationIds],
+    sourceExperimentIds: [...learning.sourceExperimentIds],
+    sourceOutcomeIds: [...learning.sourceOutcomeIds],
+    supportingMetricIds: [...learning.supportingMetricIds],
     confidence: learning.confidence,
+    relevance: learning.relevance,
+    decayRate: learning.decayRate,
     createdAt: learning.createdAt,
-    metadata: normalizeMetadata(learning.metadata),
+    lastValidatedAt: learning.lastValidatedAt ?? null,
+    expiresAt: learning.expiresAt ?? null,
+    evidenceRefs: learning.evidenceRefs.map(serializeEvidenceRef),
+    lineage: learning.lineage.map(serializeLineageRef),
   };
+}
+
+function computeLearningFingerprint(
+  learning: IntelligenceLearning,
+): Fingerprint {
+  return contentFingerprint(serializeLearningForFingerprint(learning));
+}
+
+function assertTimestampOrder(
+  createdAt: string,
+  lastValidatedAt: string | undefined,
+  expiresAt: string | undefined,
+): void {
+  const created = Date.parse(createdAt);
+
+  if (lastValidatedAt !== undefined) {
+    invariant(
+      Date.parse(lastValidatedAt) >= created,
+      "INTELLIGENCE_LEARNING_INVALID_TIME_ORDER",
+      "lastValidatedAt must not precede createdAt",
+    );
+  }
+
+  if (expiresAt !== undefined) {
+    invariant(
+      Date.parse(expiresAt) >= created,
+      "INTELLIGENCE_LEARNING_INVALID_TIME_ORDER",
+      "expiresAt must not precede createdAt",
+    );
+  }
+
+  if (
+    lastValidatedAt !== undefined &&
+    expiresAt !== undefined
+  ) {
+    invariant(
+      Date.parse(expiresAt) >= Date.parse(lastValidatedAt),
+      "INTELLIGENCE_LEARNING_INVALID_TIME_ORDER",
+      "expiresAt must not precede lastValidatedAt",
+    );
+  }
 }
 
 export function createIntelligenceLearning(
@@ -287,35 +515,123 @@ export function createIntelligenceLearning(
     input.learningId,
     "learningId",
   );
-  const cycleId = requireNonEmpty(input.cycleId, "cycleId");
-  const createdAt = normalizeTimestamp(input.createdAt);
+
+  const type = normalizeLearningType(input.type);
+  const status = normalizeLearningStatus(input.status);
+
+  const statement = requireNonEmpty(
+    input.statement,
+    "statement",
+  );
+
+  const normalizedStatement = normalizeText(statement);
+
+  invariant(
+    normalizedStatement.length > 0,
+    "INTELLIGENCE_LEARNING_EMPTY_STATEMENT",
+    "normalizedStatement must not be empty",
+  );
+
+  const sourceSignalIds = normalizeIdList(
+    input.sourceSignalIds,
+    "sourceSignalId",
+  );
+
+  const sourceObservationIds = normalizeIdList(
+    input.sourceObservationIds,
+    "sourceObservationId",
+  );
+
+  const sourceExperimentIds = normalizeIdList(
+    input.sourceExperimentIds,
+    "sourceExperimentId",
+  );
+
+  const sourceOutcomeIds = normalizeIdList(
+    input.sourceOutcomeIds,
+    "sourceOutcomeId",
+  );
+
+  const supportingMetricIds = normalizeIdList(
+    input.supportingMetricIds,
+    "supportingMetricId",
+  );
+
   const confidence = normalizeConfidence(input.confidence);
-  const sourceDecisionIds = normalizeDecisionIds(
-    input.sourceDecisionIds,
+  const relevance = normalizeRatio(
+    input.relevance,
+    "relevance",
   );
-  const signalIds = normalizeSignalIds(input.signalIds);
-  const evidenceRefs = normalizeEvidenceRefs(input.evidenceRefs);
-  const rule = normalizeRule(input.rule);
-  const outcome = normalizeOutcome(input.outcome);
-  const metadata = normalizeMetadata(input.metadata);
+  const decayRate = normalizeRatio(
+    input.decayRate,
+    "decayRate",
+  );
 
-  const provisional: IntelligenceLearning = {
-    learningId,
-    cycleId,
-    sourceDecisionIds,
-    signalIds,
-    evidenceRefs,
-    rule,
-    outcome,
-    confidence,
+  const createdAt = normalizeRequiredTimestamp(
+    input.createdAt,
+  );
+
+  const lastValidatedAt = normalizeTimestamp(
+    input.lastValidatedAt,
+    "lastValidatedAt",
+  );
+
+  const expiresAt = normalizeTimestamp(
+    input.expiresAt,
+    "expiresAt",
+  );
+
+  assertTimestampOrder(
     createdAt,
-    metadata,
-    fingerprint: "",
-  };
-
-  const fingerprint = contentFingerprint(
-    serializeLearningForFingerprint(provisional),
+    lastValidatedAt,
+    expiresAt,
   );
+
+  const evidenceRefs = normalizeEvidenceRefs(
+    input.evidenceRefs,
+  );
+
+  const lineage = normalizeLineage(input.lineage);
+
+  invariant(
+    sourceSignalIds.length +
+      sourceObservationIds.length +
+      sourceExperimentIds.length +
+      sourceOutcomeIds.length +
+      supportingMetricIds.length +
+      evidenceRefs.length +
+      lineage.length >
+      0,
+    "INTELLIGENCE_LEARNING_NO_PROVENANCE",
+    `Learning ${learningId} must have at least one source, evidence reference, or lineage reference`,
+  );
+
+  const provisional = {
+    learningId,
+    type,
+    status,
+    statement,
+    normalizedStatement,
+    sourceSignalIds,
+    sourceObservationIds,
+    sourceExperimentIds,
+    sourceOutcomeIds,
+    supportingMetricIds,
+    confidence,
+    relevance,
+    decayRate,
+    createdAt,
+    ...(lastValidatedAt !== undefined
+      ? { lastValidatedAt }
+      : {}),
+    ...(expiresAt !== undefined
+      ? { expiresAt }
+      : {}),
+    evidenceRefs,
+    lineage,
+  } satisfies Omit<IntelligenceLearning, "fingerprint">;
+
+  const fingerprint = contentFingerprint(provisional);
 
   const result: IntelligenceLearning = {
     ...provisional,
@@ -330,10 +646,8 @@ export function createIntelligenceLearning(
 
 export function learningFingerprint(
   learning: IntelligenceLearning,
-): string {
-  return contentFingerprint(
-    serializeLearningForFingerprint(learning),
-  );
+): Fingerprint {
+  return computeLearningFingerprint(learning);
 }
 
 export function assertLearningIntegrity(
@@ -341,75 +655,136 @@ export function assertLearningIntegrity(
 ): void {
   invariant(
     typeof learning === "object" && learning !== null,
+    "INTELLIGENCE_LEARNING_INVALID_OBJECT",
     "learning must be an object",
   );
 
   invariant(
-    normalizeText(learning.learningId).length > 0,
+    typeof learning.learningId === "string" &&
+      normalizeText(learning.learningId).length > 0,
+    "INTELLIGENCE_LEARNING_INVALID_ID",
     "learningId must not be empty",
   );
 
   invariant(
-    normalizeText(learning.cycleId).length > 0,
-    "cycleId must not be empty",
+    LEARNING_TYPES.includes(learning.type),
+    "INTELLIGENCE_LEARNING_INVALID_TYPE",
+    `Invalid learning type: ${String(learning.type)}`,
   );
 
   invariant(
-    Number.isFinite(learning.confidence) &&
-      learning.confidence >= 0 &&
-      learning.confidence <= 1,
-    "learning confidence must be between 0 and 1",
+    LEARNING_STATUSES.includes(learning.status),
+    "INTELLIGENCE_LEARNING_INVALID_STATUS",
+    `Invalid learning status: ${String(learning.status)}`,
   );
 
   invariant(
-    learning.fingerprint === learningFingerprint(learning),
-    `learning fingerprint mismatch: ${learning.learningId}`,
+    typeof learning.statement === "string" &&
+      normalizeText(learning.statement).length > 0,
+    "INTELLIGENCE_LEARNING_INVALID_STATEMENT",
+    `Learning ${learning.learningId} has an empty statement`,
   );
 
   invariant(
-    learning.rule.priority >= 0 &&
-      Number.isFinite(learning.rule.priority),
-    `learning rule priority invalid: ${learning.learningId}`,
+    learning.normalizedStatement ===
+      normalizeText(learning.statement),
+    "INTELLIGENCE_LEARNING_NORMALIZATION_MISMATCH",
+    `Learning ${learning.learningId} normalizedStatement mismatch`,
   );
 
   invariant(
-    learning.outcome.metricIds.length ===
-      new Set(learning.outcome.metricIds).size,
-    `learning outcome metricIds must be unique: ${learning.learningId}`,
+    CONFIDENCES.includes(learning.confidence),
+    "INTELLIGENCE_LEARNING_INVALID_CONFIDENCE",
+    `Learning ${learning.learningId} has invalid confidence`,
+  );
+
+  invariant(
+    Number.isFinite(learning.relevance) &&
+      learning.relevance >= 0 &&
+      learning.relevance <= 1,
+    "INTELLIGENCE_LEARNING_INVALID_RELEVANCE",
+    `Learning ${learning.learningId} relevance must be between 0 and 1`,
+  );
+
+  invariant(
+    Number.isFinite(learning.decayRate) &&
+      learning.decayRate >= 0 &&
+      learning.decayRate <= 1,
+    "INTELLIGENCE_LEARNING_INVALID_DECAY",
+    `Learning ${learning.learningId} decayRate must be between 0 and 1`,
+  );
+
+  invariant(
+    Number.isFinite(Date.parse(learning.createdAt)),
+    "INTELLIGENCE_LEARNING_INVALID_TIMESTAMP",
+    `Learning ${learning.learningId} createdAt is invalid`,
+  );
+
+  assertTimestampOrder(
+    learning.createdAt,
+    learning.lastValidatedAt,
+    learning.expiresAt,
+  );
+
+  const expectedFingerprint = learningFingerprint(learning);
+
+  invariant(
+    learning.fingerprint === expectedFingerprint,
+    "INTELLIGENCE_LEARNING_FINGERPRINT_MISMATCH",
+    `Learning fingerprint mismatch: ${learning.learningId}`,
   );
 }
 
 export function deduplicateLearnings(
   learnings: readonly IntelligenceLearning[],
 ): readonly IntelligenceLearning[] {
-  const byFingerprint = new Map<string, IntelligenceLearning>();
+  const byKey = new Map<string, IntelligenceLearning>();
 
   for (const learning of learnings) {
     assertLearningIntegrity(learning);
 
-    const existing = byFingerprint.get(learning.fingerprint);
+    const key = learning.normalizedStatement;
+    const existing = byKey.get(key);
 
     if (!existing) {
-      byFingerprint.set(learning.fingerprint, learning);
+      byKey.set(key, learning);
       continue;
     }
 
-    if (learning.confidence > existing.confidence) {
-      byFingerprint.set(learning.fingerprint, learning);
+    const confidenceDelta =
+      CONFIDENCE_RANK[learning.confidence] -
+      CONFIDENCE_RANK[existing.confidence];
+
+    if (confidenceDelta > 0) {
+      byKey.set(key, learning);
       continue;
     }
 
     if (
-      learning.confidence === existing.confidence &&
+      confidenceDelta === 0 &&
+      learning.relevance > existing.relevance
+    ) {
+      byKey.set(key, learning);
+      continue;
+    }
+
+    if (
+      confidenceDelta === 0 &&
+      learning.relevance === existing.relevance &&
       learning.createdAt < existing.createdAt
     ) {
-      byFingerprint.set(learning.fingerprint, learning);
+      byKey.set(key, learning);
     }
   }
 
-  return [...byFingerprint.values()].sort((left, right) => {
-    if (left.createdAt !== right.createdAt) {
-      return left.createdAt.localeCompare(right.createdAt);
+  return [...byKey.values()].sort((left, right) => {
+    const statementOrder =
+      left.normalizedStatement.localeCompare(
+        right.normalizedStatement,
+      );
+
+    if (statementOrder !== 0) {
+      return statementOrder;
     }
 
     return left.learningId.localeCompare(right.learningId);
@@ -424,43 +799,102 @@ export function filterLearnings(
     assertLearningIntegrity(learning);
 
     if (
-      filter.cycleId !== undefined &&
-      learning.cycleId !== filter.cycleId
+      filter.type !== undefined &&
+      learning.type !== filter.type
     ) {
       return false;
     }
 
     if (
-      filter.ruleType !== undefined &&
-      learning.rule.type !== filter.ruleType
+      filter.status !== undefined &&
+      learning.status !== filter.status
+    ) {
+      return false;
+    }
+
+    if (
+      filter.minRelevance !== undefined &&
+      learning.relevance < filter.minRelevance
+    ) {
+      return false;
+    }
+
+    if (
+      filter.maxRelevance !== undefined &&
+      learning.relevance > filter.maxRelevance
+    ) {
+      return false;
+    }
+
+    if (
+      filter.minDecayRate !== undefined &&
+      learning.decayRate < filter.minDecayRate
+    ) {
+      return false;
+    }
+
+    if (
+      filter.maxDecayRate !== undefined &&
+      learning.decayRate > filter.maxDecayRate
     ) {
       return false;
     }
 
     if (
       filter.minConfidence !== undefined &&
-      learning.confidence < filter.minConfidence
+      CONFIDENCE_RANK[learning.confidence] <
+        CONFIDENCE_RANK[filter.minConfidence]
     ) {
       return false;
     }
 
     if (
       filter.maxConfidence !== undefined &&
-      learning.confidence > filter.maxConfidence
+      CONFIDENCE_RANK[learning.confidence] >
+        CONFIDENCE_RANK[filter.maxConfidence]
     ) {
       return false;
     }
 
     if (
       filter.signalId !== undefined &&
-      !learning.signalIds.includes(filter.signalId)
+      !learning.sourceSignalIds.includes(filter.signalId)
     ) {
       return false;
     }
 
     if (
-      filter.decisionId !== undefined &&
-      !learning.sourceDecisionIds.includes(filter.decisionId)
+      filter.observationId !== undefined &&
+      !learning.sourceObservationIds.includes(
+        filter.observationId,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      filter.experimentId !== undefined &&
+      !learning.sourceExperimentIds.includes(
+        filter.experimentId,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      filter.outcomeId !== undefined &&
+      !learning.sourceOutcomeIds.includes(
+        filter.outcomeId,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      filter.metricId !== undefined &&
+      !learning.supportingMetricIds.includes(
+        filter.metricId,
+      )
     ) {
       return false;
     }
@@ -474,60 +908,119 @@ export function summarizeLearnings(
 ): LearningSummary {
   const normalized = deduplicateLearnings(learnings);
 
-  if (normalized.length === 0) {
-    return {
-      total: 0,
-      averageConfidence: 0,
-      highConfidence: 0,
-      lowConfidence: 0,
-      ruleTypes: [],
-      cycleIds: [],
-    };
+  const confidenceDistribution: Record<
+    IntelligenceConfidence,
+    number
+  > = {
+    VERY_LOW: 0,
+    LOW: 0,
+    MEDIUM: 0,
+    HIGH: 0,
+    VERY_HIGH: 0,
+  };
+
+  let relevanceTotal = 0;
+  let decayRateTotal = 0;
+
+  let candidate = 0;
+  let validated = 0;
+  let promoted = 0;
+  let watch = 0;
+  let rejected = 0;
+  let retired = 0;
+
+  for (const learning of normalized) {
+    confidenceDistribution[learning.confidence] += 1;
+
+    relevanceTotal += learning.relevance;
+    decayRateTotal += learning.decayRate;
+
+    switch (learning.status) {
+      case "CANDIDATE":
+        candidate += 1;
+        break;
+      case "VALIDATED":
+        validated += 1;
+        break;
+      case "PROMOTED":
+        promoted += 1;
+        break;
+      case "WATCH":
+        watch += 1;
+        break;
+      case "REJECTED":
+        rejected += 1;
+        break;
+      case "RETIRED":
+        retired += 1;
+        break;
+    }
   }
 
-  const averageConfidence =
-    normalized.reduce(
-      (total, learning) => total + learning.confidence,
-      0,
-    ) / normalized.length;
+  const total = normalized.length;
 
   return {
-    total: normalized.length,
-    averageConfidence:
-      Math.round(averageConfidence * 1_000_000) / 1_000_000,
-    highConfidence: normalized.filter(
-      (learning) => learning.confidence >= 0.8,
-    ).length,
-    lowConfidence: normalized.filter(
-      (learning) => learning.confidence < 0.5,
-    ).length,
-    ruleTypes: uniqueStrings(
-      normalized.map((learning) => learning.rule.type),
-    ),
-    cycleIds: uniqueStrings(
-      normalized.map((learning) => learning.cycleId),
-    ),
+    total,
+    candidate,
+    validated,
+    promoted,
+    watch,
+    rejected,
+    retired,
+    averageRelevance:
+      total === 0
+        ? 0
+        : Math.round(
+            (relevanceTotal / total) * 1_000_000,
+          ) / 1_000_000,
+    averageDecayRate:
+      total === 0
+        ? 0
+        : Math.round(
+            (decayRateTotal / total) * 1_000_000,
+          ) / 1_000_000,
+    confidenceDistribution,
+    types: [
+      ...new Set(
+        normalized.map((learning) => learning.type),
+      ),
+    ].sort((left, right) => left.localeCompare(right)),
+    statuses: [
+      ...new Set(
+        normalized.map((learning) => learning.status),
+      ),
+    ].sort((left, right) => left.localeCompare(right)),
   };
 }
 
 export function rankLearnings(
   learnings: readonly IntelligenceLearning[],
 ): readonly IntelligenceLearning[] {
-  return [...deduplicateLearnings(learnings)].sort((left, right) => {
-    if (right.confidence !== left.confidence) {
-      return right.confidence - left.confidence;
-    }
+  return [...deduplicateLearnings(learnings)].sort(
+    (left, right) => {
+      const confidence =
+        CONFIDENCE_RANK[right.confidence] -
+        CONFIDENCE_RANK[left.confidence];
 
-    if (right.rule.priority !== left.rule.priority) {
-      return right.rule.priority - left.rule.priority;
-    }
+      if (confidence !== 0) {
+        return confidence;
+      }
 
-    if (left.createdAt !== right.createdAt) {
-      return left.createdAt.localeCompare(right.createdAt);
-    }
+      if (right.relevance !== left.relevance) {
+        return right.relevance - left.relevance;
+      }
 
-    return left.learningId.localeCompare(right.learningId);
-  });
+      if (left.decayRate !== right.decayRate) {
+        return left.decayRate - right.decayRate;
+      }
+
+      if (left.createdAt !== right.createdAt) {
+        return left.createdAt.localeCompare(right.createdAt);
+      }
+
+      return left.learningId.localeCompare(right.learningId);
+    },
+  );
 }
 
 export function assertLearningCollection(
@@ -541,12 +1034,14 @@ export function assertLearningCollection(
 
     invariant(
       !ids.has(learning.learningId),
-      `duplicate learningId: ${learning.learningId}`,
+      "INTELLIGENCE_LEARNING_DUPLICATE_ID",
+      `Duplicate learningId: ${learning.learningId}`,
     );
 
     invariant(
       !fingerprints.has(learning.fingerprint),
-      `duplicate learning fingerprint: ${learning.learningId}`,
+      "INTELLIGENCE_LEARNING_DUPLICATE_FINGERPRINT",
+      `Duplicate learning fingerprint: ${learning.learningId}`,
     );
 
     ids.add(learning.learningId);
