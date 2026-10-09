@@ -93,23 +93,21 @@ function normalizeOperator(
   const normalized = String(operator).trim();
 
   switch (normalized) {
-    case "EQUALS":
-    case "NOT_EQUALS":
-    case "GREATER_THAN":
-    case "GREATER_THAN_OR_EQUAL":
-    case "LESS_THAN":
-    case "LESS_THAN_OR_EQUAL":
+    case "EQ":
+    case "NEQ":
+    case "GT":
+    case "GTE":
+    case "LT":
+    case "LTE":
     case "IN":
     case "NOT_IN":
+    case "BETWEEN":
     case "CONTAINS":
     case "NOT_CONTAINS":
     case "MATCHES":
-    case "NOT_MATCHES":
     case "EXISTS":
     case "NOT_EXISTS":
-    case "BETWEEN":
-    case "OUTSIDE":
-      return normalized as KnowledgeConditionOperator;
+      return normalized;
 
     default:
       throw new Error(
