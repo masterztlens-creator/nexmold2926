@@ -5,1066 +5,889 @@ import {
   fingerprint,
   nonEmpty,
   sortedUnique,
+  type ClaimId,
+  type ContextId,
   type EntityId,
+  type EvidenceId,
   type Fingerprint,
+  type ScopeId,
 } from "../../domain/primitives.js";
-
-import {
-  normalizeKnowledgeValue,
-} from "./property-model.js";
 
 import type {
   CreateKnowledgeConstraintInput,
+  KnowledgeConfidence,
   KnowledgeConstraint,
   KnowledgeConstraintType,
-  KnowledgeValue,
 } from "./types.js";
 
 /**
- * NEXMOLD V8 Knowledge Constraint Model
+ * NEXMOLD V8 — Engineering Knowledge Constraint Model
  *
- * A constraint defines a boundary that Knowledge must satisfy.
+ * Phase 2.4
  *
- * Constraint:
- *   Subject
- *     +
- *   Type
- *     +
- *   Expression / Value
- *     +
- *   Applicability Context
- *
- * Design requirements:
- * - deterministic semantic identity
- * - deterministic fingerprints
- * - fail-closed validation
- * - immutable output
- * - explicit entity/property references
- * - deterministic lookup/indexing
+ * Responsibilities:
+ * - canonical constraint identity
+ * - deterministic identifiers and fingerprints
+ * - immutable construction
+ * - integrity verification
+ * - Evidence / Claim lineage preservation
+ * - deterministic indexing and deduplication
  * - conflict detection
- * - replacement safety
+ * - safe replacement checks
  *
- * Truth is not created here.
- * Evidence / Claim remains the epistemic authority.
+ * This module does not establish engineering truth.
+ * Evidence and Claim remain the authoritative truth lineage.
  */
 
-const CONSTRAINT_MODEL_VERSION = 1 as const;
+const MODEL_VERSION = 1 as const;
 
-const CONSTRAINT_ID_PREFIX =
-  "constraint:v8:";
+const ID_PREFIX = "constraint:v8:";
+const FINGERPRINT_PREFIX = "constraint-fp:v8:";
 
-const CONSTRAINT_FINGERPRINT_PREFIX =
-  "constraint-fp:v8:";
+const CONSTRAINT_TYPES = [
+  "REQUIRED",
+  "FORBIDDEN",
+  "MINIMUM",
+  "MAXIMUM",
+  "RANGE",
+  "ENUMERATION",
+  "COMPATIBILITY",
+  "EXCLUSIVITY",
+  "DEPENDENCY",
+  "SEQUENCE",
+  "SCOPE",
+  "CONTEXT",
+  "EVIDENCE",
+  "OTHER",
+] as const satisfies readonly KnowledgeConstraintType[];
 
-function normalizeWhitespace(
-  value: string,
-): string {
-  return value
-    .trim()
-    .replace(/\s+/g, " ");
+const CONFIDENCE_LEVELS = [
+  "VERY_LOW",
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "VERY_HIGH",
+] as const satisfies readonly KnowledgeConfidence[];
+
+export interface ConstraintIdentityInput {
+  readonly type: KnowledgeConstraintType;
+  readonly statement: string;
+  readonly subjectEntityIds?: readonly EntityId[];
+  readonly conditionIds?: readonly string[];
+  readonly requiredPropertyIds?: readonly string[];
+  readonly forbiddenPropertyIds?: readonly string[];
+  readonly scopeId?: ScopeId;
+  readonly contextId?: ContextId;
 }
 
-function normalizeIdentifier(
-  value: string,
-): string {
-  return normalizeWhitespace(value);
+export interface ConstraintCollection {
+  readonly constraints: readonly KnowledgeConstraint[];
+  readonly fingerprint: Fingerprint;
 }
 
-function normalizeExpression(
-  value: string,
-): string {
-  return normalizeWhitespace(
-    nonEmpty(value, "expression"),
+function normalizeWhitespace(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalizeStatement(value: string): string {
+  return normalizeWhitespace(nonEmpty(value, "statement"));
+}
+
+function normalizeType(
+  value: KnowledgeConstraintType,
+): KnowledgeConstraintType {
+  const candidate = String(value).trim();
+
+  if (
+    !(CONSTRAINT_TYPES as readonly string[]).includes(
+      candidate,
+    )
+  ) {
+    throw new Error(
+      `V8_KNOWLEDGE_INVALID_CONSTRAINT_TYPE: unsupported type "${candidate}".`,
+    );
+  }
+
+  return candidate as KnowledgeConstraintType;
+}
+
+function normalizeConfidence(
+  value: KnowledgeConfidence,
+): KnowledgeConfidence {
+  const candidate = String(value).trim();
+
+  if (
+    !(CONFIDENCE_LEVELS as readonly string[]).includes(
+      candidate,
+    )
+  ) {
+    throw new Error(
+      `V8_KNOWLEDGE_INVALID_CONSTRAINT_CONFIDENCE: unsupported confidence "${candidate}".`,
+    );
+  }
+
+  return candidate as KnowledgeConfidence;
+}
+
+function normalizeIds<T extends string>(
+  values: readonly T[] | undefined,
+  field: string,
+): readonly T[] {
+  const normalized = (values ?? []).map((value) =>
+    nonEmpty(String(value), field),
+  ) as T[];
+
+  return Object.freeze(
+    [...sortedUnique(normalized)],
   );
 }
 
-function normalizeConstraintType(
-  type: KnowledgeConstraintType,
-): KnowledgeConstraintType {
-  const normalized = String(type).trim();
-
-  switch (normalized) {
-    case "REQUIRED":
-    case "PROHIBITED":
-    case "RANGE":
-    case "MINIMUM":
-    case "MAXIMUM":
-    case "EXACT":
-    case "ENUMERATION":
-    case "DEPENDENCY":
-    case "MUTUAL_EXCLUSION":
-    case "PRECONDITION":
-    case "POSTCONDITION":
-    case "RESOURCE":
-    case "CAPABILITY":
-    case "SCOPE":
-    case "SAFETY":
-      return normalized as KnowledgeConstraintType;
-
-    default:
-      throw new Error(
-        `V8_KNOWLEDGE_INVALID_CONSTRAINT_TYPE: unsupported constraint type "${type}".`,
-      );
-  }
-}
-
-function normalizeUnit(
-  value: string | undefined,
-): string | undefined {
+function normalizeOptionalId<T extends string>(
+  value: T | undefined,
+  field: string,
+): T | undefined {
   if (value === undefined) {
     return undefined;
   }
 
-  const normalized =
-    normalizeWhitespace(value);
-
-  return normalized.length > 0
-    ? normalized.toLowerCase()
-    : undefined;
+  return nonEmpty(String(value), field) as T;
 }
 
-function canonicalValue(
-  value: KnowledgeValue | undefined,
-): KnowledgeValue | null {
-  if (value === undefined) {
-    return null;
-  }
-
-  return normalizeKnowledgeValue(value);
-}
-
-function hashCanonicalValue(
-  value: unknown,
-): string {
+function hashCanonical(value: unknown): string {
   return createHash("sha256")
     .update(
-      JSON.stringify(
-        canonicalize(value),
-      ),
+      JSON.stringify(canonicalize(value)),
       "utf8",
     )
     .digest("hex");
 }
 
+function identityMaterial(
+  input: ConstraintIdentityInput,
+): Readonly<Record<string, unknown>> {
+  return Object.freeze({
+    version: MODEL_VERSION,
+    type: normalizeType(input.type),
+    statement: normalizeStatement(input.statement),
+    subjectEntityIds: normalizeIds(
+      input.subjectEntityIds,
+      "subjectEntityId",
+    ),
+    conditionIds: normalizeIds(
+      input.conditionIds,
+      "conditionId",
+    ),
+    requiredPropertyIds: normalizeIds(
+      input.requiredPropertyIds,
+      "requiredPropertyId",
+    ),
+    forbiddenPropertyIds: normalizeIds(
+      input.forbiddenPropertyIds,
+      "forbiddenPropertyId",
+    ),
+    scopeId:
+      normalizeOptionalId(input.scopeId, "scopeId") ??
+      null,
+    contextId:
+      normalizeOptionalId(input.contextId, "contextId") ??
+      null,
+  });
+}
+
 /**
- * Build the semantic identity of a constraint.
+ * Produce canonical identity material for a constraint.
  *
- * Human-readable descriptions are deliberately excluded.
- * A wording change must not silently create a new constraint.
+ * Evidence, Claim, and confidence are deliberately excluded from
+ * identity: they are provenance and assessment dimensions rather
+ * than the semantic definition of the constraint.
  */
 export function constraintIdentity(
-  input: Pick<
-    CreateKnowledgeConstraintInput,
-    | "subjectEntityId"
-    | "propertyId"
-    | "type"
-    | "value"
-    | "unit"
-    | "expression"
-  >,
+  input: ConstraintIdentityInput,
 ): string {
   return JSON.stringify(
-    canonicalize({
-      subjectEntityId:
-        input.subjectEntityId === undefined
-          ? null
-          : normalizeIdentifier(
-              String(
-                input.subjectEntityId,
-              ),
-            ),
-      propertyId:
-        input.propertyId === undefined
-          ? null
-          : normalizeIdentifier(
-              input.propertyId,
-            ),
-      type: normalizeConstraintType(
-        input.type,
-      ),
-      value: canonicalValue(
-        input.value,
-      ),
-      unit:
-        normalizeUnit(input.unit) ??
-        null,
-      expression:
-        normalizeExpression(
-          input.expression,
-        ),
-    }),
+    canonicalize(identityMaterial(input)),
   );
 }
 
 /**
- * Derive a deterministic constraint ID.
+ * Derive the canonical deterministic constraint identifier.
  */
 export function deriveConstraintId(
-  input: Pick<
-    CreateKnowledgeConstraintInput,
-    | "subjectEntityId"
-    | "propertyId"
-    | "type"
-    | "value"
-    | "unit"
-    | "expression"
-  >,
+  input: ConstraintIdentityInput,
 ): string {
-  const digest =
-    hashCanonicalValue({
-      model:
-        CONSTRAINT_MODEL_VERSION,
-      identity:
-        constraintIdentity(input),
-    });
+  return `${ID_PREFIX}${hashCanonical({
+    model: MODEL_VERSION,
+    identity: identityMaterial(input),
+  })}`;
+}
 
-  return `${CONSTRAINT_ID_PREFIX}${digest}`;
+function canonicalConstraintPayload(
+  constraint: Omit<KnowledgeConstraint, "fingerprint">,
+): Readonly<Record<string, unknown>> {
+  return Object.freeze({
+    constraintId: nonEmpty(
+      constraint.constraintId,
+      "constraintId",
+    ),
+    type: normalizeType(constraint.type),
+    statement: normalizeStatement(constraint.statement),
+    normalizedStatement: normalizeStatement(
+      constraint.normalizedStatement,
+    ),
+    subjectEntityIds: normalizeIds(
+      constraint.subjectEntityIds,
+      "subjectEntityId",
+    ),
+    conditionIds: normalizeIds(
+      constraint.conditionIds,
+      "conditionId",
+    ),
+    requiredPropertyIds: normalizeIds(
+      constraint.requiredPropertyIds,
+      "requiredPropertyId",
+    ),
+    forbiddenPropertyIds: normalizeIds(
+      constraint.forbiddenPropertyIds,
+      "forbiddenPropertyId",
+    ),
+    scopeId:
+      normalizeOptionalId(constraint.scopeId, "scopeId") ??
+      null,
+    contextId:
+      normalizeOptionalId(
+        constraint.contextId,
+        "contextId",
+      ) ?? null,
+    evidenceIds: normalizeIds(
+      constraint.evidenceIds,
+      "evidenceId",
+    ),
+    claimIds: normalizeIds(
+      constraint.claimIds,
+      "claimId",
+    ),
+    confidence: normalizeConfidence(constraint.confidence),
+  });
 }
 
 /**
- * Create a deterministic constraint fingerprint.
+ * Compute a deterministic fingerprint for a constraint.
  */
 export function fingerprintConstraint(
-  constraint: KnowledgeConstraint,
+  constraint: Omit<KnowledgeConstraint, "fingerprint">,
 ): Fingerprint {
-  const canonical = canonicalize({
-    constraintId:
-      constraint.constraintId,
-    subjectEntityId:
-      constraint.subjectEntityId ===
-      undefined
-        ? null
-        : String(
-            constraint.subjectEntityId,
-          ),
-    propertyId:
-      constraint.propertyId ??
-      null,
-    type:
-      normalizeConstraintType(
-        constraint.type,
-      ),
-    value:
-      canonicalValue(
-        constraint.value,
-      ),
-    unit:
-      normalizeUnit(
-        constraint.unit,
-      ) ?? null,
-    expression:
-      normalizeExpression(
-        constraint.expression,
-      ),
-  });
-
-  const digest =
-    createHash("sha256")
-      .update(
-        JSON.stringify(canonical),
-        "utf8",
-      )
-      .digest("hex");
-
   return fingerprint(
-    `${CONSTRAINT_FINGERPRINT_PREFIX}${digest}`,
+    `${FINGERPRINT_PREFIX}${hashCanonical(
+      canonicalConstraintPayload(constraint),
+    )}`,
   );
 }
 
+function assertSubjectPresent(
+  constraint: Pick<
+    KnowledgeConstraint,
+    "subjectEntityIds" | "requiredPropertyIds" | "forbiddenPropertyIds"
+  >,
+): void {
+  if (
+    constraint.subjectEntityIds.length === 0 &&
+    constraint.requiredPropertyIds.length === 0 &&
+    constraint.forbiddenPropertyIds.length === 0
+  ) {
+    throw new Error(
+      "V8_KNOWLEDGE_CONSTRAINT_SUBJECT_MISSING: a constraint must reference at least one entity or property.",
+    );
+  }
+}
+
+function assertPropertySetsDisjoint(
+  requiredPropertyIds: readonly string[],
+  forbiddenPropertyIds: readonly string[],
+): void {
+  const forbidden = new Set(forbiddenPropertyIds);
+
+  const conflicts = requiredPropertyIds.filter((id) =>
+    forbidden.has(id),
+  );
+
+  if (conflicts.length > 0) {
+    throw new Error(
+      `V8_KNOWLEDGE_CONSTRAINT_PROPERTY_CONFLICT: properties cannot be both required and forbidden: ${conflicts.join(", ")}.`,
+    );
+  }
+}
+
 /**
- * Construct a KnowledgeConstraint.
+ * Construct a canonical constraint using the repository's actual
+ * CreateKnowledgeConstraintInput and KnowledgeConstraint contracts.
  *
- * Fail-closed rules:
- * - a constraint must have an entity or property subject
- * - type must be recognized
- * - expression must be non-empty
- * - supplied ID must equal deterministic ID
+ * A supplied identifier must match the deterministic identity.
  */
 export function createKnowledgeConstraint(
   input: CreateKnowledgeConstraintInput,
 ): KnowledgeConstraint {
-  const type =
-    normalizeConstraintType(
-      input.type,
-    );
+  const type = normalizeType(input.type);
+  const statement = normalizeStatement(input.statement);
+  const normalizedStatement = statement;
 
-  const expression =
-    normalizeExpression(
-      input.expression,
-    );
+  const subjectEntityIds = normalizeIds(
+    input.subjectEntityIds,
+    "subjectEntityId",
+  ) as readonly EntityId[];
 
-  const subjectEntityId =
-    input.subjectEntityId ===
-    undefined
-      ? undefined
-      : (nonEmpty(
-          String(
-            input.subjectEntityId,
-          ),
-          "subjectEntityId",
-        ) as EntityId);
-
-  const propertyId =
-    input.propertyId === undefined
-      ? undefined
-      : nonEmpty(
-          input.propertyId,
-          "propertyId",
-        );
-
-  if (
-    subjectEntityId === undefined &&
-    propertyId === undefined
-  ) {
-    throw new Error(
-      "V8_KNOWLEDGE_CONSTRAINT_SUBJECT_MISSING: constraint must reference a subjectEntityId or propertyId.",
-    );
-  }
-
-  const value =
-    canonicalValue(input.value);
-
-  const unit =
-    normalizeUnit(input.unit);
-
-  const identityInput = {
-    subjectEntityId,
-    propertyId,
-    type,
-    value:
-      value === null
-        ? undefined
-        : value,
-    unit,
-    expression,
-  } satisfies Pick<
-    CreateKnowledgeConstraintInput,
-    | "subjectEntityId"
-    | "propertyId"
-    | "type"
-    | "value"
-    | "unit"
-    | "expression"
-  >;
-
-  const derivedConstraintId =
-    deriveConstraintId(
-      identityInput,
-    );
-
-  const suppliedConstraintId =
-    nonEmpty(
-      input.constraintId,
-      "constraintId",
-    );
-
-  if (
-    suppliedConstraintId !==
-    derivedConstraintId
-  ) {
-    throw new Error(
-      `V8_KNOWLEDGE_CONSTRAINT_ID_MISMATCH: supplied constraintId "${suppliedConstraintId}" does not match deterministic identity "${derivedConstraintId}".`,
-    );
-  }
-
-  const draft = {
-    constraintId:
-      derivedConstraintId,
-    subjectEntityId,
-    propertyId,
-    type,
-    value:
-      value === null
-        ? undefined
-        : value,
-    unit,
-    expression,
-    fingerprint:
-      "" as Fingerprint,
-  } satisfies Omit<
-    KnowledgeConstraint,
-    "fingerprint"
-  > & {
-    fingerprint: Fingerprint;
-  };
-
-  const complete: KnowledgeConstraint = {
-    ...draft,
-    fingerprint:
-      fingerprintConstraint(
-        draft as KnowledgeConstraint,
-      ),
-  };
-
-  return Object.freeze(
-    complete,
+  const conditionIds = normalizeIds(
+    input.conditionIds,
+    "conditionId",
   );
+
+  const requiredPropertyIds = normalizeIds(
+    input.requiredPropertyIds,
+    "requiredPropertyId",
+  );
+
+  const forbiddenPropertyIds = normalizeIds(
+    input.forbiddenPropertyIds,
+    "forbiddenPropertyId",
+  );
+
+  const scopeId = normalizeOptionalId(
+    input.scopeId,
+    "scopeId",
+  );
+
+  const contextId = normalizeOptionalId(
+    input.contextId,
+    "contextId",
+  );
+
+  const evidenceIds = normalizeIds(
+    input.evidenceIds,
+    "evidenceId",
+  ) as readonly EvidenceId[];
+
+  const claimIds = normalizeIds(
+    input.claimIds,
+    "claimId",
+  ) as readonly ClaimId[];
+
+  const confidence = normalizeConfidence(
+    input.confidence ?? "MEDIUM",
+  );
+
+  assertSubjectPresent({
+    subjectEntityIds,
+    requiredPropertyIds,
+    forbiddenPropertyIds,
+  });
+
+  assertPropertySetsDisjoint(
+    requiredPropertyIds,
+    forbiddenPropertyIds,
+  );
+
+  const identity: ConstraintIdentityInput = {
+    type,
+    statement,
+    subjectEntityIds,
+    conditionIds,
+    requiredPropertyIds,
+    forbiddenPropertyIds,
+    scopeId,
+    contextId,
+  };
+
+  const expectedId = deriveConstraintId(identity);
+  const suppliedId = nonEmpty(
+    input.constraintId,
+    "constraintId",
+  );
+
+  if (suppliedId !== expectedId) {
+    throw new Error(
+      `V8_KNOWLEDGE_CONSTRAINT_ID_MISMATCH: supplied "${suppliedId}" does not match canonical ID "${expectedId}".`,
+    );
+  }
+
+  const payload: Omit<KnowledgeConstraint, "fingerprint"> = {
+    constraintId: expectedId,
+    type,
+    statement,
+    normalizedStatement,
+    subjectEntityIds,
+    conditionIds,
+    requiredPropertyIds,
+    forbiddenPropertyIds,
+    scopeId,
+    contextId,
+    evidenceIds,
+    claimIds,
+    confidence,
+  };
+
+  const result: KnowledgeConstraint = Object.freeze({
+    ...payload,
+    fingerprint: fingerprintConstraint(payload),
+  });
+
+  assertConstraintIntegrity(result);
+
+  return result;
 }
 
 /**
- * Convenience factory that derives the ID.
+ * Preferred factory: derive the ID rather than requiring callers
+ * to calculate it independently.
  */
 export function createConstraint(
-  input: Omit<
-    CreateKnowledgeConstraintInput,
-    "constraintId"
-  >,
+  input: Omit<CreateKnowledgeConstraintInput, "constraintId">,
 ): KnowledgeConstraint {
-  const constraintId =
-    deriveConstraintId({
-      subjectEntityId:
-        input.subjectEntityId,
-      propertyId:
-        input.propertyId,
-      type:
-        input.type,
-      value:
-        input.value,
-      unit:
-        input.unit,
-      expression:
-        input.expression,
-    });
+  const identity: ConstraintIdentityInput = {
+    type: input.type,
+    statement: input.statement,
+    subjectEntityIds: input.subjectEntityIds,
+    conditionIds: input.conditionIds,
+    requiredPropertyIds: input.requiredPropertyIds,
+    forbiddenPropertyIds: input.forbiddenPropertyIds,
+    scopeId: input.scopeId,
+    contextId: input.contextId,
+  };
 
   return createKnowledgeConstraint({
     ...input,
-    constraintId,
+    constraintId: deriveConstraintId(identity),
   });
 }
 
 /**
- * Verify the canonical fingerprint.
- */
-export function verifyConstraintFingerprint(
-  constraint: KnowledgeConstraint,
-): boolean {
-  try {
-    return (
-      String(
-        fingerprintConstraint(
-          constraint,
-        ),
-      ) ===
-      String(
-        constraint.fingerprint,
-      )
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Assert complete constraint integrity.
+ * Validate identifier, canonical fields, provenance arrays,
+ * semantic invariants, and fingerprint.
  */
 export function assertConstraintIntegrity(
   constraint: KnowledgeConstraint,
 ): void {
   if (
-    !constraint ||
-    typeof constraint !==
-      "object"
+    constraint === null ||
+    typeof constraint !== "object"
   ) {
     throw new Error(
       "V8_KNOWLEDGE_INVALID_CONSTRAINT: constraint must be an object.",
     );
   }
 
+  nonEmpty(constraint.constraintId, "constraintId");
+  nonEmpty(constraint.statement, "statement");
   nonEmpty(
-    constraint.constraintId,
-    "constraintId",
+    constraint.normalizedStatement,
+    "normalizedStatement",
   );
 
-  normalizeConstraintType(
-    constraint.type,
+  const type = normalizeType(constraint.type);
+  normalizeConfidence(constraint.confidence);
+
+  const canonicalStatement = normalizeStatement(
+    constraint.statement,
   );
 
-  normalizeExpression(
-    constraint.expression,
+  if (constraint.normalizedStatement !== canonicalStatement) {
+    throw new Error(
+      `V8_KNOWLEDGE_CONSTRAINT_NORMALIZATION_MISMATCH: "${constraint.constraintId}" has a non-canonical normalized statement.`,
+    );
+  }
+
+  const subjectEntityIds = normalizeIds(
+    constraint.subjectEntityIds,
+    "subjectEntityId",
+  );
+
+  const conditionIds = normalizeIds(
+    constraint.conditionIds,
+    "conditionId",
+  );
+
+  const requiredPropertyIds = normalizeIds(
+    constraint.requiredPropertyIds,
+    "requiredPropertyId",
+  );
+
+  const forbiddenPropertyIds = normalizeIds(
+    constraint.forbiddenPropertyIds,
+    "forbiddenPropertyId",
+  );
+
+  const evidenceIds = normalizeIds(
+    constraint.evidenceIds,
+    "evidenceId",
+  );
+
+  const claimIds = normalizeIds(
+    constraint.claimIds,
+    "claimId",
   );
 
   if (
-    constraint.subjectEntityId ===
-      undefined &&
-    constraint.propertyId ===
-      undefined
+    subjectEntityIds.length !==
+      constraint.subjectEntityIds.length ||
+    conditionIds.length !== constraint.conditionIds.length ||
+    requiredPropertyIds.length !==
+      constraint.requiredPropertyIds.length ||
+    forbiddenPropertyIds.length !==
+      constraint.forbiddenPropertyIds.length ||
+    evidenceIds.length !== constraint.evidenceIds.length ||
+    claimIds.length !== constraint.claimIds.length
   ) {
     throw new Error(
-      "V8_KNOWLEDGE_CONSTRAINT_SUBJECT_MISSING: constraint must reference a subjectEntityId or propertyId.",
+      `V8_KNOWLEDGE_CONSTRAINT_DUPLICATE_REFERENCE: "${constraint.constraintId}" contains duplicate or non-canonical references.`,
     );
   }
 
-  if (
-    constraint.subjectEntityId !==
-    undefined
-  ) {
-    nonEmpty(
-      String(
-        constraint.subjectEntityId,
-      ),
-      "subjectEntityId",
-    );
-  }
+  assertSubjectPresent({
+    subjectEntityIds: constraint.subjectEntityIds,
+    requiredPropertyIds: constraint.requiredPropertyIds,
+    forbiddenPropertyIds: constraint.forbiddenPropertyIds,
+  });
 
-  if (
-    constraint.propertyId !==
-    undefined
-  ) {
-    nonEmpty(
-      constraint.propertyId,
-      "propertyId",
-    );
-  }
+  assertPropertySetsDisjoint(
+    constraint.requiredPropertyIds,
+    constraint.forbiddenPropertyIds,
+  );
 
-  if (
-    constraint.value !==
-    undefined
-  ) {
-    canonicalValue(
-      constraint.value,
-    );
-  }
+  const expectedId = deriveConstraintId({
+    type,
+    statement: constraint.statement,
+    subjectEntityIds: constraint.subjectEntityIds,
+    conditionIds: constraint.conditionIds,
+    requiredPropertyIds: constraint.requiredPropertyIds,
+    forbiddenPropertyIds: constraint.forbiddenPropertyIds,
+    scopeId: constraint.scopeId,
+    contextId: constraint.contextId,
+  });
 
-  const expectedId =
-    deriveConstraintId({
-      subjectEntityId:
-        constraint.subjectEntityId,
-      propertyId:
-        constraint.propertyId,
-      type:
-        constraint.type,
-      value:
-        constraint.value,
-      unit:
-        constraint.unit,
-      expression:
-        constraint.expression,
-    });
-
-  if (
-    expectedId !==
-    constraint.constraintId
-  ) {
+  if (constraint.constraintId !== expectedId) {
     throw new Error(
-      `V8_KNOWLEDGE_CONSTRAINT_ID_MISMATCH: expected "${expectedId}" but received "${constraint.constraintId}".`,
+      `V8_KNOWLEDGE_CONSTRAINT_ID_MISMATCH: "${constraint.constraintId}" does not match "${expectedId}".`,
     );
   }
 
-  if (
-    !verifyConstraintFingerprint(
-      constraint,
-    )
-  ) {
+  const { fingerprint: _fingerprint, ...payload } = constraint;
+
+  const expectedFingerprint = fingerprintConstraint(payload);
+
+  if (constraint.fingerprint !== expectedFingerprint) {
     throw new Error(
-      `V8_KNOWLEDGE_CONSTRAINT_FINGERPRINT_MISMATCH: constraint "${constraint.constraintId}" has an invalid fingerprint.`,
+      `V8_KNOWLEDGE_CONSTRAINT_FINGERPRINT_MISMATCH: "${constraint.constraintId}" has an invalid fingerprint.`,
     );
   }
 }
 
-/**
- * Determine semantic identity equality.
- */
+export function verifyConstraintFingerprint(
+  constraint: KnowledgeConstraint,
+): boolean {
+  try {
+    const { fingerprint: _fingerprint, ...payload } = constraint;
+
+    return (
+      fingerprintConstraint(payload) === constraint.fingerprint
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function sameConstraintIdentity(
-  left: Pick<
-    KnowledgeConstraint,
-    | "subjectEntityId"
-    | "propertyId"
-    | "type"
-    | "value"
-    | "unit"
-    | "expression"
-  >,
-  right: Pick<
-    KnowledgeConstraint,
-    | "subjectEntityId"
-    | "propertyId"
-    | "type"
-    | "value"
-    | "unit"
-    | "expression"
-  >,
+  left: KnowledgeConstraint,
+  right: KnowledgeConstraint,
 ): boolean {
   return (
-    constraintIdentity(
-      left,
-    ) ===
-    constraintIdentity(
-      right,
-    )
+    constraintIdentity(left) === constraintIdentity(right)
   );
 }
 
-/**
- * Find a constraint by deterministic ID.
- */
 export function findConstraint(
-  constraints:
-    readonly KnowledgeConstraint[],
+  constraints: readonly KnowledgeConstraint[],
   constraintId: string,
-): KnowledgeConstraint | null {
-  const id = nonEmpty(
-    constraintId,
-    "constraintId",
-  );
-
-  return (
-    constraints.find(
-      (constraint) =>
-        constraint.constraintId ===
-        id,
-    ) ?? null
-  );
-}
-
-/**
- * Find constraints by property.
- */
-export function findConstraintsByProperty(
-  constraints:
-    readonly KnowledgeConstraint[],
-  propertyId: string,
-): readonly KnowledgeConstraint[] {
-  const id = nonEmpty(
-    propertyId,
-    "propertyId",
-  );
-
-  return constraints.filter(
-    (constraint) =>
-      constraint.propertyId === id,
-  );
-}
-
-/**
- * Find constraints by entity.
- */
-export function findConstraintsByEntity(
-  constraints:
-    readonly KnowledgeConstraint[],
-  entityId: EntityId,
-): readonly KnowledgeConstraint[] {
-  const id = nonEmpty(
-    String(entityId),
-    "entityId",
-  );
-
-  return constraints.filter(
-    (constraint) =>
-      constraint.subjectEntityId !==
-        undefined &&
-      String(
-        constraint.subjectEntityId,
-      ) === id,
-  );
-}
-
-/**
- * Find constraints by type.
- */
-export function findConstraintsByType(
-  constraints:
-    readonly KnowledgeConstraint[],
-  type: KnowledgeConstraintType,
-): readonly KnowledgeConstraint[] {
-  const normalized =
-    normalizeConstraintType(
-      type,
-    );
-
-  return constraints.filter(
-    (constraint) =>
-      constraint.type ===
-      normalized,
-  );
-}
-
-/**
- * Build a deterministic constraint index.
- */
-export function indexConstraints(
-  constraints:
-    readonly KnowledgeConstraint[],
-): ReadonlyMap<
-  string,
-  KnowledgeConstraint
-> {
-  const map = new Map<
-    string,
-    KnowledgeConstraint
-  >();
+): KnowledgeConstraint | undefined {
+  const id = nonEmpty(constraintId, "constraintId");
 
   for (const constraint of constraints) {
-    assertConstraintIntegrity(
-      constraint,
-    );
-
-    const existing =
-      map.get(
-        constraint.constraintId,
-      );
-
-    if (
-      existing === undefined
-    ) {
-      map.set(
-        constraint.constraintId,
-        constraint,
-      );
-      continue;
-    }
-
-    if (
-      !sameConstraintIdentity(
-        existing,
-        constraint,
-      )
-    ) {
-      throw new Error(
-        `V8_KNOWLEDGE_CONSTRAINT_INDEX_CONFLICT: constraint ID "${constraint.constraintId}" maps to multiple semantic identities.`,
-      );
-    }
-
-    if (
-      existing.fingerprint !==
-      constraint.fingerprint
-    ) {
-      throw new Error(
-        `V8_KNOWLEDGE_CONSTRAINT_INDEX_FINGERPRINT_CONFLICT: constraint ID "${constraint.constraintId}" has conflicting fingerprints.`,
-      );
+    if (constraint.constraintId === id) {
+      assertConstraintIntegrity(constraint);
+      return constraint;
     }
   }
 
-  return map;
+  return undefined;
 }
 
-/**
- * Deduplicate constraints deterministically.
- */
-export function deduplicateConstraints(
-  constraints:
-    readonly KnowledgeConstraint[],
+export function findConstraintsByType(
+  constraints: readonly KnowledgeConstraint[],
+  type: KnowledgeConstraintType,
 ): readonly KnowledgeConstraint[] {
-  const map =
-    indexConstraints(
-      constraints,
-    );
+  const expectedType = normalizeType(type);
 
-  return [
-    ...map.values(),
-  ].sort(
-    (left, right) =>
-      left.constraintId.localeCompare(
-        right.constraintId,
+  return Object.freeze(
+    constraints
+      .filter((constraint) => {
+        assertConstraintIntegrity(constraint);
+        return constraint.type === expectedType;
+      })
+      .sort((left, right) =>
+        left.constraintId.localeCompare(right.constraintId),
+      ),
+  );
+}
+
+export function findConstraintsByEntity(
+  constraints: readonly KnowledgeConstraint[],
+  entityId: EntityId,
+): readonly KnowledgeConstraint[] {
+  const id = nonEmpty(String(entityId), "entityId");
+
+  return Object.freeze(
+    constraints
+      .filter((constraint) => {
+        assertConstraintIntegrity(constraint);
+
+        return constraint.subjectEntityIds.some(
+          (candidate) => String(candidate) === id,
+        );
+      })
+      .sort((left, right) =>
+        left.constraintId.localeCompare(right.constraintId),
+      ),
+  );
+}
+
+export function findConstraintsByCondition(
+  constraints: readonly KnowledgeConstraint[],
+  conditionId: string,
+): readonly KnowledgeConstraint[] {
+  const id = nonEmpty(conditionId, "conditionId");
+
+  return Object.freeze(
+    constraints
+      .filter((constraint) => {
+        assertConstraintIntegrity(constraint);
+        return constraint.conditionIds.includes(id);
+      })
+      .sort((left, right) =>
+        left.constraintId.localeCompare(right.constraintId),
+      ),
+  );
+}
+
+export function findConstraintsByProperty(
+  constraints: readonly KnowledgeConstraint[],
+  propertyId: string,
+): readonly KnowledgeConstraint[] {
+  const id = nonEmpty(propertyId, "propertyId");
+
+  return Object.freeze(
+    constraints
+      .filter((constraint) => {
+        assertConstraintIntegrity(constraint);
+
+        return (
+          constraint.requiredPropertyIds.includes(id) ||
+          constraint.forbiddenPropertyIds.includes(id)
+        );
+      })
+      .sort((left, right) =>
+        left.constraintId.localeCompare(right.constraintId),
       ),
   );
 }
 
 /**
- * Detect semantic conflicts.
+ * Build a deterministic ID index and reject conflicting records.
  */
-export function assertNoConstraintConflicts(
-  constraints:
-    readonly KnowledgeConstraint[],
-): void {
-  const byIdentity =
-    new Map<
-      string,
-      KnowledgeConstraint
-    >();
+export function indexConstraints(
+  constraints: readonly KnowledgeConstraint[],
+): ReadonlyMap<string, KnowledgeConstraint> {
+  const result = new Map<string, KnowledgeConstraint>();
 
   for (const constraint of constraints) {
-    assertConstraintIntegrity(
-      constraint,
-    );
+    assertConstraintIntegrity(constraint);
 
-    const identity =
-      constraintIdentity(
-        constraint,
-      );
+    const existing = result.get(constraint.constraintId);
 
-    const previous =
-      byIdentity.get(identity);
-
-    if (
-      previous === undefined
-    ) {
-      byIdentity.set(
-        identity,
-        constraint,
-      );
+    if (existing === undefined) {
+      result.set(constraint.constraintId, constraint);
       continue;
     }
 
-    if (
-      previous.constraintId !==
-      constraint.constraintId
-    ) {
+    if (existing.fingerprint !== constraint.fingerprint) {
       throw new Error(
-        `V8_KNOWLEDGE_CONSTRAINT_ID_CONFLICT: semantic identity maps to multiple constraint IDs "${previous.constraintId}" and "${constraint.constraintId}".`,
+        `V8_KNOWLEDGE_CONSTRAINT_INDEX_CONFLICT: "${constraint.constraintId}" has conflicting fingerprints.`,
+      );
+    }
+  }
+
+  return result;
+}
+
+export function deduplicateConstraints(
+  constraints: readonly KnowledgeConstraint[],
+): readonly KnowledgeConstraint[] {
+  return Object.freeze(
+    [...indexConstraints(constraints).values()].sort(
+      (left, right) =>
+        left.constraintId.localeCompare(right.constraintId),
+    ),
+  );
+}
+
+export function assertNoConstraintConflicts(
+  constraints: readonly KnowledgeConstraint[],
+): void {
+  const byIdentity = new Map<string, KnowledgeConstraint>();
+
+  for (const constraint of constraints) {
+    assertConstraintIntegrity(constraint);
+
+    const identity = constraintIdentity(constraint);
+    const previous = byIdentity.get(identity);
+
+    if (previous === undefined) {
+      byIdentity.set(identity, constraint);
+      continue;
+    }
+
+    if (previous.constraintId !== constraint.constraintId) {
+      throw new Error(
+        `V8_KNOWLEDGE_CONSTRAINT_ID_CONFLICT: one semantic identity maps to "${previous.constraintId}" and "${constraint.constraintId}".`,
       );
     }
 
-    if (
-      previous.fingerprint !==
-      constraint.fingerprint
-    ) {
+    if (previous.fingerprint !== constraint.fingerprint) {
       throw new Error(
-        `V8_KNOWLEDGE_CONSTRAINT_FINGERPRINT_CONFLICT: semantic identity maps to conflicting fingerprints.`,
+        `V8_KNOWLEDGE_CONSTRAINT_FINGERPRINT_CONFLICT: "${constraint.constraintId}" has inconsistent payloads.`,
       );
     }
   }
 }
 
-/**
- * Fingerprint an entire constraint collection.
- */
 export function fingerprintConstraints(
-  constraints:
-    readonly KnowledgeConstraint[],
+  constraints: readonly KnowledgeConstraint[],
 ): Fingerprint {
-  const canonicalConstraints =
-    deduplicateConstraints(
-      constraints,
-    ).map(
-      (constraint) => ({
-        constraintId:
-          constraint.constraintId,
-        subjectEntityId:
-          constraint.subjectEntityId ===
-          undefined
-            ? null
-            : String(
-                constraint.subjectEntityId,
-              ),
-        propertyId:
-          constraint.propertyId ??
-          null,
-        type:
-          constraint.type,
-        value:
-          canonicalValue(
-            constraint.value,
-          ),
-        unit:
-          normalizeUnit(
-            constraint.unit,
-          ) ?? null,
-        expression:
-          normalizeExpression(
-            constraint.expression,
-          ),
-        fingerprint:
-          String(
-            constraint.fingerprint,
-          ),
-      }),
-    );
-
-  const digest =
-    hashCanonicalValue(
-      canonicalConstraints,
-    );
+  const canonical = deduplicateConstraints(constraints).map(
+    (constraint) => ({
+      constraintId: constraint.constraintId,
+      fingerprint: String(constraint.fingerprint),
+    }),
+  );
 
   return fingerprint(
-    `${CONSTRAINT_FINGERPRINT_PREFIX}collection:${digest}`,
+    `${FINGERPRINT_PREFIX}collection:${hashCanonical(canonical)}`,
   );
 }
 
-/**
- * Ensure a replacement cannot silently change semantic identity.
- */
-export function assertConstraintReplacementSafe(
-  current: KnowledgeConstraint,
-  replacement: KnowledgeConstraint,
-): void {
-  assertConstraintIntegrity(
-    current,
-  );
+export function buildConstraintCollection(
+  constraints: readonly KnowledgeConstraint[],
+): ConstraintCollection {
+  const canonicalConstraints = deduplicateConstraints(constraints);
 
-  assertConstraintIntegrity(
-    replacement,
-  );
-
-  if (
-    current.constraintId !==
-    replacement.constraintId
-  ) {
-    throw new Error(
-      `V8_KNOWLEDGE_CONSTRAINT_REPLACEMENT_ID_CHANGE: constraint replacement changes ID from "${current.constraintId}" to "${replacement.constraintId}".`,
-    );
-  }
-
-  if (
-    !sameConstraintIdentity(
-      current,
-      replacement,
-    )
-  ) {
-    throw new Error(
-      `V8_KNOWLEDGE_CONSTRAINT_REPLACEMENT_IDENTITY_CHANGE: constraint "${current.constraintId}" semantic identity changed.`,
-    );
-  }
-}
-
-/**
- * Return an immutable canonical snapshot.
- */
-export function snapshotConstraint(
-  constraint: KnowledgeConstraint,
-): KnowledgeConstraint {
-  assertConstraintIntegrity(
-    constraint,
-  );
+  assertNoConstraintConflicts(canonicalConstraints);
 
   return Object.freeze({
-    constraintId:
-      constraint.constraintId,
-    subjectEntityId:
-      constraint.subjectEntityId,
-    propertyId:
-      constraint.propertyId,
-    type:
-      constraint.type,
-    value:
-      constraint.value,
-    unit:
-      constraint.unit,
-    expression:
-      constraint.expression,
-    fingerprint:
-      constraint.fingerprint,
+    constraints: canonicalConstraints,
+    fingerprint: fingerprintConstraints(canonicalConstraints),
   });
 }
 
-/**
- * Clone a constraint into a detached immutable object.
- */
+export function assertConstraintReplacementSafe(
+  previous: KnowledgeConstraint,
+  replacement: KnowledgeConstraint,
+): void {
+  assertConstraintIntegrity(previous);
+  assertConstraintIntegrity(replacement);
+
+  if (previous.constraintId !== replacement.constraintId) {
+    throw new Error(
+      "V8_KNOWLEDGE_CONSTRAINT_REPLACEMENT_ID_CHANGE: constraint ID cannot change during replacement.",
+    );
+  }
+
+  if (!sameConstraintIdentity(previous, replacement)) {
+    throw new Error(
+      "V8_KNOWLEDGE_CONSTRAINT_REPLACEMENT_IDENTITY_CHANGE: semantic identity cannot change during replacement.",
+    );
+  }
+}
+
 export function cloneConstraint(
   constraint: KnowledgeConstraint,
 ): KnowledgeConstraint {
-  assertConstraintIntegrity(
-    constraint,
-  );
+  assertConstraintIntegrity(constraint);
 
-  const clone =
-    JSON.parse(
-      JSON.stringify(
-        constraint,
-      ),
-    ) as KnowledgeConstraint;
-
-  return Object.freeze(
-    clone,
-  );
-}
-
-/**
- * Deterministic comparison.
- */
-export function compareConstraints(
-  left: KnowledgeConstraint,
-  right: KnowledgeConstraint,
-): number {
-  return left.constraintId.localeCompare(
-    right.constraintId,
-  );
-}
-
-/**
- * Deterministically sort constraints.
- */
-export function sortConstraints(
-  constraints:
-    readonly KnowledgeConstraint[],
-): readonly KnowledgeConstraint[] {
-  return [
-    ...constraints,
-  ].sort(
-    compareConstraints,
-  );
-}
-
-/**
- * Verify an entire constraint collection.
- */
-export function verifyConstraintCollection(
-  constraints:
-    readonly KnowledgeConstraint[],
-): void {
-  assertNoConstraintConflicts(
-    constraints,
-  );
-
-  for (const constraint of constraints) {
-    assertConstraintIntegrity(
-      constraint,
-    );
-  }
-}
-
-/**
- * Collect unique referenced entity IDs.
- */
-export function collectConstraintEntityIds(
-  constraints:
-    readonly KnowledgeConstraint[],
-): readonly EntityId[] {
-  return sortedUnique(
-    constraints
-      .map(
-        (constraint) =>
-          constraint.subjectEntityId ===
-          undefined
-            ? ""
-            : String(
-                constraint.subjectEntityId,
-              ),
-      )
-      .filter(
-        (value) =>
-          value.length > 0,
-      ),
-  ) as readonly EntityId[];
-}
-
-/**
- * Collect unique referenced property IDs.
- */
-export function collectConstraintPropertyIds(
-  constraints:
-    readonly KnowledgeConstraint[],
-): readonly string[] {
-  return sortedUnique(
-    constraints
-      .map(
-        (constraint) =>
-          constraint.propertyId ??
-          "",
-      )
-      .filter(
-        (value) =>
-          value.length > 0,
-      ),
-  );
-}
-
-/**
- * Model defaults and explicit invariants.
- */
-export const CONSTRAINT_MODEL_DEFAULTS =
-  Object.freeze({
-    modelVersion:
-      CONSTRAINT_MODEL_VERSION,
-    idPrefix:
-      CONSTRAINT_ID_PREFIX,
-    fingerprintPrefix:
-      CONSTRAINT_FINGERPRINT_PREFIX,
-    requireSubjectOrProperty:
-      true,
-    deterministicIdentity:
-      true,
-    immutableOutput:
-      true,
-    failClosed:
-      true,
+  return Object.freeze({
+    ...constraint,
+    subjectEntityIds: Object.freeze([
+      ...constraint.subjectEntityIds,
+    ]),
+    conditionIds: Object.freeze([
+      ...constraint.conditionIds,
+    ]),
+    requiredPropertyIds: Object.freeze([
+      ...constraint.requiredPropertyIds,
+    ]),
+    forbiddenPropertyIds: Object.freeze([
+      ...constraint.forbiddenPropertyIds,
+    ]),
+    evidenceIds: Object.freeze([
+      ...constraint.evidenceIds,
+    ]),
+    claimIds: Object.freeze([
+      ...constraint.claimIds,
+    ]),
   });
+}
+
+export function collectConstraintEntityIds(
+  constraints: readonly KnowledgeConstraint[],
+): readonly EntityId[] {
+  return Object.freeze(
+    [...sortedUnique(
+      constraints.flatMap((constraint) => {
+        assertConstraintIntegrity(constraint);
+        return constraint.subjectEntityIds;
+      }),
+    )] as EntityId[],
+  );
+}
+
+export function collectConstraintEvidenceIds(
+  constraints: readonly KnowledgeConstraint[],
+): readonly EvidenceId[] {
+  return Object.freeze(
+    [...sortedUnique(
+      constraints.flatMap((constraint) => {
+        assertConstraintIntegrity(constraint);
+        return constraint.evidenceIds;
+      }),
+    )] as EvidenceId[],
+  );
+}
+
+export function collectConstraintClaimIds(
+  constraints: readonly KnowledgeConstraint[],
+): readonly ClaimId[] {
+  return Object.freeze(
+    [...sortedUnique(
+      constraints.flatMap((constraint) => {
+        assertConstraintIntegrity(constraint);
+        return constraint.claimIds;
+      }),
+    )] as ClaimId[],
+  );
+}
+
+export const CONSTRAINT_MODEL_DEFAULTS = Object.freeze({
+  version: MODEL_VERSION,
+  idPrefix: ID_PREFIX,
+  fingerprintPrefix: FINGERPRINT_PREFIX,
+  deterministicIdentity: true,
+  immutableOutput: true,
+  failClosed: true,
+  preserveEvidenceLineage: true,
+  preserveClaimLineage: true,
+});
