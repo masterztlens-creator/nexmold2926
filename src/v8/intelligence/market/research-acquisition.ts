@@ -27,6 +27,10 @@ import {
   type DiscoveryInput,
 } from "../web-discovery/discovery.js";
 
+import {
+  normalizeDiscoveryUrl,
+} from "../web-discovery/candidate-normalizer.js";
+
 import type {
   DiscoveryBatch,
 } from "../web-discovery/types.js";
@@ -76,6 +80,16 @@ const message = (
     ? error.message
     : String(error);
 
+function throwIfAborted(
+  signal: AbortSignal | undefined,
+): void {
+  if (signal?.aborted) {
+    throw new Error(
+      "V8_MARKET_RESEARCH_ABORTED",
+    );
+  }
+}
+
 function evidenceKey(
   candidate: ExtractedEvidenceCandidate,
 ): string {
@@ -102,61 +116,33 @@ function extractEvidence(
     ),
   ];
 
-  const seen =
-    new Set<string>();
+  const seen = new Set<string>();
 
   return all.filter(
     (candidate) => {
-      const key =
-        evidenceKey(candidate);
+      const key = evidenceKey(candidate);
 
-      if (
-        seen.has(key)
-      ) {
+      if (seen.has(key)) {
         return false;
       }
 
       seen.add(key);
-
       return true;
     },
   );
 }
 
-function actionIdForQuery(
-  plan: MarketResearchPlan,
-  query: string,
-): string {
-  const match =
-    plan.queries.find(
-      (item) =>
-        item.query === query,
-    );
-
-  return (
-    match?.actionId ??
-    "unknown"
-  );
-}
-
-function actionIdForCandidate(
-  plan: MarketResearchPlan,
-  candidateUrl: string,
-): string {
-  const matchingQuery =
-    plan.queries.find(
-      (item) =>
-        item.query ===
-        candidateUrl,
-    );
-
-  return (
-    matchingQuery?.actionId ??
-    plan.queries[0]?.actionId ??
-    "unknown"
-  );
-}
-
+/**
+ * Executes market research while preserving the relationship between
+ * each discovered candidate URL and the research action that produced it.
+ *
+ * Provenance rules:
+ * - URL identity uses the same normalizer as candidate discovery.
+ * - The first research action producing a normalized URL owns attribution.
+ * - Duplicate URLs do not overwrite their original attribution.
+ * - A candidate without an action mapping is not acquired.
+ * - No candidate is silently attributed to the first plan action.
+ */
 export async function runMarketAcquisition(
   plan: MarketResearchPlan,
   searchProvider: SearchProvider,
@@ -164,100 +150,138 @@ export async function runMarketAcquisition(
   store: FoundationStore,
   config: MarketAcquisitionConfig = {},
 ): Promise<MarketAcquisitionResult> {
-  const inputs:
-    DiscoveryInput[] = [];
+  const inputs: DiscoveryInput[] = [];
 
-  const searchErrors:
-    {
-      query: string;
-      error: string;
-    }[] = [];
+  const searchErrors: {
+    query: string;
+    error: string;
+  }[] = [];
 
-  const queryToAction =
+  const fetchErrors: {
+    url: string;
+    error: string;
+  }[] = [];
+
+  /*
+   * Key: canonical discovery URL.
+   * Value: the research action responsible for discovering it.
+   */
+  const candidateActionByUrl =
     new Map<string, string>();
 
-  for (
-    const item of plan.queries
-  ) {
-    if (
-      config.signal?.aborted
-    ) {
-      throw new Error(
-        "V8_MARKET_RESEARCH_ABORTED",
-      );
-    }
-
-    queryToAction.set(
-      item.query,
-      item.actionId,
-    );
+  for (const item of plan.queries) {
+    throwIfAborted(config.signal);
 
     try {
       const results =
         await searchProvider.search(
           item.query,
           {
-            signal:
-              config.signal,
+            signal: config.signal,
           },
         );
 
-      for (
-        const result of results
-      ) {
+      for (const result of results) {
+        const normalizedUrl =
+          normalizeDiscoveryUrl(result.url);
+
+        /*
+         * Invalid URLs are left for discovery validation to reject.
+         * They must never receive a fabricated provenance mapping.
+         */
+        if (normalizedUrl !== null) {
+          /*
+           * Deterministic ownership:
+           * the first query/action producing this normalized URL wins.
+           */
+          if (
+            !candidateActionByUrl.has(
+              normalizedUrl,
+            )
+          ) {
+            candidateActionByUrl.set(
+              normalizedUrl,
+              item.actionId,
+            );
+          }
+        }
+
         inputs.push({
           url: result.url,
           kind: "SERP_RESULT",
           title: result.title,
+          sourceUrl: item.query,
         });
       }
-    } catch (
-      error
-    ) {
+    } catch (error) {
+      throwIfAborted(config.signal);
+
       searchErrors.push({
         query: item.query,
-        error:
-          message(error),
+        error: message(error),
       });
     }
   }
 
+  throwIfAborted(config.signal);
+
   const discovery =
-    discoverCandidates(
-      inputs,
-    );
+    discoverCandidates(inputs);
 
-  const acquisitions:
-    MarketAcquisitionRecord[] =
-      [];
+  const acquisitions: MarketAcquisitionRecord[] = [];
 
-  const fetchErrors:
-    {
-      url: string;
-      error: string;
-    }[] = [];
+  const configuredMaxCandidates =
+    config.maxCandidates ?? 10;
 
-  const maxCandidates =
-    config.maxCandidates ??
-    10;
-
-  for (
-    const candidate of
-      discovery.candidates
+  if (
+    !Number.isInteger(
+      configuredMaxCandidates,
+    ) ||
+    configuredMaxCandidates < 0
   ) {
+    throw new Error(
+      "V8_MARKET_ACQUISITION_MAX_CANDIDATES_INVALID",
+    );
+  }
+
+  for (const candidate of discovery.candidates) {
     if (
       acquisitions.length >=
-      maxCandidates
+      configuredMaxCandidates
     ) {
       break;
     }
 
-    if (
-      config.signal?.aborted
-    ) {
-      throw new Error(
-        "V8_MARKET_RESEARCH_ABORTED",
+    throwIfAborted(config.signal);
+
+    /*
+     * Candidate URLs are normalized by discovery. Resolve attribution
+     * using the same canonical identity rather than comparing a URL
+     * against a search-query string.
+     */
+    const normalizedUrl =
+      candidate.normalizedUrl;
+
+    const actionId =
+      candidateActionByUrl.get(
+        normalizedUrl,
       );
+
+    /*
+     * Fail closed: do not fetch or ingest evidence when action provenance
+     * is missing. This also makes the failure visible in the result.
+     */
+    if (
+      actionId === undefined ||
+      actionId.trim() === ""
+    ) {
+      fetchErrors.push({
+        url: candidate.url,
+        error:
+          "V8_MARKET_ACQUISITION_ACTION_PROVENANCE_MISSING",
+      });
+
+      continue;
     }
 
     try {
@@ -265,10 +289,11 @@ export async function runMarketAcquisition(
         await pageFetcher.fetch(
           candidate.url,
           {
-            signal:
-              config.signal,
+            signal: config.signal,
           },
         );
+
+      throwIfAborted(config.signal);
 
       const acquisition =
         ingestFetchedPage(
@@ -276,51 +301,30 @@ export async function runMarketAcquisition(
           page,
           extractEvidence(page),
           {
-            actorId:
-              config.actorId,
+            actorId: config.actorId,
           },
         );
 
-      const actionId =
-        queryToAction.get(
-          candidate.url,
-        ) ??
-        plan.queries[0]
-          ?.actionId ??
-        "unknown";
-
       acquisitions.push({
         actionId,
-        candidateUrl:
-          candidate.url,
+        candidateUrl: candidate.url,
         page,
         acquisition,
       });
-    } catch (
-      error
-    ) {
+    } catch (error) {
+      throwIfAborted(config.signal);
+
       fetchErrors.push({
-        url:
-          candidate.url,
-        error:
-          message(error),
+        url: candidate.url,
+        error: message(error),
       });
     }
   }
 
-  return {
+  return immutable({
     discovery,
-    acquisitions:
-      immutable(
-        acquisitions,
-      ),
-    searchErrors:
-      immutable(
-        searchErrors,
-      ),
-    fetchErrors:
-      immutable(
-        fetchErrors,
-      ),
-  };
+    acquisitions,
+    searchErrors,
+    fetchErrors,
+  });
 }
