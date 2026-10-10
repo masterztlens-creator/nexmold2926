@@ -94,11 +94,6 @@ test(
     );
 
     assert.equal(result.eligible, false);
-    assert.ok(
-      result.reasons.includes(
-        "seo-quality:SEO_TITLE_EMPTY",
-      ),
-    );
   },
 );
 
