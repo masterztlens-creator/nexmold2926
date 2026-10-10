@@ -1,4 +1,3 @@
-
 import { normalizeText, uniqueStrings } from "../shared.js";
 
 export type GeoVisibilitySeverity = "INFO" | "WARN" | "BLOCK";
@@ -228,6 +227,10 @@ function freezeReport(
  * - Each observation must include a query, platform, timestamp, and answer.
  * - Timestamps must be timezone-qualified ISO-8601 timestamps.
  * - Citation URLs must be valid HTTP(S) URLs.
+ *
+ * Duplicate observations are identified by normalized query, normalized
+ * platform, and timestamp. Invalid snapshots do not reserve a deduplication
+ * key, and duplicate snapshots are diagnosed but excluded from all metrics.
  */
 export function evaluateGeoVisibility(
   target: GeoVisibilityTarget,
@@ -395,6 +398,12 @@ export function evaluateGeoVisibility(
       validCitations.push(trimmedUrl);
     }
 
+    // Invalid snapshots must not reserve a key: a later valid snapshot with
+    // the same query/platform/timestamp must still be eligible for evaluation.
+    if (invalid) {
+      continue;
+    }
+
     const snapshotKey = JSON.stringify([
       normalizeText(query),
       normalizeText(platform),
@@ -406,17 +415,14 @@ export function evaluateGeoVisibility(
         finding(
           "GEO_VISIBILITY_DUPLICATE_OBSERVATION",
           "WARN",
-          "A duplicate query, platform, and timestamp observation was supplied.",
+          "A duplicate query, platform, and timestamp observation was supplied; the repeated snapshot was excluded from metrics.",
           index,
         ),
       );
+      continue;
     }
 
     seenSnapshotKeys.add(snapshotKey);
-
-    if (invalid) {
-      continue;
-    }
 
     const ownedCitationUrls = uniqueStrings(
       validCitations.filter((url) =>

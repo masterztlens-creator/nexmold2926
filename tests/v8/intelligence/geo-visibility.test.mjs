@@ -1,4 +1,3 @@
-
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -72,6 +71,68 @@ test(
     assert.equal(
       report.observations[0].externalCitationUrls.length,
       1,
+    );
+  },
+);
+
+test(
+  "excludes duplicate observations from all metrics while preserving a diagnostic",
+  () => {
+    const report = evaluateGeoVisibility(
+      TARGET,
+      [
+        createSnapshot(),
+        createSnapshot({
+          answerText: "A generic answer without brand or competitor mentions.",
+          citedUrls: [],
+        }),
+      ],
+    );
+
+    assert.equal(report.passed, true);
+    assert.equal(report.metrics.observationCount, 1);
+    assert.equal(report.observations.length, 1);
+    assert.equal(report.metrics.brandMentionRate, 1);
+    assert.equal(report.metrics.answerCitationRate, 1);
+    assert.equal(report.metrics.ownedCitationShare, 0.5);
+    assert.equal(report.metrics.meanCitationsPerAnswer, 2);
+    assert.equal(report.metrics.competitorMentionRates.Protolabs, 1);
+
+    const duplicateFinding = report.findings.find(
+      (item) => item.code === "GEO_VISIBILITY_DUPLICATE_OBSERVATION",
+    );
+
+    assert.ok(duplicateFinding);
+    assert.equal(duplicateFinding.severity, "WARN");
+    assert.equal(duplicateFinding.snapshotIndex, 1);
+  },
+);
+
+test(
+  "does not let an invalid snapshot reserve a duplicate key",
+  () => {
+    const report = evaluateGeoVisibility(
+      TARGET,
+      [
+        createSnapshot({ answerText: " " }),
+        createSnapshot(),
+      ],
+    );
+
+    assert.equal(report.metrics.observationCount, 1);
+    assert.equal(report.metrics.brandMentionRate, 1);
+
+    assert.equal(
+      report.findings.some(
+        (item) => item.code === "GEO_VISIBILITY_DUPLICATE_OBSERVATION",
+      ),
+      false,
+    );
+
+    assert.ok(
+      report.findings.some(
+        (item) => item.code === "GEO_VISIBILITY_ANSWER_EMPTY",
+      ),
     );
   },
 );
