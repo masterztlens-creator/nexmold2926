@@ -1023,10 +1023,10 @@ export function discoverNiches(
 
   const topics: TopicCandidate[] = [];
 
-type BlockedNiche =
-  NicheDiscoveryResult["blocked"][number];
+  type BlockedNiche =
+    NicheDiscoveryResult["blocked"][number];
 
-const blocked: BlockedNiche[] = [];
+  const blocked: BlockedNiche[] = [];
 
   const existingNiches =
     input.existingNiches ?? [];
@@ -1045,7 +1045,9 @@ const blocked: BlockedNiche[] = [];
         )
         .sort();
 
-    const clusterSignals =
+    // Keep all original signals in the cluster for lineage and audit.
+    // Only evidence-backed, positive-confidence signals may influence scoring.
+    const candidateClusterSignals =
       cluster.signals.length > 0
         ? cluster.signals
         : input.signals.filter(
@@ -1059,10 +1061,38 @@ const blocked: BlockedNiche[] = [];
               ),
           );
 
+    const clusterSignals =
+      candidateClusterSignals.filter(
+        (signal) =>
+          Number.isFinite(signal.confidence) &&
+          signal.confidence > 0 &&
+          signal.evidenceRefs.some(
+            (reference) =>
+              typeof reference === "string" &&
+              reference.trim().length > 0,
+          ),
+      );
+
+    // Market selection must not be influenced by unsupported signal market IDs.
+    // Keyword market associations remain eligible, as they are part of the
+    // keyword input used to form this cluster.
+    const scoringMarketIds = new Set(
+      [
+        ...cluster.keywords.map(
+          (keyword) =>
+            normalizeText(keyword.market ?? ""),
+        ),
+        ...clusterSignals.map(
+          (signal) =>
+            normalizeText(signal.marketId ?? ""),
+        ),
+      ].filter(Boolean),
+    );
+
     const market =
       input.markets.find(
         (item) =>
-          cluster.marketIds.includes(
+          scoringMarketIds.has(
             normalizeText(
               item.marketId,
             ),
@@ -1218,7 +1248,7 @@ const blocked: BlockedNiche[] = [];
             )
             .sort(),
         marketIds:
-          cluster.marketIds,
+          [...scoringMarketIds].sort(),
         minimumScore:
           input.minimumScore,
         minimumEvidenceConfidence:
