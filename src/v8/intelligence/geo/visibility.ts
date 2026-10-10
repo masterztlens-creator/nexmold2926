@@ -1,3 +1,4 @@
+
 import { normalizeText, uniqueStrings } from "../shared.js";
 
 export type GeoVisibilitySeverity = "INFO" | "WARN" | "BLOCK";
@@ -132,10 +133,7 @@ function isOwnedDomain(
   }
 }
 
-function containsEntity(
-  text: string,
-  entity: string,
-): boolean {
+function containsEntity(text: string, entity: string): boolean {
   const normalizedText = normalizeText(text);
   const normalizedEntity = normalizeText(entity);
 
@@ -143,8 +141,7 @@ function containsEntity(
     return false;
   }
 
-  // Use Unicode letter/number boundaries to avoid matching a brand
-  // as an accidental substring of a longer identifier.
+  // Unicode letter/number boundaries prevent accidental substring matches.
   const escaped = normalizedEntity.replace(
     /[.*+?^${}()|[\]\\]/g,
     "\\$&",
@@ -156,6 +153,27 @@ function containsEntity(
   );
 
   return pattern.test(normalizedText);
+}
+
+/**
+ * Retains caller-facing names while deduplicating entities case-insensitively.
+ * The first non-empty display name wins for each normalized name.
+ */
+function uniqueDisplayNames(values: readonly string[]): string[] {
+  const names = new Map<string, string>();
+
+  for (const value of values) {
+    const displayName = value.trim();
+    const normalizedName = normalizeText(displayName);
+
+    if (!displayName || !normalizedName || names.has(normalizedName)) {
+      continue;
+    }
+
+    names.set(normalizedName, displayName);
+  }
+
+  return [...names.values()];
 }
 
 function freezeObservation(
@@ -187,9 +205,7 @@ function freezeReport(
       (item) => item.severity === "BLOCK",
     ),
     findings: immutableFindings,
-    observations: Object.freeze(
-      observations.map(freezeObservation),
-    ),
+    observations: Object.freeze(observations.map(freezeObservation)),
     metrics: Object.freeze({
       ...metrics,
       competitorMentionRates: Object.freeze({
@@ -200,18 +216,17 @@ function freezeReport(
 }
 
 /**
- * Evaluates observed GEO / AI-answer visibility from caller-supplied
- * answer snapshots.
+ * Evaluates observed GEO / AI-answer visibility from caller-supplied snapshots.
  *
  * This module does not query AI platforms and does not invent observations.
- * Results describe only the snapshots supplied by the caller; they do not
- * establish search ranking, answer correctness, causal impact, or lead volume.
+ * Results describe only supplied snapshots; they do not establish search
+ * ranking, answer correctness, causal impact, or lead volume.
  *
  * Fail-closed input rules:
- * - The target brand and owned-domain list must be present.
+ * - A non-empty target brand and owned-domain list are required.
  * - At least one observation must be supplied.
  * - Each observation must include a query, platform, timestamp, and answer.
- * - Timestamps must be explicit ISO-8601 timestamps with a timezone.
+ * - Timestamps must be timezone-qualified ISO-8601 timestamps.
  * - Citation URLs must be valid HTTP(S) URLs.
  */
 export function evaluateGeoVisibility(
@@ -228,11 +243,16 @@ export function evaluateGeoVisibility(
     ...(target.entityAliases ?? []),
   ]).filter(Boolean);
 
-  const competitorNames = uniqueStrings(
+  // Preserve original display casing in output metrics, but compare and
+  // deduplicate using normalized names. For example, "Protolabs" remains
+  // "Protolabs" as an output key rather than becoming "protolabs".
+  const aliasKeys = new Set(
+    aliases.map((alias) => normalizeText(alias)),
+  );
+
+  const competitorNames = uniqueDisplayNames(
     target.competitorNames ?? [],
-  ).filter((name) => !aliases.some(
-    (alias) => normalizeText(alias) === normalizeText(name),
-  ));
+  ).filter((name) => !aliasKeys.has(normalizeText(name)));
 
   const normalizedDomains = uniqueStrings(
     target.ownedDomains
@@ -268,7 +288,9 @@ export function evaluateGeoVisibility(
         "At least one owned domain is required to calculate owned citation share.",
       ),
     );
-  } else if (normalizedDomains.length !== uniqueStrings(target.ownedDomains).length) {
+  } else if (
+    normalizedDomains.length !== uniqueStrings(target.ownedDomains).length
+  ) {
     findings.push(
       finding(
         "GEO_VISIBILITY_OWNED_DOMAIN_INVALID",
@@ -430,9 +452,11 @@ export function evaluateGeoVisibility(
   }
 
   const observationCount = observations.length;
+
   const distinctQueries = new Set(
     observations.map((item) => normalizeText(item.query)),
   );
+
   const distinctPlatforms = new Set(
     observations.map((item) => normalizeText(item.platform)),
   );
@@ -458,9 +482,11 @@ export function evaluateGeoVisibility(
   const competitorMentionRates: Record<string, number> = {};
 
   for (const competitorName of competitorNames) {
+    const competitorKey = normalizeText(competitorName);
+
     const mentionCount = observations.filter((item) =>
       item.competitorsMentioned.some(
-        (name) => normalizeText(name) === normalizeText(competitorName),
+        (name) => normalizeText(name) === competitorKey,
       ),
     ).length;
 
