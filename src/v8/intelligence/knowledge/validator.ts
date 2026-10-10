@@ -375,6 +375,63 @@ function validateEvidenceAndClaimLineage(
       }
     }
   }
+
+  /*
+   * Phase 2.7 lineage completion:
+   * Every semantic model that carries Claim/Evidence references must
+   * remain inside the canonical Knowledge lineage.
+   *
+   * Out-of-lineage references are ERROR issues. They cannot be
+   * downgraded to warnings by the validator options.
+   */
+  const lineageBearingModels = [
+    {
+      label: "Constraint",
+      path: "constraints",
+      records: knowledge.constraints,
+    },
+    {
+      label: "Exception",
+      path: "exceptions",
+      records: knowledge.exceptions,
+    },
+    {
+      label: "FailureMode",
+      path: "failureModes",
+      records: knowledge.failureModes,
+    },
+    {
+      label: "Rule",
+      path: "rules",
+      records: knowledge.rules,
+    },
+  ] as const;
+
+  for (const model of lineageBearingModels) {
+    for (const [index, record] of model.records.entries()) {
+      for (const claimId of record.claimIds) {
+        if (!canonicalClaims.has(String(claimId))) {
+          addIssue(
+            context,
+            `V8_KNOWLEDGE_${model.label.toUpperCase()}_CLAIM_OUTSIDE_LINEAGE`,
+            `${model.label} references Claim "${claimId}" outside the canonical Knowledge lineage.`,
+            `${model.path}[${index}].claimIds`,
+          );
+        }
+      }
+
+      for (const evidenceId of record.evidenceIds) {
+        if (!canonicalEvidence.has(String(evidenceId))) {
+          addIssue(
+            context,
+            `V8_KNOWLEDGE_${model.label.toUpperCase()}_EVIDENCE_OUTSIDE_LINEAGE`,
+            `${model.label} references Evidence "${evidenceId}" outside the canonical Knowledge lineage.`,
+            `${model.path}[${index}].evidenceIds`,
+          );
+        }
+      }
+    }
+  }
 }
 
 function validateFoundationPayload(
