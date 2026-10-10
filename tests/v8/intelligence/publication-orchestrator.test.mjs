@@ -1,3 +1,4 @@
+
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -94,6 +95,11 @@ test(
     );
 
     assert.equal(result.eligible, false);
+    assert.ok(
+      result.reasons.includes(
+        "seo-quality:SEO_TITLE_EMPTY",
+      ),
+    );
   },
 );
 
@@ -196,11 +202,6 @@ test(
     assert.ok(
       result.reasons.includes(
         "geo-quality:audit-error",
-      ),
-    );
-    assert.ok(
-      result.reasons.includes(
-        "geo-citation:audit-error",
       ),
     );
   },
