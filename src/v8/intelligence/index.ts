@@ -1,4 +1,3 @@
-
 export * from "./shared.js";
 export * from "./pipeline.js";
 export * from "./web-discovery/index.js";
@@ -13,6 +12,7 @@ export * from "./evidence-expansion/index.js";
 export * from "./content-compiler/index.js";
 export * from "./seo/index.js";
 export * from "./geo/index.js";
+export * from "./search-quality.js";
 export * from "./authority-graph/index.js";
 export * from "./internal-links/index.js";
 export * from "./novelty/index.js";
