@@ -121,6 +121,50 @@ function uniqueLineage(
   ];
 }
 
+/**
+ * Normalizes HTML and common character entities for conservative
+ * excerpt matching against the immutable snapshot text.
+ *
+ * This is not intended to be a general-purpose HTML parser.
+ * It provides a deterministic comparison for the snapshot content
+ * available to FoundationService.
+ */
+function normalizeSnapshotExcerpt(value: string): string {
+  return value
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<template[\s\S]*?<\/template>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#39;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, (_match, code: string) => {
+      const point = Number(code);
+
+      return Number.isInteger(point) &&
+        point >= 0 &&
+        point <= 0x10ffff
+        ? String.fromCodePoint(point)
+        : " ";
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_match, code: string) => {
+      const point = Number.parseInt(code, 16);
+
+      return Number.isInteger(point) &&
+        point >= 0 &&
+        point <= 0x10ffff
+        ? String.fromCodePoint(point)
+        : " ";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export class FoundationService {
   private readonly store: FoundationStore;
 
@@ -556,6 +600,33 @@ export class FoundationService {
       "Evidence snapshot is not sealed.",
     );
 
+    invariant(
+      snapshot.payload.sourceId === current.payload.sourceId,
+      "V8_FOUNDATION_EVIDENCE_SNAPSHOT_SOURCE_MISMATCH",
+      "Evidence source does not match the sealed snapshot source.",
+    );
+
+    invariant(
+      snapshot.payload.metadataOnly === false &&
+        typeof snapshot.payload.payload === "string" &&
+        snapshot.payload.payload.trim().length > 0,
+      "V8_FOUNDATION_EVIDENCE_SNAPSHOT_CONTENT_UNAVAILABLE",
+      "Evidence cannot be verified without sealed snapshot content.",
+    );
+
+    const normalizedSnapshot =
+      normalizeSnapshotExcerpt(snapshot.payload.payload);
+
+    const normalizedExcerpt =
+      normalizeSnapshotExcerpt(current.payload.excerpt);
+
+    invariant(
+      normalizedExcerpt.length > 0 &&
+        normalizedSnapshot.includes(normalizedExcerpt),
+      "V8_FOUNDATION_EVIDENCE_EXCERPT_NOT_IN_SNAPSHOT",
+      "Evidence excerpt cannot be reproduced from the sealed snapshot content.",
+    );
+
     assertEvidenceReady({
       ...current.payload,
       id: evidenceId(current.aggregateId),
@@ -571,8 +642,11 @@ export class FoundationService {
       [
         "source exists",
         "sealed snapshot exists",
+        "snapshot source matches evidence source",
+        "snapshot content is available",
         "exact locator present",
         "raw excerpt present",
+        "excerpt reproduced from sealed snapshot content",
         "evidence hash bound to snapshot",
       ],
       actor,
@@ -713,9 +787,9 @@ export class FoundationService {
         ...((claim as any).confidence
           ? {
               confidence:
-              (claim as any).confidence,
+                (claim as any).confidence,
             }
-        : {}),
+          : {}),
 
         ...((claim as any).epistemicLevel
           ? {
