@@ -1,4 +1,3 @@
-
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -40,7 +39,7 @@ function createDraft(overrides = {}) {
         publisher:
           "Example Engineering",
         excerpt:
-          "Wall thickness should be evaluated against material and part requirements.",
+          "Wall thickness should be evaluated against material properties and part requirements.",
       },
     ],
     ...overrides,
@@ -118,6 +117,11 @@ test(
         "geo-quality:GEO_FACTS_EMPTY",
       ),
     );
+    assert.ok(
+      result.reasons.includes(
+        "geo-citation:GEO_CLAIMS_EMPTY",
+      ),
+    );
   },
 );
 
@@ -142,13 +146,13 @@ test(
             sourceUrl:
               "https://example.com/source",
             excerpt:
-              "First evidence excerpt.",
+              "A documented engineering fact appears in this excerpt.",
           },
           {
             sourceUrl:
               "https://example.com/source",
             excerpt:
-              "Second evidence excerpt.",
+              "A documented engineering fact appears in this excerpt too.",
           },
         ],
       }),
@@ -156,6 +160,26 @@ test(
 
     assert.equal(result.eligible, true);
     assert.deepEqual(result.reasons, []);
+  },
+);
+
+test(
+  "unsupported GEO claim prevents publication",
+  () => {
+    const result = evaluate(
+      createDraft({
+        claims: [
+          "Controlled draft angles reduce mold release problems.",
+        ],
+      }),
+    );
+
+    assert.equal(result.eligible, false);
+    assert.ok(
+      result.reasons.includes(
+        "geo-citation:GEO_CLAIM_EVIDENCE_UNMATCHED",
+      ),
+    );
   },
 );
 
@@ -177,6 +201,11 @@ test(
     assert.ok(
       result.reasons.includes(
         "geo-quality:audit-error",
+      ),
+    );
+    assert.ok(
+      result.reasons.includes(
+        "geo-citation:audit-error",
       ),
     );
   },
@@ -324,6 +353,11 @@ test(
         "geo-quality:GEO_CITATIONS_EMPTY",
       ),
     );
+    assert.ok(
+      result.reasons.includes(
+        "geo-citation:GEO_CLAIM_EVIDENCE_UNMATCHED",
+      ),
+    );
   },
 );
 
@@ -353,6 +387,7 @@ test(
       "seo-quality:SEO_TITLE_EMPTY",
       "geo-quality:GEO_FACTS_EMPTY",
       "geo-quality:GEO_CITATIONS_EMPTY",
+      "geo-citation:GEO_CLAIMS_EMPTY",
     ]) {
       assert.ok(
         result.reasons.includes(reason),

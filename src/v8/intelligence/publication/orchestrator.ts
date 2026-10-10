@@ -1,4 +1,3 @@
-
 import type {
   ContentDraft,
   QualityReport,
@@ -6,6 +5,9 @@ import type {
 import {
   compileGeo,
 } from "../geo/compiler.js";
+import {
+  auditClaimEvidenceAlignment,
+} from "../geo/citation-audit.js";
 import {
   compileSeo,
 } from "../seo/compiler.js";
@@ -31,13 +33,14 @@ function uniqueReasons(
 /**
  * Fail-closed publication eligibility decision.
  *
- * Existing quality-firewall, semantic-collision, novelty, and evidence
- * checks remain in place. SEO and GEO structural audits are now part
- * of the actual publication decision.
+ * SEO and GEO structural audits, claim-to-evidence lexical alignment,
+ * the existing quality firewall, semantic-collision checks, novelty
+ * checks, and evidence-presence checks all participate in publication
+ * eligibility.
  *
- * Passing structural checks does not establish factual correctness,
- * search ranking, or citation-to-claim support. Those require their
- * respective evidence and provenance gates.
+ * Lexical alignment is not semantic entailment. Passing this gate does
+ * not establish factual correctness, search ranking, or guaranteed
+ * citation by an external AI system.
  */
 export function evaluatePublication(
   draft: ContentDraft,
@@ -76,6 +79,7 @@ export function evaluatePublication(
 
   let seoAuditPassed = false;
   let geoAuditPassed = false;
+  let citationAuditPassed = false;
 
   try {
     const seoReport = auditSeoArtifact(
@@ -84,11 +88,9 @@ export function evaluatePublication(
 
     seoAuditPassed = seoReport.passed;
 
-    for (const finding of seoReport.findings) {
-      if (finding.severity === "BLOCK") {
-        reasons.push(
-          `seo-quality:${finding.code}`,
-        );
+    for (const item of seoReport.findings) {
+      if (item.severity === "BLOCK") {
+        reasons.push(`seo-quality:${item.code}`);
       }
     }
   } catch {
@@ -102,29 +104,59 @@ export function evaluatePublication(
 
     geoAuditPassed = geoReport.passed;
 
-    for (const finding of geoReport.findings) {
-      if (finding.severity === "BLOCK") {
-        reasons.push(
-          `geo-quality:${finding.code}`,
-        );
+    for (const item of geoReport.findings) {
+      if (item.severity === "BLOCK") {
+        reasons.push(`geo-quality:${item.code}`);
       }
     }
   } catch {
     reasons.push("geo-quality:audit-error");
   }
 
-  // Explicit fail-closed guards protect against future changes to
-  // audit implementations that might otherwise omit a blocking finding.
-  if (!seoAuditPassed && !reasons.some(
-    (reason) => reason.startsWith("seo-quality:"),
-  )) {
+  try {
+    const citationReport = auditClaimEvidenceAlignment(
+      draft.claims,
+      draft.evidence,
+    );
+
+    citationAuditPassed = citationReport.passed;
+
+    for (const item of citationReport.findings) {
+      if (item.severity === "BLOCK") {
+        reasons.push(`geo-citation:${item.code}`);
+      }
+    }
+  } catch {
+    reasons.push("geo-citation:audit-error");
+  }
+
+  // Explicit fail-closed guards prevent an audit from silently
+  // returning a failed state without a corresponding blocker.
+  if (
+    !seoAuditPassed &&
+    !reasons.some((reason) =>
+      reason.startsWith("seo-quality:"),
+    )
+  ) {
     reasons.push("seo-quality:failed");
   }
 
-  if (!geoAuditPassed && !reasons.some(
-    (reason) => reason.startsWith("geo-quality:"),
-  )) {
+  if (
+    !geoAuditPassed &&
+    !reasons.some((reason) =>
+      reason.startsWith("geo-quality:"),
+    )
+  ) {
     reasons.push("geo-quality:failed");
+  }
+
+  if (
+    !citationAuditPassed &&
+    !reasons.some((reason) =>
+      reason.startsWith("geo-citation:"),
+    )
+  ) {
+    reasons.push("geo-citation:failed");
   }
 
   const finalReasons = uniqueReasons(reasons);
