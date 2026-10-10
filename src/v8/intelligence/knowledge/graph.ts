@@ -135,8 +135,8 @@ function normalizeIds<T extends string>(
   values: readonly T[],
   field: string,
 ): readonly T[] {
-  const normalized = values.map((value) =>
-    nonEmpty(String(value), field),
+  const normalized: T[] = values.map((value) =>
+    nonEmpty(String(value), field) as T,
   );
 
   return Object.freeze([...sortedUnique(normalized)]);
