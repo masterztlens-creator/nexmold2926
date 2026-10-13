@@ -1,0 +1,78 @@
+
+name: V8 First Article Reproduction
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/v8/**"
+      - "scripts/v8-first-article.mjs"
+      - ".github/workflows/v8-first-article-reproduction.yml"
+      - "tsconfig.v8.json"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v8-first-article-reproduction-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reproduce-first-article:
+    name: Reproduce and Preserve First Article
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Record source and runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .v8-artifacts/first-article
+          {
+            echo "NEXMOLD V8 FIRST ARTICLE REPRODUCTION"
+            echo "source_sha=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "node=$(node --version)"
+            echo "npm=$(npm --version)"
+            echo "timestamp_utc=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } | tee .v8-artifacts/first-article/session.txt
+
+      - name: Run live first-article pipeline
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run v8:article:first 2>&1 | tee .v8-artifacts/first-article/run.log
+
+      - name: Upload article, manifest, and execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexmold-v8-first-article-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            .v8-artifacts/first-article/
+            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md
+            .nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json
+          if-no-files-found: warn
+          retention-days: 14
