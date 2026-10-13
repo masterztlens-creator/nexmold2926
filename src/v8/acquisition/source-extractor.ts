@@ -1292,6 +1292,106 @@ function deduplicateEvidence(
   return output;
 }
 
+/**
+ * Split normalized source text into bounded excerpts without silently
+ * discarding its tail. Sentence boundaries are preferred; whitespace
+ * boundaries are used only when an individual sentence exceeds the limit.
+ *
+ * Since source text has already been normalized, adjoining excerpts can
+ * be reconstructed in order by joining them with a single space.
+ */
+function splitTextIntoExcerpts(
+  text: string,
+  maxLength = MAX_EXCERPT_LENGTH,
+): readonly string[] {
+  if (!text || maxLength < 1) return [];
+
+  const sentences: string[] = [];
+  const sentencePattern =
+    /[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g;
+
+  let sentenceMatch: RegExpExecArray | null;
+
+  while (
+    (sentenceMatch =
+      sentencePattern.exec(text)) !== null
+  ) {
+    const sentence = sentenceMatch[0].trim();
+
+    if (sentence) {
+      sentences.push(sentence);
+    }
+  }
+
+  sentencePattern.lastIndex = 0;
+
+  const units: string[] = [];
+
+  for (const sentence of sentences) {
+    if (sentence.length <= maxLength) {
+      units.push(sentence);
+      continue;
+    }
+
+    /*
+     * A single sentence may itself exceed the maximum length.
+     * Split that sentence at whitespace boundaries. If one token
+     * alone exceeds the limit, split the token so no text is lost.
+     */
+    let remaining = sentence;
+
+    while (remaining.length > maxLength) {
+      let splitAt =
+        remaining.lastIndexOf(" ", maxLength);
+
+      if (splitAt <= 0) {
+        splitAt = maxLength;
+      }
+
+      const part =
+        remaining.slice(0, splitAt).trim();
+
+      if (part) {
+        units.push(part);
+      }
+
+      remaining =
+        remaining.slice(splitAt).trim();
+    }
+
+    if (remaining) {
+      units.push(remaining);
+    }
+  }
+
+  const excerpts: string[] = [];
+  let current = "";
+
+  for (const unit of units) {
+    if (!current) {
+      current = unit;
+      continue;
+    }
+
+    if (
+      current.length + 1 + unit.length <=
+      maxLength
+    ) {
+      current += ` ${unit}`;
+      continue;
+    }
+
+    excerpts.push(current);
+    current = unit;
+  }
+
+  if (current) {
+    excerpts.push(current);
+  }
+
+  return excerpts;
+}
+
 export function extractTextEvidence(
   html: string,
   locator = "document:text",
@@ -1304,18 +1404,20 @@ export function extractTextEvidence(
 
   if (!text) return [];
 
-  return [
-    {
-      locator,
-      excerpt:
-        text.slice(
-          0,
-          MAX_EXCERPT_LENGTH,
-        ),
+  return splitTextIntoExcerpts(text).map(
+    (
+      excerpt,
+      index,
+    ): ExtractedEvidenceCandidate => ({
+      locator:
+        index === 0
+          ? locator
+          : `${locator}:part:${String(index + 1).padStart(4, "0")}`,
+      excerpt,
       extractionConfidence:
         "MEDIUM",
-    },
-  ];
+    }),
+  );
 }
 
 export function extractEvidenceByPattern(
