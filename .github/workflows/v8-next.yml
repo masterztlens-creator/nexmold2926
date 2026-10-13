@@ -36,12 +36,12 @@ jobs:
           RUN_ID="$(printf '%s' "$DISPATCH_RUN_ID" | tr -d '[:space:]')"
 
           if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "ERROR: Invalid source SHA: $SHA"
+            echo "::error::Invalid source SHA: $SHA"
             exit 1
           fi
 
           if [[ ! "$RUN_ID" =~ ^[0-9]+$ ]]; then
-            echo "ERROR: Invalid source workflow run ID: $RUN_ID"
+            echo "::error::Invalid source workflow run ID: $RUN_ID"
             exit 1
           fi
 
@@ -68,7 +68,7 @@ jobs:
           ACTUAL_SHA="$(git rev-parse HEAD)"
 
           if [[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]]; then
-            echo "ERROR: Checkout SHA mismatch"
+            echo "::error::Checkout SHA mismatch"
             echo "Expected: $EXPECTED_SHA"
             echo "Actual:   $ACTUAL_SHA"
             exit 1
@@ -341,8 +341,7 @@ jobs:
           HANDOFF=".nexmold/v8-real-publication-handoff.json"
 
           if [ ! -f "$HANDOFF" ]; then
-            echo "ERROR: Downloaded V8 publication handoff is missing:"
-            echo "       $HANDOFF"
+            echo "::error::Downloaded V8 publication handoff is missing: $HANDOFF"
             exit 1
           fi
 
@@ -458,6 +457,298 @@ jobs:
           NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
           NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
         run: npm run v8:next
+
+      - name: Run V8 first article production
+        shell: bash
+        env:
+          NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+
+          npm run v8:article:first
+
+      - name: Verify and stage V8 first article artifacts
+        shell: bash
+        env:
+          NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          NEXMOLD_SOURCE_RUN_ID: ${{ steps.source.outputs.run_id }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+
+          ARTICLE=".nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md"
+          MANIFEST=".nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json"
+          STAGE=".nexmold/v8-first-article-artifact"
+
+          test -s "$ARTICLE" || {
+            echo "::error::First article is missing or empty: $ARTICLE"
+            exit 1
+          }
+
+          test -s "$MANIFEST" || {
+            echo "::error::First article manifest is missing or empty: $MANIFEST"
+            exit 1
+          }
+
+          test -s ".v8-build/src/v8/foundation/hash.js" || {
+            echo "::error::Canonical V8 fingerprint implementation is missing."
+            exit 1
+          }
+
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import { pathToFileURL } from 'node:url';
+
+          const articlePath =
+            '.nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md';
+
+          const manifestPath =
+            '.nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json';
+
+          const article = fs.readFileSync(articlePath, 'utf8');
+          const manifest = JSON.parse(
+            fs.readFileSync(manifestPath, 'utf8'),
+          );
+
+          const hashModule = await import(
+            pathToFileURL(
+              './.v8-build/src/v8/foundation/hash.js',
+            ).href,
+          );
+
+          if (typeof hashModule.contentFingerprint !== 'function') {
+            throw new Error(
+              'Canonical contentFingerprint function is unavailable.',
+            );
+          }
+
+          if (article.trim().length < 500) {
+            throw new Error(
+              'Article is shorter than the minimum verification threshold.',
+            );
+          }
+
+          const actualFingerprint =
+            hashModule.contentFingerprint(article);
+
+          const expectedFingerprint =
+            manifest?.artifact?.contentFingerprint;
+
+          if (
+            typeof expectedFingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/i.test(expectedFingerprint)
+          ) {
+            throw new Error(
+              'Manifest content fingerprint is missing or invalid.',
+            );
+          }
+
+          if (
+            actualFingerprint.toLowerCase() !==
+            expectedFingerprint.toLowerCase()
+          ) {
+            throw new Error(
+              'Article content fingerprint does not match the manifest.',
+            );
+          }
+
+          const evidenceIds =
+            manifest?.foundation?.verifiedEvidenceIds;
+
+          const claimIds =
+            manifest?.foundation?.claimIds;
+
+          const knowledgeIds =
+            manifest?.foundation?.knowledgeIds;
+
+          const provenance =
+            manifest?.runtime?.content?.provenance;
+
+          for (const [label, values] of [
+            ['verifiedEvidenceIds', evidenceIds],
+            ['claimIds', claimIds],
+            ['knowledgeIds', knowledgeIds],
+            ['content.provenance', provenance],
+          ]) {
+            if (!Array.isArray(values) || values.length === 0) {
+              throw new Error(
+                `Manifest lineage is missing or empty: ${label}`,
+              );
+            }
+          }
+
+          for (const [label, values] of [
+            ['verifiedEvidenceIds', evidenceIds],
+            ['claimIds', claimIds],
+            ['knowledgeIds', knowledgeIds],
+          ]) {
+            if (
+              values.some(
+                (value) =>
+                  typeof value !== 'string' ||
+                  value.trim().length === 0,
+              )
+            ) {
+              throw new Error(
+                `Manifest contains an invalid ID in ${label}.`,
+              );
+            }
+
+            if (new Set(values).size !== values.length) {
+              throw new Error(
+                `Manifest contains duplicate IDs in ${label}.`,
+              );
+            }
+          }
+
+          const runtime = manifest?.runtime;
+
+          if (
+            typeof runtime?.decisionId !== 'string' ||
+            runtime.decisionId.trim().length === 0
+          ) {
+            throw new Error('Runtime decision ID is missing.');
+          }
+
+          if (
+            typeof runtime?.content?.id !== 'string' ||
+            runtime.content.id.trim().length === 0
+          ) {
+            throw new Error('Runtime content ID is missing.');
+          }
+
+          if (
+            runtime.content.decisionId !== runtime.decisionId
+          ) {
+            throw new Error(
+              'Content decision ID does not match runtime decision ID.',
+            );
+          }
+
+          console.log('First article fingerprint: PASS');
+          console.log('First article lineage structure: PASS');
+          console.log(`Content fingerprint: ${actualFingerprint}`);
+          console.log(`Verified Evidence: ${evidenceIds.length}`);
+          console.log(`Claims: ${claimIds.length}`);
+          console.log(`Knowledge: ${knowledgeIds.length}`);
+          console.log(`Provenance records: ${provenance.length}`);
+          console.log(`Decision ID: ${runtime.decisionId}`);
+          console.log(`Content ID: ${runtime.content.id}`);
+          NODE
+
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+
+          cp "$ARTICLE" "$STAGE/article.md"
+          cp "$MANIFEST" "$STAGE/manifest.json"
+
+          ARTICLE_SHA256="$(sha256sum "$STAGE/article.md" | cut -d ' ' -f 1)"
+          MANIFEST_SHA256="$(sha256sum "$STAGE/manifest.json" | cut -d ' ' -f 1)"
+
+          export ARTICLE_SHA256
+          export MANIFEST_SHA256
+
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+
+          const stage = '.nexmold/v8-first-article-artifact';
+          const manifest = JSON.parse(
+            fs.readFileSync(`${stage}/manifest.json`, 'utf8'),
+          );
+
+          const required = {
+            sourceSha: process.env.NEXMOLD_SOURCE_SHA,
+            sourceRunId: process.env.NEXMOLD_SOURCE_RUN_ID,
+            verificationRunId: process.env.GITHUB_RUN_ID,
+            repository: process.env.GITHUB_REPOSITORY,
+            handoffFingerprint:
+              process.env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT,
+            articleSha256: process.env.ARTICLE_SHA256,
+            manifestSha256: process.env.MANIFEST_SHA256,
+          };
+
+          for (const [key, value] of Object.entries(required)) {
+            if (
+              typeof value !== 'string' ||
+              value.trim().length === 0
+            ) {
+              throw new Error(
+                `Required verification metadata is missing: ${key}`,
+              );
+            }
+          }
+
+          if (!/^[0-9a-f]{40}$/i.test(required.sourceSha)) {
+            throw new Error('Source SHA is invalid.');
+          }
+
+          if (!/^[0-9]+$/.test(required.sourceRunId)) {
+            throw new Error('Source workflow run ID is invalid.');
+          }
+
+          if (!/^[0-9a-f]{64}$/i.test(required.handoffFingerprint)) {
+            throw new Error('Publication handoff fingerprint is invalid.');
+          }
+
+          if (
+            !/^[0-9a-f]{64}$/i.test(required.articleSha256) ||
+            !/^[0-9a-f]{64}$/i.test(required.manifestSha256)
+          ) {
+            throw new Error('Staged artifact SHA-256 is invalid.');
+          }
+
+          const metadata = {
+            schema: 'nexmold.v8.first-article-verification.v1',
+            ...required,
+            articlePath:
+              '.nexmold/v8/articles/plastic-injection-molding-wall-thickness/article.md',
+            manifestPath:
+              '.nexmold/v8/articles/plastic-injection-molding-wall-thickness/manifest.json',
+            contentFingerprint:
+              manifest.artifact.contentFingerprint,
+            articleBytes:
+              fs.statSync(`${stage}/article.md`).size,
+            manifestBytes:
+              fs.statSync(`${stage}/manifest.json`).size,
+            verifiedEvidenceCount:
+              manifest.foundation.verifiedEvidenceIds.length,
+            claimCount:
+              manifest.foundation.claimIds.length,
+            knowledgeCount:
+              manifest.foundation.knowledgeIds.length,
+            provenanceCount:
+              manifest.runtime.content.provenance.length,
+            contentId:
+              manifest.runtime.content.id,
+            decisionId:
+              manifest.runtime.decisionId,
+          };
+
+          fs.writeFileSync(
+            `${stage}/verification.json`,
+            `${JSON.stringify(metadata, null, 2)}\n`,
+            'utf8',
+          );
+
+          console.log('First article verification metadata: PASS');
+          console.log(`Source SHA: ${metadata.sourceSha}`);
+          console.log(`Source Final run ID: ${metadata.sourceRunId}`);
+          console.log(`Article SHA-256: ${metadata.articleSha256}`);
+          console.log(`Manifest SHA-256: ${metadata.manifestSha256}`);
+          console.log(`Handoff fingerprint: ${metadata.handoffFingerprint}`);
+          NODE
+
+          echo "V8 first article artifact verification: PASS"
+
+      - name: Upload verified V8 first article artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexmold-v8-first-article-${{ steps.source.outputs.sha }}
+          path: .nexmold/v8-first-article-artifact
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Prepare persisted V8 production artifact
         shell: bash
