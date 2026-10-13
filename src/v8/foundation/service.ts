@@ -1,3 +1,4 @@
+
 import {
   createScope,
   type Scope,
@@ -121,22 +122,8 @@ function uniqueLineage(
   ];
 }
 
-/**
- * Normalizes HTML and common character entities for conservative
- * excerpt matching against the immutable snapshot text.
- *
- * This is not intended to be a general-purpose HTML parser.
- * It provides a deterministic comparison for the snapshot content
- * available to FoundationService.
- */
-function normalizeSnapshotExcerpt(value: string): string {
+function decodeSnapshotHtmlEntities(value: string): string {
   return value
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<template[\s\S]*?<\/template>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
@@ -160,9 +147,112 @@ function normalizeSnapshotExcerpt(value: string): string {
         point <= 0x10ffff
         ? String.fromCodePoint(point)
         : " ";
-    })
+    });
+}
+
+function normalizeSnapshotText(value: string): string {
+  return decodeSnapshotHtmlEntities(
+    value
+      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ")
+      .replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ")
+      .replace(/<noscript\b[\s\S]*?<\/noscript\s*>/gi, " ")
+      .replace(/<template\b[\s\S]*?<\/template\s*>/gi, " ")
+      .replace(/<svg\b[\s\S]*?<\/svg\s*>/gi, " ")
+      .replace(/<[^>]*>/g, " "),
+  )
+    .normalize("NFKC")
+    .replace(/[\u00a0\u2000-\u200b\u202f\u205f\u3000]/g, " ")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .toLocaleLowerCase("en-US");
+}
+
+function containsExactExcerptFragment(
+  normalizedSnapshot: string,
+  fragment: string,
+): boolean {
+  let offset = 0;
+
+  while (offset <= normalizedSnapshot.length - fragment.length) {
+    const index = normalizedSnapshot.indexOf(fragment, offset);
+
+    if (index < 0) {
+      return false;
+    }
+
+    const before = normalizedSnapshot[index - 1] ?? "";
+    const after =
+      normalizedSnapshot[index + fragment.length] ?? "";
+
+    const startsWithWord = /^[a-z0-9]$/i.test(fragment[0] ?? "");
+    const endsWithWord = /^[a-z0-9]$/i.test(
+      fragment[fragment.length - 1] ?? "",
+    );
+
+    const leftBoundary =
+      !startsWithWord || !/[a-z0-9]/i.test(before);
+
+    const rightBoundary =
+      !endsWithWord || !/[a-z0-9]/i.test(after);
+
+    if (leftBoundary && rightBoundary) {
+      return true;
+    }
+
+    offset = index + 1;
+  }
+
+  return false;
+}
+
+/**
+ * Table excerpts may combine a section heading, header cells and a row.
+ * Validate each generated fragment against the sealed snapshot.
+ *
+ * Exact word/number boundaries prevent "2 mm" from matching "12 mm"
+ * or "20 mm". Empty fragments are rejected.
+ */
+function excerptIsReproducible(
+  snapshotContent: string,
+  excerpt: string,
+): boolean {
+  const normalizedSnapshot =
+    normalizeSnapshotText(snapshotContent);
+
+  const normalizedExcerpt =
+    normalizeSnapshotText(excerpt);
+
+  if (!normalizedSnapshot || !normalizedExcerpt) {
+    return false;
+  }
+
+  if (
+    containsExactExcerptFragment(
+      normalizedSnapshot,
+      normalizedExcerpt,
+    )
+  ) {
+    return true;
+  }
+
+  const fragments = normalizedExcerpt
+    .split(/\s+-\s+|\s+\|\s+/)
+    .map((fragment) => fragment.trim())
+    .filter(Boolean);
+
+  if (fragments.length < 2) {
+    return false;
+  }
+
+  return fragments.every((fragment) =>
+    containsExactExcerptFragment(
+      normalizedSnapshot,
+      fragment,
+    ),
+  );
 }
 
 export class FoundationService {
@@ -614,15 +704,11 @@ export class FoundationService {
       "Evidence cannot be verified without sealed snapshot content.",
     );
 
-    const normalizedSnapshot =
-      normalizeSnapshotExcerpt(snapshot.payload.payload);
-
-    const normalizedExcerpt =
-      normalizeSnapshotExcerpt(current.payload.excerpt);
-
     invariant(
-      normalizedExcerpt.length > 0 &&
-        normalizedSnapshot.includes(normalizedExcerpt),
+      excerptIsReproducible(
+        snapshot.payload.payload,
+        current.payload.excerpt,
+      ),
       "V8_FOUNDATION_EVIDENCE_EXCERPT_NOT_IN_SNAPSHOT",
       "Evidence excerpt cannot be reproduced from the sealed snapshot content.",
     );
