@@ -1,3 +1,7 @@
+import {
+  extractTextEvidence,
+} from "../.v8-build/src/v8/acquisition/source-extractor.js";
+
 import assert from "node:assert/strict";
 
 import {
@@ -1323,6 +1327,7 @@ function structuredExcerptExistsInSnapshot(
 }
 
 
+
 /*
  * ============================================================================
  * Gate 7
@@ -1334,8 +1339,8 @@ function structuredExcerptExistsInSnapshot(
  * 1. Ordinary text Evidence:
  *
  *      Evidence.excerpt
- *          ∈
- *      Snapshot-derived text projection
+ *          ===
+ *      Canonical text Evidence reconstructed from Snapshot
  *
  * 2. Structured Evidence:
  *
@@ -1344,23 +1349,29 @@ function structuredExcerptExistsInSnapshot(
  *
  *      Evidence.excerpt
  *          ∈
- *      deterministic structural projection
+ *      Deterministic structural projection
  *          of
- *      immutable Snapshot raw payload
+ *      Immutable Snapshot raw payload
  *
  * IMPORTANT:
  *
- * We deliberately do NOT use:
+ * The immutable Snapshot remains the source of truth.
  *
- *   snapshotPayload.includes(
- *     evidence.excerpt,
- *   )
+ * Ordinary text Evidence MUST be reproduced using the same canonical
+ * extractor used by acquisition. An independently implemented HTML-to-text
+ * projection is not an authoritative acceptance criterion because its
+ * semantic subtree filtering, whitespace normalization, and excerpt splitting
+ * can differ from the canonical acquisition pipeline.
  *
- * because Evidence.excerpt is a canonical extracted representation rather
- * than a literal HTML byte sequence.
+ * The Evidence excerpt is never inserted into or used to construct the
+ * candidate projection.
  *
- * The immutable Snapshot remains the sole source. The structural projection
- * is only a deterministic verification view over that immutable payload.
+ * Fail closed:
+ * - Missing Snapshot => FAIL
+ * - Empty Snapshot payload => FAIL
+ * - Empty Evidence excerpt => FAIL
+ * - Unreproducible ordinary Evidence => FAIL
+ * - Untraceable structured Evidence => FAIL
  * ============================================================================
  */
 
@@ -1432,32 +1443,59 @@ for (
       ].join("\n"),
     );
   } else {
-    const snapshotText =
-      snapshotTextProjection(
-        snapshotPayload,
+    /*
+     * Reproduce ordinary text Evidence through the canonical extractor.
+     *
+     * The locator stored in runtime Evidence may include a bounded-text
+     * suffix such as ":part:0002". Remove only that suffix to recover the
+     * base locator passed to extractTextEvidence() during acquisition.
+     *
+     * Do not remove arbitrary locator suffixes: the exact locator and exact
+     * excerpt must both match a candidate independently reconstructed from
+     * the immutable Snapshot payload.
+     */
+    const textLocatorBase =
+      locator.replace(
+        /:part:\d{4}$/,
+        "",
       );
 
     assert.ok(
-      snapshotText.length > 0,
-      `Snapshot ${evidence.snapshotId} text projection is empty.`,
+      textLocatorBase.length > 0,
+      [
+        `Evidence ${evidenceRecord.aggregateId} has no valid ordinary-text locator.`,
+        `Evidence locator: ${locator}`,
+      ].join("\n"),
     );
 
+    const reproducedEvidence =
+      extractTextEvidence(
+        snapshotPayload,
+        textLocatorBase,
+      );
+
+    const exactMatch =
+      reproducedEvidence.some(
+        (candidate) =>
+          candidate.locator === locator &&
+          candidate.excerpt === evidence.excerpt,
+      );
+
     assert.ok(
-      snapshotText.includes(
-        evidence.excerpt,
-      ),
+      exactMatch,
       [
-        `Evidence ${evidenceRecord.aggregateId} excerpt is not present in the Snapshot-derived text projection.`,
-        `Evidence locator: ${evidence.locator}`,
+        `Evidence ${evidenceRecord.aggregateId} excerpt cannot be reproduced from the persisted Snapshot using the canonical text extractor.`,
+        `Evidence locator: ${locator}`,
         `Evidence excerpt length: ${evidence.excerpt.length}`,
         `Snapshot payload length: ${snapshotPayload.length}`,
-        `Snapshot text projection length: ${snapshotText.length}`,
+        `Reproduced text Evidence count: ${reproducedEvidence.length}`,
       ].join("\n"),
     );
   }
 
   exactExcerptMatches += 1;
 }
+
 
 
 /*
