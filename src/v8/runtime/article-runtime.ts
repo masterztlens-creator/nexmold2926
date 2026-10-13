@@ -597,7 +597,6 @@ function buildCoreTopicAnchors(
       (token) =>
         !genericTopicTerms.has(token),
     );
-
   /*
    * Remove grammatical/contextual material that follows the semantic
    * object requested by the Problem.
@@ -1221,7 +1220,6 @@ function scoreEvidence(
       ),
   };
 }
-
 function selectRuntimeEvidence(
   acquisitions:
     readonly ResearchAcquisitionResult["acquisitions"][number][],
@@ -1798,7 +1796,7 @@ export async function runV8ArticleRuntime(
       );
 
       console.error(
-        `statement=${rejected.statement}`,
+                `statement=${rejected.statement}`,
       );
 
       console.error(
