@@ -1,3 +1,4 @@
+
 name: NEXMOLD V8 Next Operational Gate
 
 on:
@@ -19,7 +20,6 @@ permissions:
 jobs:
   v8-next:
     name: V8 Next Operational Verification
-
     runs-on: ubuntu-latest
 
     steps:
@@ -32,11 +32,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          SHA="$DISPATCH_SHA"
-          RUN_ID="$DISPATCH_RUN_ID"
-
-          SHA="$(printf '%s' "$SHA" | tr '[:upper:]' '[:lower:]')"
-          RUN_ID="$(printf '%s' "$RUN_ID" | tr -d '[:space:]')"
+          SHA="$(printf '%s' "$DISPATCH_SHA" | tr '[:upper:]' '[:lower:]')"
+          RUN_ID="$(printf '%s' "$DISPATCH_RUN_ID" | tr -d '[:space:]')"
 
           if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
             echo "ERROR: Invalid source SHA: $SHA"
@@ -63,11 +60,12 @@ jobs:
 
       - name: Verify checked out source SHA
         shell: bash
+        env:
+          EXPECTED_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -euo pipefail
 
           ACTUAL_SHA="$(git rev-parse HEAD)"
-          EXPECTED_SHA="${{ steps.source.outputs.sha }}"
 
           if [[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]]; then
             echo "ERROR: Checkout SHA mismatch"
@@ -95,41 +93,26 @@ jobs:
           const fs = require('node:fs');
 
           const packageJson = JSON.parse(
-            fs.readFileSync(
-              'package.json',
-              'utf8',
-            ),
+            fs.readFileSync('package.json', 'utf8'),
           );
 
           const lockfile = JSON.parse(
-            fs.readFileSync(
-              'package-lock.json',
-              'utf8',
-            ),
+            fs.readFileSync('package-lock.json', 'utf8'),
           );
 
-          if (
-            packageJson.name !==
-            'nexmold-v8-full'
-          ) {
+          if (packageJson.name !== 'nexmold-v8-full') {
             throw new Error(
               `Unexpected package name: ${packageJson.name}`,
             );
           }
 
-          if (
-            packageJson.engines?.node !==
-            '>=22.12.0'
-          ) {
+          if (packageJson.engines?.node !== '>=22.12.0') {
             throw new Error(
               `Unexpected Node engine: ${packageJson.engines?.node}`,
             );
           }
 
-          if (
-            packageJson.devDependencies?.typescript !==
-            '6.0.3'
-          ) {
+          if (packageJson.devDependencies?.typescript !== '6.0.3') {
             throw new Error(
               `Unexpected TypeScript version: ${
                 packageJson.devDependencies?.typescript
@@ -137,21 +120,14 @@ jobs:
             );
           }
 
-          if (
-            lockfile.lockfileVersion !==
-            3
-          ) {
+          if (lockfile.lockfileVersion !== 3) {
             throw new Error(
-              `Unexpected lockfileVersion: ${
-                lockfile.lockfileVersion
-              }`,
+              `Unexpected lockfileVersion: ${lockfile.lockfileVersion}`,
             );
           }
 
           if (
-            lockfile.packages?.['']
-              ?.devDependencies
-              ?.typescript !==
+            lockfile.packages?.['']?.devDependencies?.typescript !==
             '6.0.3'
           ) {
             throw new Error(
@@ -159,9 +135,7 @@ jobs:
             );
           }
 
-          console.log(
-            'LKG package contract: PASS',
-          );
+          console.log('LKG package contract: PASS');
           NODE
 
       - name: Verify source Final workflow run
@@ -176,138 +150,91 @@ jobs:
           node - <<'NODE'
           const https = require('node:https');
 
-          const runId =
-            process.env.SOURCE_RUN_ID;
-
-          const expectedSha =
-            process.env.SOURCE_SHA;
-
-          const repository =
-            process.env.GITHUB_REPOSITORY;
-
-          const token =
-            process.env.GITHUB_TOKEN;
+          const runId = process.env.SOURCE_RUN_ID;
+          const expectedSha = process.env.SOURCE_SHA;
+          const repository = process.env.GITHUB_REPOSITORY;
+          const token = process.env.GITHUB_TOKEN;
 
           function requestJson(url) {
-            return new Promise(
-              (resolve, reject) => {
-                const request =
-                  https.request(
-                    url,
-                    {
-                      method: 'GET',
-                      headers: {
-                        Accept:
-                          'application/vnd.github+json',
-                        Authorization:
-                          `Bearer ${token}`,
-                        'X-GitHub-Api-Version':
-                          '2022-11-28',
-                        'User-Agent':
-                          'nexmold-v8-next-gate',
-                      },
-                    },
-                    (response) => {
-                      let body = '';
+            return new Promise((resolve, reject) => {
+              const request = https.request(
+                url,
+                {
+                  method: 'GET',
+                  headers: {
+                    Accept: 'application/vnd.github+json',
+                    Authorization: `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'User-Agent': 'nexmold-v8-next-gate',
+                  },
+                },
+                (response) => {
+                  let body = '';
 
-                      response.setEncoding(
-                        'utf8',
+                  response.setEncoding('utf8');
+
+                  response.on('data', (chunk) => {
+                    body += chunk;
+                  });
+
+                  response.on('end', () => {
+                    if (
+                      response.statusCode < 200 ||
+                      response.statusCode >= 300
+                    ) {
+                      reject(
+                        new Error(
+                          `GitHub API ${response.statusCode}: ${body}`,
+                        ),
                       );
+                      return;
+                    }
 
-                      response.on(
-                        'data',
-                        (chunk) => {
-                          body += chunk;
-                        },
-                      );
+                    try {
+                      resolve(JSON.parse(body));
+                    } catch (error) {
+                      reject(error);
+                    }
+                  });
+                },
+              );
 
-                      response.on(
-                        'end',
-                        () => {
-                          if (
-                            response.statusCode <
-                              200 ||
-                            response.statusCode >=
-                              300
-                          ) {
-                            reject(
-                              new Error(
-                                `GitHub API ${response.statusCode}: ${body}`,
-                              ),
-                            );
-
-                            return;
-                          }
-
-                          try {
-                            resolve(
-                              JSON.parse(
-                                body,
-                              ),
-                            );
-                          } catch (
-                            error
-                          ) {
-                            reject(
-                              error,
-                            );
-                          }
-                        },
-                      );
-                    },
-                  );
-
-                request.on(
-                  'error',
-                  reject,
+              request.setTimeout(30 * 1000, () => {
+                request.destroy(
+                  new Error(
+                    'GitHub API request timed out after 30 seconds',
+                  ),
                 );
+              });
 
-                request.end();
-              },
-            );
+              request.on('error', reject);
+              request.end();
+            });
           }
 
           (async () => {
-            if (
-              !/^[0-9]+$/.test(
-                runId,
-              )
-            ) {
+            if (!/^[0-9]+$/.test(runId)) {
               throw new Error(
                 `Invalid source workflow run ID: ${runId}`,
               );
             }
 
-            if (
-              !/^[0-9a-f]{40}$/i.test(
-                expectedSha,
-              )
-            ) {
-              throw new Error(
-                `Invalid source SHA: ${expectedSha}`,
-              );
+            if (!/^[0-9a-f]{40}$/i.test(expectedSha)) {
+              throw new Error(`Invalid source SHA: ${expectedSha}`);
             }
 
             if (
-              typeof repository !==
-                'string' ||
-              repository.length ===
-                0
+              typeof repository !== 'string' ||
+              repository.length === 0
             ) {
-              throw new Error(
-                'GITHUB_REPOSITORY is missing',
-              );
+              throw new Error('GITHUB_REPOSITORY is missing');
             }
 
             if (
-              typeof token !==
-                'string' ||
-              token.length ===
-                0
+              typeof token !== 'string' ||
+              token.length === 0
             ) {
-              throw new Error(
-                'GITHUB_TOKEN is missing',
-              );
+              throw new Error('GITHUB_TOKEN is missing');
             }
 
             const sourceRunUrl =
@@ -323,8 +250,7 @@ jobs:
 
               if (
                 typeof run?.head_sha !== 'string' ||
-                run.head_sha.toLowerCase() !==
-                  expectedSha.toLowerCase()
+                run.head_sha.toLowerCase() !== expectedSha.toLowerCase()
               ) {
                 throw new Error(
                   `Source workflow SHA mismatch: expected ${expectedSha}, received ${run?.head_sha}`,
@@ -346,7 +272,6 @@ jobs:
                     `Source Final workflow completed unsuccessfully: ${run.conclusion}`,
                   );
                 }
-
                 break;
               }
 
@@ -376,48 +301,29 @@ jobs:
                 `Source Final workflow status: ${run.status}; waiting ${pollIntervalMs / 1000}s before checking again`,
               );
 
-              await new Promise(
-                (resolve) => setTimeout(resolve, pollIntervalMs),
+              await new Promise((resolve) =>
+                setTimeout(resolve, pollIntervalMs),
               );
             }
 
-            console.log(
-              'Source Final workflow verification: PASS',
+            console.log('Source Final workflow verification: PASS');
+            console.log(`Source workflow: ${run.name}`);
+            console.log(`Source run ID: ${run.id}`);
+            console.log(`Source SHA: ${run.head_sha}`);
+            console.log(`Source conclusion: ${run.conclusion}`);
+          })().catch((error) => {
+            console.error(
+              'Source Final workflow verification: FAIL',
             );
-
-            console.log(
-              `Source workflow: ${run.name}`,
+            console.error(
+              error instanceof Error
+                ? error.stack || error.message
+                : error,
             );
+            process.exit(1);
+          });
+          NODE
 
-            console.log(
-              `Source run ID: ${run.id}`,
-            );
-
-            console.log(
-              `Source SHA: ${run.head_sha}`,
-            );
-
-            console.log(
-              `Source conclusion: ${run.conclusion}`,
-            );
-          })().catch(
-            (error) => {
-              console.error(
-                'Source Final workflow verification: FAIL',
-              );
-
-              console.error(
-                error instanceof Error
-                  ? error.stack ||
-                    error.message
-                  : error,
-              );
-
-              process.exit(
-                1,
-              );
-            },
-          );
       - name: Download V8 publication handoff
         uses: actions/download-artifact@v4
         with:
@@ -427,6 +333,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify downloaded V8 publication handoff
+        id: handoff
         shell: bash
         run: |
           set -euo pipefail
@@ -442,16 +349,8 @@ jobs:
           node - <<'NODE'
           const fs = require('node:fs');
 
-          const path =
-            '.nexmold/v8-real-publication-handoff.json';
-
-          const payload =
-            JSON.parse(
-              fs.readFileSync(
-                path,
-                'utf8',
-              ),
-            );
+          const path = '.nexmold/v8-real-publication-handoff.json';
+          const payload = JSON.parse(fs.readFileSync(path, 'utf8'));
 
           if (
             payload?.schema !==
@@ -463,11 +362,8 @@ jobs:
           }
 
           if (
-            typeof payload.fingerprint !==
-              'string' ||
-            !/^[0-9a-f]{64}$/.test(
-              payload.fingerprint,
-            )
+            typeof payload.fingerprint !== 'string' ||
+            !/^[0-9a-f]{64}$/.test(payload.fingerprint)
           ) {
             throw new Error(
               'Publication handoff fingerprint is missing or invalid',
@@ -475,88 +371,58 @@ jobs:
           }
 
           if (
-            !Array.isArray(
-              payload.pages,
-            ) ||
-            payload.pages.length !==
-              3
+            !Array.isArray(payload.pages) ||
+            payload.pages.length !== 3
           ) {
             throw new Error(
               `Expected exactly 3 publication pages, received ${
-                payload.pages?.length ??
-                0
+                payload.pages?.length ?? 0
               }`,
             );
           }
 
-          const requiredRoutes =
-            new Set([
-              '/knowledge/plastic-injection-molding-wall-thickness/',
-              '/de/wissen/plastic-injection-molding-wall-thickness/',
-              '/fr/knowledge/plastic-injection-molding-wall-thickness/',
-            ]);
+          const requiredRoutes = new Set([
+            '/knowledge/plastic-injection-molding-wall-thickness/',
+            '/de/wissen/plastic-injection-molding-wall-thickness/',
+            '/fr/knowledge/plastic-injection-molding-wall-thickness/',
+          ]);
 
-          const actualRoutes =
-            new Set(
-              payload.pages.map(
-                (page) =>
-                  page?.canonicalRoute,
-              ),
-            );
+          const actualRoutes = new Set(
+            payload.pages.map((page) => page?.canonicalRoute),
+          );
 
-          if (
-            actualRoutes.size !==
-            requiredRoutes.size
-          ) {
+          if (actualRoutes.size !== requiredRoutes.size) {
             throw new Error(
               'Publication handoff contains duplicate or invalid routes',
             );
           }
 
-          for (
-            const route of requiredRoutes
-          ) {
-            if (
-              !actualRoutes.has(
-                route,
-              )
-            ) {
+          for (const route of requiredRoutes) {
+            if (!actualRoutes.has(route)) {
               throw new Error(
                 `Publication handoff missing required route: ${route}`,
               );
             }
           }
 
-          const fingerprint =
-            payload.fingerprint.toLowerCase();
+          const fingerprint = payload.fingerprint.toLowerCase();
 
           fs.appendFileSync(
             process.env.GITHUB_ENV,
-            `NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=CONSUME_EXISTING\n`,
+            'NEXMOLD_V8_PUBLICATION_HANDOFF_MODE=CONSUME_EXISTING\n',
             'utf8',
           );
 
           fs.appendFileSync(
-            process.env.GITHUB_ENV,
-            `NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT=${fingerprint}\n`,
+            process.env.GITHUB_OUTPUT,
+            `fingerprint=${fingerprint}\n`,
             'utf8',
           );
 
-          console.log(
-            'Downloaded V8 publication handoff: PASS',
-          );
-
-          console.log(
-            `handoff fingerprint: ${fingerprint}`,
-          );
-
-          console.log(
-            `publication pages: ${payload.pages.length}`,
-          );
-
-          console.log(
-            'Production handoff mode: CONSUME_EXISTING',
-          );
+          console.log('Downloaded V8 publication handoff: PASS');
+          console.log(`handoff fingerprint: ${fingerprint}`);
+          console.log(`publication pages: ${payload.pages.length}`);
+          console.log('Production handoff mode: CONSUME_EXISTING');
           NODE
 
       - name: Install locked dependencies
@@ -573,7 +439,7 @@ jobs:
         env:
           NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
           NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
-          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
         run: |
           set -euo pipefail
 
@@ -590,7 +456,7 @@ jobs:
         env:
           NEXMOLD_SOURCE_SHA: ${{ steps.source.outputs.sha }}
           NEXMOLD_V8_PUBLICATION_HANDOFF_MODE: CONSUME_EXISTING
-          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ env.NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
         run: npm run v8:next
 
       - name: Prepare persisted V8 production artifact
@@ -598,15 +464,13 @@ jobs:
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
           SOURCE_RUN_ID: ${{ steps.source.outputs.run_id }}
+          NEXMOLD_V8_PUBLICATION_HANDOFF_FINGERPRINT: ${{ steps.handoff.outputs.fingerprint }}
         run: |
           set -euo pipefail
 
           STAGE="v8-production-artifact"
-
           CLOSURE=".nexmold/v8-actual-dist-production-closure.json"
-
           HANDOFF=".nexmold/v8-real-publication-handoff.json"
-
           LKG=".nexmold/last-known-good.json"
 
           rm -rf "$STAGE"
@@ -617,11 +481,8 @@ jobs:
             "$STAGE/release"
 
           test -d dist
-
           test -f "$CLOSURE"
-
           test -f "$HANDOFF"
-
           test -f "$LKG"
 
           BUILD_EPOCH="$(
@@ -630,36 +491,26 @@ jobs:
 
               const value =
                 JSON.parse(
-                  fs.readFileSync(
-                    process.argv[1],
-                    "utf8",
-                  ),
+                  fs.readFileSync(process.argv[1], "utf8"),
                 ).buildEpoch;
 
               if (
                 typeof value !== "string" ||
                 value.length === 0
               ) {
-                throw new Error(
-                  "Closure buildEpoch is missing",
-                );
+                throw new Error("Closure buildEpoch is missing");
               }
 
-              process.stdout.write(
-                value,
-              );
+              process.stdout.write(value);
             ' "$CLOSURE"
           )"
 
           RELEASE_DIR=".nexmold/releases/$BUILD_EPOCH"
 
           test -d "$RELEASE_DIR"
-
           test -f "$RELEASE_DIR/html-manifest.json"
 
-          cp -a \
-            dist/. \
-            "$STAGE/dist/"
+          cp -a dist/. "$STAGE/dist/"
 
           cp \
             "$CLOSURE" \
@@ -673,16 +524,11 @@ jobs:
             "$LKG" \
             "$STAGE/proof/last-known-good.json"
 
-          cp -a \
-            "$RELEASE_DIR/." \
-            "$STAGE/release/"
+          cp -a "$RELEASE_DIR/." "$STAGE/release/"
 
           node - <<'NODE'
-          const fs =
-            require('node:fs');
-
-          const crypto =
-            require('node:crypto');
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
 
           const closurePath =
             'v8-production-artifact/proof/v8-actual-dist-production-closure.json';
@@ -690,35 +536,18 @@ jobs:
           const handoffPath =
             'v8-production-artifact/proof/v8-real-publication-handoff.json';
 
-          const closure =
-            JSON.parse(
-              fs.readFileSync(
-                closurePath,
-                'utf8',
-              ),
-            );
+          const closure = JSON.parse(
+            fs.readFileSync(closurePath, 'utf8'),
+          );
 
-          const handoff =
-            JSON.parse(
-              fs.readFileSync(
-                handoffPath,
-                'utf8',
-              ),
-            );
+          const handoff = JSON.parse(
+            fs.readFileSync(handoffPath, 'utf8'),
+          );
 
-          const sha256 =
-            crypto
-              .createHash(
-                'sha256',
-              )
-              .update(
-                fs.readFileSync(
-                  closurePath,
-                ),
-              )
-              .digest(
-                'hex',
-              );
+          const sha256 = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(closurePath))
+            .digest('hex');
 
           if (
             closure?.handoff?.fingerprint?.toLowerCase() !==
@@ -738,103 +567,145 @@ jobs:
             );
           }
 
+          const requiredString = (value, label) => {
+            if (
+              typeof value !== 'string' ||
+              value.trim().length === 0
+            ) {
+              throw new Error(
+                `Persisted artifact required field is missing: ${label}`,
+              );
+            }
+
+            return value;
+          };
+
+          const requiredFingerprint = (value, label) => {
+            const fingerprint = requiredString(value, label);
+
+            if (!/^[0-9a-f]{64}$/i.test(fingerprint)) {
+              throw new Error(
+                `Persisted artifact fingerprint is invalid: ${label}`,
+              );
+            }
+
+            return fingerprint.toLowerCase();
+          };
+
+          if (
+            typeof closure?.schema !== 'string' ||
+            closure.schema.length === 0
+          ) {
+            throw new Error(
+              'Production closure schema is missing or invalid',
+            );
+          }
+
           const metadata = {
-            schema:
-              'nexmold.v8.persisted-production-artifact.v1',
+            schema: 'nexmold.v8.persisted-production-artifact.v1',
 
-            sourceSha:
+            sourceSha: requiredString(
               process.env.SOURCE_SHA,
+              'sourceSha',
+            ),
 
-            sourceRunId:
+            sourceRunId: requiredString(
               process.env.SOURCE_RUN_ID,
+              'sourceRunId',
+            ),
 
-            nextRunId:
+            nextRunId: requiredString(
               process.env.GITHUB_RUN_ID,
+              'nextRunId',
+            ),
 
-            repository:
+            repository: requiredString(
               process.env.GITHUB_REPOSITORY,
+              'repository',
+            ),
 
-            buildEpoch:
+            buildEpoch: requiredString(
               closure.buildEpoch,
+              'closure.buildEpoch',
+            ),
 
-            handoffFingerprint:
+            handoffFingerprint: requiredFingerprint(
               handoff.fingerprint,
+              'handoff.fingerprint',
+            ),
 
-            contentId:
-              closure.content.id,
+            contentId: requiredString(
+              closure?.content?.id,
+              'closure.content.id',
+            ),
 
-            decisionId:
-              closure.decision.id,
+            decisionId: requiredString(
+              closure?.decision?.id,
+              'closure.decision.id',
+            ),
 
-            projectionId:
-              closure.projection.id,
+            projectionId: requiredString(
+              closure?.projection?.id,
+              'closure.projection.id',
+            ),
 
-            projectionFingerprint:
-              closure.projection.fingerprint,
+            projectionFingerprint: requiredFingerprint(
+              closure?.projection?.fingerprint,
+              'closure.projection.fingerprint',
+            ),
 
-            releaseId:
-              closure.release.id,
+            releaseId: requiredString(
+              closure?.release?.id,
+              'closure.release.id',
+            ),
 
-            releaseFingerprint:
-              closure.release.fingerprint,
+            releaseFingerprint: requiredFingerprint(
+              closure?.release?.fingerprint,
+              'closure.release.fingerprint',
+            ),
 
-            productionExecutionId:
-              closure.productionExecution.executionId,
+            productionExecutionId: requiredString(
+              closure?.productionExecution?.executionId,
+              'closure.productionExecution.executionId',
+            ),
 
-            productionExecutionFingerprint:
-              closure.productionExecution.executionFingerprint,
+            productionExecutionFingerprint: requiredFingerprint(
+              closure?.productionExecution?.executionFingerprint,
+              'closure.productionExecution.executionFingerprint',
+            ),
 
-            productionConsumptionId:
-              closure.productionConsumption.consumptionId,
+            productionConsumptionId: requiredString(
+              closure?.productionConsumption?.consumptionId,
+              'closure.productionConsumption.consumptionId',
+            ),
 
-            productionConsumptionFingerprint:
-              closure.productionConsumption.consumptionFingerprint,
+            productionConsumptionFingerprint: requiredFingerprint(
+              closure?.productionConsumption?.consumptionFingerprint,
+              'closure.productionConsumption.consumptionFingerprint',
+            ),
 
-            closureSha256:
+            closureSha256: requiredFingerprint(
               sha256,
+              'closureSha256',
+            ),
           };
 
           fs.writeFileSync(
             'v8-production-artifact/proof/persisted-artifact-manifest.json',
-            JSON.stringify(
-              metadata,
-              null,
-              2,
-            ) + '\n',
+            JSON.stringify(metadata, null, 2) + '\n',
             'utf8',
           );
 
-          console.log(
-            'Persisted production artifact manifest: PASS',
-          );
+          console.log('Persisted production artifact manifest: PASS');
+          console.log(`sourceSha: ${metadata.sourceSha}`);
+          console.log(`buildEpoch: ${metadata.buildEpoch}`);
+          console.log(`handoffFingerprint: ${metadata.handoffFingerprint}`);
+          console.log(`decisionId: ${metadata.decisionId}`);
+          console.log(`projectionFingerprint: ${metadata.projectionFingerprint}`);
+          console.log(`releaseId: ${metadata.releaseId}`);
+          console.log(`closureSha256: ${metadata.closureSha256}`);
+          NODE
 
-          console.log(
-            `sourceSha: ${metadata.sourceSha}`,
-          );
-
-          console.log(
-            `buildEpoch: ${metadata.buildEpoch}`,
-          );
-
-          console.log(
-            `handoffFingerprint: ${metadata.handoffFingerprint}`,
-          );
-
-          console.log(
-            `decisionId: ${metadata.decisionId}`,
-          );
-
-          console.log(
-            `projectionFingerprint: ${metadata.projectionFingerprint}`,
-          );
-
-          console.log(
-            `releaseId: ${metadata.releaseId}`,
-          );
-
-          console.log(
-            `closureSha256: ${metadata.closureSha256}`,
-          );
       - name: Upload verified V8 production artifact
         uses: actions/upload-artifact@v4
         with:
