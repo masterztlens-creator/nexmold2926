@@ -1,3 +1,4 @@
+
 import type { ExtractedEvidenceCandidate } from "./types.js";
 
 const MAX_EXCERPT_LENGTH = 2_000;
