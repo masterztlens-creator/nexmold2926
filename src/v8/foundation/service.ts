@@ -814,7 +814,10 @@ export class FoundationService {
         table: current.payload.table,
         row: current.payload.row,
         parameter: current.payload.parameter,
-        value: current.payload.value,
+        value:
+        current.payload.value === undefined
+        ? undefined
+        : String(current.payload.value),
         unit: current.payload.unit,
         materialManufacturer: current.payload.materialManufacturer,
         materialGrade: current.payload.materialGrade,
