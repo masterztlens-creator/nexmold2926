@@ -21,6 +21,11 @@ import {
 import { ApplicabilityEngine } from "../applicability/engine.js";
 
 import {
+  extractStructuredEvidence,
+  extractTextEvidence,
+} from "../acquisition/source-extractor.js";
+
+import {
   immutable,
   invariant,
 } from "../constitution/invariants.js";
@@ -252,6 +257,100 @@ function excerptIsReproducible(
       fragment,
     ),
   );
+}
+
+interface ReproducibleEvidenceExcerpt {
+  readonly locator: string;
+  readonly excerpt: string;
+  readonly section?: string;
+  readonly table?: string;
+  readonly row?: string;
+  readonly parameter?: string;
+  readonly value?: string;
+  readonly unit?: string;
+  readonly materialManufacturer?: string;
+  readonly materialGrade?: string;
+  readonly testMethod?: string;
+  readonly testCondition?: string;
+  readonly flowDirection?: string;
+  readonly extractionConfidence?: string;
+}
+
+/**
+ * Reproduce an evidence excerpt from the exact sealed HTML snapshot
+ * using the same deterministic extractors used by acquisition.
+ *
+ * This function never authorizes an excerpt when extraction fails.
+ */
+function extractedEvidenceMatchesSnapshot(
+  snapshotContent: string,
+  evidence: ReproducibleEvidenceExcerpt,
+): boolean {
+  if (
+    typeof snapshotContent !== "string" ||
+    snapshotContent.trim().length === 0 ||
+    typeof evidence.locator !== "string" ||
+    evidence.locator.trim().length === 0 ||
+    typeof evidence.excerpt !== "string" ||
+    evidence.excerpt.trim().length === 0
+  ) {
+    return false;
+  }
+
+  try {
+    const candidates = [
+      ...extractStructuredEvidence(snapshotContent),
+      ...extractTextEvidence(snapshotContent, evidence.locator),
+    ];
+
+    return candidates.some((candidate) => {
+      if (candidate.locator !== evidence.locator) {
+        return false;
+      }
+
+      if (
+        normalizeSnapshotText(candidate.excerpt) !==
+        normalizeSnapshotText(evidence.excerpt)
+      ) {
+        return false;
+      }
+
+      const metadataKeys = [
+        "section",
+        "table",
+        "row",
+        "parameter",
+        "value",
+        "unit",
+        "materialManufacturer",
+        "materialGrade",
+        "testMethod",
+        "testCondition",
+        "flowDirection",
+        "extractionConfidence",
+      ] as const;
+
+      for (const key of metadataKeys) {
+        const persistedValue = evidence[key];
+        const extractedValue = candidate[key];
+
+        if (persistedValue === undefined) {
+          continue;
+        }
+
+        if (
+          extractedValue === undefined ||
+          String(extractedValue) !== String(persistedValue)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  } catch {
+    return false;
+  }
 }
 
 export class FoundationService {
@@ -706,10 +805,24 @@ export class FoundationService {
     const snapshotContent = snapshot.payload.payload;
     const excerpt = current.payload.excerpt;
 
-    const reproducible = excerptIsReproducible(
-      snapshotContent,
-      excerpt,
-    );
+    const reproducible =
+      excerptIsReproducible(snapshotContent, excerpt) ||
+      extractedEvidenceMatchesSnapshot(snapshotContent, {
+        locator: current.payload.locator,
+        excerpt: current.payload.excerpt,
+        section: current.payload.section,
+        table: current.payload.table,
+        row: current.payload.row,
+        parameter: current.payload.parameter,
+        value: current.payload.value,
+        unit: current.payload.unit,
+        materialManufacturer: current.payload.materialManufacturer,
+        materialGrade: current.payload.materialGrade,
+        testMethod: current.payload.testMethod,
+        testCondition: current.payload.testCondition,
+        flowDirection: current.payload.flowDirection,
+        extractionConfidence: current.payload.extractionConfidence,
+      });
 
     if (!reproducible) {
       console.error(
