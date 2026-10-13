@@ -1,3 +1,4 @@
+
 import { rawBytesFingerprint } from "../foundation/hash.js";
 import { evaluateSourceUrl } from "./source-policy.js";
 import { normalizeSourceUrl } from "./url-normalizer.js";
@@ -5,6 +6,69 @@ import type { FetchedPage, PageFetcher } from "./types.js";
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const DEFAULT_MAX_REDIRECTS = 10;
+const DEFAULT_CHARSET = "utf-8";
+
+interface ParsedContentType {
+  readonly mediaType: string;
+  readonly charset: string;
+}
+
+function parseContentType(value: string | null): ParsedContentType {
+  if (!value?.trim()) {
+    return {
+      mediaType: "application/octet-stream",
+      charset: DEFAULT_CHARSET,
+    };
+  }
+
+  const parts = value.split(";");
+  const mediaType = parts[0]?.trim().toLowerCase();
+
+  let charset = DEFAULT_CHARSET;
+
+  for (const part of parts.slice(1)) {
+    const match = /^\s*charset\s*=\s*(?:"([^"]+)"|'([^']+)'|([^;\s]+))\s*$/i.exec(
+      part,
+    );
+
+    if (!match) {
+      continue;
+    }
+
+    const declaredCharset = match[1] ?? match[2] ?? match[3];
+
+    if (declaredCharset) {
+      charset = declaredCharset.trim();
+      break;
+    }
+  }
+
+  return {
+    mediaType: mediaType || "application/octet-stream",
+    charset,
+  };
+}
+
+function decodeResponseBody(
+  bytes: Uint8Array,
+  charset: string,
+): string {
+  let decoder: TextDecoder;
+
+  try {
+    decoder = new TextDecoder(charset, {
+      fatal: true,
+    });
+  } catch {
+    throw new Error("V8_ACQUISITION_UNSUPPORTED_CHARSET");
+  }
+
+  try {
+    return decoder.decode(bytes);
+  } catch {
+    throw new Error("V8_ACQUISITION_INVALID_RESPONSE_ENCODING");
+  }
+}
 
 export interface HttpPageFetcherOptions {
   readonly timeoutMs?: number;
@@ -139,19 +203,19 @@ export class HttpPageFetcher implements PageFetcher {
           throw new Error("V8_ACQUISITION_RESPONSE_TOO_LARGE");
         }
 
-        const mediaType =
-          response.headers
-            .get("content-type")
-            ?.split(";", 1)[0]
-            ?.trim() || "application/octet-stream";
+        const contentType = parseContentType(
+          response.headers.get("content-type"),
+        );
+
+        const body = decodeResponseBody(bytes, contentType.charset);
 
         return {
           requestedUrl,
           finalUrl: currentUrl,
           redirectChain,
           status: response.status,
-          mediaType,
-          body: new TextDecoder().decode(bytes),
+          mediaType: contentType.mediaType,
+          body,
           bytes,
           fetchedAt: new Date().toISOString(),
         };
@@ -165,4 +229,3 @@ export class HttpPageFetcher implements PageFetcher {
     return rawBytesFingerprint(bytes);
   }
 }
-

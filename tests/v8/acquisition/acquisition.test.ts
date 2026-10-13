@@ -1,3 +1,4 @@
+
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -306,6 +307,140 @@ test("V8-05 HTTP page fetcher fails closed on non-2xx response", async () => {
           "https://example.com/not-found",
         ),
       /V8_ACQUISITION_HTTP_STATUS_404/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+test("V8-05 HTTP page fetcher decodes UTF-8 and preserves Unicode punctuation", async () => {
+  const originalFetch = globalThis.fetch;
+  const expected =
+    "Wall thickness — let’s verify the evidence。";
+
+  globalThis.fetch = async () =>
+    new Response(
+      new TextEncoder().encode(expected),
+      {
+        status: 200,
+        headers: {
+          "content-type": 'text/html; charset="UTF-8"',
+        },
+      },
+    );
+
+  try {
+    const page = await new HttpPageFetcher({
+      timeoutMs: 5_000,
+    }).fetch("https://example.com/utf8");
+
+    assert.equal(page.body, expected);
+    assert.equal(page.mediaType, "text/html");
+
+    // Decoding must not rewrite the original acquired bytes.
+    assert.deepEqual(
+      page.bytes,
+      new TextEncoder().encode(expected),
+    );
+
+    assert.equal(
+      HttpPageFetcher.contentHash(page.bytes),
+      rawBytesFingerprint(page.bytes),
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+test("V8-05 HTTP page fetcher honors Windows-1252 charset", async () => {
+  const originalFetch = globalThis.fetch;
+
+  // Windows-1252 encodes "café" with 0xE9 rather than UTF-8 bytes.
+  const bytes = new Uint8Array([
+    0x63,
+    0x61,
+    0x66,
+    0xe9,
+  ]);
+
+  globalThis.fetch = async () =>
+    new Response(
+      bytes,
+      {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=windows-1252",
+        },
+      },
+    );
+
+  try {
+    const page = await new HttpPageFetcher({
+      timeoutMs: 5_000,
+    }).fetch("https://example.com/legacy-charset");
+
+    assert.equal(page.body, "café");
+    assert.equal(page.mediaType, "text/html");
+
+    // The snapshot input remains the original response byte sequence.
+    assert.deepEqual(page.bytes, bytes);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+test("V8-05 HTTP page fetcher rejects unsupported declared charset", async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () =>
+    new Response(
+      new TextEncoder().encode("content"),
+      {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=x-v8-unsupported-charset",
+        },
+      },
+    );
+
+  try {
+    await assert.rejects(
+      () =>
+        new HttpPageFetcher({
+          timeoutMs: 5_000,
+        }).fetch("https://example.com/unknown-charset"),
+      /V8_ACQUISITION_UNSUPPORTED_CHARSET/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+test("V8-05 HTTP page fetcher rejects malformed UTF-8 instead of silently replacing bytes", async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () =>
+    new Response(
+      new Uint8Array([0xc3, 0x28]),
+      {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+        },
+      },
+    );
+
+  try {
+    await assert.rejects(
+      () =>
+        new HttpPageFetcher({
+          timeoutMs: 5_000,
+        }).fetch("https://example.com/malformed-utf8"),
+      /V8_ACQUISITION_INVALID_RESPONSE_ENCODING/,
     );
   } finally {
     globalThis.fetch = originalFetch;
