@@ -1,4 +1,3 @@
-
 name: NEXMOLD V8 Next Operational Gate
 
 on:
@@ -603,13 +602,42 @@ jobs:
             }
           }
 
+          /*
+           * Decision ID authority:
+           * foundation.decisionId is the canonical field emitted by
+           * scripts/v8-first-article.mjs.
+           *
+           * runtime.content.decisionId must refer to that same decision.
+           * Do not read runtime.decisionId: that field is not emitted
+           * at the top level of the actual first-article manifest.
+           */
+          const foundation = manifest?.foundation;
           const runtime = manifest?.runtime;
+          const decisionId = foundation?.decisionId;
+          const contentDecisionId = runtime?.content?.decisionId;
 
           if (
-            typeof runtime?.decisionId !== 'string' ||
-            runtime.decisionId.trim().length === 0
+            typeof decisionId !== 'string' ||
+            decisionId.trim().length === 0
           ) {
-            throw new Error('Runtime decision ID is missing.');
+            throw new Error(
+              'Foundation decision ID is missing.',
+            );
+          }
+
+          if (
+            typeof contentDecisionId !== 'string' ||
+            contentDecisionId.trim().length === 0
+          ) {
+            throw new Error(
+              'Runtime content decision ID is missing.',
+            );
+          }
+
+          if (contentDecisionId !== decisionId) {
+            throw new Error(
+              'Runtime content decision ID does not match the canonical Foundation decision ID.',
+            );
           }
 
           if (
@@ -619,22 +647,15 @@ jobs:
             throw new Error('Runtime content ID is missing.');
           }
 
-          if (
-            runtime.content.decisionId !== runtime.decisionId
-          ) {
-            throw new Error(
-              'Content decision ID does not match runtime decision ID.',
-            );
-          }
-
           console.log('First article fingerprint: PASS');
           console.log('First article lineage structure: PASS');
+          console.log('First article decision lineage: PASS');
           console.log(`Content fingerprint: ${actualFingerprint}`);
           console.log(`Verified Evidence: ${evidenceIds.length}`);
           console.log(`Claims: ${claimIds.length}`);
           console.log(`Knowledge: ${knowledgeIds.length}`);
           console.log(`Provenance records: ${provenance.length}`);
-          console.log(`Decision ID: ${runtime.decisionId}`);
+          console.log(`Decision ID: ${decisionId}`);
           console.log(`Content ID: ${runtime.content.id}`);
           NODE
 
@@ -688,6 +709,10 @@ jobs:
             throw new Error('Source workflow run ID is invalid.');
           }
 
+          if (!/^[0-9]+$/.test(required.verificationRunId)) {
+            throw new Error('Verification workflow run ID is invalid.');
+          }
+
           if (!/^[0-9a-f]{64}$/i.test(required.handoffFingerprint)) {
             throw new Error('Publication handoff fingerprint is invalid.');
           }
@@ -697,6 +722,38 @@ jobs:
             !/^[0-9a-f]{64}$/i.test(required.manifestSha256)
           ) {
             throw new Error('Staged artifact SHA-256 is invalid.');
+          }
+
+          const decisionId = manifest?.foundation?.decisionId;
+          const contentDecisionId = manifest?.runtime?.content?.decisionId;
+          const contentId = manifest?.runtime?.content?.id;
+
+          if (
+            typeof decisionId !== 'string' ||
+            decisionId.trim().length === 0
+          ) {
+            throw new Error(
+              'Verification metadata cannot be created: Foundation decision ID is missing.',
+            );
+          }
+
+          if (
+            typeof contentDecisionId !== 'string' ||
+            contentDecisionId.trim().length === 0 ||
+            contentDecisionId !== decisionId
+          ) {
+            throw new Error(
+              'Verification metadata cannot be created: runtime content decision ID does not match Foundation decision ID.',
+            );
+          }
+
+          if (
+            typeof contentId !== 'string' ||
+            contentId.trim().length === 0
+          ) {
+            throw new Error(
+              'Verification metadata cannot be created: content ID is missing.',
+            );
           }
 
           const metadata = {
@@ -720,10 +777,8 @@ jobs:
               manifest.foundation.knowledgeIds.length,
             provenanceCount:
               manifest.runtime.content.provenance.length,
-            contentId:
-              manifest.runtime.content.id,
-            decisionId:
-              manifest.runtime.decisionId,
+            contentId,
+            decisionId,
           };
 
           fs.writeFileSync(
@@ -738,6 +793,7 @@ jobs:
           console.log(`Article SHA-256: ${metadata.articleSha256}`);
           console.log(`Manifest SHA-256: ${metadata.manifestSha256}`);
           console.log(`Handoff fingerprint: ${metadata.handoffFingerprint}`);
+          console.log(`Decision ID: ${metadata.decisionId}`);
           NODE
 
           echo "V8 first article artifact verification: PASS"
