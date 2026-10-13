@@ -310,37 +310,74 @@ jobs:
               );
             }
 
-            const run =
-              await requestJson(
-                `https://api.github.com/repos/${repository}/actions/runs/${runId}`,
+            const sourceRunUrl =
+              `https://api.github.com/repos/${repository}/actions/runs/${runId}`;
+
+            const timeoutMs = 10 * 60 * 1000;
+            const pollIntervalMs = 10 * 1000;
+            const startedAt = Date.now();
+            let run;
+
+            while (true) {
+              run = await requestJson(sourceRunUrl);
+
+              if (
+                typeof run?.head_sha !== 'string' ||
+                run.head_sha.toLowerCase() !==
+                  expectedSha.toLowerCase()
+              ) {
+                throw new Error(
+                  `Source workflow SHA mismatch: expected ${expectedSha}, received ${run?.head_sha}`,
+                );
+              }
+
+              if (
+                run?.name !==
+                'NEXMOLD V8 Final + Production Integration'
+              ) {
+                throw new Error(
+                  `Unexpected source workflow: ${run?.name}`,
+                );
+              }
+
+              if (run.status === 'completed') {
+                if (run.conclusion !== 'success') {
+                  throw new Error(
+                    `Source Final workflow completed unsuccessfully: ${run.conclusion}`,
+                  );
+                }
+
+                break;
+              }
+
+              if (
+                ![
+                  'queued',
+                  'in_progress',
+                  'waiting',
+                  'requested',
+                  'pending',
+                ].includes(run.status)
+              ) {
+                throw new Error(
+                  `Unexpected source workflow status: ${run.status}`,
+                );
+              }
+
+              const elapsedMs = Date.now() - startedAt;
+
+              if (elapsedMs >= timeoutMs) {
+                throw new Error(
+                  `Timed out waiting for source Final workflow after ${Math.floor(elapsedMs / 1000)} seconds; last status: ${run.status}`,
+                );
+              }
+
+              console.log(
+                `Source Final workflow status: ${run.status}; waiting ${pollIntervalMs / 1000}s before checking again`,
               );
 
-            if (
-              typeof run?.head_sha !==
-                'string' ||
-              run.head_sha.toLowerCase() !==
-                expectedSha.toLowerCase()
-            ) {
-              throw new Error(
-                `Source workflow SHA mismatch: expected ${expectedSha}, received ${run?.head_sha}`,
-              );
-            }
-
-            if (
-              run?.name !==
-              'NEXMOLD V8 Final + Production Integration'
-            ) {
-              throw new Error(
-                `Unexpected source workflow: ${run?.name}`,
-              );
-            }
-
-            if (
-              run?.conclusion !==
-              'success'
-            ) {
-              throw new Error(
-                `Source Final workflow is not successful: ${run?.conclusion}`,
+              await new Promise(
+                (resolve) => setTimeout(resolve, pollIntervalMs),
               );
             }
 
@@ -381,8 +418,6 @@ jobs:
               );
             },
           );
-          NODE
-
       - name: Download V8 publication handoff
         uses: actions/download-artifact@v4
         with:
@@ -800,8 +835,6 @@ jobs:
           console.log(
             `closureSha256: ${metadata.closureSha256}`,
           );
-          NODE
-
       - name: Upload verified V8 production artifact
         uses: actions/upload-artifact@v4
         with:
