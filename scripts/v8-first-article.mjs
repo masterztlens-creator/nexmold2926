@@ -1421,6 +1421,248 @@ function buildFoundationClosureAudit(
       ),
   };
 }
+/*
+ * ============================================================
+ * EXACT EVIDENCE → SOURCE MAPPING
+ * ============================================================
+ *
+ * Evidence ownership is derived from canonical identity, not
+ * from the position of an Acquisition in an array.
+ *
+ * A verified Evidence ID must map to exactly one acquired
+ * source/snapshot pair. Zero matches or multiple matches fail
+ * closed rather than silently assigning incorrect provenance.
+ */
+
+import {
+  evidenceId,
+} from "../.v8-build/src/v8/domain/primitives.js";
+
+
+function canonicalAcquiredEvidenceId(
+  record,
+  evidence,
+) {
+  return evidenceId(
+    contentFingerprint({
+      source:
+        record.acquisition.sourceId,
+
+      snapshotId:
+        record.acquisition.snapshotId,
+
+      snapshotContentHash:
+        record.acquisition.snapshot.contentHash,
+
+      locator:
+        evidence.locator,
+
+      excerpt:
+        evidence.excerpt,
+
+      page:
+        evidence.page,
+
+      printedPage:
+        evidence.printedPage,
+
+      section:
+        evidence.section,
+
+      table:
+        evidence.table,
+
+      row:
+        evidence.row,
+
+      parameter:
+        evidence.parameter,
+
+      value:
+        evidence.value,
+
+      unit:
+        evidence.unit,
+
+      materialManufacturer:
+        evidence.materialManufacturer,
+
+      materialGrade:
+        evidence.materialGrade,
+
+      testMethod:
+        evidence.testMethod,
+
+      testCondition:
+        evidence.testCondition,
+
+      flowDirection:
+        evidence.flowDirection,
+
+      extractionConfidence:
+        evidence.extractionConfidence ?? "LOW",
+    }),
+  ).toString();
+}
+
+
+function buildExactEvidenceSourceMapping(
+  acquisition,
+  verifiedEvidenceIds,
+) {
+  requireCondition(
+    acquisition !== null &&
+      typeof acquisition === "object" &&
+      Array.isArray(acquisition.acquisitions),
+    "Evidence source mapping received an invalid Acquisition result",
+  );
+
+  requireCondition(
+    Array.isArray(verifiedEvidenceIds),
+    "Evidence source mapping received invalid verified Evidence IDs",
+  );
+
+  const verifiedSet =
+    new Set(
+      verifiedEvidenceIds.map(
+        (id) => String(id),
+      ),
+    );
+
+  requireCondition(
+    verifiedSet.size ===
+      verifiedEvidenceIds.length,
+    "verified Evidence IDs contain duplicates",
+  );
+
+  const sourceRecords =
+    acquisition.acquisitions.map(
+      (record) => ({
+        candidateUrl:
+          record.candidateUrl,
+
+        requestedUrl:
+          record.page.requestedUrl,
+
+        finalUrl:
+          record.page.finalUrl,
+
+        sourceId:
+          record.acquisition.sourceId,
+
+        snapshotId:
+          record.acquisition.snapshotId,
+
+        evidenceIds: [],
+      }),
+    );
+
+  const evidenceOwners =
+    new Map();
+
+  for (
+    let sourceIndex = 0;
+    sourceIndex <
+      acquisition.acquisitions.length;
+    sourceIndex += 1
+  ) {
+    const record =
+      acquisition.acquisitions[
+        sourceIndex
+      ];
+
+    requireCondition(
+      Array.isArray(
+        record.acquisition.evidence,
+      ),
+      `Acquisition ${sourceIndex} has no Evidence inventory`,
+    );
+
+    for (
+      const evidence of
+        record.acquisition.evidence
+    ) {
+      const id =
+        canonicalAcquiredEvidenceId(
+          record,
+          evidence,
+        );
+
+      if (
+        !verifiedSet.has(id)
+      ) {
+        continue;
+      }
+
+      const owners =
+        evidenceOwners.get(id) ??
+        [];
+
+      owners.push(
+        sourceIndex,
+      );
+
+      evidenceOwners.set(
+        id,
+        owners,
+      );
+    }
+  }
+
+  for (
+    const verifiedId of
+      verifiedSet
+  ) {
+    const owners =
+      evidenceOwners.get(
+        verifiedId,
+      ) ?? [];
+
+    requireCondition(
+      owners.length === 1,
+      [
+        "V8 verified Evidence must resolve to exactly one source.",
+        `evidenceId=${verifiedId}`,
+        `ownerCount=${owners.length}`,
+      ].join(" "),
+    );
+
+    sourceRecords[
+      owners[0]
+    ].evidenceIds.push(
+      verifiedId,
+    );
+  }
+
+  for (
+    const source of
+      sourceRecords
+  ) {
+    source.evidenceIds.sort();
+  }
+
+  const mappedEvidenceIds =
+    sourceRecords.flatMap(
+      (source) =>
+        source.evidenceIds,
+    );
+
+  requireCondition(
+    mappedEvidenceIds.length ===
+      verifiedSet.size,
+    "Evidence source mapping cardinality mismatch",
+  );
+
+  requireCondition(
+    new Set(
+      mappedEvidenceIds,
+    ).size ===
+      mappedEvidenceIds.length,
+    "Evidence source mapping assigned one Evidence ID more than once",
+  );
+
+  return sourceRecords;
+}
 
 
 /*
@@ -1440,37 +1682,20 @@ function createManifest({
   const acquisition =
     runtime.acquisition;
 
+  /*
+   * The previous implementation associated Evidence to sources
+   * by array index. That is invalid because one Acquisition may
+   * contribute zero Evidence, while another may contribute one.
+   *
+   * Build ownership from the canonical Evidence ID instead.
+   */
   const sources =
-    acquisition.acquisitions.map(
-      (
-        record,
-        index,
-      ) => ({
-        candidateUrl:
-          record.candidateUrl,
-
-        requestedUrl:
-          record.page.requestedUrl,
-
-        finalUrl:
-          record.page.finalUrl,
-
-        sourceId:
-          record.acquisition.sourceId,
-
-        snapshotId:
-          record.acquisition.snapshotId,
-
-        evidenceIds:
-          [
-            runtime.verifiedEvidenceIds[
-              index
-            ],
-          ] ??
-          null,
-      }),
+    buildExactEvidenceSourceMapping(
+      acquisition,
+      runtime.verifiedEvidenceIds,
     );
-      const base = {
+
+  const base = {
     schema:
       "nexmold.v8.first-article-manifest.v3",
 
@@ -1637,55 +1862,54 @@ function createManifest({
             bodyLength:
               runtime.content.body.length,
 
+            provenance:
+              assertionAudit.map(
+                (
+                  assertion,
+                ) => ({
+                  ordinal:
+                    assertion.ordinal,
 
-provenance:
-  assertionAudit.map(
-    (
-      assertion,
-    ) => ({
-      ordinal:
-        assertion.ordinal,
+                  text:
+                    assertion.text,
 
-      text:
-        assertion.text,
+                  fingerprint:
+                    assertion.fingerprint,
 
-      fingerprint:
-        assertion.fingerprint,
+                  kind:
+                    assertion.kind,
 
-      kind:
-        assertion.kind,
+                  problemIds:
+                    [
+                      ...assertion.problemIds,
+                    ],
 
-      problemIds:
-        [
-          ...assertion.problemIds,
-        ],
+                  decisionIds:
+                    [
+                      ...assertion.decisionIds,
+                    ],
 
-      decisionIds:
-        [
-          ...assertion.decisionIds,
-        ],
+                  contextIds:
+                    [
+                      ...assertion.contextIds,
+                    ],
 
-      contextIds:
-        [
-          ...assertion.contextIds,
-        ],
+                  knowledgeIds:
+                    [
+                      ...assertion.knowledgeIds,
+                    ],
 
-      knowledgeIds:
-        [
-          ...assertion.knowledgeIds,
-        ],
+                  claimIds:
+                    [
+                      ...assertion.claimIds,
+                    ],
 
-      claimIds:
-        [
-          ...assertion.claimIds,
-        ],
-
-      evidenceIds:
-        [
-          ...assertion.evidenceIds,
-        ],
-    }),
-  ),
+                  evidenceIds:
+                    [
+                      ...assertion.evidenceIds,
+                    ],
+                }),
+              ),
           },
 
         assertionCount:
@@ -1859,7 +2083,6 @@ function verifyPersistedArtifacts({
       `manifest Content provenance fingerprint mismatch at ${assertion.ordinal}`,
     );
 
-    
     requireCondition(
       persisted.kind === assertion.kind,
       `manifest Content provenance kind mismatch at ${assertion.ordinal}`,
@@ -1894,7 +2117,6 @@ function verifyPersistedArtifacts({
         ),
       `manifest Content provenance Context closure mismatch at ${assertion.ordinal}`,
     );
-
 
     requireCondition(
       JSON.stringify(
@@ -1953,14 +2175,56 @@ function verifyPersistedArtifacts({
     "manifest records no verified Evidence IDs",
   );
 
+  /*
+   * Reload the source-to-Evidence mapping and ensure every
+   * verified Evidence ID appears once and only once.
+   */
+  const persistedSources =
+    persistedManifest.acquisition.sources;
+
+  requireCondition(
+    Array.isArray(persistedSources),
+    "manifest source mapping is missing",
+  );
+
+  const persistedMappedEvidenceIds =
+    persistedSources.flatMap(
+      (source) => {
+        requireCondition(
+          Array.isArray(source.evidenceIds),
+          "manifest source evidenceIds is not an array",
+        );
+
+        return source.evidenceIds;
+      },
+    );
+
+  requireCondition(
+    JSON.stringify(
+      [...persistedMappedEvidenceIds].sort(),
+    ) ===
+      JSON.stringify(
+        [...runtime.verifiedEvidenceIds]
+          .map(String)
+          .sort(),
+      ),
+    "manifest source mapping does not equal the Runtime verified Evidence set",
+  );
+
+  requireCondition(
+    new Set(
+      persistedMappedEvidenceIds,
+    ).size ===
+      persistedMappedEvidenceIds.length,
+    "manifest source mapping contains duplicate Evidence ownership",
+  );
+
   return {
     persistedArticle,
 
     persistedManifest,
   };
 }
-
-
 /*
  * ============================================================
  * MAIN
@@ -2407,7 +2671,9 @@ async function main() {
   console.log(
     `13. Article body length: ${runtime.content.body.length}`,
   );
-    /*
+
+
+  /*
    * ----------------------------------------------------------
    * 5. ARTICLE ARTIFACT
    * ----------------------------------------------------------
