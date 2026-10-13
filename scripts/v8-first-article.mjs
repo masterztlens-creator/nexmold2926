@@ -980,50 +980,329 @@ function isStructuralContentLine(
 }
 
 
+
 function normalizeProvenanceIds(
   value,
   label,
   ordinal,
+  {
+    allowEmpty = false,
+  } = {},
 ) {
   requireCondition(
-    Array.isArray(
-      value,
-    ),
+    Array.isArray(value),
     `${label} is not an array at assertion ${ordinal}`,
   );
 
   requireCondition(
-    value.length >
-      0,
+    allowEmpty || value.length > 0,
     `${label} is empty at assertion ${ordinal}`,
   );
 
-  const normalized =
-    value.map(
-      (id) =>
-        String(id),
-    );
+  const normalized = value.map(
+    (id) => String(id),
+  );
 
   requireCondition(
     normalized.every(
-      (id) =>
-        id.trim().length >
-        0,
+      (id) => id.trim().length > 0,
     ),
     `${label} contains an empty ID at assertion ${ordinal}`,
   );
 
   requireCondition(
-    new Set(
-      normalized,
-    ).size ===
-      normalized.length,
+    new Set(normalized).size === normalized.length,
     `${label} contains duplicate IDs at assertion ${ordinal}`,
   );
 
   return normalized;
 }
 
+function buildArticleAssertionAudit(
+  content,
+) {
+  requireCondition(
+    content !== null &&
+      typeof content === "object",
+    "compiled content is missing",
+  );
+
+  requireCondition(
+    typeof content.body === "string" &&
+      content.body.trim().length > 0,
+    "compiled content body is empty",
+  );
+
+  requireCondition(
+    Array.isArray(content.provenance),
+    "compiled content provenance is missing",
+  );
+
+  requireCondition(
+    content.provenance.length > 0,
+    "compiled content provenance is empty",
+  );
+
+  const assertions = content.body
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.length > 0 &&
+        !isStructuralContentLine(line),
+    );
+
+  requireCondition(
+    assertions.length > 0,
+    "compiled content contains no auditable assertions",
+  );
+
+  requireCondition(
+    assertions.length === content.provenance.length,
+    `compiled content assertion count ${assertions.length} differs from Content.provenance count ${content.provenance.length}`,
+  );
+
+  const allowedKinds = new Set([
+    "QUESTION",
+    "CONSTRAINT",
+    "CONTEXT",
+    "DECISION",
+    "KNOWLEDGE",
+  ]);
+
+  return content.provenance.map(
+    (provenance, ordinal) => {
+      requireCondition(
+        provenance !== null &&
+          typeof provenance === "object",
+        `Content.provenance[${ordinal}] is invalid`,
+      );
+
+      requireCondition(
+        provenance.ordinal === ordinal,
+        `Content.provenance[${ordinal}] ordinal mismatch`,
+      );
+
+      requireCondition(
+        allowedKinds.has(provenance.kind),
+        `Content.provenance[${ordinal}] has unsupported kind`,
+      );
+
+      const text = assertions[ordinal];
+
+      const fingerprint = contentFingerprint(text);
+
+      requireCondition(
+        provenance.text === text,
+        `Content.provenance[${ordinal}] text mismatch`,
+      );
+
+      requireCondition(
+        provenance.fingerprint === fingerprint,
+        `Content.provenance[${ordinal}] fingerprint mismatch`,
+      );
+
+      const kind = provenance.kind;
+
+      const problemIds = normalizeProvenanceIds(
+        provenance.problemIds,
+        "problemIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const decisionIds = normalizeProvenanceIds(
+        provenance.decisionIds,
+        "decisionIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const contextIds = normalizeProvenanceIds(
+        provenance.contextIds,
+        "contextIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const knowledgeIds = normalizeProvenanceIds(
+        provenance.knowledgeIds,
+        "knowledgeIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const claimIds = normalizeProvenanceIds(
+        provenance.claimIds,
+        "claimIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const evidenceIds = normalizeProvenanceIds(
+        provenance.evidenceIds,
+        "evidenceIds",
+        ordinal,
+        { allowEmpty: true },
+      );
+
+      const requireEmpty = (ids, label) => {
+        requireCondition(
+          ids.length === 0,
+          `${label} must be empty for ${kind} assertion ${ordinal}`,
+        );
+      };
+
+      switch (kind) {
+        case "QUESTION":
+        case "CONSTRAINT":
+          requireCondition(
+            problemIds.length === 1,
+            `${kind} assertion ${ordinal} must bind exactly one Problem`,
+          );
+
+          requireEmpty(
+            decisionIds,
+            "decisionIds",
+          );
+
+          requireEmpty(
+            contextIds,
+            "contextIds",
+          );
+
+          requireEmpty(
+            knowledgeIds,
+            "knowledgeIds",
+          );
+
+          requireEmpty(
+            claimIds,
+            "claimIds",
+          );
+
+          requireEmpty(
+            evidenceIds,
+            "evidenceIds",
+          );
+
+          break;
+
+        case "CONTEXT":
+          requireEmpty(
+            problemIds,
+            "problemIds",
+          );
+
+          requireEmpty(
+            decisionIds,
+            "decisionIds",
+          );
+
+          requireCondition(
+            contextIds.length === 1,
+            `CONTEXT assertion ${ordinal} must bind exactly one Context`,
+          );
+
+          requireEmpty(
+            knowledgeIds,
+            "knowledgeIds",
+          );
+
+          requireEmpty(
+            claimIds,
+            "claimIds",
+          );
+
+          requireEmpty(
+            evidenceIds,
+            "evidenceIds",
+          );
+
+          break;
+
+        case "DECISION":
+          requireEmpty(
+            problemIds,
+            "problemIds",
+          );
+
+          requireCondition(
+            decisionIds.length === 1,
+            `DECISION assertion ${ordinal} must bind exactly one Decision`,
+          );
+
+          requireEmpty(
+            contextIds,
+            "contextIds",
+          );
+
+          requireEmpty(
+            knowledgeIds,
+            "knowledgeIds",
+          );
+
+          requireEmpty(
+            claimIds,
+            "claimIds",
+          );
+
+          requireEmpty(
+            evidenceIds,
+            "evidenceIds",
+          );
+
+          break;
+
+        case "KNOWLEDGE":
+          requireEmpty(
+            problemIds,
+            "problemIds",
+          );
+
+          requireEmpty(
+            decisionIds,
+            "decisionIds",
+          );
+
+          requireEmpty(
+            contextIds,
+            "contextIds",
+          );
+
+          requireCondition(
+            knowledgeIds.length > 0,
+            `KNOWLEDGE assertion ${ordinal} has no Knowledge lineage`,
+          );
+
+          requireCondition(
+            claimIds.length > 0,
+            `KNOWLEDGE assertion ${ordinal} has no Claim lineage`,
+          );
+
+          requireCondition(
+            evidenceIds.length > 0,
+            `KNOWLEDGE assertion ${ordinal} has no Evidence lineage`,
+          );
+
+          break;
+      }
+
+      return {
+        ordinal,
+        text,
+        fingerprint,
+        kind,
+        problemIds,
+        decisionIds,
+        contextIds,
+        knowledgeIds,
+        claimIds,
+        evidenceIds,
+      };
+    },
+  );
+}
 
 function buildArticleAssertionAudit(
   content,
@@ -1492,36 +1771,55 @@ function createManifest({
             bodyLength:
               runtime.content.body.length,
 
-            provenance:
-              assertionAudit.map(
-                (
-                  assertion,
-                ) => ({
-                  ordinal:
-                    assertion.ordinal,
 
-                  text:
-                    assertion.text,
+provenance:
+  assertionAudit.map(
+    (
+      assertion,
+    ) => ({
+      ordinal:
+        assertion.ordinal,
 
-                  fingerprint:
-                    assertion.fingerprint,
+      text:
+        assertion.text,
 
-                  knowledgeIds:
-                    [
-                      ...assertion.knowledgeIds,
-                    ],
+      fingerprint:
+        assertion.fingerprint,
 
-                  claimIds:
-                    [
-                      ...assertion.claimIds,
-                    ],
+      kind:
+        assertion.kind,
 
-                  evidenceIds:
-                    [
-                      ...assertion.evidenceIds,
-                    ],
-                }),
-              ),
+      problemIds:
+        [
+          ...assertion.problemIds,
+        ],
+
+      decisionIds:
+        [
+          ...assertion.decisionIds,
+        ],
+
+      contextIds:
+        [
+          ...assertion.contextIds,
+        ],
+
+      knowledgeIds:
+        [
+          ...assertion.knowledgeIds,
+        ],
+
+      claimIds:
+        [
+          ...assertion.claimIds,
+        ],
+
+      evidenceIds:
+        [
+          ...assertion.evidenceIds,
+        ],
+    }),
+  ),
           },
 
         assertionCount:
@@ -1694,6 +1992,43 @@ function verifyPersistedArtifacts({
         assertion.fingerprint,
       `manifest Content provenance fingerprint mismatch at ${assertion.ordinal}`,
     );
+
+    
+    requireCondition(
+      persisted.kind === assertion.kind,
+      `manifest Content provenance kind mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.problemIds,
+      ) ===
+        JSON.stringify(
+          assertion.problemIds,
+        ),
+      `manifest Content provenance Problem closure mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.decisionIds,
+      ) ===
+        JSON.stringify(
+          assertion.decisionIds,
+        ),
+      `manifest Content provenance Decision closure mismatch at ${assertion.ordinal}`,
+    );
+
+    requireCondition(
+      JSON.stringify(
+        persisted.contextIds,
+      ) ===
+        JSON.stringify(
+          assertion.contextIds,
+        ),
+      `manifest Content provenance Context closure mismatch at ${assertion.ordinal}`,
+    );
+
 
     requireCondition(
       JSON.stringify(
