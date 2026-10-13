@@ -1,4 +1,3 @@
-
 import {
   createScope,
   type Scope,
@@ -704,11 +703,41 @@ export class FoundationService {
       "Evidence cannot be verified without sealed snapshot content.",
     );
 
+    const snapshotContent = snapshot.payload.payload;
+    const excerpt = current.payload.excerpt;
+
+    const reproducible = excerptIsReproducible(
+      snapshotContent,
+      excerpt,
+    );
+
+    if (!reproducible) {
+      console.error(
+        "[V8-FOUNDATION][EVIDENCE-EXCERPT-MISMATCH]",
+        JSON.stringify({
+          evidenceId: current.aggregateId,
+          sourceId: current.payload.sourceId,
+          snapshotId: current.payload.snapshotId,
+          locator: current.payload.locator,
+          section: current.payload.section ?? null,
+          table: current.payload.table ?? null,
+          row: current.payload.row ?? null,
+          parameter: current.payload.parameter ?? null,
+          value: current.payload.value ?? null,
+          unit: current.payload.unit ?? null,
+          excerpt,
+          excerptLength: excerpt.length,
+          snapshotLength: snapshotContent.length,
+          excerptFingerprint: contentFingerprint(excerpt),
+          snapshotFingerprint: contentFingerprint(snapshotContent),
+          normalizedExcerpt: normalizeSnapshotText(excerpt),
+          excerptIsReproducible: false,
+        }),
+      );
+    }
+
     invariant(
-      excerptIsReproducible(
-        snapshot.payload.payload,
-        current.payload.excerpt,
-      ),
+      reproducible,
       "V8_FOUNDATION_EVIDENCE_EXCERPT_NOT_IN_SNAPSHOT",
       "Evidence excerpt cannot be reproduced from the sealed snapshot content.",
     );
