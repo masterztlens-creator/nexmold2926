@@ -82,12 +82,9 @@ function lineageOf(
 ): LineageLink {
   return {
     type,
-    id:
-      record.aggregateId,
-    version:
-      record.version,
-    fingerprint:
-      record.fingerprint,
+    id: record.aggregateId,
+    version: record.version,
+    fingerprint: record.fingerprint,
   };
 }
 
@@ -98,18 +95,78 @@ function uniqueSorted(
     [
       ...new Set(
         values
-          .map((value) =>
-            value.trim(),
-          )
-          .filter(
-            (value) =>
-              value.length > 0,
-          ),
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0),
       ),
     ].sort(),
   );
 }
 
+/**
+ * Normalize text for deterministic presentation without changing
+ * the underlying verified proposition.
+ *
+ * This function intentionally does not paraphrase technical claims.
+ * Any wording change to a verified proposition would require a
+ * separate claim-transformation and verification step.
+ */
+function normalizeArticleText(
+  value: string,
+): string {
+  return value
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join(" ")
+    .trim();
+}
+
+function assertUniquePropositions(
+  knowledge:
+    readonly FoundationRecord<KnowledgePayload>[],
+): void {
+  const normalized = knowledge.map(
+    (record) =>
+      normalizeArticleText(
+        record.payload.proposition,
+      ),
+  );
+
+  invariant(
+    normalized.every(
+      (proposition) =>
+        proposition.length > 0,
+    ),
+    "V8_CONTENT_COMPILER_EMPTY_KNOWLEDGE_PROPOSITION",
+    "Verified Knowledge must contain non-empty propositions.",
+  );
+
+  invariant(
+    new Set(normalized).size === normalized.length,
+    "V8_CONTENT_COMPILER_DUPLICATE_KNOWLEDGE_PROPOSITION",
+    "Distinct Knowledge records cannot compile to duplicate article assertions.",
+  );
+}
+
+/**
+ * Build a readable, deterministic technical article body.
+ *
+ * Important invariants:
+ *
+ * 1. The compiler does not invent engineering facts or causal claims.
+ * 2. Verified Knowledge propositions retain their exact wording,
+ *    apart from whitespace normalization.
+ * 3. Every Knowledge paragraph can be resolved to one exact
+ *    Knowledge aggregate and its Claim -> Evidence closure.
+ * 4. Structural statements remain separate from epistemic claims.
+ * 5. Output order is deterministic for identical inputs.
+ *
+ * This is an evidence-constrained article composition layer, not a
+ * free-form text generator. It improves readability through narrative
+ * organization and paragraph presentation without silently rewriting
+ * the technical meaning of verified source material.
+ */
 function deterministicBody(
   problem: ProblemPayload,
   decision: DecisionPayload,
@@ -117,66 +174,130 @@ function deterministicBody(
   knowledge:
     readonly FoundationRecord<KnowledgePayload>[],
 ): string {
-  const knowledgeLines =
+  assertUniquePropositions(knowledge);
+
+  const question =
+    normalizeArticleText(
+      problem.question,
+    );
+
+  const outcome =
+    normalizeArticleText(
+      decision.outcome,
+    );
+
+  const purpose =
+    normalizeArticleText(
+      context.purpose,
+    );
+
+  invariant(
+    question.length > 0,
+    "V8_CONTENT_COMPILER_EMPTY_PROBLEM_QUESTION",
+    "The engineering article requires a non-empty Problem question.",
+  );
+
+  invariant(
+    outcome.length > 0,
+    "V8_CONTENT_COMPILER_EMPTY_DECISION_OUTCOME",
+    "The engineering article requires a non-empty approved Decision outcome.",
+  );
+
+  invariant(
+    knowledge.length > 0,
+    "V8_CONTENT_COMPILER_NO_VERIFIED_KNOWLEDGE",
+    "The engineering article requires at least one verified Knowledge record.",
+  );
+
+  const knowledgeParagraphs =
     knowledge
-      .map(
-        (record) =>
-          record.payload.proposition
-            .trim(),
-      )
-      .sort()
-      .map(
-        (proposition) =>
-          `- ${proposition}`,
-      )
-      .join("\n");
+      .map((record) => ({
+        id: record.aggregateId,
+        proposition: normalizeArticleText(
+          record.payload.proposition,
+        ),
+      }))
+      .sort((left, right) => {
+        const byText =
+          left.proposition.localeCompare(
+            right.proposition,
+          );
 
-  const constraintLines =
-    problem.constraints.length > 0
-      ? problem.constraints
-          .map((constraint) =>
-            constraint.trim(),
-          )
-          .sort()
-          .map(
-            (constraint) =>
-              `- ${constraint}`,
-          )
-          .join("\n")
-      : "- None specified.";
+        return byText !== 0
+          ? byText
+          : left.id.localeCompare(right.id);
+      })
+      .map(
+        ({ proposition }) => proposition,
+      );
 
-  const variableLines =
-    Object.entries(
+  const constraintParagraphs =
+    uniqueSorted(
+      problem.constraints.map(
+        normalizeArticleText,
+      ),
+    );
+
+  const contextParagraphs = [
+    purpose.length > 0
+      ? `Purpose: ${purpose}`
+      : "",
+    ...Object.entries(
       context.variables,
     )
+      .map(([key, value]) => ({
+        key: key.trim(),
+        value: normalizeArticleText(value),
+      }))
+      .filter(
+        ({ key, value }) =>
+          key.length > 0 &&
+          value.length > 0,
+      )
       .sort(
-        ([a], [b]) =>
-          a.localeCompare(b),
+        (left, right) =>
+          left.key.localeCompare(right.key),
       )
       .map(
-        ([key, value]) =>
-          `- ${key}: ${value}`,
-      )
-      .join("\n") ||
-    "- None specified.";
+        ({ key, value }) =>
+          `${key}: ${value}`,
+      ),
+  ].filter(
+    (line) => line.length > 0,
+  );
 
+  /*
+   * Preserve the existing structural section markers in this file.
+   * The provenance parser and domain-level Content factory recognize
+   * these exact markers as structural lines.
+   *
+   * Verified propositions and constraints are rendered as paragraphs,
+   * rather than "- field: value" entries. No unsupported explanatory
+   * claims are inserted between source-backed propositions.
+   */
   return [
     "Problem",
-    problem.question.trim(),
+    question,
     "",
     "Decision",
-    decision.outcome.trim(),
+    outcome,
     "",
     "Verified knowledge",
-    knowledgeLines,
+    ...knowledgeParagraphs,
     "",
     "Context",
-    `Purpose: ${context.purpose.trim()}`,
-    `Context ID: ${context.scopeId}`,
-    variableLines,
+    ...(
+      contextParagraphs.length > 0
+        ? contextParagraphs
+        : ["No additional context was specified."]
+    ),
     "",
     "Constraints",
-    constraintLines,
+    ...(
+      constraintParagraphs.length > 0
+        ? constraintParagraphs
+        : ["No explicit constraints were specified."]
+    ),
   ].join("\n");
 }
 
@@ -198,9 +319,7 @@ function createProvenanceRecord(
   evidenceIds: readonly string[],
 ): ContentProvenance {
   const normalizedText =
-    normalizeAssertionText(
-      text,
-    );
+    normalizeAssertionText(text);
 
   invariant(
     normalizedText.length > 0,
@@ -209,34 +328,22 @@ function createProvenanceRecord(
   );
 
   const normalizedProblemIds =
-    uniqueSorted(
-      problemIds,
-    );
+    uniqueSorted(problemIds);
 
   const normalizedDecisionIds =
-    uniqueSorted(
-      decisionIds,
-    );
+    uniqueSorted(decisionIds);
 
   const normalizedContextIds =
-    uniqueSorted(
-      contextIds,
-    );
+    uniqueSorted(contextIds);
 
   const normalizedKnowledgeIds =
-    uniqueSorted(
-      knowledgeIds,
-    );
+    uniqueSorted(knowledgeIds);
 
   const normalizedClaimIds =
-    uniqueSorted(
-      claimIds,
-    );
+    uniqueSorted(claimIds);
 
   const normalizedEvidenceIds =
-    uniqueSorted(
-      evidenceIds,
-    );
+    uniqueSorted(evidenceIds);
 
   switch (kind) {
     case "QUESTION":
@@ -406,56 +513,30 @@ function createProvenanceRecord(
 
   return {
     ordinal,
-
-    text:
-      normalizedText,
-
-    fingerprint:
-      contentFingerprint(
-        normalizedText,
-      ),
-
+    text: normalizedText,
+    fingerprint: contentFingerprint(normalizedText),
     kind,
-
-    problemIds:
-      normalizedProblemIds,
-
-    decisionIds:
-      normalizedDecisionIds,
-
-    contextIds:
-      normalizedContextIds,
-
-    knowledgeIds:
-      normalizedKnowledgeIds,
-
-    claimIds:
-      normalizedClaimIds,
-
-    evidenceIds:
-      normalizedEvidenceIds,
+    problemIds: normalizedProblemIds,
+    decisionIds: normalizedDecisionIds,
+    contextIds: normalizedContextIds,
+    knowledgeIds: normalizedKnowledgeIds,
+    claimIds: normalizedClaimIds,
+    evidenceIds: normalizedEvidenceIds,
   };
 }
-
 export class ContentCompiler {
-  private readonly validator:
-    DecisionValidator;
+  private readonly validator: DecisionValidator;
 
   constructor(
-    private readonly store:
-      FoundationStore,
+    private readonly store: FoundationStore,
   ) {
-    this.validator =
-      new DecisionValidator(
-        store,
-      );
+    this.validator = new DecisionValidator(store);
   }
 
   compile(
     input: ContentCompilerInput,
   ): CompiledContent {
-    const title =
-      input.title.trim();
+    const title = input.title.trim();
 
     invariant(
       title.length > 0,
@@ -471,8 +552,7 @@ export class ContentCompiler {
 
     invariant(
       decision !== null &&
-        decision.state ===
-          "APPROVED",
+        decision.state === "APPROVED",
       "V8_CONTENT_COMPILER_DECISION_NOT_APPROVED",
       "Content compilation requires an approved Decision.",
     );
@@ -485,28 +565,21 @@ export class ContentCompiler {
 
     invariant(
       problem !== null &&
-        problem.state ===
-          "REGISTERED",
+        problem.state === "REGISTERED",
       "V8_CONTENT_COMPILER_PROBLEM_NOT_REGISTERED",
       "Content compilation requires a registered Problem.",
     );
 
     invariant(
-      problem.payload.contextId ===
-        input.contextId,
+      problem.payload.contextId === input.contextId,
       "V8_CONTENT_COMPILER_CONTEXT_MISMATCH",
       "Problem context does not match compiler context.",
     );
 
     this.validator.assert({
-      decisionId:
-        input.decisionId,
-
-      scopeId:
-        input.scopeId,
-
-      contextId:
-        input.contextId,
+      decisionId: input.decisionId,
+      scopeId: input.scopeId,
+      contextId: input.contextId,
     });
 
     const context =
@@ -517,19 +590,24 @@ export class ContentCompiler {
 
     invariant(
       context !== null &&
-        context.state ===
-          "REGISTERED",
+        context.state === "REGISTERED",
       "V8_CONTENT_COMPILER_CONTEXT_NOT_REGISTERED",
       "Content compilation requires a registered Context.",
     );
 
     invariant(
-      context.payload.scopeId ===
-        input.scopeId,
+      context.payload.scopeId === input.scopeId,
       "V8_CONTENT_COMPILER_SCOPE_MISMATCH",
       "Context scope does not match compiler scope.",
     );
 
+    /*
+     * Resolve and validate the complete epistemic chain before
+     * generating any article content.
+     *
+     * No content is emitted from an unverified Knowledge, Claim,
+     * or Evidence record.
+     */
     const knowledge =
       decision.payload.knowledgeIds.map(
         (knowledgeId) => {
@@ -541,16 +619,21 @@ export class ContentCompiler {
 
           invariant(
             record !== null &&
-              record.state ===
-                "VERIFIED",
+              record.state === "VERIFIED",
             "V8_CONTENT_COMPILER_KNOWLEDGE_NOT_VERIFIED",
             `Knowledge ${knowledgeId} must be verified.`,
           );
 
           invariant(
-            record.payload
-              .claimIds.length >
-              0,
+            normalizeArticleText(
+              record.payload.proposition,
+            ).length > 0,
+            "V8_CONTENT_COMPILER_EMPTY_KNOWLEDGE_PROPOSITION",
+            `Knowledge ${knowledgeId} has an empty proposition.`,
+          );
+
+          invariant(
+            record.payload.claimIds.length > 0,
             "V8_CONTENT_COMPILER_KNOWLEDGE_NO_CLAIMS",
             `Knowledge ${knowledgeId} has no Claims.`,
           );
@@ -559,12 +642,23 @@ export class ContentCompiler {
         },
       );
 
+    invariant(
+      knowledge.length > 0,
+      "V8_CONTENT_COMPILER_NO_VERIFIED_KNOWLEDGE",
+      "Content compilation requires at least one verified Knowledge record.",
+    );
+
+    assertUniquePropositions(knowledge);
+
+    /*
+     * Resolve every Claim referenced by the approved Decision's
+     * Knowledge set. Claim IDs are canonicalized for deterministic
+     * fingerprinting and lineage output.
+     */
     const claimIds =
       uniqueSorted(
         knowledge.flatMap(
-          (record) =>
-            record.payload
-              .claimIds,
+          (record) => record.payload.claimIds,
         ),
       );
 
@@ -579,16 +673,21 @@ export class ContentCompiler {
 
           invariant(
             record !== null &&
-              record.state ===
-                "VERIFIED",
+              record.state === "VERIFIED",
             "V8_CONTENT_COMPILER_CLAIM_NOT_VERIFIED",
             `Claim ${claimId} must be verified.`,
           );
 
           invariant(
-            record.payload
-              .evidenceIds.length >
-              0,
+            normalizeArticleText(
+              record.payload.statement,
+            ).length > 0,
+            "V8_CONTENT_COMPILER_EMPTY_CLAIM",
+            `Claim ${claimId} has an empty statement.`,
+          );
+
+          invariant(
+            record.payload.evidenceIds.length > 0,
             "V8_CONTENT_COMPILER_CLAIM_NO_EVIDENCE",
             `Claim ${claimId} has no Evidence.`,
           );
@@ -597,12 +696,37 @@ export class ContentCompiler {
         },
       );
 
+    /*
+     * Each Knowledge record must point only to Claims that were
+     * resolved from the same approved Decision knowledge set.
+     */
+    const resolvedClaimIds =
+      new Set(
+        claimRecords.map(
+          (record) => record.aggregateId,
+        ),
+      );
+
+    for (const record of knowledge) {
+      for (const claimId of record.payload.claimIds) {
+        invariant(
+          resolvedClaimIds.has(claimId),
+          "V8_CONTENT_COMPILER_KNOWLEDGE_CLAIM_NOT_RESOLVED",
+          `Knowledge ${record.aggregateId} references unresolved Claim ${claimId}.`,
+        );
+      }
+    }
+
+    /*
+     * Resolve and verify all Evidence referenced by the selected
+     * Claims. Evidence IDs are deduplicated only at the aggregate
+     * level; individual Knowledge provenance will still point to
+     * its own exact Claim set and corresponding Evidence closure.
+     */
     const evidenceIds =
       uniqueSorted(
         claimRecords.flatMap(
-          (record) =>
-            record.payload
-              .evidenceIds,
+          (record) => record.payload.evidenceIds,
         ),
       );
 
@@ -617,8 +741,7 @@ export class ContentCompiler {
 
           invariant(
             record !== null &&
-              record.state ===
-                "VERIFIED",
+              record.state === "VERIFIED",
             "V8_CONTENT_COMPILER_EVIDENCE_NOT_VERIFIED",
             `Evidence ${evidenceId} must be verified.`,
           );
@@ -627,6 +750,31 @@ export class ContentCompiler {
         },
       );
 
+    const resolvedEvidenceIds =
+      new Set(
+        evidenceRecords.map(
+          (record) => record.aggregateId,
+        ),
+      );
+
+    for (const record of claimRecords) {
+      for (const evidenceId of record.payload.evidenceIds) {
+        invariant(
+          resolvedEvidenceIds.has(evidenceId),
+          "V8_CONTENT_COMPILER_CLAIM_EVIDENCE_NOT_RESOLVED",
+          `Claim ${record.aggregateId} references unresolved Evidence ${evidenceId}.`,
+        );
+      }
+    }
+
+    /*
+     * Compose the body only after the full lineage graph has passed
+     * validation.
+     *
+     * The body contains readable paragraph statements instead of
+     * bullet-prefixed database fields. The source-backed proposition
+     * text is preserved, not paraphrased.
+     */
     const body =
       deterministicBody(
         problem.payload,
@@ -635,62 +783,29 @@ export class ContentCompiler {
         knowledge,
       );
 
-    /*
-     * The compiler creates provenance from the exact deterministic
-     * body it is about to publish.
-     *
-     * Every non-structural line must receive provenance.
-     *
-     * Provenance is intentionally minimal:
-     *
-     *   KNOWLEDGE
-     *     -> exact Knowledge
-     *     -> exact Claims
-     *     -> exact Evidence
-     *
-     *   QUESTION
-     *     -> Problem
-     *
-     *   DECISION
-     *     -> Decision
-     *
-     *   CONSTRAINT
-     *     -> Problem
-     *
-     *   CONTEXT
-     *     -> Context
-     *
-     * Problem / Decision / Constraint / Context assertions MUST NOT
-     * inherit unrelated Knowledge / Claim / Evidence IDs merely because
-     * those aggregates participate in the same Decision.
-     *
-     * This prevents aggregate-level lineage from being mistaken for
-     * assertion-level evidentiary support.
-     */
     const bodyAssertions =
       body
         .split("\n")
-        .map((line) =>
-          line.trim(),
-        )
+        .map((line) => line.trim())
         .filter(
           (line) =>
             line.length > 0 &&
-            !isStructuralContentLine(
-              line,
-            ),
+            !isStructuralContentLine(line),
         );
 
     invariant(
-      bodyAssertions.length >
-        0,
+      bodyAssertions.length > 0,
       "V8_CONTENT_COMPILER_NO_ASSERTIONS",
       "Compiled content contains no auditable assertions.",
     );
 
-    const provenance: ContentProvenance[] =
-      [];
-
+    /*
+     * Classify each body assertion by its actual section.
+     *
+     * This deliberately does not infer provenance from matching
+     * wording alone. An identical sentence appearing in different
+     * sections must not silently change its lineage category.
+     */
     type BodySection =
       | "PROBLEM"
       | "DECISION"
@@ -699,151 +814,105 @@ export class ContentCompiler {
       | "CONSTRAINTS"
       | "NONE";
 
-    let section: BodySection =
-      "NONE";
+    const provenance: ContentProvenance[] = [];
 
-    /*
-     * Classification is driven by the deterministic body section,
-     * not by assertion text alone.
-     *
-     * This is critical for fail-closed provenance:
-     *
-     *   - identical text in different sections remains semantically
-     *     distinct;
-     *   - "- None specified." under Constraints is CONSTRAINT;
-     *   - context variable lines cannot accidentally become Knowledge;
-     *   - a constraint cannot accidentally become Knowledge merely
-     *     because its text matches a Knowledge proposition.
-     */
+    let section: BodySection = "NONE";
+
     for (const line of body.split("\n")) {
-      const normalizedLine =
-        line.trim();
+      const assertion = line.trim();
 
-      if (
-        normalizedLine ===
-        "Problem"
-      ) {
-        section =
-          "PROBLEM";
+      if (assertion.length === 0) {
         continue;
       }
 
-      if (
-        normalizedLine ===
-        "Decision"
-      ) {
-        section =
-          "DECISION";
+      if (isStructuralContentLine(assertion)) {
+        switch (assertion) {
+          case "Problem":
+            section = "PROBLEM";
+            break;
+
+          case "Decision":
+            section = "DECISION";
+            break;
+
+          case "Verified knowledge":
+            section = "KNOWLEDGE";
+            break;
+
+          case "Context":
+            section = "CONTEXT";
+            break;
+
+          case "Constraints":
+            section = "CONSTRAINTS";
+            break;
+        }
+
         continue;
       }
 
-      if (
-        normalizedLine ===
-        "Verified knowledge"
-      ) {
-        section =
-          "KNOWLEDGE";
-        continue;
-      }
-
-      if (
-        normalizedLine ===
-        "Context"
-      ) {
-        section =
-          "CONTEXT";
-        continue;
-      }
-
-      if (
-        normalizedLine ===
-        "Constraints"
-      ) {
-        section =
-          "CONSTRAINTS";
-        continue;
-      }
-
-      if (
-        normalizedLine.length ===
-        0
-      ) {
-        continue;
-      }
-
-      if (
-        isStructuralContentLine(
-          normalizedLine,
-        )
-      ) {
-        continue;
-      }
-
-      const assertion =
-        normalizedLine;
-
-      let kind:
-        ContentProvenanceKind;
+      let kind: ContentProvenanceKind;
 
       switch (section) {
         case "PROBLEM":
           invariant(
             assertion ===
-              problem.payload.question.trim(),
+              normalizeArticleText(
+                problem.payload.question,
+              ),
             "V8_CONTENT_COMPILER_PROBLEM_SECTION_MISMATCH",
             "Compiled Problem assertion does not match the registered Problem question.",
           );
 
-          kind =
-            "QUESTION";
-
+          kind = "QUESTION";
           break;
 
         case "DECISION":
           invariant(
             assertion ===
-              decision.payload.outcome.trim(),
+              normalizeArticleText(
+                decision.payload.outcome,
+              ),
             "V8_CONTENT_COMPILER_DECISION_SECTION_MISMATCH",
             "Compiled Decision assertion does not match the approved Decision outcome.",
           );
 
-          kind =
-            "DECISION";
-
+          kind = "DECISION";
           break;
 
         case "KNOWLEDGE":
           invariant(
-            assertion.startsWith(
-              "- ",
+            knowledge.some(
+              (record) =>
+                normalizeArticleText(
+                  record.payload.proposition,
+                ) === assertion,
             ),
             "V8_CONTENT_COMPILER_KNOWLEDGE_SECTION_MISMATCH",
-            "Compiled Knowledge assertion must use the deterministic list representation.",
+            "Compiled Knowledge assertion does not match a verified Knowledge proposition.",
           );
 
-          kind =
-            "KNOWLEDGE";
-
+          kind = "KNOWLEDGE";
           break;
 
         case "CONTEXT":
-          kind =
-            "CONTEXT";
-
+          kind = "CONTEXT";
           break;
 
         case "CONSTRAINTS":
           invariant(
-            assertion.startsWith(
-              "- ",
-            ),
+            problem.payload.constraints.some(
+              (constraint) =>
+                normalizeArticleText(constraint) ===
+                assertion,
+            ) ||
+              assertion ===
+                "No explicit constraints were specified.",
             "V8_CONTENT_COMPILER_CONSTRAINT_SECTION_MISMATCH",
-            "Compiled Constraint assertion must use the deterministic list representation.",
+            "Compiled Constraint assertion does not match a registered Problem constraint.",
           );
 
-          kind =
-            "CONSTRAINT";
-
+          kind = "CONSTRAINT";
           break;
 
         default:
@@ -854,82 +923,50 @@ export class ContentCompiler {
           );
       }
 
-      let assertionProblemIds:
-        readonly string[] = [];
-
-      let assertionDecisionIds:
-        readonly string[] = [];
-
-      let assertionContextIds:
-        readonly string[] = [];
-
-      let assertionKnowledgeIds:
-        readonly string[] = [];
-
-      let assertionClaimIds:
-        readonly string[] = [];
-
-      let assertionEvidenceIds:
-        readonly string[] = [];
+      let assertionProblemIds: readonly string[] = [];
+      let assertionDecisionIds: readonly string[] = [];
+      let assertionContextIds: readonly string[] = [];
+      let assertionKnowledgeIds: readonly string[] = [];
+      let assertionClaimIds: readonly string[] = [];
+      let assertionEvidenceIds: readonly string[] = [];
 
       /*
-       * Structural provenance is represented by its actual aggregate.
-       *
-       * QUESTION / CONSTRAINT
-       *     -> current Problem
-       *
-       * DECISION
-       *     -> current Decision
-       *
-       * CONTEXT
-       *     -> current Context
-       *
-       * No unrelated epistemic lineage is attached.
+       * Structural assertions carry structural lineage only.
+       * They must not inherit unrelated epistemic references from
+       * the surrounding Decision.
        */
       if (
-        kind ===
-          "QUESTION" ||
-        kind ===
-          "CONSTRAINT"
+        kind === "QUESTION" ||
+        kind === "CONSTRAINT"
       ) {
         assertionProblemIds = [
           problem.aggregateId,
         ];
-      } else if (
-        kind ===
-        "DECISION"
-      ) {
+      } else if (kind === "DECISION") {
         assertionDecisionIds = [
           decision.aggregateId,
         ];
-      } else if (
-        kind ===
-        "CONTEXT"
-      ) {
+      } else if (kind === "CONTEXT") {
         assertionContextIds = [
           context.aggregateId,
         ];
       }
 
       /*
-       * Knowledge assertions receive the smallest possible epistemic
-       * closure: exactly the Knowledge -> Claim -> Evidence chain
-       * belonging to that Knowledge.
+       * Knowledge assertions must resolve to one exact Knowledge
+       * aggregate, then to that aggregate's own Claims and Evidence.
        */
-      if (
-        kind ===
-        "KNOWLEDGE"
-      ) {
+      if (kind === "KNOWLEDGE") {
         const knowledgeRecord =
           knowledge.find(
             (record) =>
-              `- ${record.payload.proposition.trim()}` ===
-              assertion,
+              normalizeArticleText(
+                record.payload.proposition,
+              ) === assertion,
           );
 
         invariant(
-          knowledgeRecord !==
-            undefined,
+          knowledgeRecord !== undefined,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NOT_FOUND",
           `Knowledge provenance source not found for assertion ${provenance.length}.`,
         );
@@ -938,51 +975,40 @@ export class ContentCompiler {
           knowledgeRecord.aggregateId,
         ];
 
-        const knowledgeClaimIds =
+        assertionClaimIds =
           uniqueSorted(
-            knowledgeRecord
-              .payload
-              .claimIds,
+            knowledgeRecord.payload.claimIds,
           );
 
         invariant(
-          knowledgeClaimIds.length >
-            0,
+          assertionClaimIds.length > 0,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_CLAIMS",
           `Knowledge assertion ${provenance.length} has no Claim lineage.`,
         );
 
-        assertionClaimIds =
-          knowledgeClaimIds;
-
         assertionEvidenceIds =
           uniqueSorted(
-            knowledgeClaimIds.flatMap(
-              (id) => {
+            assertionClaimIds.flatMap(
+              (claimId) => {
                 const claim =
                   claimRecords.find(
                     (record) =>
-                      record.aggregateId ===
-                      id,
+                      record.aggregateId === claimId,
                   );
 
                 invariant(
-                  claim !==
-                    undefined,
+                  claim !== undefined,
                   "V8_CONTENT_COMPILER_KNOWLEDGE_CLAIM_NOT_FOUND",
-                  `Claim ${id} required by Knowledge ${knowledgeRecord.aggregateId} was not found.`,
+                  `Claim ${claimId} required by Knowledge ${knowledgeRecord.aggregateId} was not found.`,
                 );
 
-                return claim
-                  .payload
-                  .evidenceIds;
+                return claim.payload.evidenceIds;
               },
             ),
           );
 
         invariant(
-          assertionEvidenceIds.length >
-            0,
+          assertionEvidenceIds.length > 0,
           "V8_CONTENT_COMPILER_KNOWLEDGE_PROVENANCE_NO_EVIDENCE",
           `Knowledge assertion ${provenance.length} has no Evidence lineage.`,
         );
@@ -1002,95 +1028,218 @@ export class ContentCompiler {
         ),
       );
     }
-
+    /*
+     * Fail closed if even one body assertion lacks provenance.
+     * The body and provenance must remain positionally aligned.
+     */
     invariant(
-      provenance.length ===
-        bodyAssertions.length,
+      provenance.length === bodyAssertions.length,
       "V8_CONTENT_COMPILER_PROVENANCE_COVERAGE_FAILED",
       "Not every compiled content assertion received provenance.",
     );
 
-    const content =
+    for (
+      let index = 0;
+      index < bodyAssertions.length;
+      index += 1
+    ) {
+      const assertion = bodyAssertions[index];
+      const record = provenance[index];
+
+      invariant(
+        record !== undefined &&
+          record.ordinal === index &&
+          record.text === assertion,
+        "V8_CONTENT_COMPILER_PROVENANCE_ORDER_MISMATCH",
+        `Content provenance does not match body assertion ${index}.`,
+      );
+
+      invariant(
+        record.fingerprint ===
+          contentFingerprint(assertion),
+        "V8_CONTENT_COMPILER_PROVENANCE_FINGERPRINT_MISMATCH",
+        `Content provenance fingerprint mismatch at assertion ${index}.`,
+      );
+
+      if (record.kind === "KNOWLEDGE") {
+        invariant(
+          record.knowledgeIds.length === 1 &&
+            record.claimIds.length > 0 &&
+            record.evidenceIds.length > 0,
+          "V8_CONTENT_COMPILER_INCOMPLETE_KNOWLEDGE_LINEAGE",
+          `Knowledge assertion ${index} does not contain a complete Knowledge -> Claim -> Evidence lineage.`,
+        );
+
+        for (const claimId of record.claimIds) {
+          const claim = claimRecords.find(
+            (candidate) =>
+              candidate.aggregateId === claimId,
+          );
+
+          invariant(
+            claim !== undefined &&
+              claim.state === "VERIFIED",
+            "V8_CONTENT_COMPILER_LINEAGE_CLAIM_NOT_VERIFIED",
+            `Knowledge assertion ${index} references an unverified or missing Claim ${claimId}.`,
+          );
+
+          invariant(
+            claim.payload.evidenceIds.every(
+              (evidenceId) =>
+                record.evidenceIds.includes(evidenceId),
+            ),
+            "V8_CONTENT_COMPILER_LINEAGE_EVIDENCE_INCOMPLETE",
+            `Knowledge assertion ${index} omits Evidence referenced by Claim ${claimId}.`,
+          );
+        }
+
+        for (const evidenceId of record.evidenceIds) {
+          const evidence = evidenceRecords.find(
+            (candidate) =>
+              candidate.aggregateId === evidenceId,
+          );
+
+          invariant(
+            evidence !== undefined &&
+              evidence.state === "VERIFIED",
+            "V8_CONTENT_COMPILER_LINEAGE_EVIDENCE_NOT_VERIFIED",
+            `Knowledge assertion ${index} references unverified or missing Evidence ${evidenceId}.`,
+          );
+        }
+      }
+    }
+
+    /*
+     * createContent validates the domain-level body/provenance
+     * contract again. Keep this independent validation: compiler
+     * correctness must not depend on the caller trusting this method.
+     */
+    const content: Readonly<Content> =
       createContent({
-        decisionId:
-          decisionId(
-            decision.aggregateId,
-          ),
-
+        decisionId: decisionId(
+          decision.aggregateId,
+        ),
         title,
-
         body,
-
         provenance,
       });
 
+    /*
+     * The fingerprint commits to the exact content and all provenance
+     * fields. Any change in title, body, lineage, or assertion order
+     * produces a different fingerprint.
+     */
     const fingerprint =
       contentFingerprint({
-        decisionId:
-          decision.aggregateId,
-
-        scopeId:
-          input.scopeId,
-
-        contextId:
-          input.contextId,
-
-        title:
-          content.title,
-
-        body:
-          content.body,
-
-        provenance:
-          content.provenance,
+        decisionId: decision.aggregateId,
+        scopeId: input.scopeId,
+        contextId: input.contextId,
+        title: content.title,
+        body: content.body,
+        provenance: content.provenance,
       });
 
-    const lineage:
-      LineageLink[] = [
-        lineageOf(
-          decision,
-          "DECISION",
-        ),
+    /*
+     * Aggregate-level lineage describes the full set of verified
+     * records used by this compilation.
+     *
+     * Assertion-level provenance remains narrower: each Knowledge
+     * assertion carries only its own Knowledge -> Claim -> Evidence
+     * closure. The aggregate lineage must not replace that closure.
+     */
+    const lineage: LineageLink[] = [
+      lineageOf(
+        decision,
+        "DECISION",
+      ),
 
-        lineageOf(
-          problem,
-          "PROBLEM",
-        ),
+      lineageOf(
+        problem,
+        "PROBLEM",
+      ),
 
-        lineageOf(
-          context,
-          "CONTEXT",
-        ),
+      lineageOf(
+        context,
+        "CONTEXT",
+      ),
 
-        ...knowledge.map(
-          (record) =>
-            lineageOf(
-              record,
-              "KNOWLEDGE",
-            ),
-        ),
+      ...knowledge.map(
+        (record) =>
+          lineageOf(
+            record,
+            "KNOWLEDGE",
+          ),
+      ),
 
-        ...claimRecords.map(
-          (record) =>
-            lineageOf(
-              record,
-              "CLAIM",
-            ),
-        ),
+      ...claimRecords.map(
+        (record) =>
+          lineageOf(
+            record,
+            "CLAIM",
+          ),
+      ),
 
-        ...evidenceRecords.map(
-          (record) =>
-            lineageOf(
-              record,
-              "EVIDENCE",
-            ),
+      ...evidenceRecords.map(
+        (record) =>
+          lineageOf(
+            record,
+            "EVIDENCE",
+          ),
+      ),
+    ];
+
+    /*
+     * Reject duplicate aggregate lineage entries and guarantee
+     * deterministic ordering without altering the individual
+     * assertion provenance.
+     */
+    const lineageKeys = lineage.map(
+      (link) =>
+        `${link.type}:${link.id}:${link.version}:${link.fingerprint}`,
+    );
+
+    invariant(
+      new Set(lineageKeys).size === lineageKeys.length,
+      "V8_CONTENT_COMPILER_DUPLICATE_LINEAGE",
+      "Compiled content contains duplicate aggregate lineage entries.",
+    );
+
+    const orderedLineage =
+      immutable(
+        [...lineage].sort(
+          (left, right) => {
+            const byType =
+              left.type.localeCompare(right.type);
+
+            if (byType !== 0) {
+              return byType;
+            }
+
+            const byId =
+              left.id.localeCompare(right.id);
+
+            if (byId !== 0) {
+              return byId;
+            }
+
+            const byVersion =
+              left.version - right.version;
+
+            if (byVersion !== 0) {
+              return byVersion;
+            }
+
+            return left.fingerprint.localeCompare(
+              right.fingerprint,
+            );
+          },
         ),
-      ];
+      );
 
     return immutable({
       content,
       fingerprint,
-      lineage,
+      lineage: orderedLineage,
       decision,
     });
   }

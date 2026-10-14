@@ -51,6 +51,10 @@ import {
 } from "../intelligence/truth-producer/index.js";
 
 import {
+  ExactExcerptClaimSemanticVerifier,
+} from "./claim-semantic-verifier.js";
+
+import {
   ContentCompiler,
 } from "../content-compiler/compiler.js";
 
@@ -126,6 +130,17 @@ export interface ArticleRuntimeResult {
   readonly fingerprint: string;
 }
 
+/**
+ * Convert verified Evidence excerpts into conservative Claim candidates.
+ *
+ * Each candidate must preserve the wording of an observation extracted from
+ * its own Evidence record. This interpreter does not synthesize facts,
+ * calculate values, infer missing units, or rewrite the source into a
+ * stronger statement.
+ *
+ * The semantic verifier remains responsible for checking that every emitted
+ * candidate is supported by its associated Evidence.
+ */
 export class ConservativeClaimInterpreter
   implements ClaimInterpreter
 {
@@ -159,12 +174,35 @@ export class ConservativeClaimInterpreter
       const item =
         evidence[index];
 
-      const statement =
-        item.excerpt.trim();
+      invariant(
+        item !== undefined,
+        "V8_ARTICLE_RUNTIME_EVIDENCE_INDEX_MISSING",
+        `Evidence payload at index ${index} is missing.`,
+      );
 
-      if (!statement) {
+      const evidenceIdForItem =
+        this.evidenceIds[index];
+
+      invariant(
+        typeof evidenceIdForItem === "string" &&
+          evidenceIdForItem.trim().length > 0,
+        "V8_ARTICLE_RUNTIME_EVIDENCE_ID_MISSING",
+        `Evidence ID at index ${index} is missing.`,
+      );
+
+      const excerpt =
+        normalizeObservationText(
+          item.excerpt,
+        );
+
+      if (!excerpt) {
         continue;
       }
+
+      const observations =
+        splitConservativeObservations(
+          excerpt,
+        );
 
       const confidence:
         | "HIGH"
@@ -190,24 +228,114 @@ export class ConservativeClaimInterpreter
             ]
           : undefined;
 
-      candidates.push({
-        statement,
-        evidenceIds: [
-          this.evidenceIds[index],
-        ],
-        epistemicLevel,
-        confidence,
-        ...(units
-          ? {
-              units,
-            }
-          : {}),
-        isUniversal: false,
-      });
+      for (
+        const statement of observations
+      ) {
+        candidates.push(
+          Object.freeze({
+            statement,
+            evidenceIds: Object.freeze([
+              evidenceIdForItem,
+            ]),
+            epistemicLevel,
+            confidence,
+            ...(units
+              ? {
+                  units,
+                }
+              : {}),
+            isUniversal: false,
+          }),
+        );
+      }
     }
 
-    return candidates;
+    return Object.freeze(
+      candidates,
+    );
   }
+}
+
+/**
+ * Normalize whitespace and typography without changing the source meaning.
+ *
+ * This is deliberately not a paraphrase or semantic normalization function.
+ */
+function normalizeObservationText(
+  value: string,
+): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u2018\u2019]/gu, "'")
+    .replace(/[\u201C\u201D]/gu, '"')
+    .replace(/[\u2010-\u2015\u2212]/gu, "-")
+    .replace(/\r\n?/gu, "\n")
+    .trim();
+}
+
+/**
+ * Split an excerpt only at conservative sentence boundaries.
+ *
+ * A newline by itself is not sufficient evidence that a fragment is a
+ * complete proposition. This avoids converting arbitrary navigation labels
+ * and multiline table fragments into apparently verified Claims.
+ *
+ * Fragments without terminal punctuation remain intact. The downstream
+ * verifier must match the candidate to the complete excerpt or to a
+ * conservatively extracted complete sentence.
+ */
+function splitConservativeObservations(
+  excerpt: string,
+): readonly string[] {
+  const normalized =
+    normalizeObservationText(
+      excerpt,
+    );
+
+  if (!normalized) {
+    return [];
+  }
+
+  const sentenceCandidates =
+    normalized.match(
+      /[^.!?。！？\n]+(?:[.!?。！？]+|(?=\n|$))/gu,
+    ) ?? [];
+
+  const observations =
+    sentenceCandidates
+      .map(
+        (candidate) =>
+          candidate.trim(),
+      )
+      .filter(Boolean);
+
+  if (observations.length === 0) {
+    return [
+      normalized,
+    ];
+  }
+
+  /*
+   * Preserve a short, punctuation-free excerpt as a single observation.
+   * It is still subject to exact Evidence verification; this fallback does
+   * not make the excerpt automatically admissible.
+   */
+  if (
+    observations.length === 1 &&
+    !/[.!?。！？]/u.test(normalized)
+  ) {
+    return [
+      normalized,
+    ];
+  }
+
+  return Object.freeze(
+    [
+      ...new Set(
+        observations,
+      ),
+    ],
+  );
 }
 
 const DEFAULT_ACTOR: AuditActor = {
@@ -533,7 +661,6 @@ function buildTopicPhrases(
     }),
   );
 }
-
 function buildCoreTopicAnchors(
   question: string,
 ): readonly string[] {
@@ -581,10 +708,6 @@ function buildCoreTopicAnchors(
      * rather than:
      *
      *   thickness considerations
-     *
-     * Treating these words as non-topic wrappers preserves the fail-closed
-     * requirement while preventing grammatical framing from becoming the
-     * topic anchor.
      */
     "consideration",
     "considerations",
@@ -597,27 +720,10 @@ function buildCoreTopicAnchors(
       (token) =>
         !genericTopicTerms.has(token),
     );
+
   /*
    * Remove grammatical/contextual material that follows the semantic
    * object requested by the Problem.
-   *
-   * For example:
-   *
-   *   wall thickness for plastic injection molding
-   *
-   * becomes:
-   *
-   *   wall thickness
-   *
-   * Likewise:
-   *
-   *   wall thickness is appropriate for ...
-   *
-   * becomes:
-   *
-   *   wall thickness
-   *
-   * This prevents broad domain context from becoming the core topic.
    */
   const normalizeFocusText = (
     value: string,
@@ -626,24 +732,8 @@ function buildCoreTopicAnchors(
       value.trim();
 
     /*
-     * Evaluative questions require explicit grammatical handling.
-     *
-     * Example:
-     *
-     *   How should injection molding wall thickness be evaluated
-     *   for a global B2B audience?
-     *
-     * must resolve to:
-     *
-     *   injection molding wall thickness
-     *
-     * The transformation is deterministic and lexical. It does not infer
-     * topics from Evidence, an ontology, an external model, or generated
-     * content.
-     */
-        /*
-     * Imperative guidance questions require the same deterministic semantic
-     * focus handling as evaluative "How should ..." questions.
+     * Imperative guidance questions require deterministic semantic
+     * focus handling.
      *
      * Example:
      *
@@ -652,9 +742,6 @@ function buildCoreTopicAnchors(
      *
      * The requested engineering object is the clause after "guidance for",
      * not the wrapper phrase "applicable engineering guidance".
-     *
-     * This remains lexical and fail-closed. No Evidence, ontology, model,
-     * synonym expansion, or generated topic is introduced.
      */
     const imperativeGuidanceMatch =
       normalizedValue.match(
@@ -671,6 +758,7 @@ function buildCoreTopicAnchors(
         )
         .trim();
     }
+
     const evaluationMatch =
       normalizedValue.match(
         /^how\s+(?:should|can|could|would|will|may|might)\s+(.+)$/u,
@@ -715,15 +803,6 @@ function buildCoreTopicAnchors(
   /*
    * "about / regarding / concerning" explicitly identifies the semantic
    * object in the question.
-   *
-   * Example:
-   *
-   *   What evidence-backed information can be stated about
-   *   wall thickness for plastic injection molding?
-   *
-   * becomes:
-   *
-   *   wall thickness
    */
   const aboutMatch =
     normalized.match(
@@ -741,12 +820,6 @@ function buildCoreTopicAnchors(
     /*
      * "What ..." questions frequently put the requested object immediately
      * after the interrogative and before the predicate.
-     *
-     * Examples:
-     *
-     *   What wall thickness is appropriate ...
-     *   What are the recommended wall thickness, draft angle, and
-     *   rib thickness values for ...
      */
     const whatMatch =
       normalized.match(
@@ -784,12 +857,6 @@ function buildCoreTopicAnchors(
 
   /*
    * Split explicit topic lists.
-   *
-   * Example:
-   *
-   *   recommended wall thickness, draft angle, and rib thickness
-   *
-   * becomes three semantic segments.
    */
   const segments =
     focusText
@@ -826,12 +893,7 @@ function buildCoreTopicAnchors(
       tokens.length >= 2
     ) {
       /*
-       * The final two semantic tokens are the compact deterministic topic
-       * representation.
-       *
-       *   wall thickness
-       *   draft angle
-       *   rib thickness
+       * Use the final two semantic tokens as the compact topic anchor.
        */
       anchors.push(
         tokens
@@ -865,32 +927,6 @@ function buildCoreTopicAnchors(
       );
     }
   }
-
-  /*
-   * Core Topic anchors represent the semantic object requested by the
-   * Problem, not the broad manufacturing domain surrounding that object.
-   *
-   * Examples:
-   *
-   *   What wall thickness is appropriate for plastic injection molding
-   *   with high shrinkage materials?
-   *
-   *   -> wall thickness
-   *
-   *   What are the recommended wall thickness, draft angle, and rib
-   *   thickness values for plastic injection molding?
-   *
-   *   -> wall thickness
-   *   -> draft angle
-   *   -> rib thickness
-   *
-   * The domain phrase "plastic injection molding" is deliberately excluded
-   * from this gate. It may contribute to deterministic relevance scoring,
-   * but it cannot by itself satisfy the core-topic requirement.
-   *
-   * This remains lexical and deterministic. No external ontology, model,
-   * generated fact, or Evidence-derived topic is introduced.
-   */
 
   return uniqueStrings(
     anchors,
@@ -1122,9 +1158,8 @@ function scoreEvidence(
       );
 
     /*
-     * The phrase must carry a meaningful signal even when the phrase is
-     * common. Multi-word exact matches therefore receive a deterministic
-     * base weight in addition to their rarity weight.
+     * Multi-word exact matches receive a deterministic base weight in
+     * addition to their rarity weight.
      */
     const basePhraseWeight =
       12 +
@@ -1220,6 +1255,7 @@ function scoreEvidence(
       ),
   };
 }
+
 function selectRuntimeEvidence(
   acquisitions:
     readonly ResearchAcquisitionResult["acquisitions"][number][],
@@ -1418,15 +1454,10 @@ function selectRuntimeEvidence(
     /*
      * An Acquisition is allowed to be non-contributing.
      *
-     * This is not an Evidence rejection and it does not remove anything
-     * from the Foundation inventory. It simply means that the fetched
-     * Internet page did not provide Evidence relevant enough to the current
-     * Problem.question to enter this Article Runtime's Truth Production
+     * This does not remove the fetched Evidence from the Foundation
+     * inventory. It means the page did not provide Evidence relevant
+     * enough to enter the current Article Runtime's Truth Production
      * boundary.
-     *
-     * In particular, an unrelated page such as an About page must not be
-     * manufactured into a topic Evidence record merely because the
-     * Acquisition itself succeeded.
      */
     if (
       selectedForAcquisition ===
@@ -1448,10 +1479,6 @@ function selectRuntimeEvidence(
 
     /*
      * Deterministic diagnostic only. No external state is changed.
-     *
-     * Keeping the selected semantic signal visible makes an incorrect
-     * publication artifact diagnosable without weakening the fail-closed
-     * contract.
      */
     console.debug(
       "[V8-ARTICLE-RUNTIME][EVIDENCE-SELECTION]",
@@ -1504,7 +1531,6 @@ function selectRuntimeEvidence(
 
   return selected;
 }
-
 export async function runV8ArticleRuntime(
   input: ArticleRuntimeInput,
 ): Promise<ArticleRuntimeResult> {
@@ -1627,8 +1653,8 @@ export async function runV8ArticleRuntime(
    * An acquisition that has no relevant Evidence remains fully preserved in
    * the Foundation but does not cross the Truth Production boundary.
    *
-   * The selector itself remains globally fail-closed when no contributing
-   * Evidence exists anywhere in the acquired Internet evidence inventory.
+   * The selector remains globally fail-closed when no contributing Evidence
+   * exists anywhere in the acquired Internet evidence inventory.
    */
   const selectedEvidence =
     selectRuntimeEvidence(
@@ -1692,10 +1718,8 @@ export async function runV8ArticleRuntime(
   }
 
   /*
-   * Verification cardinality is based on the number of selected contributing
-   * Evidence records, not the number of Internet Acquisition records.
-   *
-   * An irrelevant Acquisition may legitimately contribute zero Evidence.
+   * Verification cardinality is based on selected contributing Evidence,
+   * not on the number of Internet Acquisition records.
    */
   invariant(
     verifiedEvidenceIds.length ===
@@ -1737,10 +1761,22 @@ export async function runV8ArticleRuntime(
       verifiedEvidenceIds,
     );
 
+  /*
+   * The Truth Producer must have an explicitly configured semantic
+   * verifier. Without this dependency, admissible Claim production fails
+   * closed with V8_TRUTH_PRODUCER_SEMANTIC_VERIFIER_NOT_CONFIGURED.
+   *
+   * This verifier is deliberately conservative:
+   * it does not authorize unsupported paraphrases or infer missing facts.
+   */
+  const semanticVerifier =
+    new ExactExcerptClaimSemanticVerifier();
+
   const truthProducer =
     new TruthProducer(
       service,
       interpreter,
+      semanticVerifier,
     );
 
   const truthInput:
@@ -1796,7 +1832,7 @@ export async function runV8ArticleRuntime(
       );
 
       console.error(
-                `statement=${rejected.statement}`,
+        `statement=${rejected.statement}`,
       );
 
       console.error(
@@ -1979,7 +2015,7 @@ export async function runV8ArticleRuntime(
    * FINAL CONTENT PROVENANCE CLOSURE
    * ============================================================
    *
-   * The ContentCompiler already defines five provenance semantics:
+   * The ContentCompiler defines five provenance semantics:
    *
    *   QUESTION
    *       -> Problem
@@ -1998,11 +2034,9 @@ export async function runV8ArticleRuntime(
    *       -> Claim
    *       -> Evidence
    *
-   * The runtime boundary must preserve those semantics exactly.
-   *
-   * In particular, structural assertions MUST NOT be forced to inherit
-   * epistemic lineage merely because they coexist with Knowledge inside
-   * the same compiled Content aggregate.
+   * The runtime boundary preserves those semantics exactly.
+   * Structural assertions must not inherit epistemic lineage merely
+   * because they coexist with Knowledge in the same compiled Content.
    */
 
   const contentAssertions =
@@ -2046,7 +2080,6 @@ export async function runV8ArticleRuntime(
     "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_ORDINAL_INVALID",
     "Compiled Content provenance contains an invalid ordinal.",
   );
-
   for (
     let index = 0;
     index <
@@ -2138,7 +2171,7 @@ export async function runV8ArticleRuntime(
             provenance.evidenceIds.length ===
               0,
           "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_STRUCTURAL_CONTAMINATION",
-          "Content assertion ${index} kind=CONTEXT contains unrelated lineage.",
+          `Content assertion ${index} kind=CONTEXT contains unrelated lineage.`,
         );
 
         break;
