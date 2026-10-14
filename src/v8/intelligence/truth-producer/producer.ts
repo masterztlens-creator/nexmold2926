@@ -1,3 +1,4 @@
+
 import {
   createClaim,
   createKnowledge,
@@ -23,6 +24,8 @@ import type {
 import type {
   ClaimCandidate,
   ClaimInterpreter,
+  ClaimSemanticVerification,
+  ClaimSemanticVerifier,
   TruthProducerInput,
   TruthProducerResult,
 } from "./types.js";
@@ -50,7 +53,8 @@ function normalizeCandidate(
     "statement",
   );
 
-  if (candidate.evidenceIds.length === 0) {
+  if (!Array.isArray(candidate.evidenceIds) ||
+      candidate.evidenceIds.length === 0) {
     throw new Error(
       "V8_TRUTH_PRODUCER_CLAIM_WITHOUT_EVIDENCE",
     );
@@ -123,22 +127,151 @@ function normalizeActor(
     );
   }
 
+  const id = nonEmpty(
+    actor.id,
+    "actor_id",
+  );
+
   return {
-    id: actor.id,
+    id,
     role: actor.role as AuditRole,
   };
+}
+
+function normalizedStringSet(
+  values: readonly string[],
+): readonly string[] {
+  return [
+    ...new Set(
+      values.map(
+        (value) => value.trim(),
+      ),
+    ),
+  ]
+    .filter(Boolean)
+    .sort();
+}
+
+function sameStringSet(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  const normalizedLeft =
+    normalizedStringSet(left);
+
+  const normalizedRight =
+    normalizedStringSet(right);
+
+  return (
+    normalizedLeft.length ===
+      normalizedRight.length &&
+    normalizedLeft.every(
+      (value, index) =>
+        value === normalizedRight[index],
+    )
+  );
+}
+
+function validateSemanticVerification(
+  candidate: ClaimCandidate,
+  evidence: readonly EvidencePayload[],
+  verification: ClaimSemanticVerification,
+): void {
+  if (!verification ||
+      typeof verification !== "object") {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_INVALID_SEMANTIC_VERIFICATION_RESULT",
+    );
+  }
+
+  if (
+    verification.verdict !== "VERIFIED" &&
+    verification.verdict !== "REQUIRES_REVIEW" &&
+    verification.verdict !== "REJECTED"
+  ) {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_INVALID_SEMANTIC_VERIFICATION_VERDICT",
+    );
+  }
+
+  if (verification.verdict !== "VERIFIED") {
+    const reasons =
+      Array.isArray(verification.reasons)
+        ? verification.reasons
+            .map((reason) => String(reason).trim())
+            .filter(Boolean)
+        : [];
+
+    throw new Error(
+      [
+        `V8_TRUTH_PRODUCER_SEMANTIC_VERIFICATION_${verification.verdict}`,
+        ...(reasons.length > 0
+          ? reasons
+          : ["No verification reason was provided."]),
+      ].join(":"),
+    );
+  }
+
+  if (
+    typeof verification.verifiedStatement !== "string" ||
+    verification.verifiedStatement.trim() !==
+      candidate.statement
+  ) {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_SEMANTIC_VERIFIED_STATEMENT_MISMATCH",
+    );
+  }
+
+  if (
+    !Array.isArray(verification.evidenceIds) ||
+    !sameStringSet(
+      verification.evidenceIds,
+      candidate.evidenceIds,
+    )
+  ) {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_SEMANTIC_VERIFIED_EVIDENCE_MAPPING_MISMATCH",
+    );
+  }
+
+  if (
+    !Array.isArray(verification.reasons) ||
+    verification.reasons.some(
+      (reason) => typeof reason !== "string",
+    )
+  ) {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_INVALID_SEMANTIC_VERIFICATION_REASONS",
+    );
+  }
+
+  /*
+   * The Evidence passed to the verifier must correspond one-to-one with the
+   * candidate's normalized Evidence IDs. This check does not itself prove
+   * semantic entailment; that is the verifier's responsibility.
+   */
+  if (evidence.length !== candidate.evidenceIds.length) {
+    throw new Error(
+      "V8_TRUTH_PRODUCER_SEMANTIC_EVIDENCE_CARDINALITY_MISMATCH",
+    );
+  }
 }
 
 export class TruthProducer {
   private readonly service: FoundationService;
   private readonly interpreter: ClaimInterpreter;
+  private readonly semanticVerifier:
+    | ClaimSemanticVerifier
+    | undefined;
 
   constructor(
     service: FoundationService,
     interpreter: ClaimInterpreter,
+    semanticVerifier?: ClaimSemanticVerifier,
   ) {
     this.service = service;
     this.interpreter = interpreter;
+    this.semanticVerifier = semanticVerifier;
   }
 
   produce(
@@ -179,6 +312,18 @@ export class TruthProducer {
       }
 
       try {
+        /*
+         * Fail closed: VERIFIED Evidence does not imply a VERIFIED Claim.
+         *
+         * Existing callers that do not inject an independently implemented
+         * semantic verifier cannot promote any candidate to VERIFIED.
+         */
+        if (!this.semanticVerifier) {
+          throw new Error(
+            "V8_TRUTH_PRODUCER_SEMANTIC_VERIFIER_NOT_CONFIGURED",
+          );
+        }
+
         const typedEvidenceIds =
           candidate.evidenceIds.map(
             evidenceId,
@@ -190,6 +335,34 @@ export class TruthProducer {
             typedEvidenceIds,
           );
 
+        /*
+         * Check that the supplied Evidence payloads are exactly the records
+         * resolved from the candidate's Evidence IDs before semantic review.
+         */
+        if (
+          evidence.length !== typedEvidenceIds.length
+        ) {
+          throw new Error(
+            "V8_TRUTH_PRODUCER_EVIDENCE_MAPPING_MISMATCH",
+          );
+        }
+
+        const verification =
+          this.semanticVerifier.verify(
+            candidate,
+            evidence,
+          );
+
+        validateSemanticVerification(
+          candidate,
+          evidence,
+          verification,
+        );
+
+        /*
+         * Only the explicit semantic-verification boundary above may permit
+         * the producer to create a VERIFIED Claim.
+         */
         const claim = createClaim({
           id: undefined,
           statement: candidate.statement,
@@ -244,7 +417,7 @@ export class TruthProducer {
           this.service.createClaim(
             claim as Claim,
             actor,
-            "truth producer",
+            "truth producer: semantic verification accepted",
           );
 
         const persistedClaimId =
@@ -257,17 +430,13 @@ export class TruthProducer {
         );
 
         /*
-         * Knowledge is intentionally created only
-         * after Claim persistence succeeds.
+         * Knowledge is created only after:
+         * 1. all cited Evidence records are VERIFIED;
+         * 2. an explicit semantic verifier accepts the exact statement;
+         * 3. the verifier's Evidence mapping matches the candidate; and
+         * 4. Claim persistence succeeds.
          *
-         * The Knowledge record must preserve every
-         * applicability constraint carried by its
-         * supporting Claim. This is required by the
-         * V8-24 Knowledge scope gate.
-         *
-         * Epistemic metadata such as confidence and
-         * epistemicLevel remains Claim-level metadata
-         * and is therefore not copied into Knowledge.
+         * Applicability constraints are preserved from the Claim candidate.
          */
         const knowledgeInput =
           createKnowledge({
@@ -315,19 +484,12 @@ export class TruthProducer {
           this.service.createKnowledge(
             knowledgeInput as Knowledge,
             actor,
-            "truth producer",
+            "truth producer: semantically verified Claim",
           );
 
         knowledge.push(
           knowledgeRecord.aggregateId,
         );
-
-        /*
-         * Keep the variable alive so the
-         * verified-evidence lookup remains an
-         * explicit producer gate.
-         */
-        void evidence;
       } catch (error) {
         rejectedCandidates.push({
           statement:
