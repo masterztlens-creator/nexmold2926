@@ -26,6 +26,15 @@ const auditor = {
 const statement =
   "Adequate draft angle supports reliable part ejection.";
 
+function countRecords(store, aggregateType) {
+  return store
+    .auditTrail()
+    .filter(
+      (record) =>
+        record.aggregateType === aggregateType,
+    ).length;
+}
+
 function createVerifiedEvidenceFixture() {
   const store =
     new InMemoryFoundationStore();
@@ -275,8 +284,7 @@ test(
 
     /*
      * Deliberately omit the semantic verifier.
-     * This represents a runtime that can verify Evidence records but cannot
-     * independently establish whether a candidate Claim is supported.
+     * Evidence verification alone must not authorize Claim creation.
      */
     const producer =
       new TruthProducer(
@@ -318,13 +326,13 @@ test(
     );
 
     assert.equal(
-      fixture.store.list("CLAIM").length,
+      countRecords(fixture.store, "CLAIM"),
       0,
       "No Claim may be created without semantic verification.",
     );
 
     assert.equal(
-      fixture.store.list("KNOWLEDGE").length,
+      countRecords(fixture.store, "KNOWLEDGE"),
       0,
       "No Knowledge may be created without a semantically verified Claim.",
     );
@@ -342,7 +350,7 @@ test(
     assert.equal(
       persistedEvidence.state,
       "VERIFIED",
-      "The fix must preserve valid Evidence even when Claim creation is blocked.",
+      "Valid Evidence must remain persisted when Claim creation is blocked.",
     );
 
     assert.doesNotThrow(
@@ -409,12 +417,12 @@ test(
     );
 
     assert.equal(
-      fixture.store.list("CLAIM").length,
+      countRecords(fixture.store, "CLAIM"),
       0,
     );
 
     assert.equal(
-      fixture.store.list("KNOWLEDGE").length,
+      countRecords(fixture.store, "KNOWLEDGE"),
       0,
     );
   },
@@ -478,12 +486,12 @@ test(
     );
 
     assert.equal(
-      fixture.store.list("CLAIM").length,
+      countRecords(fixture.store, "CLAIM"),
       0,
     );
 
     assert.equal(
-      fixture.store.list("KNOWLEDGE").length,
+      countRecords(fixture.store, "KNOWLEDGE"),
       0,
     );
   },
@@ -557,12 +565,12 @@ test(
       );
 
       assert.equal(
-        fixture.store.list("CLAIM").length,
+        countRecords(fixture.store, "CLAIM"),
         0,
       );
 
       assert.equal(
-        fixture.store.list("KNOWLEDGE").length,
+        countRecords(fixture.store, "KNOWLEDGE"),
         0,
       );
     }
