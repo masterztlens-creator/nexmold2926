@@ -199,11 +199,6 @@ export class ConservativeClaimInterpreter
         continue;
       }
 
-      const observations =
-        splitConservativeObservations(
-          excerpt,
-        );
-
       const confidence:
         | "HIGH"
         | "MEDIUM"
@@ -228,26 +223,29 @@ export class ConservativeClaimInterpreter
             ]
           : undefined;
 
-      for (
-        const statement of observations
-      ) {
-        candidates.push(
-          Object.freeze({
-            statement,
-            evidenceIds: Object.freeze([
-              evidenceIdForItem,
-            ]),
-            epistemicLevel,
-            confidence,
-            ...(units
-              ? {
-                  units,
-                }
-              : {}),
-            isUniversal: false,
-          }),
-        );
-      }
+      /*
+       * One selected Evidence excerpt produces at most one Claim candidate.
+       * Preserve the complete excerpt; do not split it into sentence-level
+       * candidates, select a sentence arbitrarily, or paraphrase the source.
+       * ExactExcerptClaimSemanticVerifier remains the fail-closed authority
+       * for deciding whether this complete statement is admissible.
+       */
+      candidates.push(
+        Object.freeze({
+          statement: excerpt,
+          evidenceIds: Object.freeze([
+            evidenceIdForItem,
+          ]),
+          epistemicLevel,
+          confidence,
+          ...(units
+            ? {
+                units,
+              }
+            : {}),
+          isUniversal: false,
+        }),
+      );
     }
 
     return Object.freeze(
@@ -271,71 +269,6 @@ function normalizeObservationText(
     .replace(/[\u2010-\u2015\u2212]/gu, "-")
     .replace(/\r\n?/gu, "\n")
     .trim();
-}
-
-/**
- * Split an excerpt only at conservative sentence boundaries.
- *
- * A newline by itself is not sufficient evidence that a fragment is a
- * complete proposition. This avoids converting arbitrary navigation labels
- * and multiline table fragments into apparently verified Claims.
- *
- * Fragments without terminal punctuation remain intact. The downstream
- * verifier must match the candidate to the complete excerpt or to a
- * conservatively extracted complete sentence.
- */
-function splitConservativeObservations(
-  excerpt: string,
-): readonly string[] {
-  const normalized =
-    normalizeObservationText(
-      excerpt,
-    );
-
-  if (!normalized) {
-    return [];
-  }
-
-  const sentenceCandidates =
-    normalized.match(
-      /[^.!?。！？\n]+(?:[.!?。！？]+|(?=\n|$))/gu,
-    ) ?? [];
-
-  const observations =
-    sentenceCandidates
-      .map(
-        (candidate) =>
-          candidate.trim(),
-      )
-      .filter(Boolean);
-
-  if (observations.length === 0) {
-    return [
-      normalized,
-    ];
-  }
-
-  /*
-   * Preserve a short, punctuation-free excerpt as a single observation.
-   * It is still subject to exact Evidence verification; this fallback does
-   * not make the excerpt automatically admissible.
-   */
-  if (
-    observations.length === 1 &&
-    !/[.!?。！？]/u.test(normalized)
-  ) {
-    return [
-      normalized,
-    ];
-  }
-
-  return Object.freeze(
-    [
-      ...new Set(
-        observations,
-      ),
-    ],
-  );
 }
 
 const DEFAULT_ACTOR: AuditActor = {
@@ -539,7 +472,6 @@ const TOPIC_SEARCH_FIELDS: readonly {
     weight: 2,
   },
 ];
-
 interface TopicPhrase {
   readonly value: string;
   readonly tokenCount: number;
@@ -1490,7 +1422,7 @@ function selectRuntimeEvidence(
           selectedForAcquisition.id,
         score:
           selectedForAcquisition.score,
-        phraseMatches:
+                  phraseMatches:
           selectedForAcquisition.phraseMatches,
         tokenMatches:
           selectedForAcquisition.tokenMatches,
@@ -1965,7 +1897,7 @@ export async function runV8ArticleRuntime(
     });
 
   const decision =
-    createDecision({
+      createDecision({
       id:
         `decision:v8:${decisionFingerprint}`,
       problemId:
