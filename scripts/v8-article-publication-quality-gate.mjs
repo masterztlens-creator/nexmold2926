@@ -1,20 +1,16 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const SCRIPT_PATH = fileURLToPath(import.meta.url);
 
 const ARTICLE_DIRECTORY = path.resolve(
   ".nexmold/v8/articles/plastic-injection-molding-wall-thickness",
 );
 
-const ARTICLE_PATH = path.join(
-  ARTICLE_DIRECTORY,
-  "article.md",
-);
-
-const MANIFEST_PATH = path.join(
-  ARTICLE_DIRECTORY,
-  "manifest.json",
-);
+const ARTICLE_PATH = path.join(ARTICLE_DIRECTORY, "article.md");
+const MANIFEST_PATH = path.join(ARTICLE_DIRECTORY, "manifest.json");
 
 const MINIMUM_H2_HEADINGS = 3;
 const MINIMUM_KNOWLEDGE_ASSERTIONS = 4;
@@ -51,11 +47,7 @@ function normalizeLine(value) {
 }
 
 function wordCount(value) {
-  return (
-    value
-      .trim()
-      .match(/\S+/g)?.length ?? 0
-  );
+  return value.trim().match(/\S+/g)?.length ?? 0;
 }
 
 function extractHeadings(article) {
@@ -72,8 +64,7 @@ function extractHeadings(article) {
 }
 
 function extractProseLines(article, description) {
-  const normalizedDescription =
-    normalizeLine(description);
+  const normalizedDescription = normalizeLine(description);
 
   return article
     .split("\n")
@@ -130,9 +121,7 @@ function assertManifestShape(manifest) {
 
   if (
     !isRecord(manifest.foundation) ||
-    !Array.isArray(
-      manifest.foundation.verifiedEvidenceIds,
-    ) ||
+    !Array.isArray(manifest.foundation.verifiedEvidenceIds) ||
     !Array.isArray(manifest.foundation.claimIds) ||
     !Array.isArray(manifest.foundation.knowledgeIds)
   ) {
@@ -145,9 +134,7 @@ function assertManifestShape(manifest) {
   if (
     !isRecord(manifest.runtime) ||
     !isRecord(manifest.runtime.content) ||
-    !Array.isArray(
-      manifest.runtime.content.provenance,
-    )
+    !Array.isArray(manifest.runtime.content.provenance)
   ) {
     fail(
       "PROVENANCE_MISSING",
@@ -184,8 +171,7 @@ export function validateArticlePublication({
     .map((line) => line.trim())
     .find((line) => line.length > 0);
 
-  const expectedTitle =
-    `# ${manifest.article.title.trim()}`;
+  const expectedTitle = `# ${manifest.article.title.trim()}`;
 
   if (titleLine !== expectedTitle) {
     fail(
@@ -194,10 +180,7 @@ export function validateArticlePublication({
     );
   }
 
-  if (
-    manifest.runtime.content.title !==
-    manifest.article.title
-  ) {
+  if (manifest.runtime.content.title !== manifest.article.title) {
     fail(
       "RUNTIME_TITLE_MISMATCH",
       "Runtime title and manifest title differ.",
@@ -213,8 +196,8 @@ export function validateArticlePublication({
     );
   }
 
-  const normalizedHeadings = headings.map(
-    (heading) => heading.toLocaleLowerCase("en"),
+  const normalizedHeadings = headings.map((heading) =>
+    heading.toLocaleLowerCase("en"),
   );
 
   if (
@@ -247,7 +230,11 @@ export function validateArticlePublication({
       );
     }
 
-    if (/^(?:Problem|Decision|Verified knowledge|Context|Constraints)\s*:/i.test(line)) {
+    if (
+      /^(?:Problem|Decision|Verified knowledge|Context|Constraints)\s*:/i.test(
+        line,
+      )
+    ) {
       fail(
         "INTERNAL_FIELD_LEAK",
         `Internal workflow field was emitted as article prose: "${line}".`,
@@ -262,22 +249,16 @@ export function validateArticlePublication({
     }
   }
 
-  const provenance =
-    manifest.runtime.content.provenance;
+  const provenance = manifest.runtime.content.provenance;
 
-  if (
-    provenance.length !==
-    manifest.runtime.assertionCount
-  ) {
+  if (provenance.length !== manifest.runtime.assertionCount) {
     fail(
       "PROVENANCE_COUNT_MISMATCH",
       "Provenance count differs from the runtime assertion count.",
     );
   }
 
-  if (
-    manifest.runtime.content.bodyLength < 1
-  ) {
+  if (manifest.runtime.content.bodyLength < 1) {
     fail(
       "RUNTIME_BODY_LENGTH_INVALID",
       "Runtime body length is invalid.",
@@ -307,8 +288,7 @@ export function validateArticlePublication({
   }
 
   if (
-    knownClaimIds.size !==
-    manifest.foundation.claimIds.length
+    knownClaimIds.size !== manifest.foundation.claimIds.length
   ) {
     fail(
       "DUPLICATE_CLAIM_IDS",
@@ -328,7 +308,11 @@ export function validateArticlePublication({
 
   const provenanceByText = new Map();
 
-  for (let index = 0; index < provenance.length; index += 1) {
+  for (
+    let index = 0;
+    index < provenance.length;
+    index += 1
+  ) {
     const record = provenance[index];
 
     if (!isRecord(record)) {
@@ -452,8 +436,8 @@ export function validateArticlePublication({
     );
   }
 
-  const proseKeys = proseLines.map(
-    (line) => line.toLocaleLowerCase("en"),
+  const proseKeys = proseLines.map((line) =>
+    line.toLocaleLowerCase("en"),
   );
 
   if (proseKeys.length !== provenanceByText.size) {
@@ -545,7 +529,7 @@ function main() {
 
 if (
   process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)
+  path.resolve(process.argv[1]) === path.resolve(SCRIPT_PATH)
 ) {
   try {
     main();
