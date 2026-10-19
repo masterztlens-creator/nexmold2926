@@ -1196,6 +1196,9 @@ function selectRuntimeEvidence(
   readonly id: string;
   readonly payload: EvidencePayload;
 }[] {
+  const MAX_EVIDENCE_PER_ACQUISITION = 8;
+  const MAX_EVIDENCE_FOR_RUNTIME = 48;
+
   const evidenceInventory:
     readonly (readonly EvidencePayload[])[] =
     acquisitions.map(
@@ -1205,12 +1208,8 @@ function selectRuntimeEvidence(
 
   const totalEvidenceCount =
     evidenceInventory.reduce(
-      (
-        total,
-        evidence,
-      ) =>
-        total +
-        evidence.length,
+      (total, evidence) =>
+        total + evidence.length,
       0,
     );
 
@@ -1221,19 +1220,13 @@ function selectRuntimeEvidence(
   );
 
   const topicPhrases =
-    buildTopicPhrases(
-      question,
-    );
+    buildTopicPhrases(question);
 
   const coreTopicAnchors =
-    buildCoreTopicAnchors(
-      question,
-    );
+    buildCoreTopicAnchors(question);
 
   const questionTokens =
-    topicTokens(
-      question,
-    );
+    topicTokens(question);
 
   invariant(
     topicPhrases.length > 0 &&
@@ -1246,9 +1239,7 @@ function selectRuntimeEvidence(
   const phraseFrequency =
     new Map<string, number>();
 
-  for (
-    const phrase of topicPhrases
-  ) {
+  for (const phrase of topicPhrases) {
     phraseFrequency.set(
       phrase.value,
       phraseDocumentFrequency(
@@ -1261,9 +1252,7 @@ function selectRuntimeEvidence(
   const tokenFrequency =
     new Map<string, number>();
 
-  for (
-    const token of questionTokens
-  ) {
+  for (const token of questionTokens) {
     tokenFrequency.set(
       token,
       tokenDocumentFrequency(
@@ -1273,52 +1262,68 @@ function selectRuntimeEvidence(
     );
   }
 
-  const selected: {
-    id: string;
-    payload: EvidencePayload;
+  const candidates: {
+    readonly acquisitionIndex: number;
+    readonly evidenceIndex: number;
+    readonly id: string;
+    readonly payload: EvidencePayload;
+    readonly score: number;
+    readonly phraseMatches: readonly string[];
+    readonly tokenMatches: readonly string[];
   }[] = [];
 
-  const selectedIds =
+  const seenCandidateIds =
     new Set<string>();
 
   for (
-    const record of acquisitions
+    let acquisitionIndex = 0;
+    acquisitionIndex < acquisitions.length;
+    acquisitionIndex += 1
   ) {
-    let selectedForAcquisition:
-      | {
-          id: string;
-          payload: EvidencePayload;
-          score: number;
-          phraseMatches:
-            readonly string[];
-          tokenMatches:
-            readonly string[];
-          evidenceIndex: number;
-        }
-      | undefined;
+    const record =
+      acquisitions[acquisitionIndex];
+
+    invariant(
+      record !== undefined,
+      "V8_ARTICLE_RUNTIME_ACQUISITION_INDEX_MISSING",
+      `Acquisition record at index ${acquisitionIndex} is missing.`,
+    );
+
+    const acquisition =
+      record.acquisition;
+
+    const rankedForAcquisition: {
+      readonly evidenceIndex: number;
+      readonly id: string;
+      readonly payload: EvidencePayload;
+      readonly score: number;
+      readonly phraseMatches: readonly string[];
+      readonly tokenMatches: readonly string[];
+    }[] = [];
 
     for (
       let evidenceIndex = 0;
-      evidenceIndex <
-        record.acquisition.evidence.length;
+      evidenceIndex < acquisition.evidence.length;
       evidenceIndex += 1
     ) {
       const payload =
-        record.acquisition.evidence[
-          evidenceIndex
-        ];
+        acquisition.evidence[evidenceIndex];
+
+      invariant(
+        payload !== undefined,
+        "V8_ARTICLE_RUNTIME_EVIDENCE_INDEX_MISSING",
+        `Evidence payload at index ${evidenceIndex} is missing in acquisition ${acquisitionIndex}.`,
+      );
 
       const id =
         canonicalEvidenceId(
-          record.acquisition.sourceId,
-          record.acquisition.snapshotId,
-          record.acquisition.snapshot.contentHash,
+          acquisition.sourceId,
+          acquisition.snapshotId,
+          acquisition.snapshot.contentHash,
           payload,
         );
 
-      if (
-        selectedIds.has(id)
-      ) {
+      if (seenCandidateIds.has(id)) {
         continue;
       }
 
@@ -1332,17 +1337,15 @@ function selectRuntimeEvidence(
           totalEvidenceCount,
         );
 
-      /*
-       * A core topic anchor is mandatory.
-       *
-       * Generic domain overlap such as "plastic injection molding" is not
-       * sufficient because one page may contain several unrelated
-       * manufacturing parameters.
-       */
+      if (
+        relevance.phraseMatches.length === 0 ||
+        relevance.tokenMatches.length === 0
+      ) {
+        continue;
+      }
+
       const normalizedEvidenceText =
-        evidenceSearchText(
-          payload,
-        );
+        evidenceSearchText(payload);
 
       const coreTopicMatched =
         coreTopicAnchors.some(
@@ -1356,100 +1359,128 @@ function selectRuntimeEvidence(
         continue;
       }
 
-      if (
-        relevance.phraseMatches.length ===
-        0
-      ) {
+      rankedForAcquisition.push({
+        evidenceIndex,
+        id,
+        payload,
+        score: relevance.score,
+        phraseMatches:
+          relevance.phraseMatches,
+        tokenMatches:
+          relevance.tokenMatches,
+      });
+    }
+
+    rankedForAcquisition.sort(
+      (left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return left.evidenceIndex -
+          right.evidenceIndex;
+      },
+    );
+
+    const selectedForAcquisition =
+      rankedForAcquisition.slice(
+        0,
+        MAX_EVIDENCE_PER_ACQUISITION,
+      );
+
+    for (const candidate of selectedForAcquisition) {
+      if (seenCandidateIds.has(candidate.id)) {
         continue;
       }
 
-      if (
-        selectedForAcquisition ===
-          undefined ||
-        relevance.score >
-          selectedForAcquisition.score
-      ) {
-        selectedForAcquisition = {
-          id,
-          payload,
-          score:
-            relevance.score,
-          phraseMatches:
-            relevance.phraseMatches,
-          tokenMatches:
-            relevance.tokenMatches,
-          evidenceIndex,
-        };
-      }
+      seenCandidateIds.add(candidate.id);
+
+      candidates.push({
+        acquisitionIndex,
+        evidenceIndex:
+          candidate.evidenceIndex,
+        id: candidate.id,
+        payload: candidate.payload,
+        score: candidate.score,
+        phraseMatches:
+          candidate.phraseMatches,
+        tokenMatches:
+          candidate.tokenMatches,
+      });
     }
 
-    /*
-     * An Acquisition is allowed to be non-contributing.
-     *
-     * This does not remove the fetched Evidence from the Foundation
-     * inventory. It means the page did not provide Evidence relevant
-     * enough to enter the current Article Runtime's Truth Production
-     * boundary.
-     */
-    if (
-      selectedForAcquisition ===
-      undefined
-    ) {
+    if (selectedForAcquisition.length === 0) {
       console.debug(
         "[V8-ARTICLE-RUNTIME][NON-CONTRIBUTING]",
         JSON.stringify({
-          candidateUrl:
-            record.candidateUrl,
+          candidateUrl: record.candidateUrl,
           question,
-          reason:
-            "NO_TOPIC_RELEVANT_EVIDENCE",
+          reason: "NO_TOPIC_RELEVANT_EVIDENCE",
         }),
       );
+    }
+  }
 
+  candidates.sort(
+    (left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      if (
+        left.acquisitionIndex !==
+        right.acquisitionIndex
+      ) {
+        return (
+          left.acquisitionIndex -
+          right.acquisitionIndex
+        );
+      }
+
+      if (
+        left.evidenceIndex !==
+        right.evidenceIndex
+      ) {
+        return (
+          left.evidenceIndex -
+          right.evidenceIndex
+        );
+      }
+
+      return left.id.localeCompare(right.id);
+    },
+  );
+
+  const selected: {
+    readonly id: string;
+    readonly payload: EvidencePayload;
+  }[] = [];
+
+  const selectedIds =
+    new Set<string>();
+
+  for (const candidate of candidates) {
+    if (
+      selected.length >=
+      MAX_EVIDENCE_FOR_RUNTIME
+    ) {
+      break;
+    }
+
+    if (selectedIds.has(candidate.id)) {
       continue;
     }
 
-    /*
-     * Deterministic diagnostic only. No external state is changed.
-     */
-    console.debug(
-      "[V8-ARTICLE-RUNTIME][EVIDENCE-SELECTION]",
-      JSON.stringify({
-        candidateUrl:
-          record.candidateUrl,
-        question,
-        selectedEvidenceId:
-          selectedForAcquisition.id,
-        score:
-          selectedForAcquisition.score,
-                  phraseMatches:
-          selectedForAcquisition.phraseMatches,
-        tokenMatches:
-          selectedForAcquisition.tokenMatches,
-        evidenceIndex:
-          selectedForAcquisition.evidenceIndex,
+    selectedIds.add(candidate.id);
+
+    selected.push(
+      Object.freeze({
+        id: candidate.id,
+        payload: candidate.payload,
       }),
     );
-
-    selectedIds.add(
-      selectedForAcquisition.id,
-    );
-
-    selected.push({
-      id:
-        selectedForAcquisition.id,
-      payload:
-        selectedForAcquisition.payload,
-    });
   }
 
-  /*
-   * Global fail-closed boundary.
-   *
-   * Individual irrelevant acquisitions are valid and preserved.
-   * What is invalid is attempting to produce an article when the complete
-   * Internet acquisition set contains no Evidence relevant to the Problem.
-   */
   invariant(
     selected.length > 0,
     "V8_ARTICLE_RUNTIME_NO_TOPIC_RELEVANT_EVIDENCE",
@@ -1458,11 +1489,57 @@ function selectRuntimeEvidence(
       `question=${question}`,
       `acquisitions=${acquisitions.length}`,
       `totalEvidence=${totalEvidenceCount}`,
+      `topicPhrases=${topicPhrases.length}`,
+      `coreTopicAnchors=${coreTopicAnchors.length}`,
     ].join(" "),
   );
 
-  return selected;
+  console.error(
+    "[V8-ARTICLE-RUNTIME][EVIDENCE-SELECTION]",
+  );
+
+  console.error(`question=${question}`);
+  console.error(`acquisitions=${acquisitions.length}`);
+  console.error(`totalEvidence=${totalEvidenceCount}`);
+  console.error(`eligibleCandidates=${candidates.length}`);
+  console.error(`selectedEvidence=${selected.length}`);
+  console.error(
+    `perAcquisitionLimit=${MAX_EVIDENCE_PER_ACQUISITION}`,
+  );
+  console.error(
+    `runtimeLimit=${MAX_EVIDENCE_FOR_RUNTIME}`,
+  );
+
+  for (
+    let index = 0;
+    index < selected.length;
+    index += 1
+  ) {
+    const item = selected[index];
+
+    invariant(
+      item !== undefined,
+      "V8_ARTICLE_RUNTIME_SELECTED_EVIDENCE_INDEX_MISSING",
+      `Selected Evidence item ${index} is missing.`,
+    );
+
+    console.error(
+      "[V8-ARTICLE-RUNTIME][EVIDENCE-SELECTED]",
+      JSON.stringify({
+        ordinal: index + 1,
+        id: item.id,
+        section: item.payload.section ?? "",
+        parameter: item.payload.parameter ?? "",
+        excerpt: normalizeObservationText(
+          item.payload.excerpt,
+        ).slice(0, 240),
+      }),
+    );
+  }
+
+  return Object.freeze(selected);
 }
+
 export async function runV8ArticleRuntime(
   input: ArticleRuntimeInput,
 ): Promise<ArticleRuntimeResult> {
