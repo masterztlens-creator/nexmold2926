@@ -1,4 +1,3 @@
-
 import type { ExtractedEvidenceCandidate } from "./types.js";
 
 const MAX_EXCERPT_LENGTH = 2_000;
@@ -103,6 +102,7 @@ function normalizeUnit(unit: string): string {
 
   if (normalized === "μm") return "µm";
   if (normalized === "um") return "µm";
+
   if (
     normalized === "inch" ||
     normalized === "inches"
@@ -429,6 +429,99 @@ function removeNonContentBlocks(
   );
 }
 
+/**
+ * Conservative page-noise filter applied before candidates enter the evidence
+ * chain. Accepted excerpts are never rewritten, preserving their provenance.
+ */
+function isLikelyPageNoise(value: string): boolean {
+  const text = normalizeText(value);
+
+  if (!text) return true;
+
+  const lower = text.toLowerCase();
+  const tokens = text.split(/\s+/);
+
+  if (
+    text.length < 55 &&
+    /^(?:home|menu|search|skip to content|jump to section|read more|learn more|contact us|request a quote|get a quote|subscribe|sign in|log in|sign up|accept all|reject all|cookie settings|privacy policy|terms of use|next|previous|back|close|share|print|related articles?)[.!: ]*$/i.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  const uiPatterns = [
+    /\b(?:accept|manage)\s+(?:all\s+)?cookies\b/i,
+    /\b(?:subscribe|sign up)\s+(?:for|to)\s+(?:our|the)\s+(?:newsletter|emails?)\b/i,
+    /\b(?:get started|start your project|upload your (?:cad|design)|request a quote)\b/i,
+    /\b(?:follow us|share this (?:article|page)|connect with us)\b/i,
+    /\b(?:all rights reserved|privacy policy|terms (?:and|&) conditions)\b/i,
+    /\b(?:related posts|related articles|you may also like|recommended for you)\b/i,
+    /\b(?:free download|download now|book a demo|talk to an expert)\b/i,
+  ];
+
+  if (uiPatterns.some((pattern) => pattern.test(lower))) {
+    return true;
+  }
+
+  // Reject country-selector dumps, which often look substantial by token count.
+  const countryMatches =
+    text.match(
+      /\b(?:Afghanistan|Albania|Algeria|Argentina|Australia|Austria|Bangladesh|Belgium|Brazil|Canada|Chile|China|Colombia|Croatia|Czechia|Denmark|Egypt|Finland|France|Germany|Greece|Hungary|India|Indonesia|Ireland|Israel|Italy|Japan|Kenya|Malaysia|Mexico|Netherlands|Nigeria|Norway|Pakistan|Peru|Philippines|Poland|Portugal|Romania|Russia|Singapore|South Africa|South Korea|Spain|Sweden|Switzerland|Thailand|Turkey|Ukraine|United Kingdom|United States|Vietnam)\b/gi,
+    ) ?? [];
+
+  if (
+    tokens.length >= 12 &&
+    countryMatches.length >= 5 &&
+    countryMatches.length / tokens.length > 0.25
+  ) {
+    return true;
+  }
+
+  // Reject fragments dominated by menu-like title labels rather than prose.
+  const punctuationCount =
+    (text.match(/[.!?;:]/g) ?? []).length;
+
+  const words = tokens.filter(
+    (token) => /[A-Za-z]/.test(token),
+  );
+
+  const titleCaseWords = words.filter(
+    (token) => /^[A-Z][a-z]{1,}$/.test(token),
+  );
+
+  if (
+    words.length >= 10 &&
+    text.length < 420 &&
+    punctuationCount <= 1 &&
+    titleCaseWords.length / words.length > 0.72
+  ) {
+    return true;
+  }
+
+  // Very short unpunctuated fragments are not standalone evidence unless they
+  // express a recognizable measurement or numeric parameter.
+  if (
+    text.length < 90 &&
+    punctuationCount === 0 &&
+    !/\b\d+(?:\.\d+)?\s*(?:mm|cm|inch|inches|%|°c|°f|mpa|psi|gpa|kg|g)\b/i.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function filterEvidenceCandidates(
+  candidates: readonly ExtractedEvidenceCandidate[],
+): readonly ExtractedEvidenceCandidate[] {
+  return candidates.filter(
+    (candidate) => !isLikelyPageNoise(candidate.excerpt),
+  );
+}
+
 function selectSemanticContent(
   html: string,
 ): string {
@@ -556,6 +649,7 @@ function normalizeRangeUnit(
   secondUnit?: string,
 ): string {
   const first = normalizeUnit(firstUnit);
+
   const second =
     secondUnit === undefined
       ? undefined
@@ -1266,6 +1360,7 @@ function deduplicateEvidence(
   candidates: readonly ExtractedEvidenceCandidate[],
 ): readonly ExtractedEvidenceCandidate[] {
   const seen = new Set<string>();
+
   const output: ExtractedEvidenceCandidate[] =
     [];
 
@@ -1307,6 +1402,7 @@ function splitTextIntoExcerpts(
   if (!text || maxLength < 1) return [];
 
   const sentences: string[] = [];
+
   const sentencePattern =
     /[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g;
 
@@ -1365,6 +1461,7 @@ function splitTextIntoExcerpts(
   }
 
   const excerpts: string[] = [];
+
   let current = "";
 
   for (const unit of units) {
@@ -1404,7 +1501,7 @@ export function extractTextEvidence(
 
   if (!text) return [];
 
-  return splitTextIntoExcerpts(text).map(
+  const candidates = splitTextIntoExcerpts(text).map(
     (
       excerpt,
       index,
@@ -1418,6 +1515,8 @@ export function extractTextEvidence(
         "MEDIUM",
     }),
   );
+
+  return filterEvidenceCandidates(candidates);
 }
 
 export function extractEvidenceByPattern(
@@ -1464,9 +1563,11 @@ export function extractEvidenceByPattern(
 export function extractStructuredEvidence(
   html: string,
 ): readonly ExtractedEvidenceCandidate[] {
-  return deduplicateEvidence([
-    ...buildStructuredEvidence(html),
-    ...buildTableEvidence(html),
-    ...buildBlockEvidence(html),
-  ]);
+  return deduplicateEvidence(
+    filterEvidenceCandidates([
+      ...buildStructuredEvidence(html),
+      ...buildTableEvidence(html),
+      ...buildBlockEvidence(html),
+    ]),
+  );
 }

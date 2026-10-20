@@ -1,3 +1,4 @@
+
 import {
   immutable,
   invariant,
@@ -586,8 +587,12 @@ export function createContent(
  * Structural lines are presentation structure rather than factual
  * assertions.
  *
- * These lines do not need independent Evidence because the following
- * content assertions carry the actual epistemic lineage.
+ * Legacy plain-text headings remain supported for existing fixtures.
+ * Current Markdown headings emitted by the article compiler are also
+ * explicitly recognized.
+ *
+ * Exact matching is intentional: arbitrary lines must not be excluded
+ * from provenance validation merely because they resemble headings.
  */
 export function isStructuralContentLine(
   line: string,
@@ -601,16 +606,23 @@ export function isStructuralContentLine(
     return true;
   }
 
-  return (
-    normalized ===
-      "Problem" ||
-    normalized ===
-      "Decision" ||
-    normalized ===
-      "Verified knowledge" ||
-    normalized ===
-      "Context" ||
-    normalized ===
-      "Constraints"
-  );
+  switch (normalized) {
+    // Legacy headings.
+    case "Problem":
+    case "Decision":
+    case "Verified knowledge":
+    case "Context":
+    case "Constraints":
+
+    // Markdown headings emitted by the current article compiler.
+    case "## Engineering question and scope":
+    case "## Approved engineering direction":
+    case "## Verified technical findings":
+    case "## Application context":
+    case "## Design constraints and limitations":
+      return true;
+
+    default:
+      return false;
+  }
 }
