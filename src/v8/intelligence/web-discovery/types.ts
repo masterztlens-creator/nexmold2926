@@ -1,11 +1,16 @@
-
-export type DiscoveryCandidateKind = "SEED" | "LINK" | "SITEMAP" | "SERP_RESULT" | "REFERENCE";
+export type DiscoveryCandidateKind =
+  | "SEED"
+  | "LINK"
+  | "SITEMAP"
+  | "SERP_RESULT"
+  | "REFERENCE";
 
 export interface DiscoveryCandidate {
   readonly url: string;
   readonly normalizedUrl: string;
   readonly kind: DiscoveryCandidateKind;
   readonly sourceUrl?: string;
+  readonly discoveryProvider?: string;
   readonly title?: string;
   readonly discoveredAt: string;
 }

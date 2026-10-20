@@ -20,7 +20,19 @@ export type FirstHopObservationKind =
 
 export interface FirstHopObservation {
   readonly url: string;
-  readonly observedFrom: string;
+
+  /**
+   * URL of the page from which this URL was discovered.
+   * Required for crawled links; not required for search results.
+   */
+  readonly observedFrom?: string;
+
+  /**
+   * Identifier of the actual search provider that returned a SERP result.
+   * This is provider provenance, not a fabricated source URL.
+   */
+  readonly discoveryProvider?: string;
+
   readonly observedAt: string;
   readonly kind?: FirstHopObservationKind;
   readonly candidateKind?: DiscoveryCandidateKind;
@@ -95,10 +107,9 @@ function requireObservationTimestamp(
   const timestamp =
     observedAt.trim();
 
-  const milliseconds =
-    Date.parse(timestamp);
-
-  if (!Number.isFinite(milliseconds)) {
+  if (
+    !Number.isFinite(Date.parse(timestamp))
+  ) {
     throw new Error(
       "V8_FIRST_HOP_OBSERVED_AT_INVALID",
     );
@@ -116,43 +127,29 @@ function requirePublicUrl(
     typeof url !== "string" ||
     url.trim() === ""
   ) {
-    throw new Error(
-      emptyCode,
-    );
+    throw new Error(emptyCode);
   }
 
   const rawUrl =
     url.trim();
 
   const decision =
-    evaluateSourceUrl(
-      rawUrl,
-    );
+    evaluateSourceUrl(rawUrl);
 
-  if (
-    decision.status !== "ELIGIBLE"
-  ) {
-    throw new Error(
-      invalidCode,
-    );
+  if (decision.status !== "ELIGIBLE") {
+    throw new Error(invalidCode);
   }
 
   const candidate =
     createDiscoveryCandidate({
-      url:
-        rawUrl,
-      kind:
-        "SEED",
+      url: rawUrl,
+      kind: "SEED",
       discoveredAt:
         new Date(0).toISOString(),
     });
 
-  if (
-    candidate === null
-  ) {
-    throw new Error(
-      invalidCode,
-    );
+  if (!candidate) {
+    throw new Error(invalidCode);
   }
 
   return candidate.normalizedUrl;
@@ -183,36 +180,43 @@ function resolveCandidateKind(
     | DiscoveryCandidateKind
     | undefined,
 ): DiscoveryCandidateKind {
-  return (
-    candidateKind ??
-    "SEED"
-  );
+  return candidateKind ?? "SEED";
+}
+
+function validateProvider(
+  provider: string | undefined,
+): string | undefined {
+  if (provider === undefined) {
+    return undefined;
+  }
+
+  if (
+    typeof provider !== "string" ||
+    provider.trim() === ""
+  ) {
+    throw new Error(
+      "V8_FIRST_HOP_PROVIDER_INVALID",
+    );
+  }
+
+  return provider.trim();
 }
 
 /**
- * Converts real, externally observed first-hop URLs into the existing
- * DiscoveryCandidate contract.
+ * Convert externally observed URLs into V8 discovery candidates.
  *
- * This function deliberately does not perform network access and does not
- * derive URLs from the research query.
+ * Every accepted URL must be a valid public URL and must have either:
+ * - an eligible public page as its discovery source; or
+ * - an explicitly identified search provider.
  *
- * Every accepted candidate must:
- *
- * 1. be explicitly observed;
- * 2. use an eligible public Internet URL;
- * 3. have an eligible public observation source;
- * 4. have a valid UTC observation timestamp.
+ * The function does not perform network access and does not invent URLs.
  */
 export function observeFirstHop(
   input: FirstHopDiscoveryInput,
 ): DiscoveryBatch {
   requireQuery(input.query);
 
-  if (
-    !Array.isArray(
-      input.observations,
-    )
-  ) {
+  if (!Array.isArray(input.observations)) {
     throw new Error(
       "V8_FIRST_HOP_OBSERVATIONS_INVALID",
     );
@@ -222,16 +226,13 @@ export function observeFirstHop(
     resolveLimit(input.limit);
 
   const candidates = [];
-  const seen = new Set<string>();
+  const seen =
+    new Set<string>();
+
   let rejected = 0;
 
-  for (
-    const observation of
-      input.observations
-  ) {
-    if (
-      candidates.length >= limit
-    ) {
+  for (const observation of input.observations) {
+    if (candidates.length >= limit) {
       break;
     }
 
@@ -250,15 +251,41 @@ export function observeFirstHop(
           observation.url,
         );
 
-      const observedFrom =
-        requireObservationSource(
-          observation.observedFrom,
-        );
-
       const observedAt =
         requireObservationTimestamp(
           observation.observedAt,
         );
+
+      const discoveryProvider =
+        validateProvider(
+          observation.discoveryProvider,
+        );
+
+      let observedFrom:
+        string | undefined;
+
+      if (
+        observation.observedFrom !==
+        undefined
+      ) {
+        observedFrom =
+          requireObservationSource(
+            observation.observedFrom,
+          );
+      }
+
+      /*
+       * A result must retain its actual origin.
+       * Do not silently treat a SERP result as a page link.
+       */
+      if (
+        !observedFrom &&
+        !discoveryProvider
+      ) {
+        throw new Error(
+          "V8_FIRST_HOP_DISCOVERY_PROVENANCE_MISSING",
+        );
+      }
 
       if (
         seen.has(normalizedUrl)
@@ -268,35 +295,35 @@ export function observeFirstHop(
 
       const candidate =
         createDiscoveryCandidate({
-          url:
-            normalizedUrl,
+          url: normalizedUrl,
           kind:
             resolveCandidateKind(
               observation.candidateKind,
             ),
-          sourceUrl:
-            observedFrom,
-          title:
-            observation.title,
-          discoveredAt:
-            observedAt,
+
+          ...(observedFrom
+            ? { sourceUrl: observedFrom }
+            : {}),
+
+          ...(discoveryProvider
+            ? { discoveryProvider }
+            : {}),
+
+          ...(observation.title
+            ? { title: observation.title }
+            : {}),
+
+          discoveredAt: observedAt,
         });
 
-      if (
-        candidate === null
-      ) {
+      if (!candidate) {
         throw new Error(
           "V8_FIRST_HOP_CANDIDATE_INVALID",
         );
       }
 
-      seen.add(
-        candidate.normalizedUrl,
-      );
-
-      candidates.push(
-        candidate,
-      );
+      seen.add(candidate.normalizedUrl);
+      candidates.push(candidate);
     } catch {
       rejected += 1;
     }
@@ -304,9 +331,7 @@ export function observeFirstHop(
 
   return Object.freeze({
     candidates:
-      Object.freeze(
-        candidates,
-      ),
+      Object.freeze(candidates),
     accepted:
       candidates.length,
     rejected,
