@@ -1,3 +1,4 @@
+
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -265,26 +266,46 @@ test(
         0,
     );
 
-    assert.equal(
-      compiled.content.provenance.length,
+    const structuralHeadings = [
+      "## Engineering question and scope",
+      "## Approved engineering direction",
+      "## Verified technical findings",
+      "## Application context",
+      "## Design constraints and limitations",
+    ];
+
+    const bodyLines =
       compiled.content.body
         .split("\n")
         .map((line) =>
           line.trim(),
-        )
-        .filter(
-          (line) =>
-            line.length > 0 &&
-            ![
-              "Problem",
-              "Decision",
-              "Verified knowledge",
-              "Context",
-              "Constraints",
-            ].includes(
-              line,
-            ),
-        ).length,
+        );
+
+    for (
+      const heading of
+        structuralHeadings
+    ) {
+      assert.ok(
+        bodyLines.includes(
+          heading,
+        ),
+        `Expected compiled body to contain structural heading: ${heading}`,
+      );
+    }
+
+    const assertionLines =
+      bodyLines.filter(
+        (line) =>
+          line.length > 0 &&
+          !structuralHeadings.includes(
+            line,
+          ),
+      );
+
+    assert.equal(
+      compiled.content.provenance.length,
+      assertionLines.length,
+      "Every non-structural body line must have exactly one provenance record.",
     );
 
     for (
