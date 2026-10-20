@@ -1,3 +1,4 @@
+
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -248,22 +249,38 @@ test(
 
     assert.match(
       result.content.body,
-      /Problem/,
+      /^## Engineering question and scope$/m,
+    );
+
+    assert.ok(
+      result.content.body.includes(
+        fixture.problem.payload.question,
+      ),
+      "Compiled body must preserve the registered Problem question.",
     );
 
     assert.match(
       result.content.body,
-      /Decision/,
+      /^## Approved engineering direction$/m,
+    );
+
+    assert.ok(
+      result.content.body.includes(
+        fixture.decision.payload.outcome,
+      ),
+      "Compiled body must preserve the approved Decision outcome.",
     );
 
     assert.match(
       result.content.body,
-      /Verified knowledge/,
+      /^## Verified technical findings$/m,
     );
 
-    assert.match(
-      result.content.body,
-      /Verified manufacturing knowledge/,
+    assert.ok(
+      result.content.body.includes(
+        fixture.knowledge.payload.proposition,
+      ),
+      "Compiled body must preserve the verified Knowledge proposition.",
     );
 
     assert.equal(
