@@ -1,3 +1,4 @@
+// E:\nexmold\src\v8\runtime\article-runtime.ts
 import {
   createScope,
   type Scope,
@@ -472,6 +473,7 @@ const TOPIC_SEARCH_FIELDS: readonly {
     weight: 2,
   },
 ];
+
 interface TopicPhrase {
   readonly value: string;
   readonly tokenCount: number;
@@ -593,6 +595,7 @@ function buildTopicPhrases(
     }),
   );
 }
+
 function buildCoreTopicAnchors(
   question: string,
 ): readonly string[] {
@@ -1196,7 +1199,8 @@ function selectRuntimeEvidence(
   readonly id: string;
   readonly payload: EvidencePayload;
 }[] {
-  const MAX_EVIDENCE_PER_ACQUISITION = 8;
+  // 修复点在第 2 部分：每个 acquisition 最多贡献 1 条 Evidence。
+  const MAX_EVIDENCE_PER_ACQUISITION = 1;
   const MAX_EVIDENCE_FOR_RUNTIME = 48;
 
   const evidenceInventory:
@@ -1238,6 +1242,9 @@ function selectRuntimeEvidence(
 
   const phraseFrequency =
     new Map<string, number>();
+    // E:\nexmold\src\v8\runtime\article-runtime.ts
+// 第 2 部分 / 共 2 部分
+// 接续第 1 部分，从 phraseFrequency 开始。
 
   for (const phrase of topicPhrases) {
     phraseFrequency.set(
@@ -2089,6 +2096,7 @@ export async function runV8ArticleRuntime(
     "V8_ARTICLE_RUNTIME_CONTENT_PROVENANCE_ORDINAL_INVALID",
     "Compiled Content provenance contains an invalid ordinal.",
   );
+
   for (
     let index = 0;
     index <
