@@ -4,21 +4,30 @@ import type {
   SearchProvider,
   SearchResult,
 } from "../../acquisition/types.js";
-import { expandSourceReferences } from "./source-expansion.js";
+
+import {
+  expandSourceReferences,
+} from "./source-expansion.js";
+
 import {
   observeFirstHop,
   type FirstHopObservation,
 } from "./first-hop.js";
+
 import {
   resolveBootstrapSources,
   type BootstrapSource,
 } from "./bootstrap.js";
-import type { DiscoveryBatch } from "./types.js";
+
+import type {
+  DiscoveryBatch,
+} from "./types.js";
 
 export interface FirstHopInternetObservationOptions {
   /**
-   * Maximum number of bootstrap sources to select when using the
-   * legacy bootstrap discovery path.
+   * Maximum number of final discovery candidates.
+   *
+   * This is passed to the existing first-hop validation boundary.
    */
   readonly limit?: number;
 
@@ -27,34 +36,32 @@ export interface FirstHopInternetObservationOptions {
   /**
    * A real search-provider implementation.
    *
-   * The interface alone does not perform Internet search. The caller
-   * must supply a functioning provider implementation.
+   * This function does not instantiate a provider or claim that a provider
+   * is available when none has been supplied.
    */
   readonly searchProvider?: SearchProvider;
 
   /**
-   * Search queries to execute. When omitted, the original query is used.
-   * Empty or whitespace-only queries are rejected.
+   * Search queries to execute.
+   *
+   * Defaults to the original query when a provider is supplied.
    */
   readonly searchQueries?: readonly string[];
 
   /**
-   * Maximum number of search results accepted across all queries.
-   * Defaults to the observation limit, capped by the first-hop limit.
+   * Maximum number of unique search results collected across all queries.
    */
   readonly maxSearchResults?: number;
 
   /**
-   * Maximum number of result pages to fetch.
-   * Defaults to the accepted search-result count when a search provider
-   * is supplied; otherwise defaults to the selected bootstrap count.
+   * Maximum number of pages fetched after discovery.
    */
   readonly maxPagesToFetch?: number;
 
   /**
-   * When true, also include bootstrap sources in a search-provider run.
-   * Defaults to false so the search-provider path is not silently
-   * supplemented by a predefined corpus.
+   * Include the predefined bootstrap corpus alongside real search results.
+   *
+   * Defaults to false when a search provider is supplied.
    */
   readonly includeBootstrapWithSearch?: boolean;
 }
@@ -72,32 +79,72 @@ export interface FirstHopSearchError {
 
 export interface FirstHopInternetObservationResult {
   readonly query: string;
-  readonly bootstrap: ReturnType<typeof resolveBootstrapSources>;
+  readonly bootstrap: ReturnType<
+    typeof resolveBootstrapSources
+  >;
   readonly observation: DiscoveryBatch;
   readonly pagesObserved: number;
   readonly fetchErrors: readonly FirstHopFetchError[];
   readonly searchErrors: readonly FirstHopSearchError[];
   readonly searchProvider: string | null;
   readonly searchQueries: readonly string[];
+  readonly searchResultsReturned: number;
   readonly searchResultsObserved: number;
+  readonly searchResultsRejected: number;
+}
+
+interface SearchResultWithProvenance extends SearchResult {
+  /**
+   * Actual public URL of the search-results page or response resource.
+   *
+   * This must be supplied by the provider. It must not be guessed from
+   * the provider name or replaced with the target result URL.
+   */
+  readonly searchSourceUrl?: string;
+
+  /**
+   * Optional provider-observed timestamp.
+   *
+   * When absent, the observer records the time it received the result.
+   */
+  readonly searchObservedAt?: string;
 }
 
 interface SearchResultRecord {
   readonly query: string;
   readonly result: SearchResult;
   readonly provider: string;
+  readonly searchSourceUrl?: string;
+  readonly observedAt: string;
+}
+
+interface FetchSource {
+  readonly url: string;
+  readonly title?: string;
+  readonly provider?: string;
+  readonly candidateKind: "SERP_RESULT" | "SEED";
 }
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+
 const DEFAULT_MAX_SEARCH_RESULTS = 50;
 const MAX_SEARCH_RESULTS = 200;
+
 const DEFAULT_MAX_PAGES = 20;
 const MAX_PAGES = 100;
 
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
+
 function normalizeQuery(query: string): string {
-  if (typeof query !== "string" || query.trim() === "") {
-    throw new Error("V8_FIRST_HOP_QUERY_EMPTY");
+  if (
+    typeof query !== "string" ||
+    query.trim() === ""
+  ) {
+    throw new Error(
+      "V8_FIRST_HOP_QUERY_EMPTY",
+    );
   }
 
   return query.trim().replace(/\s+/g, " ");
@@ -122,9 +169,13 @@ function resolvePositiveInteger(
   return resolved;
 }
 
-function requireNotAborted(signal?: AbortSignal): void {
+function requireNotAborted(
+  signal?: AbortSignal,
+): void {
   if (signal?.aborted) {
-    throw new Error("V8_FIRST_HOP_INTERNET_ABORTED");
+    throw new Error(
+      "V8_FIRST_HOP_INTERNET_ABORTED",
+    );
   }
 }
 
@@ -153,7 +204,9 @@ function normalizeSearchQueries(
   }
 
   if (!Array.isArray(queries)) {
-    throw new Error("V8_FIRST_HOP_SEARCH_QUERIES_INVALID");
+    throw new Error(
+      "V8_FIRST_HOP_SEARCH_QUERIES_INVALID",
+    );
   }
 
   const normalized: string[] = [];
@@ -172,13 +225,17 @@ function normalizeSearchQueries(
   }
 
   if (normalized.length === 0) {
-    throw new Error("V8_FIRST_HOP_SEARCH_QUERIES_EMPTY");
+    throw new Error(
+      "V8_FIRST_HOP_SEARCH_QUERIES_EMPTY",
+    );
   }
 
   return Object.freeze(normalized);
 }
 
-function validateProviderName(provider: SearchProvider): string {
+function validateProviderName(
+  provider: SearchProvider,
+): string {
   if (
     provider === null ||
     typeof provider !== "object" ||
@@ -186,34 +243,28 @@ function validateProviderName(provider: SearchProvider): string {
     provider.name.trim() === "" ||
     typeof provider.search !== "function"
   ) {
-    throw new Error("V8_FIRST_HOP_SEARCH_PROVIDER_INVALID");
+    throw new Error(
+      "V8_FIRST_HOP_SEARCH_PROVIDER_INVALID",
+    );
   }
 
   return provider.name.trim();
 }
 
-function validateSearchResult(
+function normalizePublicHttpUrl(
   value: unknown,
-): SearchResult | null {
-  if (value === null || typeof value !== "object") {
-    return null;
-  }
-
-  const candidate = value as Partial<SearchResult>;
-
+): string | null {
   if (
-    typeof candidate.url !== "string" ||
-    candidate.url.trim() === ""
+    typeof value !== "string" ||
+    value.trim() === ""
   ) {
     return null;
   }
 
-  const url = candidate.url.trim();
-
   let parsed: URL;
 
   try {
-    parsed = new URL(url);
+    parsed = new URL(value.trim());
   } catch {
     return null;
   }
@@ -222,6 +273,64 @@ function validateSearchResult(
     parsed.protocol !== "https:" &&
     parsed.protocol !== "http:"
   ) {
+    return null;
+  }
+
+  if (
+    parsed.username !== "" ||
+    parsed.password !== "" ||
+    parsed.hostname === "" ||
+    parsed.hostname === "localhost" ||
+    parsed.hostname.endsWith(".localhost") ||
+    parsed.hostname.endsWith(".local")
+  ) {
+    return null;
+  }
+
+  return parsed.toString();
+}
+
+function normalizeObservedTimestamp(
+  value: unknown,
+): string | null {
+  if (
+    typeof value !== "string" ||
+    !ISO_TIMESTAMP_PATTERN.test(value.trim())
+  ) {
+    return null;
+  }
+
+  const timestamp = value.trim();
+
+  if (!Number.isFinite(Date.parse(timestamp))) {
+    return null;
+  }
+
+  return timestamp;
+}
+
+function validateSearchResult(
+  value: unknown,
+): {
+  readonly result: SearchResult;
+  readonly searchSourceUrl?: string;
+  readonly observedAt: string;
+} | null {
+  if (
+    value === null ||
+    typeof value !== "object"
+  ) {
+    return null;
+  }
+
+  const candidate =
+    value as Partial<SearchResultWithProvenance>;
+
+  const url = normalizePublicHttpUrl(
+    candidate.url,
+  );
+
+  if (url === null) {
     return null;
   }
 
@@ -249,10 +358,51 @@ function validateSearchResult(
       ? candidate.snippet.trim().slice(0, 4000)
       : undefined;
 
-  return Object.freeze({
+  const searchSourceUrl =
+    candidate.searchSourceUrl === undefined
+      ? undefined
+      : normalizePublicHttpUrl(
+          candidate.searchSourceUrl,
+        );
+
+  /*
+   * If the provider explicitly supplied source metadata but it is invalid,
+   * reject the record rather than silently replacing its provenance.
+   */
+  if (
+    candidate.searchSourceUrl !== undefined &&
+    searchSourceUrl === null
+  ) {
+    return null;
+  }
+
+  const providerTimestamp =
+    candidate.searchObservedAt === undefined
+      ? null
+      : normalizeObservedTimestamp(
+          candidate.searchObservedAt,
+        );
+
+  if (
+    candidate.searchObservedAt !== undefined &&
+    providerTimestamp === null
+  ) {
+    return null;
+  }
+
+  const result: SearchResult = Object.freeze({
     url,
     ...(title ? { title } : {}),
     ...(snippet ? { snippet } : {}),
+  });
+
+  return Object.freeze({
+    result,
+    ...(searchSourceUrl
+      ? { searchSourceUrl }
+      : {}),
+    observedAt:
+      providerTimestamp ?? currentTimestamp(),
   });
 }
 
@@ -264,19 +414,32 @@ async function executeSearches(
 ): Promise<{
   readonly results: readonly SearchResultRecord[];
   readonly errors: readonly FirstHopSearchError[];
+  readonly resultsReturned: number;
+  readonly resultsRejected: number;
 }> {
   const providerName = validateProviderName(provider);
+
   const results: SearchResultRecord[] = [];
   const errors: FirstHopSearchError[] = [];
   const seenUrls = new Set<string>();
 
+  let resultsReturned = 0;
+  let resultsRejected = 0;
+
   for (const query of queries) {
     requireNotAborted(signal);
+
+    if (results.length >= maximumResults) {
+      break;
+    }
 
     let rawResults: readonly SearchResult[];
 
     try {
-      rawResults = await provider.search(query, { signal });
+      rawResults = await provider.search(
+        query,
+        { signal },
+      );
     } catch (error) {
       requireNotAborted(signal);
 
@@ -298,31 +461,42 @@ async function executeSearches(
         Object.freeze({
           query,
           provider: providerName,
-          error: "V8_FIRST_HOP_SEARCH_RESULTS_INVALID",
+          error:
+            "V8_FIRST_HOP_SEARCH_RESULTS_INVALID",
         }),
       );
 
       continue;
     }
 
+    resultsReturned += rawResults.length;
+
     for (const rawResult of rawResults) {
+      requireNotAborted(signal);
+
       if (results.length >= maximumResults) {
         break;
       }
 
-      const result = validateSearchResult(rawResult);
+      const validated =
+        validateSearchResult(rawResult);
 
-      if (!result) {
+      if (validated === null) {
+        resultsRejected += 1;
         continue;
       }
 
       let normalizedUrl: string;
 
       try {
-        const parsed = new URL(result.url);
+        const parsed = new URL(
+          validated.result.url,
+        );
+
         parsed.hash = "";
         normalizedUrl = parsed.toString();
       } catch {
+        resultsRejected += 1;
         continue;
       }
 
@@ -335,31 +509,47 @@ async function executeSearches(
       results.push(
         Object.freeze({
           query,
-          result,
+          result: validated.result,
           provider: providerName,
+          ...(validated.searchSourceUrl
+            ? {
+                searchSourceUrl:
+                  validated.searchSourceUrl,
+              }
+            : {}),
+          observedAt: validated.observedAt,
         }),
       );
-    }
-
-    if (results.length >= maximumResults) {
-      break;
     }
   }
 
   return Object.freeze({
     results: Object.freeze(results),
     errors: Object.freeze(errors),
+    resultsReturned,
+    resultsRejected,
   });
 }
 
 function createSearchResultObservation(
   record: SearchResultRecord,
-  observedAt: string,
-): FirstHopObservation {
+): FirstHopObservation | null {
+  /*
+   * The baseline SearchResult contract does not require a SERP URL.
+   * Therefore, do not manufacture observedFrom from the result URL.
+   *
+   * Providers that return genuine search-source metadata can create a
+   * direct SERP_RESULT observation. Other results remain eligible for
+   * the bounded page-fetch path below.
+   */
+  if (!record.searchSourceUrl) {
+    return null;
+  }
+
   return Object.freeze({
     url: record.result.url,
-    discoveryProvider: record.provider,
-    observedAt,
+    observedFrom: record.searchSourceUrl,
+    observedAt: record.observedAt,
     kind: "DIRECT",
     candidateKind: "SERP_RESULT",
     ...(record.result.title
@@ -372,7 +562,6 @@ function createFetchedPageObservation(
   url: string,
   observedFrom: string,
   observedAt: string,
-  provider: string | undefined,
   title: string | undefined,
   candidateKind: "SERP_RESULT" | "SEED",
 ): FirstHopObservation {
@@ -380,7 +569,6 @@ function createFetchedPageObservation(
     url,
     observedFrom,
     observedAt,
-    ...(provider ? { discoveryProvider: provider } : {}),
     kind: "AUTHORITY",
     candidateKind,
     ...(title ? { title } : {}),
@@ -396,7 +584,6 @@ function createReferenceObservation(
   },
   observedFrom: string,
   fallbackTimestamp: string,
-  provider: string | undefined,
 ): FirstHopObservation {
   const candidateKind =
     reference.kind === "SITEMAP"
@@ -408,8 +595,9 @@ function createReferenceObservation(
   return Object.freeze({
     url: reference.url,
     observedFrom,
-    observedAt: reference.discoveredAt ?? fallbackTimestamp,
-    ...(provider ? { discoveryProvider: provider } : {}),
+    observedAt:
+      reference.discoveredAt ??
+      fallbackTimestamp,
     kind:
       reference.kind === "SITEMAP"
         ? "SITEMAP"
@@ -417,7 +605,9 @@ function createReferenceObservation(
           ? "REFERENCE"
           : "INDEX_REFERENCE",
     candidateKind,
-    ...(reference.title ? { title: reference.title } : {}),
+    ...(reference.title
+      ? { title: reference.title }
+      : {}),
   });
 }
 
@@ -425,16 +615,17 @@ function createReferenceObservation(
  * Observe first-hop Internet sources.
  *
  * With searchProvider supplied:
- * 1. Execute actual provider searches.
- * 2. Record returned SERP URLs with provider provenance.
- * 3. Fetch a bounded number of result pages.
- * 4. Record fetched-page observations and expand page references.
+ * 1. Execute real provider searches.
+ * 2. Preserve valid provider-supplied SERP source URLs when available.
+ * 3. Fetch a bounded number of returned result pages.
+ * 4. Record each fetched page against the URL that was actually requested.
+ * 5. Expand references using the existing source-expansion implementation.
  *
  * Without searchProvider:
- * Preserve the existing bootstrap-corpus discovery behavior.
+ * Preserve the original bootstrap-corpus discovery path.
  *
- * This function does not instantiate a search provider, manufacture
- * search results, or claim that a provider is available.
+ * This function does not create a provider, invent search results, or
+ * assign a target URL as its own search-result provenance.
  */
 export async function observeInternetFirstHop(
   query: string,
@@ -458,7 +649,9 @@ export async function observeInternetFirstHop(
     typeof fetcher !== "object" ||
     typeof fetcher.fetch !== "function"
   ) {
-    throw new Error("V8_FIRST_HOP_PAGE_FETCHER_INVALID");
+    throw new Error(
+      "V8_FIRST_HOP_PAGE_FETCHER_INVALID",
+    );
   }
 
   const bootstrap = resolveBootstrapSources(
@@ -472,7 +665,9 @@ export async function observeInternetFirstHop(
   const searchErrors: FirstHopSearchError[] = [];
 
   let pagesObserved = 0;
+  let searchResultsReturned = 0;
   let searchResultsObserved = 0;
+  let searchResultsRejected = 0;
   let providerName: string | null = null;
 
   const searchQueries = options.searchProvider
@@ -494,7 +689,10 @@ export async function observeInternetFirstHop(
 
   const selectedPageLimit = resolvePositiveInteger(
     options.maxPagesToFetch,
-    Math.min(DEFAULT_MAX_PAGES, observationLimit),
+    Math.min(
+      DEFAULT_MAX_PAGES,
+      observationLimit,
+    ),
     MAX_PAGES,
     "V8_FIRST_HOP_MAX_PAGES_INVALID",
   );
@@ -502,7 +700,9 @@ export async function observeInternetFirstHop(
   const searchRecords: SearchResultRecord[] = [];
 
   if (options.searchProvider) {
-    providerName = validateProviderName(options.searchProvider);
+    providerName = validateProviderName(
+      options.searchProvider,
+    );
 
     const searchOutcome = await executeSearches(
       options.searchProvider,
@@ -513,41 +713,46 @@ export async function observeInternetFirstHop(
 
     searchRecords.push(...searchOutcome.results);
     searchErrors.push(...searchOutcome.errors);
-    searchResultsObserved = searchOutcome.results.length;
 
-    const searchObservedAt = currentTimestamp();
+    searchResultsReturned =
+      searchOutcome.resultsReturned;
+
+    searchResultsRejected =
+      searchOutcome.resultsRejected;
+
+    searchResultsObserved =
+      searchOutcome.results.length;
 
     for (const record of searchRecords) {
-      observations.push(
-        createSearchResultObservation(
-          record,
-          searchObservedAt,
-        ),
-      );
+      const observation =
+        createSearchResultObservation(record);
+
+      if (observation !== null) {
+        observations.push(observation);
+      }
     }
   }
 
-  const sourcesToFetch: Array<{
-    readonly url: string;
-    readonly title?: string;
-    readonly provider?: string;
-    readonly candidateKind: "SERP_RESULT" | "SEED";
-  }> = [];
+  const sourcesToFetch: FetchSource[] = [];
 
   if (options.searchProvider) {
     for (const record of searchRecords) {
-      if (sourcesToFetch.length >= selectedPageLimit) {
+      if (
+        sourcesToFetch.length >= selectedPageLimit
+      ) {
         break;
       }
 
-      sourcesToFetch.push({
-        url: record.result.url,
-        ...(record.result.title
-          ? { title: record.result.title }
-          : {}),
-        provider: record.provider,
-        candidateKind: "SERP_RESULT",
-      });
+      sourcesToFetch.push(
+        Object.freeze({
+          url: record.result.url,
+          ...(record.result.title
+            ? { title: record.result.title }
+            : {}),
+          provider: record.provider,
+          candidateKind: "SERP_RESULT",
+        }),
+      );
     }
 
     if (options.includeBootstrapWithSearch === true) {
@@ -556,7 +761,9 @@ export async function observeInternetFirstHop(
       );
 
       for (const source of bootstrap.matched) {
-        if (sourcesToFetch.length >= selectedPageLimit) {
+        if (
+          sourcesToFetch.length >= selectedPageLimit
+        ) {
           break;
         }
 
@@ -566,24 +773,30 @@ export async function observeInternetFirstHop(
 
         alreadySelected.add(source.url);
 
-        sourcesToFetch.push({
-          url: source.url,
-          title: source.title,
-          candidateKind: "SEED",
-        });
+        sourcesToFetch.push(
+          Object.freeze({
+            url: source.url,
+            title: source.title,
+            candidateKind: "SEED",
+          }),
+        );
       }
     }
   } else {
     for (const source of bootstrap.matched) {
-      if (sourcesToFetch.length >= selectedPageLimit) {
+      if (
+        sourcesToFetch.length >= selectedPageLimit
+      ) {
         break;
       }
 
-      sourcesToFetch.push({
-        url: source.url,
-        title: source.title,
-        candidateKind: "SEED",
-      });
+      sourcesToFetch.push(
+        Object.freeze({
+          url: source.url,
+          title: source.title,
+          candidateKind: "SEED",
+        }),
+      );
     }
   }
 
@@ -591,26 +804,32 @@ export async function observeInternetFirstHop(
     requireNotAborted(options.signal);
 
     try {
-      const page = await fetcher.fetch(source.url, {
-        signal: options.signal,
-      });
+      const page = await fetcher.fetch(
+        source.url,
+        { signal: options.signal },
+      );
 
       requireNotAborted(options.signal);
 
-      pagesObserved++;
+      pagesObserved += 1;
 
+      /*
+       * The fetched page is observed from the URL actually requested.
+       * Its final URL records redirect resolution without overwriting
+       * the original requested URL in the provenance chain.
+       */
       observations.push(
         createFetchedPageObservation(
           page.finalUrl,
           source.url,
           page.fetchedAt,
-          source.provider,
           source.title,
           source.candidateKind,
         ),
       );
 
-      const references = expandSourceReferences(page);
+      const references =
+        expandSourceReferences(page);
 
       for (const reference of references) {
         observations.push(
@@ -618,7 +837,6 @@ export async function observeInternetFirstHop(
             reference,
             page.finalUrl,
             page.fetchedAt,
-            source.provider,
           ),
         );
       }
@@ -636,6 +854,15 @@ export async function observeInternetFirstHop(
 
   requireNotAborted(options.signal);
 
+  /*
+   * Keep the established validation boundary responsible for:
+   * - public URL eligibility;
+   * - observation-source URL eligibility;
+   * - timestamp validation;
+   * - candidate construction;
+   * - normalized URL deduplication;
+   * - accepted/rejected candidate counts.
+   */
   const observation = observeFirstHop({
     query: normalizedQuery,
     observations,
@@ -651,6 +878,8 @@ export async function observeInternetFirstHop(
     searchErrors: Object.freeze(searchErrors),
     searchProvider: providerName,
     searchQueries,
+    searchResultsReturned,
     searchResultsObserved,
+    searchResultsRejected,
   });
 }
