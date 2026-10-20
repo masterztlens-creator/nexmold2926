@@ -50,6 +50,29 @@ function wordCount(value) {
   return value.trim().match(/\S+/g)?.length ?? 0;
 }
 
+function assertNonEmptyIdArray(value, code, label) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some(
+      (id) =>
+        typeof id !== "string" ||
+        id.trim().length === 0,
+    )
+  ) {
+    fail(
+      code,
+      `${label} must be a non-empty array of non-empty string IDs.`,
+    );
+  }
+}
+
+function assertUniqueIds(ids, code, label) {
+  if (new Set(ids).size !== ids.length) {
+    fail(code, `${label} contains duplicate IDs.`);
+  }
+}
+
 function extractHeadings(article) {
   return article
     .split("\n")
@@ -111,11 +134,12 @@ function assertManifestShape(manifest) {
   if (
     !isRecord(manifest.article) ||
     typeof manifest.article.title !== "string" ||
+    !manifest.article.title.trim() ||
     typeof manifest.article.description !== "string"
   ) {
     fail(
       "MANIFEST_ARTICLE_METADATA_INVALID",
-      "Article title or description is missing.",
+      "Article title or description is missing or invalid.",
     );
   }
 
@@ -131,6 +155,42 @@ function assertManifestShape(manifest) {
     );
   }
 
+  assertNonEmptyIdArray(
+    manifest.foundation.verifiedEvidenceIds,
+    "FOUNDATION_EVIDENCE_IDS_INVALID",
+    "Foundation verified Evidence IDs",
+  );
+
+  assertNonEmptyIdArray(
+    manifest.foundation.claimIds,
+    "FOUNDATION_CLAIM_IDS_INVALID",
+    "Foundation Claim IDs",
+  );
+
+  assertNonEmptyIdArray(
+    manifest.foundation.knowledgeIds,
+    "FOUNDATION_KNOWLEDGE_IDS_INVALID",
+    "Foundation Knowledge IDs",
+  );
+
+  assertUniqueIds(
+    manifest.foundation.verifiedEvidenceIds,
+    "DUPLICATE_VERIFIED_EVIDENCE_IDS",
+    "Foundation evidence closure",
+  );
+
+  assertUniqueIds(
+    manifest.foundation.claimIds,
+    "DUPLICATE_CLAIM_IDS",
+    "Foundation claim closure",
+  );
+
+  assertUniqueIds(
+    manifest.foundation.knowledgeIds,
+    "DUPLICATE_KNOWLEDGE_IDS",
+    "Foundation knowledge closure",
+  );
+
   if (
     !isRecord(manifest.runtime) ||
     !isRecord(manifest.runtime.content) ||
@@ -143,12 +203,22 @@ function assertManifestShape(manifest) {
   }
 
   if (
-    !Number.isInteger(manifest.runtime.assertionCount) ||
+    !Number.isSafeInteger(manifest.runtime.assertionCount) ||
     manifest.runtime.assertionCount < 1
   ) {
     fail(
       "ASSERTION_COUNT_INVALID",
-      "Runtime assertion count must be a positive integer.",
+      "Runtime assertion count must be a positive safe integer.",
+    );
+  }
+
+  if (
+    !Number.isSafeInteger(manifest.runtime.content.bodyLength) ||
+    manifest.runtime.content.bodyLength < 1
+  ) {
+    fail(
+      "RUNTIME_BODY_LENGTH_INVALID",
+      "Runtime body length must be a positive safe integer.",
     );
   }
 }
@@ -258,13 +328,6 @@ export function validateArticlePublication({
     );
   }
 
-  if (manifest.runtime.content.bodyLength < 1) {
-    fail(
-      "RUNTIME_BODY_LENGTH_INVALID",
-      "Runtime body length is invalid.",
-    );
-  }
-
   const verifiedEvidenceIds = new Set(
     manifest.foundation.verifiedEvidenceIds,
   );
@@ -276,35 +339,6 @@ export function validateArticlePublication({
   const knownKnowledgeIds = new Set(
     manifest.foundation.knowledgeIds,
   );
-
-  if (
-    verifiedEvidenceIds.size !==
-    manifest.foundation.verifiedEvidenceIds.length
-  ) {
-    fail(
-      "DUPLICATE_VERIFIED_EVIDENCE_IDS",
-      "Foundation evidence closure contains duplicate IDs.",
-    );
-  }
-
-  if (
-    knownClaimIds.size !== manifest.foundation.claimIds.length
-  ) {
-    fail(
-      "DUPLICATE_CLAIM_IDS",
-      "Foundation claim closure contains duplicate IDs.",
-    );
-  }
-
-  if (
-    knownKnowledgeIds.size !==
-    manifest.foundation.knowledgeIds.length
-  ) {
-    fail(
-      "DUPLICATE_KNOWLEDGE_IDS",
-      "Foundation knowledge closure contains duplicate IDs.",
-    );
-  }
 
   const provenanceByText = new Map();
 
@@ -369,19 +403,23 @@ export function validateArticlePublication({
       );
     }
 
-    if (
-      !Array.isArray(record.knowledgeIds) ||
-      record.knowledgeIds.length === 0 ||
-      !Array.isArray(record.claimIds) ||
-      record.claimIds.length === 0 ||
-      !Array.isArray(record.evidenceIds) ||
-      record.evidenceIds.length === 0
-    ) {
-      fail(
-        "PROVENANCE_LINEAGE_INCOMPLETE",
-        `Provenance record ${index} must reference Knowledge, Claim, and Evidence.`,
-      );
-    }
+    assertNonEmptyIdArray(
+      record.knowledgeIds,
+      "PROVENANCE_KNOWLEDGE_IDS_INVALID",
+      `Provenance record ${index} Knowledge IDs`,
+    );
+
+    assertNonEmptyIdArray(
+      record.claimIds,
+      "PROVENANCE_CLAIM_IDS_INVALID",
+      `Provenance record ${index} Claim IDs`,
+    );
+
+    assertNonEmptyIdArray(
+      record.evidenceIds,
+      "PROVENANCE_EVIDENCE_IDS_INVALID",
+      `Provenance record ${index} Evidence IDs`,
+    );
 
     for (const id of record.knowledgeIds) {
       if (!knownKnowledgeIds.has(id)) {
