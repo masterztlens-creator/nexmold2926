@@ -1,3 +1,4 @@
+
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -69,6 +70,14 @@ async function withInternetFixture(
         "Fixture acquisition must use the eligible public test URL",
       );
 
+      /*
+       * IMPORTANT:
+       * Return the body supplied by the individual test.
+       *
+       * Evidence excerpts in the first and third tests must be
+       * reproducible from the exact sealed Snapshot content.
+       * Do not replace this with a shared hard-coded paragraph.
+       */
       return new Response(
         body,
         {
@@ -370,8 +379,18 @@ test(
               "Self-owned discovery must acquire the explicit ResearchSeed URL",
             );
 
+            /*
+             * This test exercises live evidence extraction.
+             * The fixture must contain substantive technical prose,
+             * rather than a short label that the noise filter rejects.
+             */
             return new Response(
-              "V8-09 self-owned discovery provenance fixture",
+              [
+                "Uniform wall thickness helps reduce differential cooling and shrinkage during plastic injection molding.",
+                "Designers should evaluate nominal wall thickness in relation to the selected resin, material flow length, part geometry, and expected molding conditions.",
+                "Abrupt thickness transitions can contribute to uneven cooling, sink marks, and dimensional variation.",
+                "The appropriate wall thickness must be validated against material-specific design guidance and the functional requirements of the component before tooling approval.",
+              ].join(" "),
               {
                 status: 200,
                 headers: {
