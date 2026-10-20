@@ -82,8 +82,9 @@ import {
   invariant,
 } from "../constitution/invariants.js";
 
-import type {
-  Content,
+import {
+  isStructuralContentLine,
+  type Content,
 } from "../domain/content.js";
 
 export interface ArticleRuntimeInput {
@@ -2058,19 +2059,11 @@ export async function runV8ArticleRuntime(
   const contentAssertions =
     compiled.content.body
       .split("\n")
-      .map((line) =>
-        line.trim(),
-      )
+      .map((line) => line.trim())
       .filter(
         (line) =>
           line.length > 0 &&
-          ![
-            "Problem",
-            "Decision",
-            "Verified knowledge",
-            "Context",
-            "Constraints",
-          ].includes(line),
+          !isStructuralContentLine(line),
       );
 
   invariant(
