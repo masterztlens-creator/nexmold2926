@@ -267,32 +267,33 @@ function deterministicBody(
   );
 
   /*
-   * Preserve the existing structural section markers in this file.
-   * The provenance parser and domain-level Content factory recognize
-   * these exact markers as structural lines.
+   * Use explicit Markdown H2 headings so the publication quality
+   * gate can recognize real article sections.
    *
-   * Verified propositions and constraints are rendered as paragraphs,
-   * rather than "- field: value" entries. No unsupported explanatory
-   * claims are inserted between source-backed propositions.
+   * The domain-level Content factory and provenance parser recognize
+   * these exact headings as structural lines.
+   *
+   * Verified propositions and constraints remain auditable assertions.
+   * No unsupported engineering claims are inserted between them.
    */
   return [
-    "Problem",
+    "## Engineering question and scope",
     question,
     "",
-    "Decision",
+    "## Approved engineering direction",
     outcome,
     "",
-    "Verified knowledge",
+    "## Verified technical findings",
     ...knowledgeParagraphs,
     "",
-    "Context",
+    "## Application context",
     ...(
       contextParagraphs.length > 0
         ? contextParagraphs
         : ["No additional context was specified."]
     ),
     "",
-    "Constraints",
+    "## Design constraints and limitations",
     ...(
       constraintParagraphs.length > 0
         ? constraintParagraphs
@@ -375,7 +376,7 @@ function createProvenanceRecord(
       invariant(
         normalizedClaimIds.length === 0,
         "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
-        `Compiled assertion ${ordinal} kind=${kind} must not bind Claim.`,
+        `Compiled assertion ${ordinal} kind=${kind} must not bind a Claim.`,
       );
 
       invariant(
@@ -414,7 +415,7 @@ function createProvenanceRecord(
       invariant(
         normalizedClaimIds.length === 0,
         "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
-        `Compiled assertion ${ordinal} kind=DECISION must not bind Claim.`,
+        `Compiled assertion ${ordinal} kind=DECISION must not bind a Claim.`,
       );
 
       invariant(
@@ -453,7 +454,7 @@ function createProvenanceRecord(
       invariant(
         normalizedClaimIds.length === 0,
         "V8_CONTENT_COMPILER_ASSERTION_UNEXPECTED_CLAIM",
-        `Compiled assertion ${ordinal} kind=CONTEXT must not bind Claim.`,
+        `Compiled assertion ${ordinal} kind=CONTEXT must not bind a Claim.`,
       );
 
       invariant(
@@ -524,6 +525,7 @@ function createProvenanceRecord(
     evidenceIds: normalizedEvidenceIds,
   };
 }
+
 export class ContentCompiler {
   private readonly validator: DecisionValidator;
 
@@ -827,23 +829,23 @@ export class ContentCompiler {
 
       if (isStructuralContentLine(assertion)) {
         switch (assertion) {
-          case "Problem":
+          case "## Engineering question and scope":
             section = "PROBLEM";
             break;
 
-          case "Decision":
+          case "## Approved engineering direction":
             section = "DECISION";
             break;
 
-          case "Verified knowledge":
+          case "## Verified technical findings":
             section = "KNOWLEDGE";
             break;
 
-          case "Context":
+          case "## Application context":
             section = "CONTEXT";
             break;
 
-          case "Constraints":
+          case "## Design constraints and limitations":
             section = "CONSTRAINTS";
             break;
         }
@@ -1028,6 +1030,7 @@ export class ContentCompiler {
         ),
       );
     }
+
     /*
      * Fail closed if even one body assertion lacks provenance.
      * The body and provenance must remain positionally aligned.
