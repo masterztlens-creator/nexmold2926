@@ -35,9 +35,7 @@ interface HttpTextResponse {
   readonly finalUrl: string;
 }
 
-const DEFAULT_ENDPOINT =
-  "https://www.bing.com/search";
-
+const DEFAULT_ENDPOINT = "https://www.bing.com/search";
 const DEFAULT_USER_AGENT =
   "NEXMOLD-V8-ResearchBot/1.0 (+https://nexmold.com/)";
 
@@ -47,13 +45,7 @@ const DEFAULT_MAX_RESULTS = 10;
 const DEFAULT_ROBOTS_TTL_MS = 60 * 60 * 1000;
 const MAX_REDIRECTS = 5;
 
-const REDIRECT_STATUSES = new Set([
-  301,
-  302,
-  303,
-  307,
-  308,
-]);
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 const robotsCache = new Map<string, RobotsPolicy>();
 
@@ -66,17 +58,11 @@ function normalizeEndpoint(value: string): URL {
     throw new Error("PUBLIC_HTML_SEARCH_ENDPOINT_INVALID");
   }
 
-  if (
-    url.protocol !== "https:" &&
-    url.protocol !== "http:"
-  ) {
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error("PUBLIC_HTML_SEARCH_ENDPOINT_PROTOCOL_INVALID");
   }
 
-  if (
-    url.username.length > 0 ||
-    url.password.length > 0
-  ) {
+  if (url.username.length > 0 || url.password.length > 0) {
     throw new Error("PUBLIC_HTML_SEARCH_ENDPOINT_CREDENTIALS_FORBIDDEN");
   }
 
@@ -107,9 +93,7 @@ function normalizePositiveInteger(
   return value;
 }
 
-function throwIfAborted(
-  signal: AbortSignal | undefined,
-): void {
+function throwIfAborted(signal: AbortSignal | undefined): void {
   if (signal?.aborted) {
     throw new Error("PUBLIC_HTML_SEARCH_ABORTED");
   }
@@ -130,7 +114,10 @@ function decodeHtmlEntities(value: string): string {
   return value.replace(
     /&(#(?:x[0-9a-f]+|[0-9]+)|[a-z][a-z0-9]+);/gi,
     (entity, reference: string) => {
-      if (reference.startsWith("#x") || reference.startsWith("#X")) {
+      if (
+        reference.startsWith("#x") ||
+        reference.startsWith("#X")
+      ) {
         const codePoint = Number.parseInt(reference.slice(2), 16);
 
         return Number.isFinite(codePoint) &&
@@ -181,12 +168,39 @@ function getAttribute(
   );
 
   const match = expression.exec(attributes);
-
   const value = match?.[1] ?? match?.[2] ?? match?.[3];
 
   return value === undefined
     ? undefined
     : decodeHtmlEntities(value.trim());
+}
+
+/**
+ * Decode a Base64 string without requiring Node.js Buffer typings.
+ *
+ * Bing's "a1" redirect parameter contains a Base64-encoded destination.
+ * Invalid input fails closed by throwing; callers preserve the original
+ * redirect URL rather than trusting an undecodable destination.
+ */
+function decodeBase64Utf8(value: string): string {
+  const normalized = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const padded = normalized.padEnd(
+    normalized.length + ((4 - (normalized.length % 4)) % 4),
+    "=",
+  );
+
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(
+    binary,
+    (character) => character.charCodeAt(0),
+  );
+
+  return new TextDecoder("utf-8", {
+    fatal: true,
+  }).decode(bytes);
 }
 
 function canonicalResultUrl(
@@ -201,17 +215,11 @@ function canonicalResultUrl(
     return undefined;
   }
 
-  if (
-    url.protocol !== "https:" &&
-    url.protocol !== "http:"
-  ) {
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
     return undefined;
   }
 
-  if (
-    url.username.length > 0 ||
-    url.password.length > 0
-  ) {
+  if (url.username.length > 0 || url.password.length > 0) {
     return undefined;
   }
 
@@ -227,16 +235,14 @@ function canonicalResultUrl(
           ? target.slice(2)
           : target;
 
-        const decodedTarget = Buffer.from(
-          decoded,
-          "base64",
-        ).toString("utf8");
-
+        const decodedTarget = decodeBase64Utf8(decoded);
         const decodedUrl = new URL(decodedTarget);
 
         if (
-          decodedUrl.protocol === "https:" ||
-          decodedUrl.protocol === "http:"
+          (decodedUrl.protocol === "https:" ||
+            decodedUrl.protocol === "http:") &&
+          decodedUrl.username.length === 0 &&
+          decodedUrl.password.length === 0
         ) {
           url = decodedUrl;
         }
@@ -250,10 +256,7 @@ function canonicalResultUrl(
 
   if (
     url.hostname === "www.bing.com" &&
-    (
-      url.pathname === "/search" ||
-      url.pathname === "/ck/a"
-    )
+    (url.pathname === "/search" || url.pathname === "/ck/a")
   ) {
     return undefined;
   }
@@ -387,10 +390,7 @@ function parseRobotsRules(
     const value = line.slice(separator + 1).trim();
 
     if (directive === "user-agent") {
-      if (
-        !current ||
-        current.rules.length > 0
-      ) {
+      if (!current || current.rules.length > 0) {
         current = {
           agents: [],
           rules: [],
@@ -405,10 +405,7 @@ function parseRobotsRules(
 
     if (
       !current ||
-      (
-        directive !== "allow" &&
-        directive !== "disallow"
-      ) ||
+      (directive !== "allow" && directive !== "disallow") ||
       value.length === 0
     ) {
       continue;
@@ -539,10 +536,7 @@ async function readResponseBody(
   if (contentLength) {
     const parsed = Number(contentLength);
 
-    if (
-      Number.isFinite(parsed) &&
-      parsed > maxBytes
-    ) {
+    if (Number.isFinite(parsed) && parsed > maxBytes) {
       throw new Error("PUBLIC_HTML_SEARCH_RESPONSE_TOO_LARGE");
     }
   }
@@ -635,7 +629,9 @@ async function fetchTextWithTimeout(
       throwIfAborted(options.signal);
 
       if (currentUrl.origin !== options.expectedOrigin) {
-        throw new Error("PUBLIC_HTML_SEARCH_CROSS_ORIGIN_REDIRECT_BLOCKED");
+        throw new Error(
+          "PUBLIC_HTML_SEARCH_CROSS_ORIGIN_REDIRECT_BLOCKED",
+        );
       }
 
       const response = await fetch(currentUrl, {
@@ -644,7 +640,7 @@ async function fetchTextWithTimeout(
         signal: controller.signal,
         headers: {
           "User-Agent": options.userAgent,
-          "Accept": options.accept,
+          Accept: options.accept,
         },
       });
 
@@ -652,7 +648,9 @@ async function fetchTextWithTimeout(
         const location = response.headers.get("location");
 
         if (!location) {
-          throw new Error("PUBLIC_HTML_SEARCH_REDIRECT_WITHOUT_LOCATION");
+          throw new Error(
+            "PUBLIC_HTML_SEARCH_REDIRECT_WITHOUT_LOCATION",
+          );
         }
 
         if (redirectCount >= MAX_REDIRECTS) {
@@ -665,18 +663,24 @@ async function fetchTextWithTimeout(
           nextUrl.protocol !== "https:" &&
           nextUrl.protocol !== "http:"
         ) {
-          throw new Error("PUBLIC_HTML_SEARCH_REDIRECT_PROTOCOL_INVALID");
+          throw new Error(
+            "PUBLIC_HTML_SEARCH_REDIRECT_PROTOCOL_INVALID",
+          );
         }
 
         if (
           nextUrl.username.length > 0 ||
           nextUrl.password.length > 0
         ) {
-          throw new Error("PUBLIC_HTML_SEARCH_REDIRECT_CREDENTIALS_FORBIDDEN");
+          throw new Error(
+            "PUBLIC_HTML_SEARCH_REDIRECT_CREDENTIALS_FORBIDDEN",
+          );
         }
 
         if (nextUrl.origin !== options.expectedOrigin) {
-          throw new Error("PUBLIC_HTML_SEARCH_CROSS_ORIGIN_REDIRECT_BLOCKED");
+          throw new Error(
+            "PUBLIC_HTML_SEARCH_CROSS_ORIGIN_REDIRECT_BLOCKED",
+          );
         }
 
         await response.body?.cancel().catch(() => undefined);
@@ -726,8 +730,7 @@ async function fetchTextWithTimeout(
   }
 }
 
-export class PublicHtmlSearchProvider
-implements SearchProvider {
+export class PublicHtmlSearchProvider implements SearchProvider {
   public readonly name: string;
 
   private readonly endpoint: URL;
@@ -747,9 +750,7 @@ implements SearchProvider {
     );
 
     this.name = options.name?.trim() || "public-html-search";
-
     this.language = options.language?.trim() || "en";
-
     this.safeSearch = options.safeSearch ?? "moderate";
 
     this.maxResults = normalizePositiveInteger(
@@ -776,7 +777,8 @@ implements SearchProvider {
       24 * 60 * 60 * 1000,
     );
 
-    this.userAgent = options.userAgent?.trim() || DEFAULT_USER_AGENT;
+    this.userAgent =
+      options.userAgent?.trim() || DEFAULT_USER_AGENT;
 
     if (
       this.userAgent.length < 8 ||
@@ -820,10 +822,7 @@ implements SearchProvider {
       },
     );
 
-    if (
-      response.status === 404 ||
-      response.status === 410
-    ) {
+    if (response.status === 404 || response.status === 410) {
       const policy = Object.freeze({
         fetchedAt: now,
         rules: Object.freeze([]),
@@ -833,10 +832,7 @@ implements SearchProvider {
       return policy;
     }
 
-    if (
-      response.status < 200 ||
-      response.status >= 300
-    ) {
+    if (response.status < 200 || response.status >= 300) {
       throw new Error(
         `PUBLIC_HTML_SEARCH_ROBOTS_HTTP_${response.status}`,
       );
@@ -880,9 +876,7 @@ implements SearchProvider {
       throw new Error("PUBLIC_HTML_SEARCH_QUERY_TOO_LONG");
     }
 
-    const policy = await this.getRobotsPolicy(
-      options.signal,
-    );
+    const policy = await this.getRobotsPolicy(options.signal);
 
     if (!isAllowedByRobots(this.endpoint, policy.rules)) {
       throw new Error("PUBLIC_HTML_SEARCH_BLOCKED_BY_ROBOTS");
@@ -919,10 +913,7 @@ implements SearchProvider {
       },
     );
 
-    if (
-      response.status < 200 ||
-      response.status >= 300
-    ) {
+    if (response.status < 200 || response.status >= 300) {
       throw new Error(
         `PUBLIC_HTML_SEARCH_HTTP_${response.status}`,
       );
@@ -936,7 +927,9 @@ implements SearchProvider {
       !contentType.includes("text/html") &&
       !contentType.includes("application/xhtml+xml")
     ) {
-      throw new Error("PUBLIC_HTML_SEARCH_UNEXPECTED_CONTENT_TYPE");
+      throw new Error(
+        "PUBLIC_HTML_SEARCH_UNEXPECTED_CONTENT_TYPE",
+      );
     }
 
     const lowerHtml = response.text.toLowerCase();
