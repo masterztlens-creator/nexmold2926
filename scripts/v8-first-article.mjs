@@ -718,113 +718,7 @@ function scoreResearchCandidate(
 
   return score;
 }
-      score +=
-        3;
-    }
-  }
 
-  if (
-    title.length >
-    0
-  ) {
-    score +=
-      2;
-  }
-
-  if (
-    candidate?.kind ===
-    "SEED"
-  ) {
-    score +=
-      20;
-  }
-
-  const hasWall =
-    combined.includes(
-      "wall",
-    );
-
-  const hasThickness =
-    combined.includes(
-      "thickness",
-    );
-
-  const titleHasWall =
-    title.includes(
-      "wall",
-    );
-
-  const titleHasThickness =
-    title.includes(
-      "thickness",
-    );
-
-  if (
-    hasWall &&
-    hasThickness
-  ) {
-    score +=
-      100;
-  }
-
-  if (
-    titleHasWall &&
-    titleHasThickness
-  ) {
-    score +=
-      150;
-  }
-
-  if (
-    matchedTitleTokens >=
-    3
-  ) {
-    score +=
-      25;
-  }
-
-  if (
-    isBlockedResearchCandidate(
-      candidate,
-    )
-  ) {
-    score -=
-      1000;
-  }
-
-  for (
-    const token of
-      RESEARCH_NAVIGATION_PATH_TOKENS
-  ) {
-    if (
-      url.includes(
-        `/${token}/`,
-      ) ||
-      url.endsWith(
-        `/${token}`,
-      )
-    ) {
-      score -=
-        100;
-    }
-  }
-
-  for (
-    const token of
-      RESEARCH_LANGUAGE_PATH_TOKENS
-  ) {
-    if (
-      url.includes(
-        `/${token}/`,
-      )
-    ) {
-      score -=
-        30;
-    }
-  }
-
-  return score;
-}
 function selectResearchSeeds(
   candidates,
   query,
@@ -2361,42 +2255,31 @@ function verifyPersistedArtifacts({
  * ============================================================
  */
 
+
+/*
+ * ============================================================
+ * MAIN
+ * ============================================================
+ */
+
 async function main() {
-  console.log(
-    "==============================================",
-  );
-
-  console.log(
-    "NEXMOLD V8 FIRST ARTICLE — LIVE INTERNET",
-  );
-
-  console.log(
-    "==============================================",
-  );
-
-  console.log(
-    `Query: ${QUERY}`,
-  );
-
-  console.log(
-    `Article: ${ARTICLE_TITLE}`,
-  );
+  console.log("==============================================");
+  console.log("NEXMOLD V8 FIRST ARTICLE — LIVE INTERNET");
+  console.log("==============================================");
+  console.log(`Query: ${QUERY}`);
+  console.log(`Article: ${ARTICLE_TITLE}`);
 
   /*
-   * Create a concrete search provider. The observer does not
-   * instantiate one implicitly; it must receive the provider.
+   * 1. LIVE SEARCH PROVIDER
+   *
+   * The same concrete provider is passed to both discovery
+   * and the article runtime.
    */
-  const searchProvider =
-    new BingHtmlSearchProvider({
-      endpoint:
-        "https://www.bing.com/search",
-
-      resultLimit:
-        20,
-
-      timeoutMs:
-        15000,
-    });
+  const searchProvider = new BingHtmlSearchProvider({
+    endpoint: "https://www.bing.com/search",
+    resultLimit: 20,
+    timeoutMs: 15000,
+  });
 
   requireCondition(
     searchProvider !== null &&
@@ -2404,59 +2287,31 @@ async function main() {
     "Live search provider failed its interface check",
   );
 
-  console.log(
-    `Search provider: ${searchProvider.name}`,
-  );
-
-  console.log(
-    "Discovery owner: V8",
-  );
-
-  console.log(
-    "Acquisition owner: V8",
-  );
-
-  console.log(
-    "",
-  );
-
+  console.log(`Search provider: ${searchProvider.name}`);
+  console.log("Discovery owner: V8");
+  console.log("Acquisition owner: V8");
+  console.log("");
 
   /*
-   * ----------------------------------------------------------
-   * 1. LIVE FIRST-HOP INTERNET DISCOVERY
-   * ----------------------------------------------------------
+   * 2. LIVE FIRST-HOP INTERNET DISCOVERY
    */
+  const fetcher = new HttpPageFetcher({
+    timeoutMs: 15000,
+    maxBytes: 5 * 1024 * 1024,
+  });
 
-  const fetcher =
-    new HttpPageFetcher({
-      timeoutMs:
-        15000,
-
-      maxBytes:
-        5 * 1024 * 1024,
-    });
-
-  const firstHop =
-    await observeInternetFirstHop(
-      QUERY,
-      BOOTSTRAP_CORPUS,
-      fetcher,
-      {
-        limit:
-          20,
-
-        searchProvider,
-
-        maxSearchResults:
-          20,
-
-        maxPagesToFetch:
-          20,
-
-        includeBootstrapWithSearch:
-          false,
-      },
-    );
+  const firstHop = await observeInternetFirstHop(
+    QUERY,
+    BOOTSTRAP_CORPUS,
+    fetcher,
+    {
+      limit: 20,
+      searchProvider,
+      maxSearchResults: 20,
+      maxPagesToFetch: 20,
+      includeBootstrapWithSearch: false,
+    },
+  );
 
   requireCondition(
     typeof firstHop.searchProvider === "string" &&
@@ -2465,53 +2320,21 @@ async function main() {
     "first-hop observation did not record a real SearchProvider",
   );
 
-  console.log(
-    `Search provider used: ${firstHop.searchProvider}`,
-  );
-
-  console.log(
-    `Search queries executed: ${firstHop.searchQueries.length}`,
-  );
-
-  console.log(
-    `Search results returned: ${firstHop.searchResultsReturned}`,
-  );
-
-  console.log(
-    `Search results observed: ${firstHop.searchResultsObserved}`,
-  );
-
-  console.log(
-    `Search results rejected: ${firstHop.searchResultsRejected}`,
-  );
-
-  console.log(
-    `Search errors: ${firstHop.searchErrors.length}`,
-  );
-
-  console.log(
-    `1. Bootstrap matches: ${firstHop.bootstrap.matched.length}`,
-  );
-
-  console.log(
-    `2. Pages observed: ${firstHop.pagesObserved}`,
-  );
-
-  console.log(
-    `3. Candidates accepted: ${firstHop.observation.accepted}`,
-  );
-
-  console.log(
-    `4. Candidates rejected: ${firstHop.observation.rejected}`,
-  );
-
-  console.log(
-    `5. First-hop fetch errors: ${firstHop.fetchErrors.length}`,
-  );
+  console.log(`Search provider used: ${firstHop.searchProvider}`);
+  console.log(`Search queries executed: ${firstHop.searchQueries.length}`);
+  console.log(`Search results returned: ${firstHop.searchResultsReturned}`);
+  console.log(`Search results observed: ${firstHop.searchResultsObserved}`);
+  console.log(`Search results rejected: ${firstHop.searchResultsRejected}`);
+  console.log(`Search errors: ${firstHop.searchErrors.length}`);
+  console.log(`1. Bootstrap matches: ${firstHop.bootstrap.matched.length}`);
+  console.log(`2. Pages observed: ${firstHop.pagesObserved}`);
+  console.log(`3. Candidates accepted: ${firstHop.observation.accepted}`);
+  console.log(`4. Candidates rejected: ${firstHop.observation.rejected}`);
+  console.log(`5. First-hop fetch errors: ${firstHop.fetchErrors.length}`);
 
   /*
-   * A configured provider is not proof that live search worked.
-   * Require actual search results and successful page observation.
+   * A configured provider alone is not proof that live search
+   * worked. Require actual search results and observed pages.
    */
   requireCondition(
     firstHop.searchResultsReturned > 0,
@@ -2533,315 +2356,206 @@ async function main() {
     "Internet observation produced no discovery candidates",
   );
 
-
   /*
-   * ----------------------------------------------------------
-   * 2. CANDIDATE → TOPIC RELEVANCE → RESEARCH SEED
-   * ----------------------------------------------------------
+   * 3. CANDIDATE → TOPIC RELEVANCE → RESEARCH SEED
    */
-
-  const researchSeeds =
-    selectResearchSeeds(
-      firstHop.observation.candidates,
-      QUERY,
-      8,
-    );
+  const researchSeeds = selectResearchSeeds(
+    firstHop.observation.candidates,
+    QUERY,
+    8,
+  );
 
   requireCondition(
     researchSeeds.length >= 2,
     "V8 research discovery produced fewer than two topic-relevant research seeds",
   );
 
-  requireTopicRelevantResearchSeed(
-    researchSeeds,
-  );
+  requireTopicRelevantResearchSeed(researchSeeds);
 
-  console.log(
-    `6. Research seeds: ${researchSeeds.length}`,
-  );
+  console.log(`6. Research seeds: ${researchSeeds.length}`);
 
-  for (
-    const seed of
-      researchSeeds
-  ) {
-    console.log(
-      `    ${seed.source} ${seed.url}`,
-    );
-
-    console.log(
-      `      relevance=${seed.relevanceScore}`,
-    );
+  for (const seed of researchSeeds) {
+    console.log(`    ${seed.source} ${seed.url}`);
+    console.log(`      relevance=${seed.relevanceScore}`);
 
     if (seed.title) {
-      console.log(
-        `      title=${seed.title}`,
-      );
+      console.log(`      title=${seed.title}`);
     }
   }
 
-
   /*
-   * ----------------------------------------------------------
-   * 3. ARTICLE RUNTIME
-   * ----------------------------------------------------------
+   * 4. ARTICLE RUNTIME
    *
-   * Continue in Part 5.
+   * Pass the real provider to the runtime. The runtime must
+   * acquire and verify evidence independently of discovery.
    */
-  const runtime =
-    await runV8ArticleRuntime({
-      opportunity:
-        {
-          keyword:
-            {
-              keyword:
-                PRIMARY_KEYWORD,
+  const runtime = await runV8ArticleRuntime({
+    opportunity: {
+      keyword: {
+        keyword: PRIMARY_KEYWORD,
+        normalized: PRIMARY_KEYWORD,
+        source: "DISCOVERY",
+        intent: "INFORMATIONAL",
+        language: "en",
+        market: "GLOBAL",
+        terms: [
+          "plastic",
+          "injection",
+          "molding",
+          "wall",
+          "thickness",
+        ],
+      },
 
-              normalized:
-                PRIMARY_KEYWORD,
+      score: 1,
+      demand: 1,
+      relevance: 1,
+      competition: 0,
+      authorityGap: 1,
+      conversionPotential: 0.5,
 
-              source:
-                "DISCOVERY",
+      reasons: [
+        "First V8 live Internet article research run.",
+        "Engineering information request.",
+      ],
+    },
 
-              intent:
-                "INFORMATIONAL",
+    searchProvider,
 
-              language:
-                "en",
+    pageFetcher: fetcher,
 
-              market:
-                "GLOBAL",
+    actor: ACTOR,
 
-              terms:
-                [
-                  "plastic",
-                  "injection",
-                  "molding",
-                  "wall",
-                  "thickness",
-                ],
-            },
+    acquisition: {
+      actorId: ACTOR.id,
+      researchSeeds,
+      maxCandidates: 8,
+      maxPages: 8,
+      maxDepth: 1,
+      sameHostOnly: false,
+    },
 
-          score:
-            1,
+    scope: {
+      geography: "GLOBAL",
+      industries: ["PLASTIC_INJECTION_MOLDING"],
+      languages: ["en"],
+    },
 
-          demand:
-            1,
+    context: {
+      purpose:
+        "Generate the first NEXMOLD V8 article from evidence acquired from the live Internet.",
 
-          relevance:
-            1,
+      variables: {
+        acquisitionMode: "LIVE_INTERNET",
+        discoveryMode: "V8_SELF_OWNED",
+        searchProvider: firstHop.searchProvider,
+      },
+    },
 
-          competition:
-            0,
+    problem: {
+      question:
+        "What evidence-backed engineering information can V8 state about plastic injection molding wall thickness?",
 
-          authorityGap:
-            1,
+      constraints: [
+        "VERIFIED evidence only",
+        "No unsupported factual injection",
+        "All article content must remain traceable to acquired Internet Evidence",
+        "Unresolved contradictions must not be silently merged",
+      ],
+    },
 
-          conversionPotential:
-            0.5,
-
-          reasons:
-            [
-              "First V8 live Internet article research run.",
-              "Engineering information request.",
-            ],
-        },
-
-      searchProvider,
-
-      pageFetcher:
-        fetcher,
-
-      actor:
-        ACTOR,
-
-      acquisition:
-        {
-          actorId:
-            ACTOR.id,
-
-          researchSeeds,
-
-          maxCandidates:
-            8,
-
-          maxPages:
-            8,
-
-          maxDepth:
-            1,
-
-          sameHostOnly:
-            false,
-        },
-
-      scope:
-        {
-          geography:
-            "GLOBAL",
-
-          industries:
-            [
-              "PLASTIC_INJECTION_MOLDING",
-            ],
-
-          languages:
-            [
-              "en",
-            ],
-        },
-
-      context:
-        {
-          purpose:
-            "Generate the first NEXMOLD V8 article from evidence acquired from the live Internet.",
-
-          variables:
-            {
-              acquisitionMode:
-                "LIVE_INTERNET",
-
-              discoveryMode:
-                "V8_SELF_OWNED",
-
-              searchProvider:
-                firstHop.searchProvider,
-            },
-        },
-
-      problem:
-        {
-          question:
-            "What evidence-backed engineering information can V8 state about plastic injection molding wall thickness?",
-
-          constraints:
-            [
-              "VERIFIED evidence only",
-              "No unsupported factual injection",
-              "All article content must remain traceable to acquired Internet Evidence",
-              "Unresolved contradictions must not be silently merged",
-            ],
-        },
-
-      title:
-        ARTICLE_TITLE,
-    });
-
+    title: ARTICLE_TITLE,
+  });
 
   /*
-   * ----------------------------------------------------------
-   * 4. HARD RUNTIME CLOSURE
-   * ----------------------------------------------------------
+   * 5. HARD RUNTIME CLOSURE
    */
-
   requireCondition(
-    runtime !== null &&
-      typeof runtime ===
-        "object",
+    runtime !== null && typeof runtime === "object",
     "Article Runtime returned no runtime result",
   );
 
   requireCondition(
     runtime.acquisition !== null &&
-      typeof runtime.acquisition ===
-        "object",
+      typeof runtime.acquisition === "object",
     "Article Runtime returned no acquisition result",
   );
 
   requireCondition(
-    runtime.acquisition.acquisitions.length >
-      0,
+    runtime.acquisition.acquisitions.length > 0,
     "Article Runtime produced no successful Internet acquisitions",
   );
 
   requireCondition(
-    runtime.verifiedEvidenceIds.length >
-      0,
+    runtime.verifiedEvidenceIds.length > 0,
     "Article Runtime produced no verified Evidence",
   );
 
   requireCondition(
-    runtime.claimIds.length >
-      0,
+    runtime.claimIds.length > 0,
     "Article Runtime produced no Claims",
   );
 
   requireCondition(
-    runtime.knowledgeIds.length >
-      0,
+    runtime.knowledgeIds.length > 0,
     "Article Runtime produced no Knowledge",
   );
 
   requireCondition(
-    typeof runtime.decisionId ===
-      "string" &&
-      runtime.decisionId.length >
-        0,
+    typeof runtime.decisionId === "string" &&
+      runtime.decisionId.length > 0,
     "Article Runtime produced no Decision",
   );
 
   requireCondition(
     runtime.content !== null &&
-      typeof runtime.content ===
-        "object",
+      typeof runtime.content === "object",
     "Article Runtime produced no Content",
   );
 
   requireCondition(
-    typeof runtime.content.id ===
-      "string" &&
-      runtime.content.id.length >
-        0,
+    typeof runtime.content.id === "string" &&
+      runtime.content.id.length > 0,
     "Article Runtime produced Content without an ID",
   );
 
   requireCondition(
-    typeof runtime.content.decisionId ===
-      "string" &&
-      runtime.content.decisionId.length >
-        0,
+    typeof runtime.content.decisionId === "string" &&
+      runtime.content.decisionId.length > 0,
     "Article Runtime produced Content without a Decision ID",
   );
 
   requireCondition(
-    runtime.content.decisionId ===
-      runtime.decisionId,
+    runtime.content.decisionId === runtime.decisionId,
     "Content Decision ID differs from Runtime Decision ID",
   );
 
   requireCondition(
-    typeof runtime.content.title ===
-      "string" &&
-      runtime.content.title.trim().length >
-        0,
+    typeof runtime.content.title === "string" &&
+      runtime.content.title.trim().length > 0,
     "Article Runtime produced Content without a title",
   );
 
   requireCondition(
-    typeof runtime.content.body ===
-      "string" &&
-      runtime.content.body.trim().length >
-        0,
+    typeof runtime.content.body === "string" &&
+      runtime.content.body.trim().length > 0,
     "Article Runtime produced Content without an article body",
   );
 
   requireCondition(
-    Array.isArray(
-      runtime.content.provenance,
-    ) &&
-      runtime.content.provenance.length >
-        0,
+    Array.isArray(runtime.content.provenance) &&
+      runtime.content.provenance.length > 0,
     "Article Runtime produced Content without assertion provenance",
   );
 
-  const closureAudit =
-    buildFoundationClosureAudit(
-      runtime,
-    );
+  /*
+   * 6. EVIDENCE CLOSURE AND ASSERTION AUDIT
+   */
+  const closureAudit = buildFoundationClosureAudit(runtime);
 
-  const assertionAudit =
-    buildArticleAssertionAudit(
-      runtime.content,
-    );
+  const assertionAudit = buildArticleAssertionAudit(
+    runtime.content,
+  );
 
   console.log(
     `7. Successful acquisitions: ${runtime.acquisition.acquisitions.length}`,
@@ -2851,224 +2565,133 @@ async function main() {
     `8. Verified Evidence: ${runtime.verifiedEvidenceIds.length}`,
   );
 
-  console.log(
-    `9. Claims: ${runtime.claimIds.length}`,
-  );
-
-  console.log(
-    `10. Knowledge: ${runtime.knowledgeIds.length}`,
-  );
-
-  console.log(
-    `11. Decision: ${runtime.decisionId}`,
-  );
-
-  console.log(
-    `12. Article assertions audited: ${assertionAudit.length}`,
-  );
-
-  console.log(
-    `13. Article body length: ${runtime.content.body.length}`,
-  );
-
+  console.log(`9. Claims: ${runtime.claimIds.length}`);
+  console.log(`10. Knowledge: ${runtime.knowledgeIds.length}`);
+  console.log(`11. Decision: ${runtime.decisionId}`);
+  console.log(`12. Article assertions audited: ${assertionAudit.length}`);
+  console.log(`13. Article body length: ${runtime.content.body.length}`);
 
   /*
-   * ----------------------------------------------------------
-   * 5. ARTICLE ARTIFACT
-   * ----------------------------------------------------------
+   * 7. BUILD ARTICLE ARTIFACT AND MANIFEST
    */
+  const articleContent = createArticleMarkdown(runtime.content);
 
-  const articleContent =
-    createArticleMarkdown(
-      runtime.content,
-    );
-
-  const manifest =
-    createManifest({
-      query:
-        QUERY,
-
-      firstHop,
-
-      runtime,
-
-      articleContent,
-
-      assertionAudit,
-
-      closureAudit,
-    });
-
-  writeUtf8(
-    ARTICLE_PATH,
+  const manifest = createManifest({
+    query: QUERY,
+    firstHop,
+    runtime,
     articleContent,
-  );
+    assertionAudit,
+    closureAudit,
+  });
+
+  writeUtf8(ARTICLE_PATH, articleContent);
 
   writeUtf8(
     MANIFEST_PATH,
-    `${JSON.stringify(
-      manifest,
-      null,
-      2,
-    )}\n`,
+    `${JSON.stringify(manifest, null, 2)}\n`,
   );
 
-
   /*
-   * ----------------------------------------------------------
-   * 6. PERSISTED ARTIFACT VERIFICATION
-   * ----------------------------------------------------------
+   * 8. VERIFY PERSISTED ARTIFACTS
    */
-
   const {
     persistedArticle,
     persistedManifest,
-  } =
-    verifyPersistedArtifacts({
-      articleContent,
-
-      runtime,
-
-      assertionAudit,
-    });
+  } = verifyPersistedArtifacts({
+    articleContent,
+    runtime,
+    assertionAudit,
+  });
 
   requireCondition(
-    persistedArticle ===
-      articleContent,
+    persistedArticle === articleContent,
     "persisted article is not byte-identical to runtime artifact",
   );
 
   requireCondition(
-    persistedManifest.artifact
-      .contentFingerprint ===
-      contentFingerprint(
-        persistedArticle,
-      ),
+    persistedManifest.artifact.contentFingerprint ===
+      contentFingerprint(persistedArticle),
     "persisted article fingerprint is invalid",
   );
 
   requireCondition(
-    persistedManifest.foundation
-      .verifiedEvidenceIds.every(
-        (
-          evidenceId,
-          index,
-        ) =>
-          evidenceId ===
-          String(
-            runtime.verifiedEvidenceIds[
-              index
-            ],
-          ),
-      ),
+    persistedManifest.foundation.verifiedEvidenceIds.every(
+      (evidenceId, index) =>
+        evidenceId === String(runtime.verifiedEvidenceIds[index]),
+    ),
     "manifest Evidence IDs are not identical to Runtime verifiedEvidenceIds",
   );
 
   requireCondition(
-    persistedManifest.foundation
-      .claimIds.every(
-        (
-          claimId,
-          index,
-        ) =>
-          claimId ===
-          String(
-            runtime.claimIds[
-              index
-            ],
-          ),
-      ),
+    persistedManifest.foundation.claimIds.every(
+      (claimId, index) =>
+        claimId === String(runtime.claimIds[index]),
+    ),
     "manifest Claim IDs are not identical to Runtime claimIds",
   );
 
   requireCondition(
-    persistedManifest.foundation
-      .knowledgeIds.every(
-        (
-          knowledgeId,
-          index,
-        ) =>
-          knowledgeId ===
-          String(
-            runtime.knowledgeIds[
-              index
-            ],
-          ),
-      ),
+    persistedManifest.foundation.knowledgeIds.every(
+      (knowledgeId, index) =>
+        knowledgeId === String(runtime.knowledgeIds[index]),
+    ),
     "manifest Knowledge IDs are not identical to Runtime knowledgeIds",
   );
 
   requireCondition(
-    persistedManifest.runtime
-      .content
-      .provenance.length ===
+    persistedManifest.runtime.content.provenance.length ===
       assertionAudit.length,
     "persisted assertion provenance count differs from Runtime",
   );
 
-  for (
-    const assertion of
-      assertionAudit
-  ) {
+  for (const assertion of assertionAudit) {
     const persisted =
-      persistedManifest.runtime
-        .content
-        .provenance[
-          assertion.ordinal
-        ];
+      persistedManifest.runtime.content.provenance[
+        assertion.ordinal
+      ];
 
     requireCondition(
-      persisted.ordinal ===
-        assertion.ordinal,
+      persisted.ordinal === assertion.ordinal,
       `persisted assertion ordinal mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
-      persisted.text ===
-        assertion.text,
+      persisted.text === assertion.text,
       `persisted assertion text mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
-      persisted.fingerprint ===
-        assertion.fingerprint,
+      persisted.fingerprint === assertion.fingerprint,
       `persisted assertion fingerprint mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
-      JSON.stringify(
-        persisted.knowledgeIds,
-      ) ===
-        JSON.stringify(
-          assertion.knowledgeIds,
-        ),
+      JSON.stringify(persisted.knowledgeIds) ===
+        JSON.stringify(assertion.knowledgeIds),
       `persisted assertion Knowledge lineage mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
-      JSON.stringify(
-        persisted.claimIds,
-      ) ===
-        JSON.stringify(
-          assertion.claimIds,
-        ),
+      JSON.stringify(persisted.claimIds) ===
+        JSON.stringify(assertion.claimIds),
       `persisted assertion Claim lineage mismatch:${assertion.ordinal}`,
     );
 
     requireCondition(
-      JSON.stringify(
-        persisted.evidenceIds,
-      ) ===
-        JSON.stringify(
-          assertion.evidenceIds,
-        ),
+      JSON.stringify(persisted.evidenceIds) ===
+        JSON.stringify(assertion.evidenceIds),
       `persisted assertion Evidence lineage mismatch:${assertion.ordinal}`,
     );
   }
 
   /*
-   * Verify that the persisted manifest records the provider
-   * used for this execution, not a hardcoded placeholder.
+   * Verify the persisted manifest records the provider used
+   * for this execution, rather than a hardcoded placeholder.
+   *
+   * ArticleRuntimeResult does not expose `runtime.context`.
+   * The actual provider identity is recorded by first-hop
+   * discovery and passed into runtime context variables.
    */
   requireCondition(
     persistedManifest.execution.searchProvider ===
@@ -3076,40 +2699,18 @@ async function main() {
     "persisted SearchProvider identity differs from first-hop observation",
   );
 
-  requireCondition(
-    persistedManifest.execution.searchProvider ===
-      runtime.context?.variables?.searchProvider,
-    "persisted SearchProvider identity differs from Runtime context",
-  );
+  /*
+   * 9. REPORT VERIFIED ARTIFACT PATHS
+   */
+  console.log("14. Article artifact: PASS");
+  console.log(`    ${ARTICLE_PATH}`);
+  console.log(`    ${MANIFEST_PATH}`);
+  console.log("");
 
-  console.log(
-    "14. Article artifact: PASS",
-  );
-
-  console.log(
-    `    ${ARTICLE_PATH}`,
-  );
-
-  console.log(
-    `    ${MANIFEST_PATH}`,
-  );
-
-  console.log(
-    "",
-  );
-
-  console.log(
-    "==============================================",
-  );
-
-  console.log(
-    "V8 FIRST ARTICLE LIVE INTERNET RUN: PASS",
-  );
-
-  console.log(
-    "==============================================",
+  console.log("==============================================");
+  console.log("V8 FIRST ARTICLE LIVE INTERNET RUN: PASS");
+  console.log("==============================================");
 }
-
 
 main().catch(
   (
