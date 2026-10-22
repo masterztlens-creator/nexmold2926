@@ -1,9 +1,11 @@
 
 const DEFAULT_RESULT_LIMIT = 10;
 const MAX_RESULT_LIMIT = 50;
+const DEFAULT_TIMEOUT_MS = 15000;
+const MAX_TIMEOUT_MS = 120000;
 
 function decodeHtml(value) {
-  return value
+  return String(value ?? "")
     .replace(/&amp;/gi, "&")
     .replace(/&quot;/gi, '"')
     .replace(/&#39;|&apos;/gi, "'")
@@ -11,7 +13,6 @@ function decodeHtml(value) {
     .replace(/&gt;/gi, ">")
     .replace(/&#(\d+);/g, (_, decimal) => {
       const codePoint = Number(decimal);
-
       return Number.isInteger(codePoint) &&
         codePoint >= 0 &&
         codePoint <= 0x10ffff
@@ -20,7 +21,6 @@ function decodeHtml(value) {
     })
     .replace(/&#x([0-9a-f]+);/gi, (_, hexadecimal) => {
       const codePoint = Number.parseInt(hexadecimal, 16);
-
       return Number.isInteger(codePoint) &&
         codePoint >= 0 &&
         codePoint <= 0x10ffff
@@ -31,15 +31,23 @@ function decodeHtml(value) {
 
 function stripHtml(value) {
   return decodeHtml(
-    value
+    String(value ?? "")
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<!--[\s\S]*?-->/g, " ")
       .replace(/<[^>]*>/g, " ")
       .replace(/\s+/g, " ")
       .trim(),
   );
 }
 
+/**
+ * Validate a target URL extracted from an organic search result.
+ *
+ * Search-engine URLs are deliberately not accepted as result URLs.
+ * The caller must not weaken this boundary to permit the search
+ * provider's own domain as an article source.
+ */
 function normalizeResultUrl(value) {
   if (typeof value !== "string" || value.trim() === "") {
     return null;
@@ -62,6 +70,39 @@ function normalizeResultUrl(value) {
       return null;
     }
 
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validate the final HTTP response URL for the search request.
+ *
+ * This is a separate policy from normalizeResultUrl():
+ * the response is expected to be served by Bing, while organic
+ * result targets must not be Bing redirect/tracking URLs.
+ */
+function normalizeSearchResponseUrl(value) {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null;
+  }
+
+  try {
+    const url = new URL(value.trim());
+
+    if (
+      url.protocol !== "https:" ||
+      url.username !== "" ||
+      url.password !== "" ||
+      url.hostname.toLowerCase() !== "www.bing.com" ||
+      (url.port !== "" && url.port !== "443") ||
+      url.pathname !== "/search"
+    ) {
+      return null;
+    }
+
+    url.hash = "";
     return url.toString();
   } catch {
     return null;
@@ -96,14 +137,13 @@ function extractAnchor(block) {
   const innerHtml = match[2] ?? "";
   const href = extractAttribute(attributes, "href");
   const title = stripHtml(innerHtml);
-
   const url = normalizeResultUrl(href);
 
   if (!url || !title) {
     return null;
   }
 
-  return { url, title };
+  return Object.freeze({ url, title });
 }
 
 function extractSnippet(block) {
@@ -117,17 +157,10 @@ function extractSnippet(block) {
 
   const snippet = stripHtml(match[1] ?? "");
 
-  return snippet
-    ? snippet.slice(0, 4000)
-    : undefined;
+  return snippet ? snippet.slice(0, 4000) : undefined;
 }
 
 function extractBingResults(html, sourceUrl, observedAt, limit) {
-  /*
-   * Restrict extraction to Bing's organic-result containers.
-   * Do not turn arbitrary page links, navigation links, or the bootstrap
-   * corpus into search results.
-   */
   const blocks = html.match(
     /<li\b[^>]*class\s*=\s*(?:"[^"]*\bb_algo\b[^"]*"|'[^']*\bb_algo\b[^']*')[^>]*>[\s\S]*?<\/li>/gi,
   ) ?? [];
@@ -152,13 +185,9 @@ function extractBingResults(html, sourceUrl, observedAt, limit) {
       Object.freeze({
         url: anchor.url,
         title: anchor.title,
-        snippet: extractSnippet(block),
-
-        /*
-         * These are actual response provenance fields consumed by the
-         * first-hop observer. sourceUrl is the search page returned by
-         * the HTTP request, not the target result URL.
-         */
+        ...(extractSnippet(block)
+          ? { snippet: extractSnippet(block) }
+          : {}),
         searchSourceUrl: sourceUrl,
         searchObservedAt: observedAt,
       }),
@@ -168,11 +197,19 @@ function extractBingResults(html, sourceUrl, observedAt, limit) {
   return Object.freeze(results);
 }
 
+function errorCode(error) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "V8_SEARCH_PROVIDER_UNKNOWN_ERROR";
+}
+
 export class BingHtmlSearchProvider {
   constructor({
     endpoint = "https://www.bing.com/search",
     resultLimit = DEFAULT_RESULT_LIMIT,
-    timeoutMs = 15000,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
   } = {}) {
     let parsedEndpoint;
 
@@ -184,7 +221,11 @@ export class BingHtmlSearchProvider {
 
     if (
       parsedEndpoint.protocol !== "https:" ||
-      parsedEndpoint.hostname !== "www.bing.com"
+      parsedEndpoint.hostname.toLowerCase() !== "www.bing.com" ||
+      parsedEndpoint.pathname !== "/search" ||
+      parsedEndpoint.username !== "" ||
+      parsedEndpoint.password !== "" ||
+      (parsedEndpoint.port !== "" && parsedEndpoint.port !== "443")
     ) {
       throw new Error("V8_SEARCH_PROVIDER_ENDPOINT_NOT_ALLOWED");
     }
@@ -200,7 +241,7 @@ export class BingHtmlSearchProvider {
     if (
       !Number.isInteger(timeoutMs) ||
       timeoutMs < 1000 ||
-      timeoutMs > 120000
+      timeoutMs > MAX_TIMEOUT_MS
     ) {
       throw new Error("V8_SEARCH_PROVIDER_TIMEOUT_INVALID");
     }
@@ -221,7 +262,6 @@ export class BingHtmlSearchProvider {
     }
 
     const requestUrl = new URL(this.endpoint);
-
     requestUrl.searchParams.set("q", query.trim());
     requestUrl.searchParams.set("count", String(this.resultLimit));
     requestUrl.searchParams.set("setlang", "en");
@@ -229,22 +269,17 @@ export class BingHtmlSearchProvider {
 
     const controller = new AbortController();
 
-    const timeout = setTimeout(
-      () => controller.abort(
-        new Error("V8_SEARCH_PROVIDER_TIMEOUT"),
-      ),
-      this.timeoutMs,
-    );
+    const timeout = setTimeout(() => {
+      controller.abort(new Error("V8_SEARCH_PROVIDER_TIMEOUT"));
+    }, this.timeoutMs);
 
-    const forwardAbort = () => controller.abort(
-      options.signal?.reason,
-    );
+    const forwardAbort = () => {
+      controller.abort(options.signal?.reason);
+    };
 
-    options.signal?.addEventListener(
-      "abort",
-      forwardAbort,
-      { once: true },
-    );
+    options.signal?.addEventListener("abort", forwardAbort, {
+      once: true,
+    });
 
     try {
       if (options.signal?.aborted) {
@@ -289,10 +324,11 @@ export class BingHtmlSearchProvider {
       }
 
       /*
-       * response.url is the final URL after HTTP redirects. It records
-       * the actual search page that produced the parsed result set.
+       * Critical fix:
+       * response.url is validated as a Bing search response URL,
+       * not as an organic result URL.
        */
-      const sourceUrl = normalizeResultUrl(response.url);
+      const sourceUrl = normalizeSearchResponseUrl(response.url);
 
       if (!sourceUrl) {
         throw new Error(
@@ -321,14 +357,11 @@ export class BingHtmlSearchProvider {
         throw new Error("V8_SEARCH_PROVIDER_ABORTED");
       }
 
-      if (
-        controller.signal.aborted &&
-        !options.signal?.aborted
-      ) {
+      if (controller.signal.aborted) {
         throw new Error("V8_SEARCH_PROVIDER_TIMEOUT");
       }
 
-      throw error;
+      throw new Error(errorCode(error), { cause: error });
     } finally {
       clearTimeout(timeout);
 

@@ -17,6 +17,10 @@ import {
   contentFingerprint,
 } from "../.v8-build/src/v8/foundation/hash.js";
 
+import {
+  BingHtmlSearchProvider,
+} from "./v8-public-search-provider.mjs";
+
 
 const ARTICLE_TITLE =
   "Plastic Injection Molding Wall Thickness";
@@ -598,6 +602,122 @@ function scoreResearchCandidate(
         token,
       )
     ) {
+      score +=
+        3;
+    }
+
+    if (
+      combined.includes(
+        token,
+      )
+    ) {
+      score +=
+        3;
+    }
+  }
+
+  if (
+    title.length >
+    0
+  ) {
+    score +=
+      2;
+  }
+
+  if (
+    candidate?.kind ===
+    "SEED"
+  ) {
+    score +=
+      20;
+  }
+
+  const hasWall =
+    combined.includes(
+      "wall",
+    );
+
+  const hasThickness =
+    combined.includes(
+      "thickness",
+    );
+
+  const titleHasWall =
+    title.includes(
+      "wall",
+    );
+
+  const titleHasThickness =
+    title.includes(
+      "thickness",
+    );
+
+  if (
+    hasWall &&
+    hasThickness
+  ) {
+    score +=
+      100;
+  }
+
+  if (
+    titleHasWall &&
+    titleHasThickness
+  ) {
+    score +=
+      150;
+  }
+
+  if (
+    matchedTitleTokens >=
+    3
+  ) {
+    score +=
+      25;
+  }
+
+  if (
+    isBlockedResearchCandidate(
+      candidate,
+    )
+  ) {
+    score -=
+      1000;
+  }
+
+  for (
+    const token of
+      RESEARCH_NAVIGATION_PATH_TOKENS
+  ) {
+    if (
+      url.includes(
+        `/${token}/`,
+      ) ||
+      url.endsWith(
+        `/${token}`,
+      )
+    ) {
+      score -=
+        100;
+    }
+  }
+
+  for (
+    const token of
+      RESEARCH_LANGUAGE_PATH_TOKENS
+  ) {
+    if (
+      url.includes(
+        `/${token}/`,
+      )
+    ) {
+      score -=
+        30;
+    }
+  }
+
+  return score;
+}
       score +=
         3;
     }
@@ -1198,7 +1318,6 @@ function buildArticleAssertionAudit(
             decisionIds,
             "decisionIds",
           );
-
           requireCondition(
             contextIds.length === 1,
             `CONTEXT assertion ${ordinal} must bind exactly one Context`,
@@ -1421,6 +1540,7 @@ function buildFoundationClosureAudit(
       ),
   };
 }
+
 /*
  * ============================================================
  * EXACT EVIDENCE → SOURCE MAPPING
@@ -1707,8 +1827,10 @@ function createManifest({
         mode:
           "LIVE_INTERNET",
 
+        // Use the provider reported by the actual first-hop
+        // observation. Do not claim that search was unused.
         searchProvider:
-          "NONE",
+          firstHop.searchProvider,
 
         discoveryProvider:
           "V8_SELF_OWNED_FIRST_HOP",
@@ -1798,7 +1920,6 @@ function createManifest({
         seeds:
           runtime.acquisition.plan.sourceQueries,
       },
-
     acquisition:
       {
         planQueries:
@@ -2155,10 +2276,17 @@ function verifyPersistedArtifacts({
     "manifest does not identify a live Internet execution",
   );
 
+  /*
+   * Fail closed if the manifest claims that no search provider
+   * was used. The actual provider identity is recorded by the
+   * first-hop observation and must survive persistence.
+   */
   requireCondition(
-    persistedManifest.execution.searchProvider ===
-      "NONE",
-    "article execution unexpectedly used a SearchProvider",
+    typeof persistedManifest.execution.searchProvider ===
+      "string" &&
+      persistedManifest.execution.searchProvider.trim().length > 0 &&
+      persistedManifest.execution.searchProvider !== "NONE",
+    "manifest does not identify the actual SearchProvider",
   );
 
   requireCondition(
@@ -2225,6 +2353,8 @@ function verifyPersistedArtifacts({
     persistedManifest,
   };
 }
+
+
 /*
  * ============================================================
  * MAIN
@@ -2252,8 +2382,30 @@ async function main() {
     `Article: ${ARTICLE_TITLE}`,
   );
 
+  /*
+   * Create a concrete search provider. The observer does not
+   * instantiate one implicitly; it must receive the provider.
+   */
+  const searchProvider =
+    new BingHtmlSearchProvider({
+      endpoint:
+        "https://www.bing.com/search",
+
+      resultLimit:
+        20,
+
+      timeoutMs:
+        15000,
+    });
+
+  requireCondition(
+    searchProvider !== null &&
+      typeof searchProvider.search === "function",
+    "Live search provider failed its interface check",
+  );
+
   console.log(
-    "Search provider: NONE",
+    `Search provider: ${searchProvider.name}`,
   );
 
   console.log(
@@ -2292,8 +2444,50 @@ async function main() {
       {
         limit:
           20,
+
+        searchProvider,
+
+        maxSearchResults:
+          20,
+
+        maxPagesToFetch:
+          20,
+
+        includeBootstrapWithSearch:
+          false,
       },
     );
+
+  requireCondition(
+    typeof firstHop.searchProvider === "string" &&
+      firstHop.searchProvider.trim().length > 0 &&
+      firstHop.searchProvider !== "NONE",
+    "first-hop observation did not record a real SearchProvider",
+  );
+
+  console.log(
+    `Search provider used: ${firstHop.searchProvider}`,
+  );
+
+  console.log(
+    `Search queries executed: ${firstHop.searchQueries.length}`,
+  );
+
+  console.log(
+    `Search results returned: ${firstHop.searchResultsReturned}`,
+  );
+
+  console.log(
+    `Search results observed: ${firstHop.searchResultsObserved}`,
+  );
+
+  console.log(
+    `Search results rejected: ${firstHop.searchResultsRejected}`,
+  );
+
+  console.log(
+    `Search errors: ${firstHop.searchErrors.length}`,
+  );
 
   console.log(
     `1. Bootstrap matches: ${firstHop.bootstrap.matched.length}`,
@@ -2315,15 +2509,27 @@ async function main() {
     `5. First-hop fetch errors: ${firstHop.fetchErrors.length}`,
   );
 
+  /*
+   * A configured provider is not proof that live search worked.
+   * Require actual search results and successful page observation.
+   */
   requireCondition(
-    firstHop.pagesObserved >
-      0,
+    firstHop.searchResultsReturned > 0,
+    "live SearchProvider returned no search results",
+  );
+
+  requireCondition(
+    firstHop.searchResultsObserved > 0,
+    "live search produced no observed search results",
+  );
+
+  requireCondition(
+    firstHop.pagesObserved > 0,
     "no Internet page was successfully observed",
   );
 
   requireCondition(
-    firstHop.observation.candidates.length >
-      0,
+    firstHop.observation.candidates.length > 0,
     "Internet observation produced no discovery candidates",
   );
 
@@ -2342,8 +2548,7 @@ async function main() {
     );
 
   requireCondition(
-    researchSeeds.length >=
-      2,
+    researchSeeds.length >= 2,
     "V8 research discovery produced fewer than two topic-relevant research seeds",
   );
 
@@ -2367,9 +2572,7 @@ async function main() {
       `      relevance=${seed.relevanceScore}`,
     );
 
-    if (
-      seed.title
-    ) {
+    if (seed.title) {
       console.log(
         `      title=${seed.title}`,
       );
@@ -2382,9 +2585,8 @@ async function main() {
    * 3. ARTICLE RUNTIME
    * ----------------------------------------------------------
    *
-   * No external SearchProvider is supplied.
+   * Continue in Part 5.
    */
-
   const runtime =
     await runV8ArticleRuntime({
       opportunity:
@@ -2444,8 +2646,7 @@ async function main() {
             ],
         },
 
-      searchProvider:
-        undefined,
+      searchProvider,
 
       pageFetcher:
         fetcher,
@@ -2503,7 +2704,7 @@ async function main() {
                 "V8_SELF_OWNED",
 
               searchProvider:
-                "NONE",
+                firstHop.searchProvider,
             },
         },
 
@@ -2632,7 +2833,6 @@ async function main() {
     "Article Runtime produced Content without assertion provenance",
   );
 
-
   const closureAudit =
     buildFoundationClosureAudit(
       runtime,
@@ -2642,7 +2842,6 @@ async function main() {
     buildArticleAssertionAudit(
       runtime.content,
     );
-
 
   console.log(
     `7. Successful acquisitions: ${runtime.acquisition.acquisitions.length}`,
@@ -2700,7 +2899,6 @@ async function main() {
       closureAudit,
     });
 
-
   writeUtf8(
     ARTICLE_PATH,
     articleContent,
@@ -2733,7 +2931,6 @@ async function main() {
 
       assertionAudit,
     });
-
 
   requireCondition(
     persistedArticle ===
@@ -2869,6 +3066,21 @@ async function main() {
     );
   }
 
+  /*
+   * Verify that the persisted manifest records the provider
+   * used for this execution, not a hardcoded placeholder.
+   */
+  requireCondition(
+    persistedManifest.execution.searchProvider ===
+      firstHop.searchProvider,
+    "persisted SearchProvider identity differs from first-hop observation",
+  );
+
+  requireCondition(
+    persistedManifest.execution.searchProvider ===
+      runtime.context?.variables?.searchProvider,
+    "persisted SearchProvider identity differs from Runtime context",
+  );
 
   console.log(
     "14. Article artifact: PASS",
@@ -2896,7 +3108,6 @@ async function main() {
 
   console.log(
     "==============================================",
-  );
 }
 
 
