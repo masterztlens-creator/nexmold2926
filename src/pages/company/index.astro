@@ -1,0 +1,466 @@
+---
+/**
+ * src/pages/company/index.astro - NEXMOLD 工业级制造矩阵与验厂中心
+ * 设计语言：Anduril / SpaceX / Protolabs 风格 —— 正体硬朗排版、CAD 工程准星、真实重工参数表
+ */
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import Header from '../../components/Header.astro';
+import EcosystemFooter from '../../components/EcosystemFooter.astro';
+import LeadModal from '../../components/LeadModal.astro';
+
+const lang: 'en' | 'de' | 'fr' = 'en';
+const location = 'North America & Europe';
+
+const description = 'Explore NEXMOLD’s 12,000m² ISO-9001 certified injection molding and CNC tooling facility in Dongguan. In-house Makino CNCs, 30+ Haitian servo presses, and Zeiss CMM metrology.';
+const title = "NEXMOLD | 12,000m² Dongguan Manufacturing Facility & Equipment Fleet";
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "mainEntity": {
+    "@type": "ManufacturingPlant",
+    "@id": "https://nexmold.com/#factory",
+    "name": "NEXMOLD Precision Manufacturing Facility",
+    "url": "https://nexmold.com/company",
+    "description": "Tier-1 industrial direct injection molding and mold-making plant featuring Haitian presses, Makino CNCs, and Zeiss CMMs.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Dongguan",
+      "addressRegion": "Guangdong",
+      "addressCountry": "CN"
+    }
+  }
+};
+
+const telemetryMetrics = [
+  { label: "FACILITY FOOTPRINT", val: "12,000 m²", unit: "DONGGUAN DIRECT PLANT" },
+  { label: "INJECTION FLEET", val: "32 UNITS", unit: "HAITIAN 90T – 1,200T" },
+  { label: "TOOLING TOLERANCE", val: "±0.005 mm", unit: "DIN 16742 / SPI STANDARDS" },
+  { label: "FIRST ARTICLE T1", val: "14–25 DAYS", unit: "RAPID & EXPORT TOOLING" }
+];
+
+const bentoGallery = [
+  {
+    title: "Automated Injection Molding Cells",
+    subtitle: "HAITIAN & ZHAFIR SERVO FLEET (90T - 1200T)",
+    desc: "24/7 lights-out robotic extraction cells equipped with central drying systems, optimized for tight-tolerance multi-cavity production, insert molding, and LSR/TPE overmolding.",
+    span: "col-span-1 md:col-span-2 row-span-2",
+    img: "/images/company/injection-floor.webp",
+    tag: "BAY 01 // MOLDING FLOOR",
+    specs: ["32 Servo Presses", "6-Axis Robotics", "Cleanroom Capable"]
+  },
+  {
+    title: "In-House Precision Toolroom",
+    subtitle: "MAKINO 5-AXIS CNC & SODICK EDM",
+    desc: "Complete vertical integration. Our climate-controlled toolroom cuts hardened ASSAB S136, H13, and NAK80 steel with sub-micron repeatability—zero third-party subcontracting.",
+    span: "col-span-1 md:col-span-2",
+    img: "/images/company/makino-cnc.webp",
+    tag: "BAY 02 // TOOLMAKING",
+    specs: ["±0.003mm Electrode Accuracy", "SPI A-1 Mirror Finish"]
+  },
+  {
+    title: "Zeiss CMM Metrology Lab",
+    subtitle: "CLIMATE-CONTROLLED QA (20°C ±1°C)",
+    desc: "Every T1 sample and production lot undergoes automated 3D coordinate inspection, delivering comprehensive FAI, CPK, and PPAP documentation.",
+    span: "col-span-1 md:col-span-1",
+    img: "/images/company/zeiss-cmm.webp",
+    tag: "BAY 03 // QUALITY CONTROL",
+    specs: ["Zeiss Contura CMM", "Optical Vision Systems"]
+  },
+  {
+    title: "Global Export & DDP Staging",
+    subtitle: "45 MINS TO YANTIAN DEEPWATER PORT",
+    desc: "Dedicated mold crating (VCI rust-proof packaging) and direct customs clearance for seamless air and ocean freight to North America and the EU.",
+    span: "col-span-1 md:col-span-1",
+    img: "/images/company/shipping-dock.webp",
+    tag: "BAY 04 // LOGISTICS",
+    specs: ["HASCO / DME Export Standards", "Turnkey DDP / DAP"]
+  }
+];
+
+const equipmentLedger = [
+  { category: "CNC Machining Centers", brand: "Makino / Haas / Mikron", specs: "High-speed 3-Axis & 5-Axis (up to 24,000 RPM)", qty: "14 Units", tolerance: "±0.005 mm" },
+  { category: "Electrical Discharge (EDM)", brand: "Sodick / AgieCharmilles", specs: "Mirror-finish sinker EDM & slow-wire cutting", qty: "18 Units", tolerance: "±0.003 mm" },
+  { category: "Injection Molding Presses", brand: "Haitian / Zhafir Electric", specs: "Clamping force 90T to 1,200T with 3-axis robots", qty: "32 Units", tolerance: "DIN 16742 TG3" },
+  { category: "Metrology & Inspection", brand: "Zeiss CMM / Keyence", specs: "Bridge CMM, Instant Vision Measurement, RoHS Tester", qty: "6 Systems", tolerance: "±0.0015 mm" }
+];
+
+const workflowSteps = [
+  { step: "01", title: "24H DFM & Moldflow Audit", desc: "Before cutting steel, our senior tooling engineers analyze gate locations, draft angles, parting lines, and cooling channels to eliminate sink marks and warpage." },
+  { step: "02", title: "In-House Steel Cutting", desc: "Certified LKM, ASSAB, or Finkl mold bases and steel cores are machined in-house with weekly photo/video progress reports sent every Monday." },
+  { step: "03", title: "T1 Trial & Zeiss FAI Report", desc: "Initial mold trials come with complete machine parameter sheets, video footage of the press cycle, and dimensional inspection reports alongside DHL sample delivery." },
+  { step: "04", title: "Scale Production or Mold Export", desc: "Run low-to-high volume production in our Dongguan presses with free lifetime mold maintenance, or export the Class-101 tool directly to your local facility." }
+];
+---
+
+<MainLayout title={title} description={description} lang={lang} location={location}>
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  <Header lang={lang} />
+
+  <main class="flex-grow bg-[#090D16] text-slate-100 selection:bg-[#EA580C] selection:text-white overflow-x-hidden font-sans">
+    
+    <!-- 🎯 1. 工业级旗舰首屏：正体严谨排版 + 真实工程背书 -->
+    <section class="relative w-full min-h-[88vh] flex items-center justify-center overflow-hidden border-b border-white/10 py-24 lg:py-32">
+      
+      <!-- 精密 CAD 工程网格背景 -->
+      <div class="absolute inset-0 z-0 bg-[#090D16]">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem]"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_800px_at_20%_30%,rgba(234,88,12,0.08),transparent)]"></div>
+      </div>
+
+      <!-- 顶部工业铭牌信息栏 (克制、真实) -->
+      <div class="absolute top-8 left-[clamp(1.5rem,5vw,4rem)] right-[clamp(1.5rem,5vw,4rem)] hidden lg:flex justify-between items-center font-mono text-[11px] text-slate-400 border-b border-white/10 pb-4 z-20">
+        <div class="flex items-center gap-6">
+          <span class="text-[#EA580C] font-semibold">PLANT ID: NEX-DG-01</span>
+          <span>LOC: 22.7937° N, 113.8051° E (DONGGUAN, CN)</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <span>CERTIFICATION: ISO 9001:2015</span>
+          <span class="text-emerald-400 flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            PLANT STATUS: 24/7 PRODUCTION ACTIVE
+          </span>
+        </div>
+      </div>
+
+      <div class="max-w-[1520px] w-full mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-20 pt-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          
+          <!-- 左侧：硬核价值主张 -->
+          <div class="lg:col-span-7 space-y-8">
+            <div class="inline-flex items-center gap-3 font-mono text-xs bg-white/[0.04] px-4 py-2 border border-white/15 uppercase tracking-widest">
+              <span class="h-2 w-2 bg-[#EA580C]"></span>
+              <span class="text-slate-200 font-semibold">DIRECT FACTORY • ZERO BROKER MARKUP</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl lg:text-[4.5rem] font-extrabold tracking-tight leading-[1.05] text-white">
+              Industrial Scale.<br />
+              <span class="text-[#EA580C]">Sub-Micron Precision.</span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl border-l-2 border-[#EA580C] pl-5">
+              Look inside the 12,000m² Dongguan manufacturing facility powering global OEM hardware teams. We combine in-house Makino 5-axis toolmaking, 32 automated Haitian servo presses, and Zeiss CMM metrology under one roof.
+            </p>
+
+            <!-- 核心工程指标看板 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 font-mono">
+              {telemetryMetrics.map((item) => (
+                <div class="bg-[#0F1523] border border-white/10 p-4 relative group hover:border-[#EA580C]/60 transition-colors">
+                  <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">{item.label}</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white mb-1">
+                    {item.val}
+                  </div>
+                  <div class="text-[10px] text-[#EA580C] font-medium uppercase">{item.unit}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- 右侧：工程级 RFQ 报价与验厂终端 -->
+          <div class="lg:col-span-5">
+            <div class="bg-[#0F1523] border border-white/15 p-8 sm:p-10 relative shadow-2xl">
+              <!-- 四角 CAD 准星装饰 -->
+              <div class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#EA580C]"></div>
+              <div class="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#EA580C]"></div>
+              <div class="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#EA580C]"></div>
+              <div class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#EA580C]"></div>
+
+              <div class="flex items-center justify-between border-b border-white/10 pb-5 mb-6">
+                <div>
+                  <span class="font-mono text-[10px] text-[#EA580C] uppercase tracking-widest block">ENGINEERING DESK</span>
+                  <h3 class="text-xl font-bold text-white mt-0.5">Direct Factory RFQ & DFM</h3>
+                </div>
+                <span class="font-mono text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1">
+                  NDA Protected
+                </span>
+              </div>
+
+              <p class="text-xs text-slate-300 leading-relaxed mb-6">
+                Submit your 3D CAD assembly directly to our Dongguan tooling engineers. Receive a comprehensive price breakdown (Tooling + Piece Cost) and DFM review within 24 hours.
+              </p>
+
+              <!-- 交互触发区 -->
+              <div 
+                onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('enterprise_hero')"
+                class="w-full bg-[#090D16] border border-dashed border-white/25 hover:border-[#EA580C] hover:bg-[#EA580C]/[0.04] p-7 transition-all duration-200 cursor-pointer text-center group"
+              >
+                <div class="w-12 h-12 mx-auto mb-3 bg-white/5 border border-white/10 group-hover:border-[#EA580C] flex items-center justify-center transition-colors">
+                  <svg class="w-6 h-6 text-[#EA580C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                  </svg>
+                </div>
+                <p class="text-sm text-white font-bold mb-1">Click to Upload 3D CAD & Project Specs</p>
+                <p class="text-[11px] text-slate-400 font-mono mb-5">Supports STEP, IGES, SLDPRT, X_T, PDF (Max 100MB)</p>
+                
+                <span class="inline-block w-full bg-[#EA580C] group-hover:bg-[#d94e07] text-white font-mono text-xs font-bold uppercase py-3.5 px-6 tracking-wider transition-colors">
+                  Open Engineering RFQ Portal →
+                </span>
+              </div>
+
+              <div class="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>✓ Free Moldflow & DFM</span>
+                <span>✓ HASCO / DME Standards</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 🎯 2. 工业标准与认证横幅 (静态高密度信息栏，比跑马灯更稳重) -->
+    <section class="border-b border-white/10 bg-[#0D1320] py-5">
+      <div class="max-w-[1520px] mx-auto px-[clamp(1.5rem,5vw,4rem)] flex flex-wrap justify-between items-center gap-4 font-mono text-xs text-slate-300">
+        <div class="flex items-center gap-2">
+          <span class="text-[#EA580C] font-bold">MOLD STANDARDS:</span>
+          <span>SPI CLASS 101 / 102 / 103 • HASCO • DME • LKM</span>
+        </div>
+        <div class="hidden xl:block text-white/20">|</div>
+        <div class="flex items-center gap-2">
+          <span class="text-[#EA580C] font-bold">TOOL STEELS:</span>
+          <span>ASSAB S136 • NAK80 • H13 • P20 • 1.2344</span>
+        </div>
+        <div class="hidden xl:block text-white/20">|</div>
+        <div class="flex items-center gap-2">
+          <span class="text-[#EA580C] font-bold">ENGINEERING RESINS:</span>
+          <span>PEEK • ULTEM (PEI) • PA66+GF30 • PC/ABS • LSR</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🎯 3. 车间实景矩阵 (Bento Grid Gallery - 增加具体工程参数标签) -->
+    <section class="py-24 lg:py-32 bg-[#090D16] border-b border-white/10">
+      <div class="max-w-[1520px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-14">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div class="space-y-2">
+            <span class="text-[#EA580C] font-mono text-xs font-bold uppercase tracking-widest block">01 // FACILITY TOUR</span>
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Inside Our Dongguan Plant</h2>
+          </div>
+          <p class="text-sm text-slate-400 max-w-md">
+            Full vertical integration from raw steel block machining to automated injection molding and climate-controlled quality inspection.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[340px]">
+          {bentoGallery.map((item) => (
+            <div class={`${item.span} group relative bg-[#0F1523] border border-white/10 hover:border-[#EA580C]/70 overflow-hidden transition-all duration-500 flex flex-col justify-between p-7`}>
+              <!-- 背景图片 -->
+              <div class="absolute inset-0 bg-[#090D16]">
+                <img 
+                  src={item.img} 
+                  alt={item.title} 
+                  class="w-full h-full object-cover opacity-55 group-hover:opacity-75 group-hover:scale-103 transition-all duration-700"
+                  onerror="this.style.display='none';"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-[#090D16] via-[#090D16]/60 to-transparent"></div>
+              </div>
+
+              <!-- 顶部车间编号与规格胶囊 -->
+              <div class="relative z-20 flex flex-wrap justify-between items-start gap-2">
+                <span class="font-mono text-[11px] bg-[#090D16]/90 border border-white/15 text-[#EA580C] px-3 py-1 font-semibold">
+                  {item.tag}
+                </span>
+                <div class="flex flex-wrap gap-1.5">
+                  {item.specs.map((spec) => (
+                    <span class="font-mono text-[10px] bg-black/70 text-slate-200 px-2.5 py-1 border border-white/10">
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <!-- 底部标题与说明 -->
+              <div class="relative z-20 space-y-1.5 pt-8">
+                <span class="font-mono text-xs text-[#EA580C] font-semibold uppercase block">{item.subtitle}</span>
+                <h3 class="text-2xl font-bold text-white">{item.title}</h3>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 🎯 4. 新增核心板块：工厂设备与精度台账表 (Equipment Ledger - B2B 客户最看重的硬实力) -->
+    <section class="py-24 lg:py-32 bg-[#0D1320] border-b border-white/10">
+      <div class="max-w-[1520px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-12">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div class="space-y-2">
+            <span class="text-[#EA580C] font-mono text-xs font-bold uppercase tracking-widest block">02 // HARDWARE AUDIT</span>
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Verified Equipment Roster</h2>
+          </div>
+          <div class="font-mono text-xs text-slate-300 border border-white/15 px-4 py-2 bg-[#090D16]">
+            AUDITED CAPACITY: 350+ MOLD SETS / YEAR
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-white/15 bg-[#090D16]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-white/15 bg-[#0F1523] font-mono text-xs text-slate-400 uppercase">
+                <th class="py-4 px-6">Department / System</th>
+                <th class="py-4 px-6">Primary Brands</th>
+                <th class="py-4 px-6">Technical Capability</th>
+                <th class="py-4 px-6">Fleet Size</th>
+                <th class="py-4 px-6 text-right">Tolerance / Standard</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10 text-sm">
+              {equipmentLedger.map((row) => (
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                  <td class="py-5 px-6 font-bold text-white">{row.category}</td>
+                  <td class="py-5 px-6 font-mono text-xs text-[#EA580C]">{row.brand}</td>
+                  <td class="py-5 px-6 text-slate-300">{row.specs}</td>
+                  <td class="py-5 px-6 font-mono text-xs text-white font-semibold">{row.qty}</td>
+                  <td class="py-5 px-6 font-mono text-xs text-emerald-400 text-right">{row.tolerance}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 🎯 5. 供应链对比：直营工厂 vs 贸易中间商 -->
+    <section class="py-24 lg:py-32 bg-[#090D16] border-b border-white/10">
+      <div class="max-w-[1400px] mx-auto px-[clamp(1.5rem,5vw,4rem)]">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-3 mb-16">
+          <span class="text-[#EA580C] font-mono text-xs font-bold uppercase tracking-widest block">03 // SUPPLY CHAIN TRANSPARENCY</span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Direct Plant vs. Trading Brokers</h2>
+          <p class="text-slate-400 text-sm sm:text-base">
+            Why hardware engineering teams bypass online manufacturing marketplaces and partner directly with NEXMOLD’s Dongguan facility.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          <!-- NEXMOLD 直营工厂 -->
+          <div class="bg-[#0F1523] border-2 border-[#EA580C] p-8 sm:p-10 relative flex flex-col justify-between">
+            <div class="absolute top-0 right-0 bg-[#EA580C] text-white font-mono text-[10px] font-bold uppercase px-3.5 py-1 tracking-widest">
+              TIER-1 DIRECT OEM PARTNER
+            </div>
+            
+            <div class="space-y-6">
+              <div>
+                <span class="font-mono text-xs text-[#EA580C] uppercase">DONGGUAN FACILITY</span>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">NEXMOLD Direct Manufacturing</h3>
+              </div>
+              <ul class="space-y-4 text-sm text-slate-200">
+                <li class="flex items-start gap-3">
+                  <span class="text-[#EA580C] font-bold">✓</span>
+                  <span><strong>Factory-Direct Pricing:</strong> Transparent steel, mold base, and machine-hour costing with zero broker markups.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-[#EA580C] font-bold">✓</span>
+                  <span><strong>Engineer-to-Engineer Comms:</strong> Direct access to the tooling designers cutting your steel—no middleman translation delays.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-[#EA580C] font-bold">✓</span>
+                  <span><strong>100% Traceable Materials:</strong> Mill certificates for mold steel (ASSAB/LKM) and Virgin Resin CoC provided on every run.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-[#EA580C] font-bold">✓</span>
+                  <span><strong>Strict IP Protection:</strong> CAD files remain on our isolated internal factory server under legally binding NDA.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="pt-6 mt-8 border-t border-white/10 font-mono text-xs text-emerald-400 flex justify-between items-center">
+              <span>LIVE VIDEO FACTORY AUDIT AVAILABLE</span>
+              <span>ISO 9001:2015</span>
+            </div>
+          </div>
+
+          <!-- 传统外贸中间商/平台 -->
+          <div class="bg-[#0D111A] border border-white/10 p-8 sm:p-10 flex flex-col justify-between">
+            <div class="space-y-6">
+              <div>
+                <span class="font-mono text-xs text-slate-500 uppercase">THIRD-PARTY MIDDLEMEN</span>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-400 mt-1">Trading Brokers & Platforms</h3>
+              </div>
+              <ul class="space-y-4 text-sm text-slate-400">
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold">✕</span>
+                  <span><strong>30%–50% Hidden Margin:</strong> Inflated tooling and part prices to cover broker commissions.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold">✕</span>
+                  <span><strong>Blind Subcontracting:</strong> Orders farmed out to lowest-bid workshops with inconsistent quality control.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold">✕</span>
+                  <span><strong>Communication Bottlenecks:</strong> Technical DFM feedback filtered through non-technical sales reps.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="text-red-400 font-bold">✕</span>
+                  <span><strong>IP Exposure Risk:</strong> Your 3D CAD drawings broadcasted to dozens of unvetted sub-suppliers for bidding.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="pt-6 mt-8 border-t border-white/10 font-mono text-xs text-slate-500">
+              HIGH RISK OF TOOLING DELAYS & REWORK
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 🎯 6. 替换原重复板块：4步透明化工程交付流程 (消除海外客户跨国采购顾虑) -->
+    <section class="py-24 lg:py-32 bg-[#0D1320] border-b border-white/10">
+      <div class="max-w-[1520px] mx-auto px-[clamp(1.5rem,5vw,4rem)] space-y-14">
+        <div class="space-y-2">
+          <span class="text-[#EA580C] font-mono text-xs font-bold uppercase tracking-widest block">04 // EXECUTION PROTOCOL</span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">From CAD to Global Delivery</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {workflowSteps.map((item) => (
+            <div class="bg-[#090D16] border border-white/10 p-7 flex flex-col justify-between hover:border-[#EA580C]/50 transition-colors">
+              <div class="space-y-4">
+                <span class="font-mono text-2xl font-extrabold text-[#EA580C] block">{item.step}</span>
+                <h3 class="text-lg font-bold text-white">{item.title}</h3>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">{item.desc}</p>
+              </div>
+              <div class="pt-6 mt-6 border-t border-white/10 font-mono text-[10px] text-slate-500 uppercase">
+                STANDARD OPERATING PROCEDURE
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 🎯 7. 底部行动号召 (支持图纸询价 + 预约视频验厂) -->
+    <section class="py-28 bg-[#090D16] text-white text-center relative overflow-hidden border-t-2 border-[#EA580C]">
+      <div class="max-w-[960px] mx-auto px-[clamp(1.5rem,5vw,4rem)] relative z-10 space-y-6">
+        <span class="font-mono text-xs font-bold uppercase tracking-widest text-[#EA580C]">READY FOR PRODUCTION?</span>
+        <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
+          Work Directly With Our Dongguan Tooling Floor.
+        </h2>
+        
+        <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          Upload your 3D CAD files for a 24-hour engineering quote and free DFM analysis, or schedule a live video tour of our facility.
+        </p>
+
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button 
+            onclick="window.NEXMOLD_OPEN_LEAD_MODAL && window.NEXMOLD_OPEN_LEAD_MODAL('matrix_cta_bottom')"
+            class="w-full sm:w-auto bg-[#EA580C] hover:bg-[#d94e07] text-white font-mono text-xs sm:text-sm font-bold uppercase tracking-wider px-10 py-5 transition-colors cursor-pointer"
+          >
+            Upload CAD for 24H Quote →
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <EcosystemFooter lang={lang} hideCadBanner={true} />
+  <LeadModal lang={lang} />
+
+</MainLayout>
